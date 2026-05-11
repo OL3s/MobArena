@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/components/panels/BuildingOverlayPanel.tscn" id="1_panel"]
+[ext_resource type="Texture2D" path="res://assets/town/icons/arena_icon.svg" id="2_icon"]
+
+[node name="ArenaContractsOverlay" instance=ExtResource("1_panel")]
+Title = "Arena Contracts"
+Body = "Choose arena contracts here. The prototype still needs the contract list, enemy preview, reward display, and launch flow."
+IconTexture = ExtResource("2_icon")

@@ -1,0 +1,90 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/CompanyLogoEditorOverlay.cs" id="1_editor"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_companylogo"]
+
+[node name="CompanyLogoEditorOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_editor")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PopupPanel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(460, 430)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
+
+[node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Company Logo"
+horizontal_alignment = 1
+
+[node name="Preview" parent="CenterContainer/PopupPanel/MarginContainer/Content" instance=ExtResource("2_companylogo")]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="CompanyNameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+text = "Company name"
+
+[node name="CompanyNameEdit" type="LineEdit" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+focus_mode = 2
+text = "The Bronze Lions"
+
+[node name="ShieldLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+text = "Shield"
+
+[node name="ShieldOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+focus_mode = 2
+
+[node name="LogoLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+text = "Logo"
+
+[node name="LogoOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+focus_mode = 2
+
+[node name="Actions" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="CancelButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+focus_mode = 2
+text = "Cancel"
+
+[node name="ApplyButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+focus_mode = 2
+text = "Apply"

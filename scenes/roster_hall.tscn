@@ -1,0 +1,67 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/RosterHall.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/TownHud.tscn" id="2_town_hud"]
+
+[node name="RosterHall" type="Node"]
+script = ExtResource("1_script")
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="WorldCamera" type="Camera2D" parent="World"]
+position = Vector2(576, 324)
+anchor_mode = 1
+enabled = true
+
+[node name="Backdrop" type="ColorRect" parent="World"]
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.09, 0.075, 0.055, 1)
+
+[node name="ControllerUi" type="CanvasLayer" parent="."]
+layer = 0
+
+[node name="Panel" type="PanelContainer" parent="ControllerUi"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 112.0
+offset_right = -24.0
+offset_bottom = -88.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="ControllerUi/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Layout" type="VBoxContainer" parent="ControllerUi/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="ControllerUi/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Roster Hall"
+horizontal_alignment = 1
+
+[node name="Body" type="RichTextLabel" parent="ControllerUi/Panel/MarginContainer/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "Roster management will live in this separate scene: gladiator list, wounds, stamina, gear, traits, and replacement after death."
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="BackButton" type="Button" parent="ControllerUi/Panel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+focus_mode = 2
+text = "Back to Town"
+
+[node name="TownHud" parent="." instance=ExtResource("2_town_hud")]

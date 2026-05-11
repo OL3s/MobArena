@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/components/panels/BuildingOverlayPanel.tscn" id="1_panel"]
+[ext_resource type="Texture2D" path="res://assets/town/icons/market_icon.svg" id="2_icon"]
+
+[node name="GladiatorMarketOverlay" instance=ExtResource("1_panel")]
+Title = "Gladiator Market"
+Body = "Recruit new gladiators here. Later this overlay should show available fighters, hiring costs, traits, and roster capacity."
+IconTexture = ExtResource("2_icon")

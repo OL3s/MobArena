@@ -1,0 +1,219 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/ui/TownHud.cs" id="1_town_hud"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_company_logo"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/boss.svg" id="3_boss_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/settings.svg" id="4_settings_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="5_gold_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/back.svg" id="6_back_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/speed_down.svg" id="7_speed_down_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/speed_up.svg" id="8_speed_up_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/sun.svg" id="9_sun_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/moon.svg" id="10_moon_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/speed_slowed.svg" id="11_speed_slowed_icon"]
+[ext_resource type="Script" path="res://scenes/components/ui/TimelineLine.cs" id="12_timeline_line"]
+
+[node name="TownHud" type="CanvasLayer"]
+script = ExtResource("1_town_hud")
+
+[node name="TopPanel" type="PanelContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 96.0
+grow_horizontal = 2
+
+[node name="Row" type="HBoxContainer" parent="TopPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="CompanyStatus" type="HBoxContainer" parent="TopPanel/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Shield" parent="TopPanel/Row/CompanyStatus" instance=ExtResource("2_company_logo")]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+
+[node name="CompanyText" type="VBoxContainer" parent="TopPanel/Row/CompanyStatus"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="CompanyName" type="Label" parent="TopPanel/Row/CompanyStatus/CompanyText"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "The Bronze Lions"
+
+[node name="StatsRow" type="VBoxContainer" parent="TopPanel/Row/CompanyStatus/CompanyText"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="GladiatorCount" type="Label" parent="TopPanel/Row/CompanyStatus/CompanyText/StatsRow"]
+layout_mode = 2
+text = "Gladiators: 1"
+
+[node name="ArenaFightCount" type="Label" parent="TopPanel/Row/CompanyStatus/CompanyText/StatsRow"]
+layout_mode = 2
+text = "Arena fights: 0"
+
+[node name="BossesWonCount" type="Label" parent="TopPanel/Row/CompanyStatus/CompanyText/StatsRow"]
+layout_mode = 2
+text = "Bosses won: 0"
+
+[node name="GoldPanel" type="PanelContainer" parent="TopPanel/Row"]
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+
+[node name="GoldRow" type="HBoxContainer" parent="TopPanel/Row/GoldPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="GoldIcon" type="TextureRect" parent="TopPanel/Row/GoldPanel/GoldRow"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+texture = ExtResource("5_gold_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GoldLabel" type="Label" parent="TopPanel/Row/GoldPanel/GoldRow"]
+layout_mode = 2
+text = "100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SettingsButton" type="Button" parent="TopPanel/Row"]
+custom_minimum_size = Vector2(128, 56)
+layout_mode = 2
+text = "Settings"
+icon = ExtResource("4_settings_icon")
+
+[node name="BackButton" type="Button" parent="TopPanel/Row"]
+custom_minimum_size = Vector2(112, 56)
+layout_mode = 2
+text = "Back"
+icon = ExtResource("6_back_icon")
+
+[node name="BottomPanel" type="PanelContainer" parent="."]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -72.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="TimeRow" type="HBoxContainer" parent="BottomPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SpeedDownButton" type="Button" parent="BottomPanel/TimeRow"]
+custom_minimum_size = Vector2(52, 44)
+layout_mode = 2
+icon = ExtResource("7_speed_down_icon")
+expand_icon = true
+
+[node name="PauseButton" type="Button" parent="BottomPanel/TimeRow"]
+custom_minimum_size = Vector2(152, 44)
+layout_mode = 2
+size_flags_horizontal = 8
+text = "Slowed"
+icon = ExtResource("11_speed_slowed_icon")
+
+[node name="SpeedUpButton" type="Button" parent="BottomPanel/TimeRow"]
+custom_minimum_size = Vector2(52, 44)
+layout_mode = 2
+icon = ExtResource("8_speed_up_icon")
+expand_icon = true
+
+[node name="CalendarPanel" type="PanelContainer" parent="BottomPanel/TimeRow"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+
+[node name="CalendarRow" type="HBoxContainer" parent="BottomPanel/TimeRow/CalendarPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DayLabel" type="Label" parent="BottomPanel/TimeRow/CalendarPanel/CalendarRow"]
+layout_mode = 2
+text = "Day 1"
+vertical_alignment = 1
+
+[node name="SunIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarRow"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("9_sun_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DayProgress" type="Control" parent="BottomPanel/TimeRow/CalendarPanel/CalendarRow"]
+custom_minimum_size = Vector2(120, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+script = ExtResource("12_timeline_line")
+MaxValue = 1440.0
+Value = 480.0
+TrackColor = Color(0.86, 0.8, 0.65, 0.14)
+FillColor = Color(0.95, 0.86, 0.52, 0.42)
+LineHeight = 6.0
+
+[node name="MoonIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarRow"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("10_moon_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DayPhaseLabel" type="Label" parent="BottomPanel/TimeRow/CalendarPanel/CalendarRow"]
+custom_minimum_size = Vector2(82, 0)
+layout_mode = 2
+text = "Open"
+vertical_alignment = 1
+
+[node name="TimelinePanel" type="PanelContainer" parent="BottomPanel/TimeRow"]
+custom_minimum_size = Vector2(430, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TimelineRow" type="HBoxContainer" parent="BottomPanel/TimeRow/TimelinePanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BossIcon" type="TextureRect" parent="BottomPanel/TimeRow/TimelinePanel/TimelineRow"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("3_boss_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BossDueLabel" type="Label" parent="BottomPanel/TimeRow/TimelinePanel/TimelineRow"]
+layout_mode = 2
+text = "Boss due"
+vertical_alignment = 1
+
+[node name="BossProgress" type="Control" parent="BottomPanel/TimeRow/TimelinePanel/TimelineRow"]
+custom_minimum_size = Vector2(220, 24)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("12_timeline_line")
+MaxValue = 7.0
+Value = 1.0
+TrackColor = Color(0.86, 0.8, 0.65, 0.14)
+FillColor = Color(0.86, 0.8, 0.65, 0.42)
+LineHeight = 6.0
+
+[node name="BossProgressValue" type="Label" parent="BottomPanel/TimeRow/TimelinePanel/TimelineRow"]
+layout_mode = 2
+text = "Day 7"
+vertical_alignment = 1
