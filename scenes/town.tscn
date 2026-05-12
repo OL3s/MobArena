@@ -22,7 +22,7 @@
 [ext_resource type="PackedScene" path="res://scenes/town_overlays/healer_overlay.tscn" id="21_healer_overlay"]
 [ext_resource type="PackedScene" path="res://scenes/roster_hall.tscn" id="22_roster_hall"]
 [ext_resource type="PackedScene" path="res://scenes/town_overlays/training_hall_overlay.tscn" id="23_training_overlay"]
-[ext_resource type="Texture2D" uid="uid://kx7nhxd23e1n" path="res://assets/ui/icons/boss.svg" id="24_boss_icon"]
+[ext_resource type="Texture2D" uid="uid://kx7nhxd23e1n" path="res://assets/ui/icons/champion.svg" id="24_champion_icon"]
 [ext_resource type="Texture2D" uid="uid://c141ktn80ivn1" path="res://assets/ui/icons/settings.svg" id="25_settings_icon"]
 [ext_resource type="Texture2D" uid="uid://budosbjkhbjtt" path="res://assets/ui/icons/gold.svg" id="26_gold_icon"]
 [ext_resource type="Texture2D" uid="uid://ouifl3o34tw2" path="res://assets/ui/icons/back.svg" id="27_back_icon"]
@@ -122,7 +122,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
 [node name="Shield" parent="ControllerUi/TopPanel/Row/CompanyStatus" unique_id=1352996079 instance=ExtResource("15_company_logo")]
-custom_minimum_size = Vector2(56, 56)
+custom_minimum_size = Vector2(112, 112)
 layout_mode = 2
 
 [node name="CompanyText" type="VBoxContainer" parent="ControllerUi/TopPanel/Row/CompanyStatus" unique_id=1458737813]
@@ -147,9 +147,9 @@ text = "Gladiators: 1"
 layout_mode = 2
 text = "Arena fights: 0"
 
-[node name="BossesWonCount" type="Label" parent="ControllerUi/TopPanel/Row/CompanyStatus/CompanyText/StatsRow" unique_id=1461161922]
+[node name="ChampionsWonCount" type="Label" parent="ControllerUi/TopPanel/Row/CompanyStatus/CompanyText/StatsRow" unique_id=1461161922]
 layout_mode = 2
-text = "Bosses won: 0"
+text = "Champions won: 0"
 
 [node name="GoldPanel" type="PanelContainer" parent="ControllerUi/TopPanel/Row" unique_id=339884712]
 custom_minimum_size = Vector2(112, 0)
@@ -276,20 +276,20 @@ size_flags_horizontal = 3
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="BossIcon" type="TextureRect" parent="ControllerUi/BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=558906536]
+[node name="ChampionIcon" type="TextureRect" parent="ControllerUi/BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=558906536]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 4
-texture = ExtResource("24_boss_icon")
+texture = ExtResource("24_champion_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="BossDueLabel" type="Label" parent="ControllerUi/BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=1862628926]
+[node name="ChampionDueLabel" type="Label" parent="ControllerUi/BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=1862628926]
 layout_mode = 2
-text = "Boss due"
+text = "Champion due"
 vertical_alignment = 1
 
-[node name="BossProgress" type="Control" parent="ControllerUi/BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=775730161]
+[node name="ChampionProgress" type="Control" parent="ControllerUi/BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=775730161]
 custom_minimum_size = Vector2(220, 24)
 layout_mode = 2
 size_flags_vertical = 4
@@ -300,7 +300,11 @@ TrackColor = Color(0.86, 0.8, 0.65, 0.14)
 FillColor = Color(0.86, 0.8, 0.65, 0.42)
 LineHeight = 6.0
 
-[node name="BossProgressValue" type="Label" parent="ControllerUi/BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=1173861037]
+[node name="ChampionProgressValue" type="Label" parent="ControllerUi/BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=1173861037]
 layout_mode = 2
 text = "Day 7"
 vertical_alignment = 1
+
+[node name="TimeTickTimer" type="Timer" parent="ControllerUi"]
+wait_time = 1.0
+autostart = true

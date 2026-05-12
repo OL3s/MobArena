@@ -44,13 +44,13 @@ Gladiators should recover naturally over time. Resting is cheaper if the company
 
 Training Hall lets the player train a gladiator in town for gold and stamina. Training should be useful, but it competes directly with resting, healing, upkeep, and saving gold for gear or recruitment.
 
-The town phase uses real time with x1, x10, and x60 speed states. At x1, time advances 1 in-game minute per real second; x10 advances 10 in-game minutes per real second; x60 advances 60 in-game minutes per real second, meaning one real second is one in-game hour. Time controls should sit on the left side of the bottom UI as left/right arrows that cycle through those speeds. For readability, the bottom timeline should focus on current day and digital time rather than showing week text. Boss deadline display belongs with the bottom timeline and should be time remaining before the required boss fight, not number of arena fights completed.
+The town phase uses real time with x1, x10, and x60 speed states. At x1, time advances 1 in-game minute per real second; x10 advances 10 in-game minutes per real second; x60 advances 60 in-game minutes per real second, meaning one real second is one in-game hour. Time controls should sit on the left side of the bottom UI as left/right arrows that cycle through those speeds. For readability, the bottom timeline should focus on current day and digital time rather than showing week text. Champion deadline display belongs with the bottom timeline and should be time remaining before the required champion fight, not number of arena fights completed.
 
-Time state should be represented by a Godot `Resource` so management systems can consume the same API without coupling directly to town UI. The resource owns current day, digital time, current speed, boss deadline, time advancement, and speed changes.
+Time state should be represented by a Godot `Resource` so management systems can consume the same API without coupling directly to town UI. The resource owns current day, digital time, current speed, champion deadline, time advancement, and speed changes.
 
 Town time should advance from a one-second `Timer` tick, not from continuous per-frame processing. Each timer tick advances 1 in-game minute at x1, 10 in-game minutes at x10, and 60 in-game minutes at x60.
 
-If the player fails to fight the boss before the deadline, the run should be lost or otherwise severely failed. This creates pressure to balance economy, roster health, stamina, and arena income instead of waiting forever.
+If the player fails to fight the champion before the deadline, the run should be lost or otherwise severely failed. This creates pressure to balance economy, roster health, stamina, and arena income instead of waiting forever.
 
 ## Combat Direction
 
@@ -97,7 +97,7 @@ Possible progression:
 - Archers as ranged enemies that force movement.
 - Brutes as slow heavy enemies with high damage.
 - Mages with area attacks or debuffs.
-- Boss monsters for major contracts.
+- Champion monsters for major contracts.
 
 ## First Prototype Scope
 

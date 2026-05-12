@@ -25,8 +25,8 @@ public partial class TownHud : CanvasLayer
     private Label _dayLabel;
     private TimelineLine _dayProgress;
     private Label _dayPhaseLabel;
-    private TimelineLine _bossProgress;
-    private Label _bossProgressValue;
+    private TimelineLine _championProgress;
+    private Label _championProgressValue;
     private Timer _timeTickTimer;
 
     public override void _Ready()
@@ -40,8 +40,8 @@ public partial class TownHud : CanvasLayer
         _dayLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarRow/DayLabel");
         _dayProgress = GetNode<TimelineLine>("BottomPanel/TimeRow/CalendarPanel/CalendarRow/DayProgress");
         _dayPhaseLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarRow/DayPhaseLabel");
-        _bossProgress = GetNode<TimelineLine>("BottomPanel/TimeRow/TimelinePanel/TimelineRow/BossProgress");
-        _bossProgressValue = GetNode<Label>("BottomPanel/TimeRow/TimelinePanel/TimelineRow/BossProgressValue");
+        _championProgress = GetNode<TimelineLine>("BottomPanel/TimeRow/TimelinePanel/TimelineRow/ChampionProgress");
+        _championProgressValue = GetNode<Label>("BottomPanel/TimeRow/TimelinePanel/TimelineRow/ChampionProgressValue");
 
         _companyLogo.SetLogoData(_saveNode?.CompanyLogoData ?? CompanyLogoData.CreateDefault());
         _companyLogo.Pressed += OnCompanyLogoPressed;
@@ -51,10 +51,8 @@ public partial class TownHud : CanvasLayer
         _speedToggleButton.Pressed += OnPausePressed;
         GetNode<Button>("BottomPanel/TimeRow/SpeedUpButton").Pressed += OnSpeedUpPressed;
 
-        _timeTickTimer = new Timer { WaitTime = 1.0 };
-        AddChild(_timeTickTimer);
+        _timeTickTimer = GetNode<Timer>("TimeTickTimer");
         _timeTickTimer.Timeout += OnTimeTickTimerTimeout;
-        _timeTickTimer.Start();
         _timeState.TimeChanged += RefreshTimeUi;
 
         RefreshCompanyUi();
@@ -131,8 +129,8 @@ public partial class TownHud : CanvasLayer
         _dayLabel.Text = _timeState.GetDayLabel();
         _dayProgress.SetValue(_timeState.GetDayProgressValue(), _timeState.GetDayProgressMax());
         _dayPhaseLabel.Text = _timeState.GetDayPhaseLabel();
-        _bossProgress.SetValue(_timeState.GetBossProgressValue(), _timeState.GetBossProgressMax());
-        _bossProgressValue.Text = _timeState.GetBossDeadlineLabel();
+        _championProgress.SetValue(_timeState.GetChampionProgressValue(), _timeState.GetChampionProgressMax());
+        _championProgressValue.Text = _timeState.GetChampionDeadlineLabel();
         RefreshSpeedToggleButton();
     }
 
@@ -143,8 +141,8 @@ public partial class TownHud : CanvasLayer
         _dayProgress.AddSegment(_timeState.GetTownOpenMinute(), _timeState.GetTownCloseMinute(), new Color(0.28f, 0.68f, 0.34f, 0.32f));
         _dayProgress.AddSegment(_timeState.GetTownCloseMinute(), _timeState.GetDayProgressMax(), new Color(0.85f, 0.64f, 0.24f, 0.24f));
 
-        _bossProgress.ClearSegments();
-        _bossProgress.AddSegment(_timeState.GetBossFinalDayStart(), _timeState.GetBossProgressMax(), new Color(0.75f, 0.16f, 0.12f, 0.32f));
+        _championProgress.ClearSegments();
+        _championProgress.AddSegment(_timeState.GetChampionFinalDayStart(), _timeState.GetChampionProgressMax(), new Color(0.75f, 0.16f, 0.12f, 0.32f));
     }
 
     private void RefreshSpeedToggleButton()

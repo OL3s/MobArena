@@ -5,14 +5,12 @@ namespace MobArena.Scripts;
 
 public partial class GlobalOverlay : CanvasLayer
 {
-    private const string PopupBlurBackdropName = "PopupBlurBackdrop";
     private const string InfoPopupPanelScenePath = "res://scenes/components/panels/InfoPopupPanel.tscn";
     private const string GoCancelPopupPanelScenePath = "res://scenes/components/panels/GoCancelPopupPanel.tscn";
 
     private static readonly PackedScene InfoPopupPanelScene = ResourceLoader.Load<PackedScene>(InfoPopupPanelScenePath);
     private static readonly PackedScene GoCancelPopupPanelScene = ResourceLoader.Load<PackedScene>(GoCancelPopupPanelScenePath);
 
-    private ColorRect _popupBlurBackdrop;
     private InfoPopupPanel _activeInfoPopup;
     private GoCancelPopupPanel _activeGoCancelPopup;
     private Action _activeGoAction;
@@ -21,11 +19,6 @@ public partial class GlobalOverlay : CanvasLayer
     {
         var sceneTree = Engine.GetMainLoop() as SceneTree;
         return sceneTree?.Root?.GetNodeOrNull<GlobalOverlay>("/root/GlobalOverlay");
-    }
-
-    public override void _Ready()
-    {
-        EnsurePopupBlurBackdrop();
     }
 
     public void AddOverlay(PackedScene overlayScene)
@@ -47,13 +40,9 @@ public partial class GlobalOverlay : CanvasLayer
             return;
         }
 
-        EnsurePopupBlurBackdrop();
         ClosePopups();
-        MoveChild(_popupBlurBackdrop, GetChildCount() - 1);
 
-        _popupBlurBackdrop.Visible = true;
         AddChild(overlay);
-        overlay.TreeExited += HideBlurIfNoPopup;
         CallDeferred(MethodName.GrabFirstOverlayFocus, overlay);
     }
 
@@ -98,12 +87,9 @@ public partial class GlobalOverlay : CanvasLayer
         if (InfoPopupPanelScene == null)
             return;
 
-        EnsurePopupBlurBackdrop();
         ClosePopups();
-        MoveChild(_popupBlurBackdrop, GetChildCount() - 1);
 
         _activeInfoPopup = InfoPopupPanelScene.Instantiate<InfoPopupPanel>();
-        _popupBlurBackdrop.Visible = true;
         AddChild(_activeInfoPopup);
         _activeInfoPopup.ShowContent(title, richText, image);
         _activeInfoPopup.Closed += OnInfoPopupClosed;
@@ -114,13 +100,10 @@ public partial class GlobalOverlay : CanvasLayer
         if (GoCancelPopupPanelScene == null)
             return;
 
-        EnsurePopupBlurBackdrop();
         ClosePopups();
-        MoveChild(_popupBlurBackdrop, GetChildCount() - 1);
 
         _activeGoAction = goAction;
         _activeGoCancelPopup = GoCancelPopupPanelScene.Instantiate<GoCancelPopupPanel>();
-        _popupBlurBackdrop.Visible = true;
         AddChild(_activeGoCancelPopup);
         _activeGoCancelPopup.ShowContent(title, richText, goText, cancelText);
         _activeGoCancelPopup.GoSelected += OnGoCancelPopupGoSelected;
@@ -141,15 +124,9 @@ public partial class GlobalOverlay : CanvasLayer
             return;
         }
 
-        for (var i = GetChildCount() - 1; i >= 0; i--)
-        {
-            var child = GetChild(i);
-            if (child == _popupBlurBackdrop)
-                continue;
-
-            child.QueueFree();
-            return;
-        }
+        var childCount = GetChildCount();
+        if (childCount > 0)
+            GetChild(childCount - 1).QueueFree();
     }
 
     public void CloseAllOverlays()
@@ -157,21 +134,7 @@ public partial class GlobalOverlay : CanvasLayer
         ClosePopups();
 
         foreach (Node child in GetChildren())
-        {
-            if (child == _popupBlurBackdrop)
-                continue;
-
             child.QueueFree();
-        }
-    }
-
-    private void EnsurePopupBlurBackdrop()
-    {
-        if (GodotObject.IsInstanceValid(_popupBlurBackdrop))
-            return;
-
-        _popupBlurBackdrop = GetNode<ColorRect>(PopupBlurBackdropName);
-        MoveChild(_popupBlurBackdrop, 0);
     }
 
     private void OnInfoPopupClosed()
@@ -205,8 +168,6 @@ public partial class GlobalOverlay : CanvasLayer
             _activeInfoPopup.QueueFree();
             _activeInfoPopup = null;
         }
-
-        HideBlurIfNoPopup();
     }
 
     private void CloseGoCancelPopup()
@@ -220,29 +181,5 @@ public partial class GlobalOverlay : CanvasLayer
         }
 
         _activeGoAction = null;
-        HideBlurIfNoPopup();
-    }
-
-    private void HideBlurIfNoPopup()
-    {
-        if (!GodotObject.IsInstanceValid(_popupBlurBackdrop))
-            return;
-
-        if (!HasVisibleOverlay())
-            _popupBlurBackdrop.Visible = false;
-    }
-
-    private bool HasVisibleOverlay()
-    {
-        if (GodotObject.IsInstanceValid(_activeInfoPopup) || GodotObject.IsInstanceValid(_activeGoCancelPopup))
-            return true;
-
-        foreach (Node child in GetChildren())
-        {
-            if (child != _popupBlurBackdrop)
-                return true;
-        }
-
-        return false;
     }
 }

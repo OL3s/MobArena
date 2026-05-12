@@ -55,7 +55,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 ## Not Yet Present
 
 - Gameplay combat scripts
-- Player, mob, contract, roster, gear, upkeep, healing, stamina, training, boss deadline, or full city UI systems
+- Player, mob, contract, roster, gear, upkeep, healing, stamina, training, champion deadline, or full city UI systems
 - Export presets
 
 ## Intended First Prototype

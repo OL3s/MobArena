@@ -1,0 +1,7 @@
+[gd_resource type="Theme" format=3 uid="uid://cxnwddhvjuth3"]
+
+[ext_resource type="FontFile" uid="uid://b7g60ea6lihk2" path="res://assets/fonts/MedievalSharp-Regular.ttf" id="1_qew4h"]
+
+[resource]
+default_font = ExtResource("1_qew4h")
+default_font_size = 24

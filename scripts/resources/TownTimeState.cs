@@ -20,7 +20,7 @@ public partial class TownTimeState : Resource
     public delegate void TimeChangedEventHandler();
 
     [Signal]
-    public delegate void BossDeadlineReachedEventHandler();
+    public delegate void ChampionDeadlineReachedEventHandler();
 
     [Export]
     public int CurrentDay { get; private set; } = 1;
@@ -29,7 +29,7 @@ public partial class TownTimeState : Resource
     public int MinutesIntoDay { get; private set; } = 8 * 60;
 
     [Export]
-    public int BossDeadlineDay { get; private set; } = 7;
+    public int ChampionDeadlineDay { get; private set; } = 7;
 
     [Export]
     public TimeSpeed CurrentSpeed { get; private set; } = TimeSpeed.X0;
@@ -59,8 +59,8 @@ public partial class TownTimeState : Resource
 
         EmitSignal(SignalName.TimeChanged);
 
-        if (IsBossDue())
-            EmitSignal(SignalName.BossDeadlineReached);
+        if (IsChampionDue())
+            EmitSignal(SignalName.ChampionDeadlineReached);
     }
 
     public void IncreaseSpeed()
@@ -180,29 +180,29 @@ public partial class TownTimeState : Resource
         return IsTownOpen();
     }
 
-    public double GetBossProgressValue()
+    public double GetChampionProgressValue()
     {
-        return Mathf.Clamp(CurrentDay, 1, BossDeadlineDay);
+        return Mathf.Clamp(CurrentDay, 1, ChampionDeadlineDay);
     }
 
-    public double GetBossProgressMax()
+    public double GetChampionProgressMax()
     {
-        return BossDeadlineDay;
+        return ChampionDeadlineDay;
     }
 
-    public double GetBossFinalDayStart()
+    public double GetChampionFinalDayStart()
     {
-        return Mathf.Max(1, BossDeadlineDay - 1);
+        return Mathf.Max(1, ChampionDeadlineDay - 1);
     }
 
-    public string GetBossDeadlineLabel()
+    public string GetChampionDeadlineLabel()
     {
-        return $"Day {BossDeadlineDay}";
+        return $"Day {ChampionDeadlineDay}";
     }
 
-    public bool IsBossDue()
+    public bool IsChampionDue()
     {
-        return CurrentDay >= BossDeadlineDay;
+        return CurrentDay >= ChampionDeadlineDay;
     }
 
     private int GetMinutesPerTick()

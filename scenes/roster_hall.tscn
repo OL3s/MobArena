@@ -58,10 +58,4 @@ fit_content = true
 scroll_active = false
 autowrap_mode = 3
 
-[node name="BackButton" type="Button" parent="ControllerUi/Panel/MarginContainer/Layout"]
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
-focus_mode = 2
-text = "Back to Town"
-
 [node name="TownHud" parent="." instance=ExtResource("2_town_hud")]

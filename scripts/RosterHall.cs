@@ -9,7 +9,6 @@ public partial class RosterHall : Node
 
     public override void _Ready()
     {
-        GetNode<Button>("ControllerUi/Panel/MarginContainer/Layout/BackButton").Pressed += OnBackPressed;
         GetNode<TownHud>("TownHud").BackPressed += OnBackPressed;
     }
 

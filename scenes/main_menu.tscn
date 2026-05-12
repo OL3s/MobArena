@@ -59,11 +59,12 @@ theme_override_constants/separation = 18
 [node name="Title" type="Label" parent="MenuRow/Content" unique_id=1249282507]
 layout_mode = 2
 theme_override_font_sizes/font_size = 44
-text = "MobArena"
+text = "Mob Arena"
 horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="MenuRow/Content" unique_id=1837677820]
 layout_mode = 2
+theme_override_font_sizes/font_size = 20
 text = "Build a gladiator company. Survive the arena."
 horizontal_alignment = 1
 autowrap_mode = 3

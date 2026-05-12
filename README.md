@@ -54,7 +54,7 @@ The company shield in `assets/ui/company_shield_highres.svg` is also the project
 Town currently uses an implied horizontal-road layout with buildings arranged in a 3x2 grid. The road is layout space only and is not drawn.
 Each town building can assign `OverlayToOpen` for modal packed-scene overlays or `SceneToOpen` for scene navigation. Roster Hall uses `SceneToOpen`; other current buildings use `OverlayToOpen`.
 Town building art and icons are assigned per instance through exported `BuildingTexture` and `IconTexture` fields.
-The town overlay tracks company status and gold at the top. The bottom timeline contains speed arrows cycling Paused/Slowed/Normal/Fast, a speed toggle button that pauses/restores the last running speed, the current day, a sun-to-moon day progress bar, and the boss deadline.
+The town overlay tracks company status and gold at the top. The bottom timeline contains speed arrows cycling Paused/Slowed/Normal/Fast, a speed toggle button that pauses/restores the last running speed, the current day, a sun-to-moon day progress bar, and the champion deadline.
 Town time logic lives in `scripts/resources/TownTimeState.cs`; the shared runtime instance lives on `SaveNode.TownTimeState`. `TownHud.tscn`/`TownHud.cs` binds the top and bottom town HUD to that shared resource so Town and Roster Hall use the same clock.
 Company logo data lives in `scripts/resources/CompanyLogoData.cs`. Clicking the shield in town opens a `GlobalOverlay` editor for choosing shield and logo parts; persistence will be added later.
 Main menu requires creating a company before `Enter Town` is enabled. The default suggested company name is `The Bronze Lions`.
@@ -73,7 +73,7 @@ Main menu requires creating a company before `Enter Town` is enabled. The defaul
 - Between fights, manage the roster, choose contracts, buy equipment, and handle upkeep.
 - During fights, control one selected gladiator in simple 2D top-down arena combat.
 - Support phone, controller, and desktop play from the start.
-- Balance real-time town management around upkeep costs, arena income, healing, stamina, training, and mandatory boss deadlines.
+- Balance real-time town management around upkeep costs, arena income, healing, stamina, training, and mandatory champion deadlines.
 - Keep permanent death meaningful: losing a gladiator should also risk the investment made in that fighter.
 - Keep the first prototype small: one gladiator, one arena, slime enemies, basic movement and attack, simple contract rewards, and death/replacement.
 

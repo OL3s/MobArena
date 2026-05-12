@@ -1,7 +1,11 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/CompanyLogoEditorOverlay.cs" id="1_editor"]
 [ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_companylogo"]
+[ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="3_blur_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
+shader = ExtResource("3_blur_shader")
 
 [node name="CompanyLogoEditorOverlay" type="Control"]
 layout_mode = 3
@@ -10,8 +14,19 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 1
+mouse_filter = 0
 script = ExtResource("1_editor")
+
+[node name="BlurBackdrop" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_popup_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1

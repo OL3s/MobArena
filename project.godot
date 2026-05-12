@@ -10,10 +10,11 @@ config_version=5
 
 [application]
 
-config/name="MobArena"
+config/name="Mob Arena"
+config/description="s"
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
-config/icon="res://assets/ui/company_shield_highres.svg"
+config/icon="uid://rth45ova1lyc"
 
 [autoload]
 
@@ -28,6 +29,10 @@ window/stretch/aspect="expand"
 [dotnet]
 
 project/assembly_name="MobArena"
+
+[gui]
+
+theme/custom="uid://cxnwddhvjuth3"
 
 [physics]
 
