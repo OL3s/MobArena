@@ -6,11 +6,9 @@ namespace MobArena.Scripts;
 public partial class GlobalOverlay : CanvasLayer
 {
     private const string PopupBlurBackdropName = "PopupBlurBackdrop";
-    private const string BlurShaderPath = "res://assets/shaders/PopupBlurBackdrop.gdshader";
     private const string InfoPopupPanelScenePath = "res://scenes/components/panels/InfoPopupPanel.tscn";
     private const string GoCancelPopupPanelScenePath = "res://scenes/components/panels/GoCancelPopupPanel.tscn";
 
-    private static readonly Shader BlurShader = ResourceLoader.Load<Shader>(BlurShaderPath);
     private static readonly PackedScene InfoPopupPanelScene = ResourceLoader.Load<PackedScene>(InfoPopupPanelScenePath);
     private static readonly PackedScene GoCancelPopupPanelScene = ResourceLoader.Load<PackedScene>(GoCancelPopupPanelScenePath);
 
@@ -172,24 +170,7 @@ public partial class GlobalOverlay : CanvasLayer
         if (GodotObject.IsInstanceValid(_popupBlurBackdrop))
             return;
 
-        _popupBlurBackdrop = new ColorRect
-        {
-            Name = PopupBlurBackdropName,
-            MouseFilter = Control.MouseFilterEnum.Stop,
-            Color = Colors.White,
-            Visible = false
-        };
-        _popupBlurBackdrop.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-
-        if (BlurShader != null)
-        {
-            _popupBlurBackdrop.Material = new ShaderMaterial
-            {
-                Shader = BlurShader
-            };
-        }
-
-        AddChild(_popupBlurBackdrop);
+        _popupBlurBackdrop = GetNode<ColorRect>(PopupBlurBackdropName);
         MoveChild(_popupBlurBackdrop, 0);
     }
 
@@ -247,7 +228,21 @@ public partial class GlobalOverlay : CanvasLayer
         if (!GodotObject.IsInstanceValid(_popupBlurBackdrop))
             return;
 
-        if (!GodotObject.IsInstanceValid(_activeInfoPopup) && !GodotObject.IsInstanceValid(_activeGoCancelPopup))
+        if (!HasVisibleOverlay())
             _popupBlurBackdrop.Visible = false;
+    }
+
+    private bool HasVisibleOverlay()
+    {
+        if (GodotObject.IsInstanceValid(_activeInfoPopup) || GodotObject.IsInstanceValid(_activeGoCancelPopup))
+            return true;
+
+        foreach (Node child in GetChildren())
+        {
+            if (child != _popupBlurBackdrop)
+                return true;
+        }
+
+        return false;
     }
 }

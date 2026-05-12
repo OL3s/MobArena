@@ -51,9 +51,10 @@ public partial class TownHud : CanvasLayer
         _speedToggleButton.Pressed += OnPausePressed;
         GetNode<Button>("BottomPanel/TimeRow/SpeedUpButton").Pressed += OnSpeedUpPressed;
 
-        _timeTickTimer = new Timer { WaitTime = 1.0, Autostart = true };
+        _timeTickTimer = new Timer { WaitTime = 1.0 };
         AddChild(_timeTickTimer);
         _timeTickTimer.Timeout += OnTimeTickTimerTimeout;
+        _timeTickTimer.Start();
         _timeState.TimeChanged += RefreshTimeUi;
 
         RefreshCompanyUi();

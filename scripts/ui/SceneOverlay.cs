@@ -7,7 +7,7 @@ public partial class SceneOverlay : CanvasLayer
 {
     private const string BlurBackdropName = "BlurBackdrop";
     private const string OverlayScenePath = "res://scenes/ui/SceneOverlay.tscn";
-    private const string BlurShaderPath = "res://assets/shaders/OverlayBlurBackdrop.gdshader";
+    private const string BlurShaderPath = "res://assets/shaders/PopupBlurBackdrop.gdshader";
 
     private static readonly PackedScene OverlayScene = ResourceLoader.Load<PackedScene>(OverlayScenePath);
     private static readonly Shader BlurShader = ResourceLoader.Load<Shader>(BlurShaderPath);

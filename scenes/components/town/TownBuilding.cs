@@ -7,6 +7,7 @@ namespace MobArena.Scenes.Components.Town;
 public partial class TownBuilding : Node2D
 {
     private static readonly Rect2 InteractionBounds = new(new Vector2(-75.0f, -75.0f), new Vector2(150.0f, 150.0f));
+    private const ulong InputActivationDebounceMsec = 250;
 
     private string _buildingName = "Town Building";
     private Texture2D _buildingTexture;
@@ -86,6 +87,7 @@ public partial class TownBuilding : Node2D
     private Node2D _visuals;
     private Sprite2D _buildingSprite;
     private Sprite2D _iconSprite;
+    private ulong _lastInputActivationMsec;
 
     public override void _Ready()
     {
@@ -113,12 +115,12 @@ public partial class TownBuilding : Node2D
 
         if (inputEvent is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } mouseButton)
         {
-            ActivateIfInside(mouseButton.Position);
+            ActivateIfInside(mouseButton.Position, true);
             return;
         }
 
         if (inputEvent is InputEventScreenTouch { Pressed: true } screenTouch)
-            ActivateIfInside(screenTouch.Position);
+            ActivateIfInside(screenTouch.Position, true);
     }
 
     public void Activate()
@@ -175,7 +177,7 @@ public partial class TownBuilding : Node2D
                 GD.Print($"TownBuilding Area2D click: {BuildingName}");
 
             GetViewport()?.SetInputAsHandled();
-            Activate();
+            ActivateFromInput();
             return;
         }
 
@@ -185,7 +187,7 @@ public partial class TownBuilding : Node2D
                 GD.Print($"TownBuilding Area2D touch: {BuildingName}");
 
             GetViewport()?.SetInputAsHandled();
-            Activate();
+            ActivateFromInput();
         }
     }
 
@@ -207,7 +209,7 @@ public partial class TownBuilding : Node2D
         GetTree().ChangeSceneToPacked(SceneToOpen);
     }
 
-    private void ActivateIfInside(Vector2 viewportPosition)
+    private void ActivateIfInside(Vector2 viewportPosition, bool fromInput = false)
     {
         var worldPosition = GetCanvasTransform().AffineInverse() * viewportPosition;
         var localPosition = ToLocal(worldPosition);
@@ -218,6 +220,19 @@ public partial class TownBuilding : Node2D
             GD.Print($"TownBuilding fallback hit: {BuildingName}, viewport={viewportPosition}, local={localPosition}");
 
         GetViewport()?.SetInputAsHandled();
+        if (fromInput)
+            ActivateFromInput();
+        else
+            Activate();
+    }
+
+    private void ActivateFromInput()
+    {
+        var nowMsec = Time.GetTicksMsec();
+        if (nowMsec - _lastInputActivationMsec < InputActivationDebounceMsec)
+            return;
+
+        _lastInputActivationMsec = nowMsec;
         Activate();
     }
 
