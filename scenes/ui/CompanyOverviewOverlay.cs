@@ -7,7 +7,7 @@ namespace MobArena.Scenes.UI;
 public partial class CompanyOverviewOverlay : Control
 {
     [Signal]
-    public delegate void ChangeCompanyRequestedEventHandler();
+    public delegate void EditCompanyRequestedEventHandler();
 
     private SaveNode _saveNode;
     private Label _companyNameLabel;
@@ -33,7 +33,7 @@ public partial class CompanyOverviewOverlay : Control
         _mobsKilledLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Stats/MobsKilledValue");
         _championsDefeatedLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Stats/ChampionsDefeatedValue");
 
-        GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/ChangeCompanyButton").Pressed += OnChangeCompanyPressed;
+        GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/EditCompanyButton").Pressed += OnEditCompanyPressed;
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/CloseButton").Pressed += QueueFree;
 
         RefreshUi();
@@ -57,9 +57,8 @@ public partial class CompanyOverviewOverlay : Control
         _championsDefeatedLabel.Text = careerData.ChampionsDefeated.ToString();
     }
 
-    private void OnChangeCompanyPressed()
+    private void OnEditCompanyPressed()
     {
-        EmitSignal(SignalName.ChangeCompanyRequested);
-        QueueFree();
+        EmitSignal(SignalName.EditCompanyRequested);
     }
 }

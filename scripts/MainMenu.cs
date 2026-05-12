@@ -63,7 +63,7 @@ public partial class MainMenu : Control
             return;
 
         var overview = CompanyOverviewScene.Instantiate<CompanyOverviewOverlay>();
-        overview.ChangeCompanyRequested += OpenCompanyEditor;
+        overview.EditCompanyRequested += OpenCompanyEditor;
         globalOverlay.AddOverlay(overview);
     }
 

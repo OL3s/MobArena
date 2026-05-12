@@ -122,11 +122,11 @@ public partial class TownHud : CanvasLayer
 			return;
 
 		var overview = CompanyOverviewScene.Instantiate<CompanyOverviewOverlay>();
-		overview.ChangeCompanyRequested += OnChangeCompanyRequested;
+		overview.EditCompanyRequested += OnEditCompanyRequested;
 		globalOverlay.AddOverlay(overview);
 	}
 
-	private void OnChangeCompanyRequested()
+	private void OnEditCompanyRequested()
 	{
 		OpenCompanyEditor();
 	}
