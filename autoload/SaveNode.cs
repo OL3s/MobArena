@@ -1,18 +1,22 @@
 using Godot;
+using System;
 using MobArena.Scripts.Resources;
 
 namespace MobArena.Scripts;
 
 public partial class SaveNode : Node
 {
-    [Signal]
-    public delegate void CompanyChangedEventHandler();
-
     [Export]
-    public bool HasCompany { get; private set; }
+    public bool HasCompany { get; set; }
 
     [Export]
     public CompanyLogoData CompanyLogoData { get; private set; } = CompanyLogoData.CreateDefault();
+
+    [Export]
+    public CompanyCareerData CompanyCareerData { get; private set; } = new();
+
+    [Export]
+    public CompanyRunData CompanyRunData { get; private set; } = new();
 
     [Export]
     public TownTimeState TownTimeState { get; private set; } = new();
@@ -23,15 +27,13 @@ public partial class SaveNode : Node
         return sceneTree?.Root?.GetNodeOrNull<SaveNode>("/root/SaveNode");
     }
 
-    public CompanyLogoData CreateEditableCompanyData()
+    public void Save()
     {
-        return CompanyLogoData.CreateCopy();
+        throw new NotImplementedException();
     }
 
-    public void ApplyCompanyData(CompanyLogoData companyLogoData)
+    public void Load()
     {
-        CompanyLogoData.CopyFrom(companyLogoData);
-        HasCompany = true;
-        EmitSignal(SignalName.CompanyChanged);
+        throw new NotImplementedException();
     }
 }

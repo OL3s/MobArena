@@ -36,7 +36,7 @@ Run these from the project root after changing assets, scenes, or C# code:
 - `autoload/SaveNode.tscn`: Runtime-only save node for temporary company data persistence between scenes.
 - `scenes/`: Godot scenes for the current game flow and reusable scene components.
 - `scripts/`: C# scripts attached to scenes.
-- `scripts/resources/`: Godot C# resources for shared game state, such as town time.
+- `scripts/resources/`: Godot C# resources for shared game state, such as town time and company career totals.
 - `assets/ui/company_shield_highres.svg`: Current project/app icon.
 - `docs/`: Project notes and working guidance, mainly written for AI agents collaborating on this codebase.
 
@@ -47,7 +47,7 @@ Run these from the project root after changing assets, scenes, or C# code:
 - `scenes/roster_hall.tscn`: Roster Hall management placeholder; unlike other town buildings, it opens as a separate scene.
 - `scenes/arena.tscn`: Arena combat placeholder with a neutral root, separate `World` node, and separate `ControllerUi` layer.
 
-The current flow is `Main Menu -> Town`, with `Town -> Roster Hall -> Town` for roster management. Other town buildings currently open modal overlay packed scenes.
+The current flow is `Main Menu -> Town`, with `Town -> Roster Hall -> Town` for roster management. Roster Hall is a town-like room with an empty `World`, the shared `TownHud`, and left-side room action buttons. Other town buildings currently open modal overlay packed scenes.
 
 The company shield in `assets/ui/company_shield_highres.svg` is also the project/app icon. In-game company logos use `CompanyLogo.tscn`, which layers a selectable shield and inner logo.
 
@@ -56,7 +56,9 @@ Each town building can assign `OverlayToOpen` for modal packed-scene overlays or
 Town building art and icons are assigned per instance through exported `BuildingTexture` and `IconTexture` fields.
 The town overlay tracks company status and gold at the top. The bottom timeline contains speed arrows cycling Paused/Slowed/Normal/Fast, a speed toggle button that pauses/restores the last running speed, the current day, a sun-to-moon day progress bar, and the champion deadline.
 Town time logic lives in `scripts/resources/TownTimeState.cs`; the shared runtime instance lives on `SaveNode.TownTimeState`. `TownHud.tscn`/`TownHud.cs` binds the top and bottom town HUD to that shared resource so Town and Roster Hall use the same clock.
-Company logo data lives in `scripts/resources/CompanyLogoData.cs`. Clicking the shield in town opens a `GlobalOverlay` editor for choosing shield and logo parts; persistence will be added later.
+Company logo data lives in `scripts/resources/CompanyLogoData.cs`. Clicking the shield in town opens `CompanyOverviewOverlay`, which shows the company name, logo, and lifetime career stats. Its `Change Company` button opens the editor for choosing shield, logo, and company name; persistence will be added later.
+Company run state lives in `scripts/resources/CompanyRunData.cs` and covers frequent mutable values such as current gold, the current gladiator list, and current run mob kills. `AliveGladiators` is derived from the current `GladiatorData` array. Company career totals live in `scripts/resources/CompanyCareerData.cs` and are separate long-term counters. Future reward/death/combat systems should update current values through run data methods such as `AddGold`, `TrySpendGold`, and `AddMobKilled`; those methods update career totals only when something additive is earned or killed. `SaveNode.Save()` and `SaveNode.Load()` are intentionally stubbed with `NotImplementedException` until disk persistence is added.
+The first roster overlay is `GladiatorsOverlay.tscn`, opened from Roster Hall's `Gladiators` button. It uses reusable `GladiatorCard.tscn` cards to show each current gladiator horizontally with portrait and name.
 Main menu requires creating a company before `Enter Town` is enabled. The default suggested company name is `The Bronze Lions`.
 
 ## Structure Principles

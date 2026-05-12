@@ -54,15 +54,11 @@ theme_override_constants/separation = 2
 
 [node name="GladiatorCount" type="Label" parent="TopPanel/Row/CompanyStatus/CompanyText/StatsRow" unique_id=1982990228]
 layout_mode = 2
-text = "Gladiators: 1"
-
-[node name="ArenaFightCount" type="Label" parent="TopPanel/Row/CompanyStatus/CompanyText/StatsRow" unique_id=83099248]
-layout_mode = 2
-text = "Arena fights: 0"
+text = "Gladiators owned: 1"
 
 [node name="ChampionsWonCount" type="Label" parent="TopPanel/Row/CompanyStatus/CompanyText/StatsRow" unique_id=1319320090]
 layout_mode = 2
-text = "Champions won: 0"
+text = "Champions slayed: 0"
 
 [node name="GoldPanel" type="PanelContainer" parent="TopPanel/Row" unique_id=2053172263]
 custom_minimum_size = Vector2(112, 0)

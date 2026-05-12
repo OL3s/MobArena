@@ -13,6 +13,7 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 - The game concept comes from `../GameIdeas/MobGladiator.md`.
 - `docs/game-design.md` contains the local implementation-oriented summary of that concept.
 - The initial scene flow is `scenes/main_menu.tscn` to `scenes/town.tscn`. Roster Hall opens as `scenes/roster_hall.tscn` and returns to town. Other town buildings currently open modal overlay packed scenes.
+- Roster Hall should stay town-like: neutral root, empty `World`, shared `TownHud.tscn`, and room-specific action buttons on the left side. Current roster actions should open overlays rather than replacing the room.
 - `scenes/town.tscn` and `scenes/arena.tscn` both use neutral roots with a separate `Node2D` world and `CanvasLayer` controller UI.
 - Town uses an implied horizontal-road layout with 1:1 buildings as `Node2D` instances of `scenes/components/town/TownBuilding.tscn` arranged in a 3x2 grid. The road is layout space only and is not drawn.
 - `TownBuilding` has exported `PackedScene` targets for `OverlayToOpen` and `SceneToOpen`. Use `OverlayToOpen` for town building UI that should stay over town; use `SceneToOpen` for full scene navigation such as Roster Hall.
@@ -23,7 +24,11 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 - The speed toggle button must expose speed as text plus icon for accessibility: Paused uses pause bars, Slowed uses a `|>` icon, Normal uses one play triangle, and Fast uses two overlapping triangles. Toggling from a running speed pauses to x0; toggling from x0 restores `LastRunningSpeed`.
 - Town time logic belongs in `scripts/resources/TownTimeState.cs`, not directly in room scripts. The shared runtime time state is `SaveNode.TownTimeState`, and reusable top/bottom HUD behavior belongs in `scenes/components/ui/TownHud.cs`/`.tscn`.
 - `TownTimeState.ResetToPause()` should be called when entering town flow from main menu or returning from arena combat. Town-like rooms should preserve the shared `SaveNode.TownTimeState` while navigating between each other.
-- Company logo selection belongs in `scripts/resources/CompanyLogoData.cs`. Use `CompanyLogo.tscn` to render shield and inner logo layers, and `CompanyLogoEditorOverlay.tscn` through `GlobalOverlay` to edit it. Do not add persistence yet.
+- Company logo selection belongs in `scripts/resources/CompanyLogoData.cs`. Use `CompanyLogo.tscn` to render shield and inner logo layers. In town, shield clicks should open `CompanyOverviewOverlay.tscn`; use its `Change Company` action to open `CompanyLogoEditorOverlay.tscn` through `GlobalOverlay`. Do not add persistence yet.
+- Company run state belongs in `scripts/resources/CompanyRunData.cs` and is separate from career totals. Track frequent mutable values there, including current gold, the current `GladiatorData` list, and current run mob kills. `AliveGladiators` is derived from the current gladiator array. Use its methods for changes such as `AddGold`, `TrySpendGold`, and `AddMobKilled`.
+- Reuse `scenes/components/ui/GladiatorCard.tscn` for compact gladiator presentation. The first roster list overlay is `scenes/ui/GladiatorsOverlay.tscn` and should display `CompanyRunData.Gladiators` horizontally.
+- Company career totals belong in `scripts/resources/CompanyCareerData.cs` and are separate from frequent current state. Track long-term additive values there, including total gladiators in career, gladiators dead, total gold earned, contracts completed, mobs killed, and champions defeated.
+- `SaveNode` should remain the runtime holder and future persistence boundary. Do not put gameplay mutation helpers there; `Save()` and `Load()` currently throw `NotImplementedException` until disk persistence is implemented.
 - Main menu should keep `Enter Town` disabled until `SaveNode.HasCompany` is true. The company editor should allow cancel only when company data already exists.
 - `.godot/` is ignored and should be treated as local editor state.
 
@@ -34,6 +39,7 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 - Keep documentation factual. If a feature does not exist yet, describe it as planned or absent rather than implying it is implemented.
 - Favor the first prototype loop before adding broader management systems: one gladiator, one arena, slimes, movement, attack, contract reward, death, and replacement.
 - When management systems are added, balance upkeep costs against arena income. Resting over time is cheaper with a small roster, healer speeds health recovery for gold, stamina cannot be healed by the healer, and Training Hall spends gold plus stamina to train gladiators.
+- Reward and combat systems should call run-data methods for current changes and career-data methods for lifetime-only events. They should not subtract from career totals when current state changes. Use `CompanyRunData.AddGold` for earned gold, `CompanyRunData.TrySpendGold` for spending current gold, and `CompanyRunData.AddMobKilled` when a mob dies during the current run.
 - Use `TownTimeState` APIs for time: `TickOneSecond`, `AdvanceMinutes`, `IncreaseSpeed`, `DecreaseSpeed`, `TogglePaused`, `GetSpeedLabel`, `GetDayLabel`, `GetDigitalTimeLabel`, `GetDayProgressValue`, `GetDayProgressMax`, `GetDayPhaseLabel`, `IsTownOpen`, `IsTownSleeping`, `AreStoresOpen`, `GetChampionProgressValue`, `GetChampionProgressMax`, `GetChampionDeadlineLabel`, and `IsChampionDue`.
 - Treat phone, controller, and desktop compatibility as a baseline requirement for input and UI decisions.
 - Keep town and arena scene logic split between `World` for game-space nodes and `ControllerUi` for HUD, controller navigation, touch controls, and overlays.

@@ -1,4 +1,5 @@
 using Godot;
+using MobArena.Scenes.Components.UI;
 using MobArena.Scenes.Components.Town;
 
 namespace MobArena.Scripts;
@@ -12,7 +13,7 @@ public partial class Town : Node
     public override void _Ready()
     {
         _contractBoard = GetNode<TownBuilding>("World/ContractBoard");
-        GetNode<MobArena.Scenes.Components.UI.TownHud>("ControllerUi").BackPressed += OnMainMenuPressed;
+        GetNode<TownHud>("TownHud").BackPressed += OnMainMenuPressed;
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)

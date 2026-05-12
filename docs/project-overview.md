@@ -51,11 +51,13 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - Room layouts should be authored in `.tscn` files. Scene scripts should look up existing nodes and attach behavior instead of generating the layout in code.
 - Use neutral scene roots when combining world and controller UI. Do not put controller UI under a `Node2D` root.
 - World layouts are authored for `1152x648`. Town and arena use centered `Camera2D` nodes so aspect-ratio expansion grows outward from the center through engine scene behavior.
+- Company overview is currently a `GlobalOverlay` modal opened from the town shield. It displays lifetime counters from `CompanyCareerData`, held by `SaveNode` until real persistence is implemented.
+- Roster Hall is a town-like room with an empty `World`, shared `TownHud`, and left-side room actions. The current `Gladiators` action opens a horizontal gladiator-list overlay using reusable gladiator cards.
 
 ## Not Yet Present
 
 - Gameplay combat scripts
-- Player, mob, contract, roster, gear, upkeep, healing, stamina, training, champion deadline, or full city UI systems
+- Player, mob, contract, roster, gear, upkeep, healing, stamina, training, champion deadline failure handling, or full city UI systems
 - Export presets
 
 ## Intended First Prototype

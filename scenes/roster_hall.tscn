@@ -25,12 +25,28 @@ layer = 0
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
+offset_left = 180.0
 offset_top = 112.0
 offset_right = -24.0
 offset_bottom = -88.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="LeftActions" type="VBoxContainer" parent="ControllerUi"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 24.0
+offset_top = 128.0
+offset_right = -996.0
+offset_bottom = 320.0
+grow_horizontal = 2
+theme_override_constants/separation = 10
+
+[node name="GladiatorsButton" type="Button" parent="ControllerUi/LeftActions"]
+custom_minimum_size = Vector2(132, 54)
+layout_mode = 2
+focus_mode = 2
+text = "Gladiators"
 
 [node name="MarginContainer" type="MarginContainer" parent="ControllerUi/Panel"]
 layout_mode = 2

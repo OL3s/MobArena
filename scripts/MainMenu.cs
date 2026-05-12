@@ -8,7 +8,9 @@ public partial class MainMenu : Control
 {
     private const string TownScene = "res://scenes/town.tscn";
     private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
+    private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
     private static readonly PackedScene CompanyLogoEditorScene = ResourceLoader.Load<PackedScene>(CompanyLogoEditorScenePath);
+    private static readonly PackedScene CompanyOverviewScene = ResourceLoader.Load<PackedScene>(CompanyOverviewScenePath);
 
     private CompanyLogo _companyLogo;
     private Button _createCompanyButton;
@@ -23,7 +25,7 @@ public partial class MainMenu : Control
         _enterTownButton = GetNode<Button>("MenuRow/Content/EnterTownButton");
 
         _createCompanyButton.Pressed += OnCreateCompanyPressed;
-        _companyLogo.Pressed += OnCreateCompanyPressed;
+        _companyLogo.Pressed += OnCompanyLogoPressed;
         _enterTownButton.Pressed += OnEnterTownPressed;
 
         GetNode<Button>("MenuRow/Content/QuitButton").Pressed += OnQuitPressed;
@@ -43,18 +45,43 @@ public partial class MainMenu : Control
 
     private void OnCreateCompanyPressed()
     {
+        OpenCompanyEditor();
+    }
+
+    private void OnCompanyLogoPressed()
+    {
+        if (_saveNode is { HasCompany: true })
+            OpenCompanyOverview();
+        else
+            OpenCompanyEditor();
+    }
+
+    private void OpenCompanyOverview()
+    {
+        var globalOverlay = GlobalOverlay.Get();
+        if (globalOverlay == null || CompanyOverviewScene == null)
+            return;
+
+        var overview = CompanyOverviewScene.Instantiate<CompanyOverviewOverlay>();
+        overview.ChangeCompanyRequested += OpenCompanyEditor;
+        globalOverlay.AddOverlay(overview);
+    }
+
+    private void OpenCompanyEditor()
+    {
         var globalOverlay = GlobalOverlay.Get();
         if (globalOverlay == null || CompanyLogoEditorScene == null || _saveNode == null)
             return;
 
         var editor = CompanyLogoEditorScene.Instantiate<CompanyLogoEditorOverlay>();
-        editor.Configure(_saveNode.CreateEditableCompanyData(), _saveNode.HasCompany, OnCompanyApplied);
+        editor.Configure(_saveNode.CompanyLogoData.CreateCopy(), _saveNode.HasCompany, OnCompanyApplied);
         globalOverlay.AddOverlay(editor);
     }
 
     private void OnCompanyApplied(MobArena.Scripts.Resources.CompanyLogoData logoData)
     {
-        _saveNode.ApplyCompanyData(logoData);
+        _saveNode.CompanyLogoData.CopyFrom(logoData);
+        _saveNode.HasCompany = true;
         RefreshCompanyUi();
     }
 
