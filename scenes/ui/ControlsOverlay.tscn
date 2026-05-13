@@ -1,8 +1,6 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/ControlsOverlay.cs" id="1_local_coop"]
-[ext_resource type="Texture2D" path="res://assets/ui/input_icons/xbox_button_a.svg" id="2_xbox_a"]
-[ext_resource type="Texture2D" path="res://assets/ui/input_icons/keyboard_backspace.svg" id="3_backspace"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="4_blur_shader"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_local_coop_blur"]
@@ -38,7 +36,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="PopupPanel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(760, 380)
+custom_minimum_size = Vector2(860, 430)
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel"]
@@ -58,74 +56,34 @@ theme_override_font_sizes/font_size = 28
 text = "Controls"
 horizontal_alignment = 1
 
-[node name="InputSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="InputSettings" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 44
+alignment = 1
 
 [node name="AutoDetectCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Content/InputSettings"]
 layout_mode = 2
-text = "Auto-detect primary input when game starts"
+text = "Auto-detect primary input"
 
 [node name="DefaultInputRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/InputSettings"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="DefaultInputLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/InputSettings/DefaultInputRow"]
-custom_minimum_size = Vector2(190, 0)
+custom_minimum_size = Vector2(112, 0)
 layout_mode = 2
-text = "Default primary input"
+text = "Primary input"
 vertical_alignment = 1
 
 [node name="DefaultInputOption" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/InputSettings/DefaultInputRow"]
-custom_minimum_size = Vector2(220, 44)
+custom_minimum_size = Vector2(172, 44)
 layout_mode = 2
-
-[node name="CurrentLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
-layout_mode = 2
-text = "Current connected"
-horizontal_alignment = 1
 
 [node name="ConnectedRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 210)
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 18
 alignment = 1
-
-[node name="PromptRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
-layout_mode = 2
-theme_override_constants/separation = 28
-alignment = 1
-
-[node name="JoinPrompt" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/PromptRow"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/PromptRow/JoinPrompt"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-texture = ExtResource("2_xbox_a")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Label" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/PromptRow/JoinPrompt"]
-layout_mode = 2
-text = "Press A to join"
-vertical_alignment = 1
-
-[node name="LeavePrompt" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/PromptRow"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/PromptRow/LeavePrompt"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-texture = ExtResource("3_backspace")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Label" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/PromptRow/LeavePrompt"]
-layout_mode = 2
-text = "Press Backspace to leave"
-vertical_alignment = 1
 
 [node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 custom_minimum_size = Vector2(180, 52)
