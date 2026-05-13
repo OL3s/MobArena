@@ -32,6 +32,62 @@ public partial class ControlsOverlay : Control
 		RefreshUi();
 	}
 
+	public override void _UnhandledInput(InputEvent inputEvent)
+	{
+		if (inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Enter or Key.KpEnter })
+		{
+			if (LocalInputConfig.Get()?.TryJoinKeyboard() == true)
+			{
+				GetViewport()?.SetInputAsHandled();
+				RefreshUi();
+			}
+
+			return;
+		}
+
+		if (inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Backspace })
+		{
+			if (LocalInputConfig.Get()?.TryLeaveKeyboard() == true)
+			{
+				GetViewport()?.SetInputAsHandled();
+				RefreshUi();
+			}
+
+			return;
+		}
+
+		if (inputEvent is InputEventScreenTouch { Pressed: true })
+		{
+			if (LocalInputConfig.Get()?.TryJoinTouch() == true)
+			{
+				GetViewport()?.SetInputAsHandled();
+				RefreshUi();
+			}
+
+			return;
+		}
+
+		if (inputEvent is not InputEventJoypadButton { Pressed: true } joypadButton)
+			return;
+
+		var localInputConfig = LocalInputConfig.Get();
+		if (localInputConfig == null)
+			return;
+
+		var changed = joypadButton.ButtonIndex switch
+		{
+			JoyButton.A => localInputConfig.TryJoinGamepad(joypadButton.Device),
+			JoyButton.B => localInputConfig.TryLeaveGamepad(joypadButton.Device),
+			_ => false
+		};
+
+		if (!changed)
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+		RefreshUi();
+	}
+
 	private void RefreshUi()
 	{
 		_refreshingUi = true;
@@ -55,13 +111,13 @@ public partial class ControlsOverlay : Control
 		_defaultInputOption.Disabled = settingsConfig.AutoDetectPrimaryInput;
 		_defaultInputLabel.Modulate = _defaultInputOption.Disabled ? new Color(1, 1, 1, 0.45f) : Colors.White;
 		_defaultInputOption.Select(_defaultInputOption.GetItemIndex((int)settingsConfig.DefaultPrimaryInput));
-		_closeButton.Disabled = localInputConfig.ControllerSetups.Count == 0;
+		_closeButton.Disabled = localInputConfig.ControllerSetups.Count <= 0;
 
 		for (var index = 0; index < localInputConfig.ControllerSetups.Count; index++)
 			AddDeviceChip(localInputConfig.ControllerSetups[index], index + 1);
 
 		if (localInputConfig.ControllerSetups.Count < LocalInputConfig.MaxLocalPlayers)
-			AddJoinChip(localInputConfig.JoinPromptIcon);
+			AddJoinChip(localInputConfig);
 
 		_refreshingUi = false;
 	}
@@ -95,15 +151,26 @@ public partial class ControlsOverlay : Control
 	private void AddDeviceChip(LocalInputControllerConfig controllerSetup, int slotNumber)
 	{
 		var localInputConfig = LocalInputConfig.Get();
-		AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.LeavePromptIcon, "To Leave", ConnectedChipStyle);
+		AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.GetLeavePromptIcon(controllerSetup), "To Leave", ConnectedChipStyle);
 	}
 
-	private void AddJoinChip(Texture2D icon)
+	private void AddJoinChip(LocalInputConfig localInputConfig)
 	{
-		AddChip("Press", string.Empty, icon, "To join", JoinChipStyle);
+		var icons = new Godot.Collections.Array<Texture2D>();
+		if (!localInputConfig.HasKeyboardSetup())
+			icons.Add(localInputConfig.KeyboardJoinPromptIcon);
+
+		icons.Add(localInputConfig.JoinPromptIcon);
+		var touchText = localInputConfig.HasTouchSetup() ? string.Empty : "or touch";
+		AddChip("Press", string.Empty, icons, touchText, "to join", JoinChipStyle);
 	}
 
 	private void AddChip(string topText, string middleText, Texture2D icon, string bottomText, StyleBoxFlat style)
+	{
+		AddChip(topText, middleText, new Godot.Collections.Array<Texture2D> { icon }, string.Empty, bottomText, style);
+	}
+
+	private void AddChip(string topText, string middleText, Godot.Collections.Array<Texture2D> icons, string touchText, string bottomText, StyleBoxFlat style)
 	{
 		var panel = new PanelContainer
 		{
@@ -135,13 +202,29 @@ public partial class ControlsOverlay : Control
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 
-		var textureRect = new TextureRect
+		var iconRow = new HBoxContainer();
+		iconRow.AddThemeConstantOverride("separation", 8);
+		iconRow.Alignment = BoxContainer.AlignmentMode.Center;
+
+		foreach (var icon in icons)
 		{
-			CustomMinimumSize = new Vector2(64, 64),
-			Texture = icon,
-			ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-			StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
+			var textureRect = new TextureRect
+			{
+				CustomMinimumSize = new Vector2(56, 56),
+				Texture = icon,
+				ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
+			};
+			iconRow.AddChild(textureRect);
+		}
+
+		var touchLabel = new Label
+		{
+			Text = touchText,
+			HorizontalAlignment = HorizontalAlignment.Center
 		};
+		touchLabel.AddThemeFontSizeOverride("font_size", 13);
+		touchLabel.Modulate = new Color(1, 1, 1, 0.72f);
 
 		var bottomLabel = new Label
 		{
@@ -152,7 +235,9 @@ public partial class ControlsOverlay : Control
 		chip.AddChild(topLabel);
 		if (!string.IsNullOrEmpty(middleText))
 			chip.AddChild(middleLabel);
-		chip.AddChild(textureRect);
+		chip.AddChild(iconRow);
+		if (!string.IsNullOrEmpty(touchText))
+			chip.AddChild(touchLabel);
 		chip.AddChild(bottomLabel);
 		margin.AddChild(chip);
 		panel.AddChild(margin);
