@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Local co-op icon</title>
+  <rect x="15" y="34" width="98" height="60" rx="24" fill="#1F2937" stroke="#E8EDF2" stroke-width="8"/>
+  <circle cx="44" cy="64" r="11" fill="#E8EDF2"/>
+  <rect x="39" y="47" width="10" height="34" rx="3" fill="#E8EDF2"/>
+  <rect x="27" y="59" width="34" height="10" rx="3" fill="#E8EDF2"/>
+  <circle cx="82" cy="56" r="6" fill="#16A34A"/>
+  <circle cx="95" cy="69" r="6" fill="#DC2626"/>
+  <circle cx="82" cy="82" r="6" fill="#2563EB"/>
+  <circle cx="69" cy="69" r="6" fill="#EAB308"/>
+</svg>

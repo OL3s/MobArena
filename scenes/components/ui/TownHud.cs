@@ -49,7 +49,6 @@ public partial class TownHud : CanvasLayer
 		_companyLogo.SetLogoData(_saveNode?.CompanyLogoData ?? CompanyLogoData.CreateDefault());
 		_companyLogo.Pressed += OpenCompanyOverview;
 		companyStatus.GuiInput += OnCompanyStatusGuiInput;
-		GetNode<Button>("TopPanel/Row/SettingsButton").Pressed += OnSettingsPressed;
 		GetNode<Button>("TopPanel/Row/BackButton").Pressed += OnBackPressed;
 		GetNode<Button>("BottomPanel/TimeRow/SpeedDownButton").Pressed += OnSpeedDownPressed;
 		_speedToggleButton.Pressed += OnPausePressed;
@@ -73,13 +72,6 @@ public partial class TownHud : CanvasLayer
 	private void OnBackPressed()
 	{
 		EmitSignal(SignalName.BackPressed);
-	}
-
-	private static void OnSettingsPressed()
-	{
-		GlobalOverlay.Get()?.ShowBlurredPopup(
-			"Settings",
-			"Settings are not implemented yet. This button is wired so it gives clear feedback instead of doing nothing.");
 	}
 
 	private void OnSpeedDownPressed()

@@ -18,8 +18,11 @@ public partial class SaveNode : Node
     [Export]
     public CompanyRunData CompanyRunData { get; private set; } = new();
 
-    [Export]
-    public TownTimeState TownTimeState { get; private set; } = new();
+	[Export]
+	public TownTimeState TownTimeState { get; private set; } = new();
+
+	[Export]
+	public SettingsConfig SettingsConfig { get; private set; } = new();
 
     public static SaveNode Get()
     {

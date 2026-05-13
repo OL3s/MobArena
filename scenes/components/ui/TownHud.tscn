@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://n8gksqgankej" path="res://scenes/components/ui/TownHud.cs" id="1_town_hud"]
 [ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_company_logo"]
 [ext_resource type="Texture2D" uid="uid://kx7nhxd23e1n" path="res://assets/ui/icons/champion.svg" id="3_champion_icon"]
-[ext_resource type="Texture2D" uid="uid://c141ktn80ivn1" path="res://assets/ui/icons/settings.svg" id="4_settings_icon"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/SettingsButton.tscn" id="4_settings_button"]
 [ext_resource type="Texture2D" uid="uid://budosbjkhbjtt" path="res://assets/ui/icons/gold.svg" id="5_gold_icon"]
 [ext_resource type="Texture2D" uid="uid://ouifl3o34tw2" path="res://assets/ui/icons/back.svg" id="6_back_icon"]
 [ext_resource type="Texture2D" uid="uid://e8d8p35m62tr" path="res://assets/ui/icons/speed_down.svg" id="7_speed_down_icon"]
@@ -82,11 +82,8 @@ text = "100"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SettingsButton" type="Button" parent="TopPanel/Row" unique_id=665519815]
-custom_minimum_size = Vector2(128, 56)
+[node name="SettingsButton" parent="TopPanel/Row" unique_id=665519815 instance=ExtResource("4_settings_button")]
 layout_mode = 2
-text = "Settings"
-icon = ExtResource("4_settings_icon")
 
 [node name="BackButton" type="Button" parent="TopPanel/Row" unique_id=649788314]
 custom_minimum_size = Vector2(112, 56)
