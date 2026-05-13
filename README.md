@@ -34,9 +34,11 @@ Run these from the project root after changing assets, scenes, or C# code:
 - `MobArena.csproj`: Godot C# project file.
 - `autoload/overlay/`: Global overlay autoload for blurred popups and confirmation dialogs.
 - `autoload/SaveNode.tscn`: Runtime-only save node for temporary company data persistence between scenes.
+- `autoload/LocalInputConfig.tscn`: Runtime input/controller configuration autoload for local players and primary input selection.
 - `scenes/`: Godot scenes for the current game flow and reusable scene components.
 - `scripts/`: C# scripts attached to scenes.
 - `scripts/resources/`: Godot C# resources for shared game state, such as town time and company career totals.
+- `assets/ui/input_icons/`: Imported input prompt icons used by controls and local co-op UI.
 - `assets/ui/company_shield_highres.svg`: Current project/app icon.
 - `docs/`: Project notes and working guidance, mainly written for AI agents collaborating on this codebase.
 
@@ -56,10 +58,13 @@ Each town building can assign `OverlayToOpen` for modal packed-scene overlays or
 Town building art and icons are assigned per instance through exported `BuildingTexture` and `IconTexture` fields.
 The town overlay tracks company status and gold at the top. The bottom timeline contains speed arrows cycling Paused/Slowed/Normal/Fast, a speed toggle button that pauses/restores the last running speed, the current day, a sun-to-moon day progress bar, and the champion deadline.
 Town time logic lives in `scripts/resources/TownTimeState.cs`; the shared runtime instance lives on `SaveNode.TownTimeState`. `TownHud.tscn`/`TownHud.cs` binds the top and bottom town HUD to that shared resource so Town and Roster Hall use the same clock.
+Settings state lives in `scripts/resources/SettingsConfig.cs`; the runtime instance lives on `SaveNode.SettingsConfig`. It currently stores the primary input preference for controls: auto-detect on/off and a default primary input of Keyboard, Touch, or Gamepad.
 Company logo data lives in `scripts/resources/CompanyLogoData.cs`. Clicking the shield in town opens `CompanyOverviewOverlay`, which shows the company name, logo, and lifetime career stats. Its `Edit Company` button opens the editor for choosing shield, logo, and company name; persistence will be added later.
 Company run state lives in `scripts/resources/CompanyRunData.cs` and covers frequent mutable values such as current gold, the current gladiator list, and current run mob kills. `AliveGladiators` is derived from the current `GladiatorData` array. Company career totals live in `scripts/resources/CompanyCareerData.cs` and are separate long-term counters. Future reward/death/combat systems should update current values through run data methods such as `AddGold`, `TrySpendGold`, and `AddMobKilled`; those methods update career totals only when something additive is earned or killed. `SaveNode.Save()` and `SaveNode.Load()` are intentionally stubbed with `NotImplementedException` until disk persistence is added.
 The first roster overlay is `GladiatorsOverlay.tscn`, opened from Roster Hall's `Gladiators` button. It uses reusable `GladiatorCard.tscn` cards to show each current gladiator horizontally with portrait and name.
 Main menu requires creating a company before `Enter Town` is enabled. The default suggested company name is `The Bronze Lions`.
+The main menu top-right controls include reusable `SettingsButton.tscn` and a `Controls` button. The Controls button opens `ControlsOverlay.tscn` through `GlobalOverlay`; this overlay uses the shared blur backdrop shader and renders connected input setups from `LocalInputConfig.ControllerSetups`.
+Local input setup is split between `LocalInputConfig` and resources. `LocalInputConfig` is an autoload `Node` because Godot autoloads need scene/node ownership. It owns a runtime `Array<LocalInputControllerConfig>` where each resource describes one setup with name, kind, device id, icon, and joined state. Backend join/leave behavior is not implemented yet; the current overlay is configuration/display scaffolding for up to four local players.
 
 ## Structure Principles
 

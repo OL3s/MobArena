@@ -4,7 +4,7 @@ This file captures what to focus on next. Update it near the end of a session so
 
 ## Next Focus
 
-Continue building the company and gladiator data structure layer now that the first company overview and career counters exist.
+Continue building the company/gladiator data structure layer, while keeping the new controls/input configuration path ready for future gameplay input work.
 
 Priorities:
 
@@ -18,3 +18,4 @@ Priorities:
 - Keep disk persistence out for now unless explicitly requested.
 - Make the data usable by Town, Roster Hall, and future arena combat without duplicating state.
 - Keep the first version minimal and focused on supporting one starting gladiator, roster display, death/replacement, and future contract rewards that update both current state and career counters correctly.
+- When input work resumes, add actual join/leave mutation to `LocalInputConfig` and keep `ControlsOverlay` as a renderer/editor for `SaveNode.SettingsConfig` plus `LocalInputConfig.ControllerSetups`.

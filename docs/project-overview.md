@@ -10,10 +10,12 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - `MobArena.csproj` configures the Godot C# project.
 - `autoload/overlay/GlobalOverlay.tscn` is an autoloaded overlay layer for modal UI.
 - `autoload/SaveNode.tscn` is an autoloaded runtime-only save node for temporary company data between scenes.
+- `autoload/LocalInputConfig.tscn` is an autoloaded runtime input configuration node for local controller setup.
 - `scenes/components/panels/InfoPopupPanel.tscn` provides a blurred OK popup.
 - `scenes/components/panels/GoCancelPopupPanel.tscn` provides a blurred Go/Cancel popup.
 - `scenes/components/town/TownBuilding.tscn` is the reusable town building template with an exported `PackedScene` target to open.
 - `scenes/main_menu.tscn` is the configured main scene.
+- `scenes/ui/ControlsOverlay.tscn` is the current controls/input configuration overlay opened from the main menu.
 - `scenes/town.tscn` is the between-fights management scene. It uses a neutral root with a `Node2D` world plus a `CanvasLayer` controller UI.
 - `scenes/arena.tscn` is the arena contract placeholder. It uses a neutral root with a `Node2D` world plus a `CanvasLayer` controller UI.
 - `scripts/MainMenu.cs`, `scripts/Town.cs`, and `scripts/Arena.cs` contain the C# scripts for the initial navigation flow.
@@ -35,11 +37,14 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - Town and arena should keep world objects under a `Node2D` named `World`.
 - Town and arena should keep HUD, controller navigation, touch controls, and menu overlays under a `CanvasLayer` named `ControllerUi`.
 - Town time state and time API live in `scripts/resources/TownTimeState.cs` as a Godot `Resource`; the shared runtime instance is stored on `SaveNode.TownTimeState`.
+- Settings state lives in `scripts/resources/SettingsConfig.cs` as a Godot `Resource`; the shared runtime instance is stored on `SaveNode.SettingsConfig` until real profile persistence is implemented.
+- Local input controller setup rows live in `scripts/resources/LocalInputControllerConfig.cs` as Godot `Resource`s. `LocalInputConfig.ControllerSetups` is a runtime `Array<LocalInputControllerConfig>` rebuilt from connected devices and settings.
 - `scenes/components/ui/TownHud.tscn` and `TownHud.cs` provide the reusable top and bottom town HUD used by town-like rooms.
 - Company logo state lives in `scripts/resources/CompanyLogoData.cs` as a Godot `Resource`.
 - `scenes/components/ui/CompanyLogo.tscn` renders the logo as two layers: shield and inner logo.
 - `scenes/ui/CompanyLogoEditorOverlay.tscn` edits logo data through `GlobalOverlay`.
 - Main menu disables `Enter Town` until company name/logo data is applied through the editor.
+- Main menu top-right UI has reusable settings and controls buttons. `SettingsButton.tscn` currently opens a placeholder feedback popup. The Controls button opens `ControlsOverlay.tscn` through `GlobalOverlay`.
 - Town buildings are represented by reusable `TownBuilding.tscn` `Node2D` instances positioned in the `World` layer.
 - `TownBuilding.tscn` contains the building SVG sprite, icon SVG sprite, text label, and `Area2D` interaction hitbox in one scene file.
 - Each `TownBuilding` instance can assign unique `BuildingTexture` and `IconTexture` exports.
@@ -47,6 +52,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - Town currently includes Arena, Gladiator Market, Blacksmith, Healer, Roster Hall, and Training Hall buildings.
 - `TownBuilding.OverlayToOpen` opens modal packed-scene building UI over town. `TownBuilding.SceneToOpen` navigates to another scene and should be reserved for buildings like Roster Hall.
 - Shared modal popups should go through `GlobalOverlay` instead of being attached directly to town or arena scenes.
+- Custom overlays such as `ControlsOverlay.tscn` should also be opened through `GlobalOverlay.AddOverlay`. If they need a blurred modal feel, reuse `assets/shaders/PopupBlurBackdrop.gdshader` on a fullscreen backdrop.
 - Keep this split intact so phone, controller, and desktop interactions can share the same scene without mixing gameplay world nodes and interface overlays.
 - Room layouts should be authored in `.tscn` files. Scene scripts should look up existing nodes and attach behavior instead of generating the layout in code.
 - Use neutral scene roots when combining world and controller UI. Do not put controller UI under a `Node2D` root.
@@ -54,10 +60,20 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - Company overview is currently a `GlobalOverlay` modal opened from the town shield. It displays lifetime counters from `CompanyCareerData`, held by `SaveNode` until real persistence is implemented.
 - Roster Hall is a town-like room with an empty `World`, shared `TownHud`, and left-side room actions. The current `Gladiators` action opens a horizontal gladiator-list overlay using reusable gladiator cards.
 
+## Settings And Input
+
+- `SettingsConfig.AutoDetectPrimaryInput` controls whether the game chooses the primary input mode from platform/device state.
+- `SettingsConfig.DefaultPrimaryInput` stores the hard-set primary input when auto-detect is off. Valid modes are Keyboard, Touch, and Gamepad.
+- Auto-detect currently maps console-like platforms to Gamepad, mobile to Gamepad when a gamepad is connected or Touch otherwise, and desktop to Keyboard.
+- The controls overlay displays currently configured inputs from `LocalInputConfig.ControllerSetups`; it does not yet implement real join/leave backend behavior.
+- Gamepad prompts use imported icons under `assets/ui/input_icons/`. Desktop keyboard primary input is labeled as Keyboard but currently uses the mouse icon for compact visual display.
+- Local co-op is planned for up to four local players. Keep future join/leave mutation in `LocalInputConfig` so gameplay scenes can query the same source of truth.
+
 ## Not Yet Present
 
 - Gameplay combat scripts
 - Player, mob, contract, roster, gear, upkeep, healing, stamina, training, champion deadline failure handling, or full city UI systems
+- Real local co-op join/leave input handling and per-player gameplay spawning
 - Export presets
 
 ## Intended First Prototype

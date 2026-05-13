@@ -10,6 +10,7 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 - `MobArena.csproj` is the Godot C# project file.
 - `GlobalOverlay` is autoloaded from `autoload/overlay/GlobalOverlay.tscn` for blurred popups and modal overlays.
 - `SaveNode` is autoloaded from `autoload/SaveNode.tscn` for temporary runtime company data and shared town time between scenes. It is not persistent storage yet.
+- `LocalInputConfig` is autoloaded from `autoload/LocalInputConfig.tscn` for runtime local input/controller setup. It reads user-facing input preferences from `SaveNode.SettingsConfig` and exposes `ControllerSetups` for UI to render.
 - The game concept comes from `../GameIdeas/MobGladiator.md`.
 - `docs/game-design.md` contains the local implementation-oriented summary of that concept.
 - The initial scene flow is `scenes/main_menu.tscn` to `scenes/town.tscn`. Roster Hall opens as `scenes/roster_hall.tscn` and returns to town. Other town buildings currently open modal overlay packed scenes.
@@ -29,7 +30,10 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 - Reuse `scenes/components/ui/GladiatorCard.tscn` for compact gladiator presentation. The first roster list overlay is `scenes/ui/GladiatorsOverlay.tscn` and should display `CompanyRunData.Gladiators` horizontally.
 - Company career totals belong in `scripts/resources/CompanyCareerData.cs` and are separate from frequent current state. Track long-term additive values there, including total gladiators in career, gladiators dead, total gold earned, contracts completed, mobs killed, and champions defeated.
 - `SaveNode` should remain the runtime holder and future persistence boundary. Do not put gameplay mutation helpers there; `Save()` and `Load()` currently throw `NotImplementedException` until disk persistence is implemented.
+- Settings resources that should eventually persist with save/profile data belong on `SaveNode`. Current settings are in `scripts/resources/SettingsConfig.cs`, exposed as `SaveNode.SettingsConfig`.
+- Local input controller rows are represented by `scripts/resources/LocalInputControllerConfig.cs`. Do not hardcode connected-device rows directly in UI scenes; refresh and read `LocalInputConfig.ControllerSetups` instead.
 - Main menu should keep `Enter Town` disabled until `SaveNode.HasCompany` is true. The company editor should allow cancel only when company data already exists.
+- Main menu top-right controls use `SettingsButton.tscn` for reusable settings feedback and `ControlsOverlay.tscn` for controls/input setup. The controls overlay should stay modal through `GlobalOverlay` and keep the blur backdrop.
 - `.godot/` is ignored and should be treated as local editor state.
 
 ## Development Guidelines
@@ -42,6 +46,8 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 - Reward and combat systems should call run-data methods for current changes and career-data methods for lifetime-only events. They should not subtract from career totals when current state changes. Use `CompanyRunData.AddGold` for earned gold, `CompanyRunData.TrySpendGold` for spending current gold, and `CompanyRunData.AddMobKilled` when a mob dies during the current run.
 - Use `TownTimeState` APIs for time: `TickOneSecond`, `AdvanceMinutes`, `IncreaseSpeed`, `DecreaseSpeed`, `TogglePaused`, `GetSpeedLabel`, `GetDayLabel`, `GetDigitalTimeLabel`, `GetDayProgressValue`, `GetDayProgressMax`, `GetDayPhaseLabel`, `IsTownOpen`, `IsTownSleeping`, `AreStoresOpen`, `GetChampionProgressValue`, `GetChampionProgressMax`, `GetChampionDeadlineLabel`, and `IsChampionDue`.
 - Treat phone, controller, and desktop compatibility as a baseline requirement for input and UI decisions.
+- For primary input selection, preserve the `SettingsConfig.AutoDetectPrimaryInput` flow: console-like platforms auto-detect Gamepad; mobile auto-detects Gamepad when one is connected, otherwise Touch; desktop auto-detects Keyboard. If auto-detect is off, use `SettingsConfig.DefaultPrimaryInput`.
+- Controller configuration is intentionally split from local co-op join logic. UI can show up to four local slots and prompts, but actual join/leave backend should be added to `LocalInputConfig` rather than directly to `ControlsOverlay`.
 - Keep town and arena scene logic split between `World` for game-space nodes and `ControllerUi` for HUD, controller navigation, touch controls, and overlays.
 - Author room layouts as real `.tscn` node trees. C# should wire behavior, signals, and scene transitions rather than constructing whole room layouts at runtime.
 - Prefer decoupling and deconstructing repeated pieces into reusable `.tscn` components instead of duplicating behavior in parent scene scripts.
@@ -49,6 +55,7 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 - Do not use a `Node2D` root for scenes that also own controller UI. Use a neutral `Node` root, with `World` and `ControllerUi` as siblings.
 - Author world layouts in the `1152x648` frame. Use centered `Camera2D` nodes for scenes with a `World` node so wider/taller aspect ratios expand from the center through engine scene behavior, not resize code.
 - Use `GlobalOverlay.ShowBlurredPopup` for informational modal text and `GlobalOverlay.ShowGoCancelPopup` for confirmation flows.
+- Use `GlobalOverlay.AddOverlay` for custom overlay scenes such as `ControlsOverlay.tscn`; custom overlays that should visually match popups can reuse `assets/shaders/PopupBlurBackdrop.gdshader` on a fullscreen `ColorRect`.
 - Preserve Godot-generated file formats and avoid hand-editing generated files unless there is a specific reason.
 - Keep repository files text-normalized with LF line endings.
 
