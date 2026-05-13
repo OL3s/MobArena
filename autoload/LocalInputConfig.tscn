@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/input_icons/mouse_left_button.svg" id="4_mouse_left"]
 [ext_resource type="Texture2D" path="res://assets/ui/input_icons/keyboard_enter.svg" id="5_enter"]
 [ext_resource type="Texture2D" path="res://assets/ui/input_icons/keyboard_backspace.svg" id="6_backspace"]
-[ext_resource type="Texture2D" path="res://assets/ui/input_icons/device_phone.png" id="7_phone"]
+[ext_resource type="Texture2D" path="res://assets/ui/input_icons/phone_touch.svg" id="7_phone"]
 
 [node name="LocalInputConfig" type="Node"]
 script = ExtResource("1_local_input_config")

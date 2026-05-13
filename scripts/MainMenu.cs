@@ -10,9 +10,6 @@ public partial class MainMenu : Control
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
 	private const string ControlsOverlayScenePath = "res://scenes/ui/ControlsOverlay.tscn";
-	private static readonly PackedScene CompanyLogoEditorScene = ResourceLoader.Load<PackedScene>(CompanyLogoEditorScenePath);
-	private static readonly PackedScene CompanyOverviewScene = ResourceLoader.Load<PackedScene>(CompanyOverviewScenePath);
-	private static readonly PackedScene ControlsOverlayScene = ResourceLoader.Load<PackedScene>(ControlsOverlayScenePath);
 
 	private CompanyLogo _companyLogo;
 	private Button _createCompanyButton;
@@ -53,10 +50,11 @@ public partial class MainMenu : Control
 
 	private static void OnControlsPressed()
 	{
-		if (ControlsOverlayScene == null)
+		var controlsOverlayScene = ResourceLoader.Load<PackedScene>(ControlsOverlayScenePath);
+		if (controlsOverlayScene == null)
 			return;
 
-		GlobalOverlay.Get()?.AddOverlay(ControlsOverlayScene.Instantiate<ControlsOverlay>());
+		GlobalOverlay.Get()?.AddOverlay(controlsOverlayScene.Instantiate<ControlsOverlay>());
 	}
 
     private void OnCompanyLogoPressed()
@@ -69,22 +67,24 @@ public partial class MainMenu : Control
 
     private void OpenCompanyOverview()
     {
-        var globalOverlay = GlobalOverlay.Get();
-        if (globalOverlay == null || CompanyOverviewScene == null)
-            return;
+		var globalOverlay = GlobalOverlay.Get();
+		var companyOverviewScene = ResourceLoader.Load<PackedScene>(CompanyOverviewScenePath);
+		if (globalOverlay == null || companyOverviewScene == null)
+			return;
 
-        var overview = CompanyOverviewScene.Instantiate<CompanyOverviewOverlay>();
+		var overview = companyOverviewScene.Instantiate<CompanyOverviewOverlay>();
         overview.EditCompanyRequested += OpenCompanyEditor;
         globalOverlay.AddOverlay(overview);
     }
 
     private void OpenCompanyEditor()
     {
-        var globalOverlay = GlobalOverlay.Get();
-        if (globalOverlay == null || CompanyLogoEditorScene == null || _saveNode == null)
-            return;
+		var globalOverlay = GlobalOverlay.Get();
+		var companyLogoEditorScene = ResourceLoader.Load<PackedScene>(CompanyLogoEditorScenePath);
+		if (globalOverlay == null || companyLogoEditorScene == null || _saveNode == null)
+			return;
 
-        var editor = CompanyLogoEditorScene.Instantiate<CompanyLogoEditorOverlay>();
+		var editor = companyLogoEditorScene.Instantiate<CompanyLogoEditorOverlay>();
         editor.Configure(_saveNode.CompanyLogoData.CreateCopy(), _saveNode.HasCompany, OnCompanyApplied);
         globalOverlay.AddOverlay(editor);
     }
@@ -109,6 +109,7 @@ public partial class MainMenu : Control
 
 	private void OnQuitPressed()
     {
-        GetTree().Quit();
+        GlobalOverlay.Get()?.CloseAllOverlays();
+        GetTree().CallDeferred(SceneTree.MethodName.Quit);
     }
 }

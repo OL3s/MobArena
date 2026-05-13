@@ -9,8 +9,6 @@ public partial class TownHud : CanvasLayer
 {
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
-	private static readonly PackedScene CompanyLogoEditorScene = ResourceLoader.Load<PackedScene>(CompanyLogoEditorScenePath);
-	private static readonly PackedScene CompanyOverviewScene = ResourceLoader.Load<PackedScene>(CompanyOverviewScenePath);
 	private readonly Texture2D _speedX0Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/pause.svg");
 	private readonly Texture2D _speedSlowedIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_slowed.svg");
 	private readonly Texture2D _speedX1Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x1.svg");
@@ -110,10 +108,11 @@ public partial class TownHud : CanvasLayer
 	private void OpenCompanyOverview()
 	{
 		var globalOverlay = GlobalOverlay.Get();
-		if (globalOverlay == null || CompanyOverviewScene == null)
+		var companyOverviewScene = ResourceLoader.Load<PackedScene>(CompanyOverviewScenePath);
+		if (globalOverlay == null || companyOverviewScene == null)
 			return;
 
-		var overview = CompanyOverviewScene.Instantiate<CompanyOverviewOverlay>();
+		var overview = companyOverviewScene.Instantiate<CompanyOverviewOverlay>();
 		overview.EditCompanyRequested += OnEditCompanyRequested;
 		globalOverlay.AddOverlay(overview);
 	}
@@ -126,10 +125,11 @@ public partial class TownHud : CanvasLayer
 	private void OpenCompanyEditor()
 	{
 		var globalOverlay = GlobalOverlay.Get();
-		if (globalOverlay == null || CompanyLogoEditorScene == null || _saveNode == null)
+		var companyLogoEditorScene = ResourceLoader.Load<PackedScene>(CompanyLogoEditorScenePath);
+		if (globalOverlay == null || companyLogoEditorScene == null || _saveNode == null)
 			return;
 
-		var editor = CompanyLogoEditorScene.Instantiate<CompanyLogoEditorOverlay>();
+		var editor = companyLogoEditorScene.Instantiate<CompanyLogoEditorOverlay>();
 		editor.Configure(_saveNode.CompanyLogoData.CreateCopy(), _saveNode.HasCompany, OnCompanyApplied);
 		globalOverlay.AddOverlay(editor);
 	}

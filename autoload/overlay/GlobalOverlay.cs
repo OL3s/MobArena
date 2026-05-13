@@ -5,11 +5,8 @@ namespace MobArena.Scripts;
 
 public partial class GlobalOverlay : CanvasLayer
 {
-    private const string InfoPopupPanelScenePath = "res://scenes/components/panels/InfoPopupPanel.tscn";
-    private const string GoCancelPopupPanelScenePath = "res://scenes/components/panels/GoCancelPopupPanel.tscn";
-
-    private static readonly PackedScene InfoPopupPanelScene = ResourceLoader.Load<PackedScene>(InfoPopupPanelScenePath);
-    private static readonly PackedScene GoCancelPopupPanelScene = ResourceLoader.Load<PackedScene>(GoCancelPopupPanelScenePath);
+	private const string InfoPopupPanelScenePath = "res://scenes/components/panels/InfoPopupPanel.tscn";
+	private const string GoCancelPopupPanelScenePath = "res://scenes/components/panels/GoCancelPopupPanel.tscn";
 
     private InfoPopupPanel _activeInfoPopup;
     private GoCancelPopupPanel _activeGoCancelPopup;
@@ -82,28 +79,30 @@ public partial class GlobalOverlay : CanvasLayer
             && control.IsVisibleInTree();
     }
 
-    public void ShowBlurredPopup(string title, string richText, Texture2D image = null)
-    {
-        if (InfoPopupPanelScene == null)
-            return;
+	public void ShowBlurredPopup(string title, string richText, Texture2D image = null)
+	{
+		var infoPopupPanelScene = ResourceLoader.Load<PackedScene>(InfoPopupPanelScenePath);
+		if (infoPopupPanelScene == null)
+			return;
 
         ClosePopups();
 
-        _activeInfoPopup = InfoPopupPanelScene.Instantiate<InfoPopupPanel>();
+		_activeInfoPopup = infoPopupPanelScene.Instantiate<InfoPopupPanel>();
         AddChild(_activeInfoPopup);
         _activeInfoPopup.ShowContent(title, richText, image);
         _activeInfoPopup.Closed += OnInfoPopupClosed;
     }
 
-    public void ShowGoCancelPopup(string title, string richText, Action goAction, string goText = "Go", string cancelText = "Cancel")
-    {
-        if (GoCancelPopupPanelScene == null)
-            return;
+	public void ShowGoCancelPopup(string title, string richText, Action goAction, string goText = "Go", string cancelText = "Cancel")
+	{
+		var goCancelPopupPanelScene = ResourceLoader.Load<PackedScene>(GoCancelPopupPanelScenePath);
+		if (goCancelPopupPanelScene == null)
+			return;
 
         ClosePopups();
 
         _activeGoAction = goAction;
-        _activeGoCancelPopup = GoCancelPopupPanelScene.Instantiate<GoCancelPopupPanel>();
+		_activeGoCancelPopup = goCancelPopupPanelScene.Instantiate<GoCancelPopupPanel>();
         AddChild(_activeGoCancelPopup);
         _activeGoCancelPopup.ShowContent(title, richText, goText, cancelText);
         _activeGoCancelPopup.GoSelected += OnGoCancelPopupGoSelected;

@@ -6,8 +6,7 @@ namespace MobArena.Scenes.UI;
 
 public partial class GladiatorsOverlay : Control
 {
-    private const string GladiatorCardScenePath = "res://scenes/components/ui/GladiatorCard.tscn";
-    private static readonly PackedScene GladiatorCardScene = ResourceLoader.Load<PackedScene>(GladiatorCardScenePath);
+	private const string GladiatorCardScenePath = "res://scenes/components/ui/GladiatorCard.tscn";
 
     private HBoxContainer _gladiatorRow;
 
@@ -19,14 +18,15 @@ public partial class GladiatorsOverlay : Control
     }
 
     private void PopulateGladiators()
-    {
-        var saveNode = SaveNode.Get();
-        if (saveNode == null || GladiatorCardScene == null)
-            return;
+	{
+		var saveNode = SaveNode.Get();
+		var gladiatorCardScene = ResourceLoader.Load<PackedScene>(GladiatorCardScenePath);
+		if (saveNode == null || gladiatorCardScene == null)
+			return;
 
-        foreach (var gladiatorData in saveNode.CompanyRunData.Gladiators)
-        {
-            var card = GladiatorCardScene.Instantiate<GladiatorCard>();
+		foreach (var gladiatorData in saveNode.CompanyRunData.Gladiators)
+		{
+			var card = gladiatorCardScene.Instantiate<GladiatorCard>();
             _gladiatorRow.AddChild(card);
             card.Configure(gladiatorData);
         }

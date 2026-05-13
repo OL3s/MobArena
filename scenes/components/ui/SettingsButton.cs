@@ -7,7 +7,6 @@ namespace MobArena.Scenes.Components.UI;
 public partial class SettingsButton : Button
 {
 	private const string SettingsOverlayScenePath = "res://scenes/ui/SettingsOverlay.tscn";
-	private static readonly PackedScene SettingsOverlayScene = ResourceLoader.Load<PackedScene>(SettingsOverlayScenePath);
 
 	public override void _Ready()
 	{
@@ -16,9 +15,10 @@ public partial class SettingsButton : Button
 
 	private static void OnPressed()
 	{
-		if (SettingsOverlayScene == null)
+		var settingsOverlayScene = ResourceLoader.Load<PackedScene>(SettingsOverlayScenePath);
+		if (settingsOverlayScene == null)
 			return;
 
-		GlobalOverlay.Get()?.AddOverlay(SettingsOverlayScene.Instantiate<SettingsOverlay>());
+		GlobalOverlay.Get()?.AddOverlay(settingsOverlayScene.Instantiate<SettingsOverlay>());
 	}
 }

@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
@@ -45,17 +46,6 @@ public partial class ControlsOverlay : Control
 		if (inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Backspace })
 		{
 			if (LocalInputConfig.Get()?.TryLeaveKeyboard() == true)
-			{
-				GetViewport()?.SetInputAsHandled();
-				RefreshUi();
-			}
-
-			return;
-		}
-
-		if (inputEvent is InputEventScreenTouch { Pressed: true })
-		{
-			if (LocalInputConfig.Get()?.TryJoinTouch() == true)
 			{
 				GetViewport()?.SetInputAsHandled();
 				RefreshUi();
@@ -117,7 +107,13 @@ public partial class ControlsOverlay : Control
 	private void AddDeviceChip(LocalInputControllerConfig controllerSetup, int slotNumber)
 	{
 		var localInputConfig = LocalInputConfig.Get();
-		AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.GetLeavePromptIcon(controllerSetup), "To Leave", _connectedChipStyle);
+		if (controllerSetup.Kind == LocalInputControllerConfig.ControllerKind.Touch)
+		{
+			AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.TouchJoinPromptIcon, "To Leave", _connectedChipStyle, () => TryLeaveController(controllerSetup));
+			return;
+		}
+
+		AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.GetLeavePromptIcon(controllerSetup), "To Leave", _connectedChipStyle, null);
 	}
 
 	private void AddJoinChip(LocalInputConfig localInputConfig)
@@ -127,22 +123,32 @@ public partial class ControlsOverlay : Control
 			icons.Add(localInputConfig.KeyboardJoinPromptIcon);
 
 		icons.Add(localInputConfig.JoinPromptIcon);
-		var touchText = localInputConfig.HasTouchSetup() ? string.Empty : "or touch";
-		AddChip("Press", string.Empty, icons, touchText, "to join", _joinChipStyle);
+		if (!localInputConfig.HasTouchSetup())
+			icons.Add(localInputConfig.TouchJoinPromptIcon);
+
+		AddChip("Press", string.Empty, icons, string.Empty, "to join", _joinChipStyle, TryJoinTouch);
 	}
 
 	private void AddChip(string topText, string middleText, Texture2D icon, string bottomText, StyleBoxFlat style)
 	{
-		AddChip(topText, middleText, new Godot.Collections.Array<Texture2D> { icon }, string.Empty, bottomText, style);
+		AddChip(topText, middleText, new Godot.Collections.Array<Texture2D> { icon }, string.Empty, bottomText, style, null);
 	}
 
-	private void AddChip(string topText, string middleText, Godot.Collections.Array<Texture2D> icons, string touchText, string bottomText, StyleBoxFlat style)
+	private void AddChip(string topText, string middleText, Texture2D icon, string bottomText, StyleBoxFlat style, Func<bool> touchAction)
+	{
+		AddChip(topText, middleText, new Godot.Collections.Array<Texture2D> { icon }, string.Empty, bottomText, style, touchAction);
+	}
+
+	private void AddChip(string topText, string middleText, Godot.Collections.Array<Texture2D> icons, string touchText, string bottomText, StyleBoxFlat style, Func<bool> touchAction)
 	{
 		var panel = new PanelContainer
 		{
-			CustomMinimumSize = new Vector2(166, 206)
+			CustomMinimumSize = new Vector2(166, 206),
+			MouseFilter = MouseFilterEnum.Stop
 		};
 		panel.AddThemeStyleboxOverride("panel", style);
+		if (touchAction != null)
+			panel.GuiInput += inputEvent => RunChipTouchAction(inputEvent, touchAction);
 
 		var margin = new MarginContainer();
 		margin.AddThemeConstantOverride("margin_left", 12);
@@ -201,13 +207,49 @@ public partial class ControlsOverlay : Control
 		chip.AddChild(topLabel);
 		if (!string.IsNullOrEmpty(middleText))
 			chip.AddChild(middleLabel);
-		chip.AddChild(iconRow);
+		if (icons.Count > 0)
+			chip.AddChild(iconRow);
 		if (!string.IsNullOrEmpty(touchText))
 			chip.AddChild(touchLabel);
 		chip.AddChild(bottomLabel);
 		margin.AddChild(chip);
 		panel.AddChild(margin);
 		_connectedRow.AddChild(panel);
+	}
+
+	private void RunChipTouchAction(InputEvent inputEvent, Func<bool> touchAction)
+	{
+		if (_refreshingUi || !IsTouchPress(inputEvent))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+		if (touchAction())
+			CallDeferred(MethodName.RefreshUi);
+	}
+
+	private bool TryJoinTouch()
+	{
+		return LocalInputConfig.Get()?.TryJoinTouch() == true;
+	}
+
+	private bool TryLeaveController(LocalInputControllerConfig controllerSetup)
+	{
+		var localInputConfig = LocalInputConfig.Get();
+		if (localInputConfig == null)
+			return false;
+
+		return controllerSetup.Kind switch
+		{
+			LocalInputControllerConfig.ControllerKind.Keyboard => localInputConfig.TryLeaveKeyboard(),
+			LocalInputControllerConfig.ControllerKind.Touch => localInputConfig.TryLeaveTouch(),
+			LocalInputControllerConfig.ControllerKind.Gamepad => localInputConfig.TryLeaveGamepad(controllerSetup.DeviceId),
+			_ => false
+		};
+	}
+
+	private static bool IsTouchPress(InputEvent inputEvent)
+	{
+		return inputEvent is InputEventScreenTouch { Pressed: true };
 	}
 
 	private static StyleBoxFlat CreateChipStyle(Color backgroundColor, Color borderColor)
