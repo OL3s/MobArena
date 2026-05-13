@@ -62,8 +62,17 @@ layout_mode = 2
 theme_override_constants/separation = 18
 alignment = 1
 
-[node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="Actions" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ResetButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
 custom_minimum_size = Vector2(180, 52)
 layout_mode = 2
-size_flags_horizontal = 4
+text = "Reset"
+
+[node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
+custom_minimum_size = Vector2(180, 52)
+layout_mode = 2
 text = "Close"

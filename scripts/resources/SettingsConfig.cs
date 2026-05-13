@@ -6,6 +6,7 @@ public partial class SettingsConfig : Resource
 {
 	public enum PrimaryInputMode
 	{
+		None,
 		Keyboard,
 		Touch,
 		Gamepad

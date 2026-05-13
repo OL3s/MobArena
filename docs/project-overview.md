@@ -63,7 +63,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 ## Settings And Input
 
 - `SettingsConfig.AutoDetectPrimaryInput` controls whether the game chooses the primary input mode from platform/device state.
-- `SettingsConfig.DefaultPrimaryInput` stores the hard-set primary input when auto-detect is off. Valid modes are Keyboard, Touch, and Gamepad.
+- `SettingsConfig.DefaultPrimaryInput` stores the hard-set primary input when auto-detect is off. Valid modes are None, Keyboard, Touch, and Gamepad.
 - Auto-detect currently maps console-like platforms to Gamepad, mobile to Gamepad when a gamepad is connected or Touch otherwise, and desktop to Keyboard.
 - The controls overlay displays currently configured inputs from `LocalInputConfig.ControllerSetups`; it does not yet implement real join/leave backend behavior.
 - Gamepad prompts use imported icons under `assets/ui/input_icons/`. Desktop keyboard primary input is labeled as Keyboard but currently uses the mouse icon for compact visual display.

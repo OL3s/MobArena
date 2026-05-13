@@ -1,5 +1,5 @@
-using Godot;
 using System;
+using Godot;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 
@@ -11,18 +11,19 @@ public partial class SettingsOverlay : Control
 	private const int VideoCategory = 1;
 	private const int SoundCategory = 2;
 	private const int GameplayCategory = 3;
-	private const int AccessibilityCategory = 4;
+	private const int SaveDataCategory = 4;
 
 	private Button _controlsButton;
 	private Button _videoButton;
 	private Button _soundButton;
 	private Button _gameplayButton;
-	private Button _accessibilityButton;
+	private Button _saveDataButton;
 	private Label _categoryTitle;
 	private CheckBox _autoDetectCheckBox;
 	private Label _defaultInputLabel;
 	private OptionButton _defaultInputOption;
 	private Control _controlsSettings;
+	private Control _saveDataSettings;
 	private Label _placeholderLabel;
 	private bool _refreshingUi;
 
@@ -32,14 +33,16 @@ public partial class SettingsOverlay : Control
 		_videoButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/VideoButton");
 		_soundButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/SoundButton");
 		_gameplayButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/GameplayButton");
-		_accessibilityButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/AccessibilityButton");
+		_saveDataButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/SaveDataButton");
 		_categoryTitle = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/CategoryTitle");
 		_controlsSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings");
+		_saveDataSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings");
 		_placeholderLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/PlaceholderLabel");
 		_autoDetectCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/AutoDetectCheckBox");
 		_defaultInputLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/DefaultInputRow/DefaultInputLabel");
 		_defaultInputOption = GetNode<OptionButton>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/DefaultInputRow/DefaultInputOption");
 
+		_defaultInputOption.AddItem("None", (int)SettingsConfig.PrimaryInputMode.None);
 		_defaultInputOption.AddItem("Keyboard", (int)SettingsConfig.PrimaryInputMode.Keyboard);
 		_defaultInputOption.AddItem("Touch", (int)SettingsConfig.PrimaryInputMode.Touch);
 		_defaultInputOption.AddItem("Gamepad", (int)SettingsConfig.PrimaryInputMode.Gamepad);
@@ -48,9 +51,13 @@ public partial class SettingsOverlay : Control
 		_videoButton.Pressed += () => ShowCategory(VideoCategory);
 		_soundButton.Pressed += () => ShowCategory(SoundCategory);
 		_gameplayButton.Pressed += () => ShowCategory(GameplayCategory);
-		_accessibilityButton.Pressed += () => ShowCategory(AccessibilityCategory);
+		_saveDataButton.Pressed += () => ShowCategory(SaveDataCategory);
 		_autoDetectCheckBox.Toggled += OnAutoDetectToggled;
 		_defaultInputOption.ItemSelected += OnDefaultInputSelected;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteRunButton").Pressed += OnDeleteRunDataPressed;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteCompanyButton").Pressed += OnDeleteCompanyDataPressed;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteSettingsButton").Pressed += OnDeleteSettingsDataPressed;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteAllButton").Pressed += OnDeleteAllSaveDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Actions/ApplyButton").Pressed += OnApplyPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Actions/CloseButton").Pressed += QueueFree;
 
@@ -61,14 +68,15 @@ public partial class SettingsOverlay : Control
 	private void ShowCategory(int category)
 	{
 		_controlsSettings.Visible = category == ControlsCategory;
-		_placeholderLabel.Visible = category != ControlsCategory;
+		_saveDataSettings.Visible = category == SaveDataCategory;
+		_placeholderLabel.Visible = category != ControlsCategory && category != SaveDataCategory;
 
 		_categoryTitle.Text = category switch
 		{
 			VideoCategory => "Video",
 			SoundCategory => "Sound",
 			GameplayCategory => "Gameplay",
-			AccessibilityCategory => "Accessibility",
+			SaveDataCategory => "Save Data",
 			_ => "Controls"
 		};
 
@@ -77,7 +85,6 @@ public partial class SettingsOverlay : Control
 			VideoCategory => "Video settings will live here: resolution, fullscreen, scale, and visual effects.",
 			SoundCategory => "Sound settings will live here: master, music, UI, and effects volume.",
 			GameplayCategory => "Gameplay settings will live here: difficulty, camera, and quality-of-life toggles.",
-			AccessibilityCategory => "Accessibility settings will live here: readability, contrast, motion, and assistance options.",
 			_ => string.Empty
 		};
 
@@ -85,7 +92,7 @@ public partial class SettingsOverlay : Control
 		_videoButton.Disabled = category == VideoCategory;
 		_soundButton.Disabled = category == SoundCategory;
 		_gameplayButton.Disabled = category == GameplayCategory;
-		_accessibilityButton.Disabled = category == AccessibilityCategory;
+		_saveDataButton.Disabled = category == SaveDataCategory;
 	}
 
 	private void RefreshControlsSettings()
@@ -127,15 +134,65 @@ public partial class SettingsOverlay : Control
 
 	private static void OnApplyPressed()
 	{
-		try
-		{
-			SaveNode.Get()?.Save();
-		}
-		catch (NotImplementedException)
+		var error = SaveNode.Get()?.Save() ?? Error.Failed;
+		if (error == Error.Ok)
 		{
 			GlobalOverlay.Get()?.ShowBlurredPopup(
 				"Settings",
-				"Settings were applied for this runtime session. Disk save is not implemented yet.");
+				"Settings were saved.");
+			return;
 		}
+
+		GlobalOverlay.Get()?.ShowBlurredPopup(
+			"Settings",
+			$"Settings could not be saved. Error: {error}.");
+	}
+
+	private void OnDeleteRunDataPressed()
+	{
+		ConfirmDeleteSaveData(saveNode => saveNode.DeleteRunData());
+	}
+
+	private void OnDeleteCompanyDataPressed()
+	{
+		ConfirmDeleteSaveData(saveNode => saveNode.DeleteCompanyData());
+	}
+
+	private void OnDeleteSettingsDataPressed()
+	{
+		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSettingsData(), RefreshControlsSettings);
+	}
+
+	private void OnDeleteAllSaveDataPressed()
+	{
+		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSave(), RefreshControlsSettings);
+	}
+
+	private static void ConfirmDeleteSaveData(Func<SaveNode, Error> deleteAction, Action afterDelete = null)
+	{
+		GlobalOverlay.Get()?.ShowGoCancelPopup(
+			"Delete Save Data?",
+			"This cannot be undone.",
+			() =>
+			{
+				DeleteSaveData(deleteAction);
+				afterDelete?.Invoke();
+			},
+			"Delete");
+	}
+
+	private static void DeleteSaveData(Func<SaveNode, Error> deleteAction)
+	{
+		var saveNode = SaveNode.Get();
+		if (saveNode == null)
+		{
+			GlobalOverlay.Get()?.ShowBlurredPopup("Save Data", "Save data could not be changed. SaveNode is missing.");
+			return;
+		}
+
+		var error = deleteAction(saveNode);
+		GlobalOverlay.Get()?.ShowBlurredPopup(
+			"Save Data",
+			error == Error.Ok ? "Save data deleted." : $"Save data could not be deleted. Error: {error}.");
 	}
 }

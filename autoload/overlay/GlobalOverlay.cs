@@ -18,6 +18,11 @@ public partial class GlobalOverlay : CanvasLayer
         return sceneTree?.Root?.GetNodeOrNull<GlobalOverlay>("/root/GlobalOverlay");
     }
 
+	public override void _ExitTree()
+	{
+		CloseAllOverlaysImmediate();
+	}
+
     public void AddOverlay(PackedScene overlayScene)
     {
         if (overlayScene == null)
@@ -135,6 +140,24 @@ public partial class GlobalOverlay : CanvasLayer
         foreach (Node child in GetChildren())
             child.QueueFree();
     }
+
+	public void CloseAllOverlaysImmediate()
+	{
+		_activeInfoPopup = null;
+		_activeGoCancelPopup = null;
+		_activeGoAction = null;
+
+		foreach (Node child in GetChildren())
+		{
+			RemoveChild(child);
+			child.Free();
+		}
+	}
+
+	public bool HasOverlays()
+	{
+		return GetChildCount() > 0;
+	}
 
     private void OnInfoPopupClosed()
     {

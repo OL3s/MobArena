@@ -1,4 +1,3 @@
-using System;
 using Godot;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
@@ -8,7 +7,11 @@ namespace MobArena.Scenes.UI;
 public partial class ControlsOverlay : Control
 {
 	private HBoxContainer _connectedRow;
+	private Button _resetButton;
 	private Button _closeButton;
+	private PanelContainer _touchJoinChip;
+	private PanelContainer _touchLeaveChip;
+	private LocalInputControllerConfig _touchLeaveControllerSetup;
 	private bool _refreshingUi;
 	private StyleBoxFlat _connectedChipStyle;
 	private StyleBoxFlat _joinChipStyle;
@@ -16,10 +19,12 @@ public partial class ControlsOverlay : Control
 	public override void _Ready()
 	{
 		_connectedRow = GetNode<HBoxContainer>("CenterContainer/PopupPanel/MarginContainer/Content/ConnectedRow");
-		_closeButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/CloseButton");
+		_resetButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/ResetButton");
+		_closeButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/CloseButton");
 		_connectedChipStyle = CreateChipStyle(new Color(0.16f, 0.24f, 0.20f, 0.96f), new Color(0.30f, 0.72f, 0.42f, 0.9f));
 		_joinChipStyle = CreateChipStyle(new Color(0.23f, 0.19f, 0.12f, 0.96f), new Color(0.93f, 0.70f, 0.27f, 0.9f));
 
+		_resetButton.Pressed += OnResetPressed;
 		_closeButton.Pressed += QueueFree;
 		RefreshUi();
 	}
@@ -32,6 +37,14 @@ public partial class ControlsOverlay : Control
 
 	public override void _UnhandledInput(InputEvent inputEvent)
 	{
+		if (inputEvent is InputEventScreenTouch { Pressed: true } screenTouch)
+		{
+			if (TryHandleChipTouch(screenTouch.Position))
+				GetViewport()?.SetInputAsHandled();
+
+			return;
+		}
+
 		if (inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Enter or Key.KpEnter })
 		{
 			if (LocalInputConfig.Get()?.TryJoinKeyboard() == true)
@@ -79,21 +92,22 @@ public partial class ControlsOverlay : Control
 	{
 		_refreshingUi = true;
 		var localInputConfig = LocalInputConfig.Get();
+		_touchJoinChip = null;
+		_touchLeaveChip = null;
+		_touchLeaveControllerSetup = null;
 
-		foreach (var child in _connectedRow.GetChildren())
-		{
-			_connectedRow.RemoveChild(child);
-			child.Free();
-		}
+		ClearChips();
 
 		if (localInputConfig == null)
 		{
+			_resetButton.Disabled = true;
 			_closeButton.Disabled = true;
 			_refreshingUi = false;
 			return;
 		}
 
-		_closeButton.Disabled = localInputConfig.ControllerSetups.Count <= 0;
+		_resetButton.Disabled = localInputConfig.ControllerSetups.Count <= 0;
+		_closeButton.Disabled = false;
 
 		for (var index = 0; index < localInputConfig.ControllerSetups.Count; index++)
 			AddDeviceChip(localInputConfig.ControllerSetups[index], index + 1);
@@ -104,16 +118,39 @@ public partial class ControlsOverlay : Control
 		_refreshingUi = false;
 	}
 
+	private void ClearChips()
+	{
+		if (!GodotObject.IsInstanceValid(_connectedRow))
+			return;
+
+		foreach (var child in _connectedRow.GetChildren())
+		{
+			_connectedRow.RemoveChild(child);
+			child.QueueFree();
+		}
+	}
+
+	private void OnResetPressed()
+	{
+		var localInputConfig = LocalInputConfig.Get();
+		if (localInputConfig == null)
+			return;
+
+		localInputConfig.ClearControllerSetups();
+		RefreshUi();
+	}
+
 	private void AddDeviceChip(LocalInputControllerConfig controllerSetup, int slotNumber)
 	{
 		var localInputConfig = LocalInputConfig.Get();
 		if (controllerSetup.Kind == LocalInputControllerConfig.ControllerKind.Touch)
 		{
-			AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.TouchJoinPromptIcon, "To Leave", _connectedChipStyle, () => TryLeaveController(controllerSetup));
+			_touchLeaveChip = AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.TouchJoinPromptIcon, "To Leave", _connectedChipStyle);
+			_touchLeaveControllerSetup = controllerSetup;
 			return;
 		}
 
-		AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.GetLeavePromptIcon(controllerSetup), "To Leave", _connectedChipStyle, null);
+		AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.GetLeavePromptIcon(controllerSetup), "To Leave", _connectedChipStyle);
 	}
 
 	private void AddJoinChip(LocalInputConfig localInputConfig)
@@ -126,20 +163,15 @@ public partial class ControlsOverlay : Control
 		if (!localInputConfig.HasTouchSetup())
 			icons.Add(localInputConfig.TouchJoinPromptIcon);
 
-		AddChip("Press", string.Empty, icons, string.Empty, "to join", _joinChipStyle, TryJoinTouch);
+		_touchJoinChip = AddChip("Press", string.Empty, icons, string.Empty, "to join", _joinChipStyle);
 	}
 
-	private void AddChip(string topText, string middleText, Texture2D icon, string bottomText, StyleBoxFlat style)
+	private PanelContainer AddChip(string topText, string middleText, Texture2D icon, string bottomText, StyleBoxFlat style)
 	{
-		AddChip(topText, middleText, new Godot.Collections.Array<Texture2D> { icon }, string.Empty, bottomText, style, null);
+		return AddChip(topText, middleText, new Godot.Collections.Array<Texture2D> { icon }, string.Empty, bottomText, style);
 	}
 
-	private void AddChip(string topText, string middleText, Texture2D icon, string bottomText, StyleBoxFlat style, Func<bool> touchAction)
-	{
-		AddChip(topText, middleText, new Godot.Collections.Array<Texture2D> { icon }, string.Empty, bottomText, style, touchAction);
-	}
-
-	private void AddChip(string topText, string middleText, Godot.Collections.Array<Texture2D> icons, string touchText, string bottomText, StyleBoxFlat style, Func<bool> touchAction)
+	private PanelContainer AddChip(string topText, string middleText, Godot.Collections.Array<Texture2D> icons, string touchText, string bottomText, StyleBoxFlat style)
 	{
 		var panel = new PanelContainer
 		{
@@ -147,8 +179,6 @@ public partial class ControlsOverlay : Control
 			MouseFilter = MouseFilterEnum.Stop
 		};
 		panel.AddThemeStyleboxOverride("panel", style);
-		if (touchAction != null)
-			panel.GuiInput += inputEvent => RunChipTouchAction(inputEvent, touchAction);
 
 		var margin = new MarginContainer();
 		margin.AddThemeConstantOverride("margin_left", 12);
@@ -215,16 +245,27 @@ public partial class ControlsOverlay : Control
 		margin.AddChild(chip);
 		panel.AddChild(margin);
 		_connectedRow.AddChild(panel);
+		return panel;
 	}
 
-	private void RunChipTouchAction(InputEvent inputEvent, Func<bool> touchAction)
+	private bool TryHandleChipTouch(Vector2 position)
 	{
-		if (_refreshingUi || !IsTouchPress(inputEvent))
-			return;
+		if (_refreshingUi)
+			return false;
 
-		GetViewport()?.SetInputAsHandled();
-		if (touchAction())
+		if (IsPointInside(_touchJoinChip, position) && TryJoinTouch())
+		{
 			CallDeferred(MethodName.RefreshUi);
+			return true;
+		}
+
+		if (IsPointInside(_touchLeaveChip, position) && TryLeaveController(_touchLeaveControllerSetup))
+		{
+			CallDeferred(MethodName.RefreshUi);
+			return true;
+		}
+
+		return false;
 	}
 
 	private bool TryJoinTouch()
@@ -234,6 +275,9 @@ public partial class ControlsOverlay : Control
 
 	private bool TryLeaveController(LocalInputControllerConfig controllerSetup)
 	{
+		if (controllerSetup == null)
+			return false;
+
 		var localInputConfig = LocalInputConfig.Get();
 		if (localInputConfig == null)
 			return false;
@@ -247,9 +291,11 @@ public partial class ControlsOverlay : Control
 		};
 	}
 
-	private static bool IsTouchPress(InputEvent inputEvent)
+	private static bool IsPointInside(Control control, Vector2 position)
 	{
-		return inputEvent is InputEventScreenTouch { Pressed: true };
+		return GodotObject.IsInstanceValid(control)
+			&& control.IsVisibleInTree()
+			&& control.GetGlobalRect().HasPoint(position);
 	}
 
 	private static StyleBoxFlat CreateChipStyle(Color backgroundColor, Color borderColor)

@@ -86,10 +86,10 @@ custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Gameplay"
 
-[node name="AccessibilityButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
+[node name="SaveDataButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-text = "Accessibility"
+text = "Save Data"
 
 [node name="SettingsPanel" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body"]
 layout_mode = 2
@@ -131,6 +131,36 @@ layout_mode = 2
 layout_mode = 2
 text = "This is a startup preference only. It does not change the active runtime controllers while an in-game menu is open."
 autowrap_mode = 3
+
+[node name="SaveDataSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SaveDataHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+layout_mode = 2
+text = "Delete saved data from disk. These actions apply immediately."
+autowrap_mode = 3
+
+[node name="DeleteRunButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Delete Run Data"
+
+[node name="DeleteCompanyButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Delete Company Data"
+
+[node name="DeleteSettingsButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Delete Settings Data"
+
+[node name="DeleteAllButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Delete All Save Data"
 
 [node name="PlaceholderLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
 visible = false

@@ -1,9 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://vql42bw3wed"]
+[gd_scene format=3 uid="uid://vql42bw3wed"]
 
 [ext_resource type="Script" uid="uid://dfrmpbqsmo1fp" path="res://scripts/MainMenu.cs" id="1_main_menu"]
 [ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_company_logo"]
 [ext_resource type="PackedScene" path="res://scenes/components/ui/SettingsButton.tscn" id="3_settings_button"]
-[ext_resource type="Texture2D" path="res://assets/ui/icons/local_coop.svg" id="4_local_coop_icon"]
+[ext_resource type="Texture2D" uid="uid://dkhfofk54qui2" path="res://assets/ui/icons/local_coop.svg" id="4_local_coop_icon"]
 
 [node name="MainMenu" type="Control" unique_id=2694169]
 layout_mode = 3

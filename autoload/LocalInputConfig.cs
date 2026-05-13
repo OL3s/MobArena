@@ -57,8 +57,21 @@ public partial class LocalInputConfig : Node
 	public void InitializeCurrentControllerSetups()
 	{
 		ControllerSetups.Clear();
-		AddAutoDetectedPrimaryControllerSetup();
-		AddConnectedGamepads();
+
+		var settingsConfig = SaveNode.Get()?.SettingsConfig ?? new SettingsConfig();
+		if (settingsConfig.AutoDetectPrimaryInput)
+		{
+			AddAutoDetectedPrimaryControllerSetup();
+			AddConnectedGamepads();
+			return;
+		}
+
+		AddDefaultPrimaryControllerSetup(settingsConfig.DefaultPrimaryInput);
+	}
+
+	public void ClearControllerSetups()
+	{
+		ControllerSetups.Clear();
 	}
 
 	public bool TryJoinGamepad(int deviceId)
@@ -150,6 +163,25 @@ public partial class LocalInputConfig : Node
 		}
 
 		ControllerSetups.Add(LocalInputControllerConfig.Create("Keyboard", LocalInputControllerConfig.ControllerKind.Keyboard, -1, MouseIcon));
+	}
+
+	private void AddDefaultPrimaryControllerSetup(SettingsConfig.PrimaryInputMode primaryInputMode)
+	{
+		switch (primaryInputMode)
+		{
+			case SettingsConfig.PrimaryInputMode.Keyboard:
+				TryJoinKeyboard();
+				break;
+			case SettingsConfig.PrimaryInputMode.Touch:
+				TryJoinTouch();
+				break;
+			case SettingsConfig.PrimaryInputMode.Gamepad:
+				AddFirstConnectedGamepad();
+				break;
+			case SettingsConfig.PrimaryInputMode.None:
+			default:
+				break;
+		}
 	}
 
 	private bool AddFirstConnectedGamepad()
