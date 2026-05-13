@@ -6,9 +6,6 @@ namespace MobArena.Scenes.UI;
 
 public partial class ControlsOverlay : Control
 {
-	private CheckBox _autoDetectCheckBox;
-	private Label _defaultInputLabel;
-	private OptionButton _defaultInputOption;
 	private HBoxContainer _connectedRow;
 	private Button _closeButton;
 	private bool _refreshingUi;
@@ -17,19 +14,11 @@ public partial class ControlsOverlay : Control
 
 	public override void _Ready()
 	{
-		_autoDetectCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Content/InputSettings/AutoDetectCheckBox");
-		_defaultInputLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/InputSettings/DefaultInputRow/DefaultInputLabel");
-		_defaultInputOption = GetNode<OptionButton>("CenterContainer/PopupPanel/MarginContainer/Content/InputSettings/DefaultInputRow/DefaultInputOption");
 		_connectedRow = GetNode<HBoxContainer>("CenterContainer/PopupPanel/MarginContainer/Content/ConnectedRow");
 		_closeButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/CloseButton");
 		_connectedChipStyle = CreateChipStyle(new Color(0.16f, 0.24f, 0.20f, 0.96f), new Color(0.30f, 0.72f, 0.42f, 0.9f));
 		_joinChipStyle = CreateChipStyle(new Color(0.23f, 0.19f, 0.12f, 0.96f), new Color(0.93f, 0.70f, 0.27f, 0.9f));
 
-		_defaultInputOption.AddItem("Keyboard", (int)SettingsConfig.PrimaryInputMode.Keyboard);
-		_defaultInputOption.AddItem("Touch", (int)SettingsConfig.PrimaryInputMode.Touch);
-		_defaultInputOption.AddItem("Gamepad", (int)SettingsConfig.PrimaryInputMode.Gamepad);
-		_autoDetectCheckBox.Toggled += OnAutoDetectToggled;
-		_defaultInputOption.ItemSelected += OnDefaultInputSelected;
 		_closeButton.Pressed += QueueFree;
 		RefreshUi();
 	}
@@ -114,11 +103,6 @@ public partial class ControlsOverlay : Control
 			return;
 		}
 
-		var settingsConfig = SaveNode.Get()?.SettingsConfig ?? new SettingsConfig();
-		_autoDetectCheckBox.ButtonPressed = settingsConfig.AutoDetectPrimaryInput;
-		_defaultInputOption.Disabled = settingsConfig.AutoDetectPrimaryInput;
-		_defaultInputLabel.Modulate = _defaultInputOption.Disabled ? new Color(1, 1, 1, 0.45f) : Colors.White;
-		_defaultInputOption.Select(_defaultInputOption.GetItemIndex((int)settingsConfig.DefaultPrimaryInput));
 		_closeButton.Disabled = localInputConfig.ControllerSetups.Count <= 0;
 
 		for (var index = 0; index < localInputConfig.ControllerSetups.Count; index++)
@@ -128,32 +112,6 @@ public partial class ControlsOverlay : Control
 			AddJoinChip(localInputConfig);
 
 		_refreshingUi = false;
-	}
-
-	private void OnAutoDetectToggled(bool enabled)
-	{
-		if (_refreshingUi)
-			return;
-
-		var settingsConfig = SaveNode.Get()?.SettingsConfig;
-		if (settingsConfig == null)
-			return;
-
-		settingsConfig.AutoDetectPrimaryInput = enabled;
-		RefreshUi();
-	}
-
-	private void OnDefaultInputSelected(long itemIndex)
-	{
-		if (_refreshingUi)
-			return;
-
-		var settingsConfig = SaveNode.Get()?.SettingsConfig;
-		if (settingsConfig == null)
-			return;
-
-		settingsConfig.DefaultPrimaryInput = (SettingsConfig.PrimaryInputMode)_defaultInputOption.GetItemId((int)itemIndex);
-		RefreshUi();
 	}
 
 	private void AddDeviceChip(LocalInputControllerConfig controllerSetup, int slotNumber)

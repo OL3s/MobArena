@@ -36,7 +36,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="PopupPanel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(860, 430)
+custom_minimum_size = Vector2(860, 340)
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel"]
@@ -55,29 +55,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Controls"
 horizontal_alignment = 1
-
-[node name="InputSettings" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
-layout_mode = 2
-theme_override_constants/separation = 44
-alignment = 1
-
-[node name="AutoDetectCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Content/InputSettings"]
-layout_mode = 2
-text = "Auto-detect primary input"
-
-[node name="DefaultInputRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/InputSettings"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="DefaultInputLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/InputSettings/DefaultInputRow"]
-custom_minimum_size = Vector2(112, 0)
-layout_mode = 2
-text = "Primary input"
-vertical_alignment = 1
-
-[node name="DefaultInputOption" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/InputSettings/DefaultInputRow"]
-custom_minimum_size = Vector2(172, 44)
-layout_mode = 2
 
 [node name="ConnectedRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 custom_minimum_size = Vector2(0, 210)

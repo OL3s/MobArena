@@ -1,10 +1,14 @@
 using Godot;
+using MobArena.Scenes.UI;
 using MobArena.Scripts;
 
 namespace MobArena.Scenes.Components.UI;
 
 public partial class SettingsButton : Button
 {
+	private const string SettingsOverlayScenePath = "res://scenes/ui/SettingsOverlay.tscn";
+	private static readonly PackedScene SettingsOverlayScene = ResourceLoader.Load<PackedScene>(SettingsOverlayScenePath);
+
 	public override void _Ready()
 	{
 		Pressed += OnPressed;
@@ -12,8 +16,9 @@ public partial class SettingsButton : Button
 
 	private static void OnPressed()
 	{
-		GlobalOverlay.Get()?.ShowBlurredPopup(
-			"Settings",
-			"Settings are not implemented yet. This button is wired so it gives clear feedback instead of doing nothing.");
+		if (SettingsOverlayScene == null)
+			return;
+
+		GlobalOverlay.Get()?.AddOverlay(SettingsOverlayScene.Instantiate<SettingsOverlay>());
 	}
 }
