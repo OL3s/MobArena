@@ -20,8 +20,7 @@ public partial class LocalInputConfig : Node
 	public Texture2D JoinPromptIcon => XboxAIcon;
 	public Texture2D LeavePromptIcon => IsConsoleLikePlatform() ? XboxBIcon : BackspaceIcon;
 	public string JoinPromptLabel => ControllerSetups.Count >= MaxLocalPlayers ? "All 4 local slots filled" : "Press A to join";
-	public string LeavePromptLabel => IsMobilePlatform() && GetSettingsConfig().DefaultPrimaryInput == SettingsConfig.PrimaryInputMode.Touch ? "Leave on phone: not set yet" : IsConsoleLikePlatform() ? "Press B to leave" : "Press Backspace to leave";
-	public SettingsConfig SettingsConfig => GetSettingsConfig();
+	public string LeavePromptLabel => IsMobilePlatform() ? "Leave on phone: not set yet" : IsConsoleLikePlatform() ? "Press B to leave" : "Press Backspace to leave";
 
 	public static LocalInputConfig Get()
 	{
@@ -31,28 +30,53 @@ public partial class LocalInputConfig : Node
 
 	public override void _Ready()
 	{
-		RefreshConnectedControllerSetups();
+		InitializeCurrentControllerSetups();
 	}
 
-	public void RefreshConnectedControllerSetups()
+	public void InitializeCurrentControllerSetups()
 	{
 		ControllerSetups.Clear();
-		var settingsConfig = GetSettingsConfig();
+		AddAutoDetectedPrimaryControllerSetup();
+		AddConnectedGamepads();
+	}
 
-		var primaryInputMode = settingsConfig.AutoDetectPrimaryInput
-			? GetAutoDetectedPrimaryInputMode()
-			: settingsConfig.DefaultPrimaryInput;
+	private void AddAutoDetectedPrimaryControllerSetup()
+	{
+		if (IsConsoleLikePlatform())
+		{
+			AddFirstConnectedGamepad();
+			return;
+		}
 
-		AddPrimaryControllerSetup(primaryInputMode);
+		if (IsMobilePlatform())
+		{
+			if (!AddFirstConnectedGamepad())
+				ControllerSetups.Add(LocalInputControllerConfig.Create("Touch", LocalInputControllerConfig.ControllerKind.Touch, -1, PhoneIcon));
 
+			return;
+		}
+
+		ControllerSetups.Add(LocalInputControllerConfig.Create("Keyboard", LocalInputControllerConfig.ControllerKind.Keyboard, -1, MouseIcon));
+	}
+
+	private bool AddFirstConnectedGamepad()
+	{
+		var joypads = Input.GetConnectedJoypads();
+		if (joypads.Count == 0)
+			return false;
+
+		ControllerSetups.Add(LocalInputControllerConfig.Create("Gamepad 1", LocalInputControllerConfig.ControllerKind.Gamepad, joypads[0], XboxAIcon));
+		return true;
+	}
+
+	private void AddConnectedGamepads()
+	{
 		foreach (var joypadId in Input.GetConnectedJoypads())
 		{
 			if (ControllerSetups.Count >= MaxLocalPlayers)
 				break;
 
-			if (ControllerSetups.Count > 0
-				&& ControllerSetups[0].Kind == LocalInputControllerConfig.ControllerKind.Gamepad
-				&& ControllerSetups[0].DeviceId == joypadId)
+			if (HasGamepadSetup(joypadId))
 				continue;
 
 			ControllerSetups.Add(LocalInputControllerConfig.Create(
@@ -63,45 +87,15 @@ public partial class LocalInputConfig : Node
 		}
 	}
 
-	private void AddPrimaryControllerSetup(SettingsConfig.PrimaryInputMode primaryInputMode)
+	private bool HasGamepadSetup(int deviceId)
 	{
-		switch (primaryInputMode)
+		foreach (var controllerSetup in ControllerSetups)
 		{
-			case SettingsConfig.PrimaryInputMode.Gamepad:
-				var joypads = Input.GetConnectedJoypads();
-				if (joypads.Count > 0)
-				{
-					ControllerSetups.Add(LocalInputControllerConfig.Create("Gamepad 1", LocalInputControllerConfig.ControllerKind.Gamepad, joypads[0], XboxAIcon));
-					return;
-				}
-
-				ControllerSetups.Add(LocalInputControllerConfig.Create("Gamepad", LocalInputControllerConfig.ControllerKind.Gamepad, -1, XboxAIcon, false));
-				return;
-			case SettingsConfig.PrimaryInputMode.Touch:
-				ControllerSetups.Add(LocalInputControllerConfig.Create("Touch", LocalInputControllerConfig.ControllerKind.Touch, -1, PhoneIcon));
-				return;
-			default:
-				ControllerSetups.Add(LocalInputControllerConfig.Create("Keyboard", LocalInputControllerConfig.ControllerKind.Keyboard, -1, MouseIcon));
-				return;
+			if (controllerSetup.Kind == LocalInputControllerConfig.ControllerKind.Gamepad && controllerSetup.DeviceId == deviceId)
+				return true;
 		}
-	}
 
-	private static SettingsConfig.PrimaryInputMode GetAutoDetectedPrimaryInputMode()
-	{
-		if (IsConsoleLikePlatform())
-			return SettingsConfig.PrimaryInputMode.Gamepad;
-
-		if (IsMobilePlatform())
-			return Input.GetConnectedJoypads().Count > 0
-				? SettingsConfig.PrimaryInputMode.Gamepad
-				: SettingsConfig.PrimaryInputMode.Touch;
-
-		return SettingsConfig.PrimaryInputMode.Keyboard;
-	}
-
-	private static SettingsConfig GetSettingsConfig()
-	{
-		return SaveNode.Get()?.SettingsConfig ?? new SettingsConfig();
+		return false;
 	}
 
 	private static bool IsMobilePlatform()

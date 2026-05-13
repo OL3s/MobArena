@@ -50,7 +50,7 @@ public partial class ControlsOverlay : Control
 			return;
 		}
 
-		var settingsConfig = localInputConfig.SettingsConfig;
+		var settingsConfig = SaveNode.Get()?.SettingsConfig ?? new SettingsConfig();
 		_autoDetectCheckBox.ButtonPressed = settingsConfig.AutoDetectPrimaryInput;
 		_defaultInputOption.Disabled = settingsConfig.AutoDetectPrimaryInput;
 		_defaultInputLabel.Modulate = _defaultInputOption.Disabled ? new Color(1, 1, 1, 0.45f) : Colors.White;
@@ -71,7 +71,7 @@ public partial class ControlsOverlay : Control
 		if (_refreshingUi)
 			return;
 
-		var settingsConfig = LocalInputConfig.Get()?.SettingsConfig;
+		var settingsConfig = SaveNode.Get()?.SettingsConfig;
 		if (settingsConfig == null)
 			return;
 
@@ -84,7 +84,7 @@ public partial class ControlsOverlay : Control
 		if (_refreshingUi)
 			return;
 
-		var settingsConfig = LocalInputConfig.Get()?.SettingsConfig;
+		var settingsConfig = SaveNode.Get()?.SettingsConfig;
 		if (settingsConfig == null)
 			return;
 
