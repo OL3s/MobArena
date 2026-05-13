@@ -12,8 +12,8 @@ public partial class ControlsOverlay : Control
 	private HBoxContainer _connectedRow;
 	private Button _closeButton;
 	private bool _refreshingUi;
-	private static readonly StyleBoxFlat ConnectedChipStyle = CreateChipStyle(new Color(0.16f, 0.24f, 0.20f, 0.96f), new Color(0.30f, 0.72f, 0.42f, 0.9f));
-	private static readonly StyleBoxFlat JoinChipStyle = CreateChipStyle(new Color(0.23f, 0.19f, 0.12f, 0.96f), new Color(0.93f, 0.70f, 0.27f, 0.9f));
+	private StyleBoxFlat _connectedChipStyle;
+	private StyleBoxFlat _joinChipStyle;
 
 	public override void _Ready()
 	{
@@ -22,6 +22,8 @@ public partial class ControlsOverlay : Control
 		_defaultInputOption = GetNode<OptionButton>("CenterContainer/PopupPanel/MarginContainer/Content/InputSettings/DefaultInputRow/DefaultInputOption");
 		_connectedRow = GetNode<HBoxContainer>("CenterContainer/PopupPanel/MarginContainer/Content/ConnectedRow");
 		_closeButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/CloseButton");
+		_connectedChipStyle = CreateChipStyle(new Color(0.16f, 0.24f, 0.20f, 0.96f), new Color(0.30f, 0.72f, 0.42f, 0.9f));
+		_joinChipStyle = CreateChipStyle(new Color(0.23f, 0.19f, 0.12f, 0.96f), new Color(0.93f, 0.70f, 0.27f, 0.9f));
 
 		_defaultInputOption.AddItem("Keyboard", (int)SettingsConfig.PrimaryInputMode.Keyboard);
 		_defaultInputOption.AddItem("Touch", (int)SettingsConfig.PrimaryInputMode.Touch);
@@ -30,6 +32,12 @@ public partial class ControlsOverlay : Control
 		_defaultInputOption.ItemSelected += OnDefaultInputSelected;
 		_closeButton.Pressed += QueueFree;
 		RefreshUi();
+	}
+
+	public override void _ExitTree()
+	{
+		_connectedChipStyle = null;
+		_joinChipStyle = null;
 	}
 
 	public override void _UnhandledInput(InputEvent inputEvent)
@@ -151,7 +159,7 @@ public partial class ControlsOverlay : Control
 	private void AddDeviceChip(LocalInputControllerConfig controllerSetup, int slotNumber)
 	{
 		var localInputConfig = LocalInputConfig.Get();
-		AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.GetLeavePromptIcon(controllerSetup), "To Leave", ConnectedChipStyle);
+		AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.GetLeavePromptIcon(controllerSetup), "To Leave", _connectedChipStyle);
 	}
 
 	private void AddJoinChip(LocalInputConfig localInputConfig)
@@ -162,7 +170,7 @@ public partial class ControlsOverlay : Control
 
 		icons.Add(localInputConfig.JoinPromptIcon);
 		var touchText = localInputConfig.HasTouchSetup() ? string.Empty : "or touch";
-		AddChip("Press", string.Empty, icons, touchText, "to join", JoinChipStyle);
+		AddChip("Press", string.Empty, icons, touchText, "to join", _joinChipStyle);
 	}
 
 	private void AddChip(string topText, string middleText, Texture2D icon, string bottomText, StyleBoxFlat style)

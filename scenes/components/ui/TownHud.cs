@@ -11,10 +11,10 @@ public partial class TownHud : CanvasLayer
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
 	private static readonly PackedScene CompanyLogoEditorScene = ResourceLoader.Load<PackedScene>(CompanyLogoEditorScenePath);
 	private static readonly PackedScene CompanyOverviewScene = ResourceLoader.Load<PackedScene>(CompanyOverviewScenePath);
-	private static readonly Texture2D SpeedX0Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/pause.svg");
-	private static readonly Texture2D SpeedSlowedIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_slowed.svg");
-	private static readonly Texture2D SpeedX1Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x1.svg");
-	private static readonly Texture2D SpeedX10Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x10.svg");
+	private readonly Texture2D _speedX0Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/pause.svg");
+	private readonly Texture2D _speedSlowedIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_slowed.svg");
+	private readonly Texture2D _speedX1Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x1.svg");
+	private readonly Texture2D _speedX10Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x10.svg");
 
 	[Signal]
 	public delegate void BackPressedEventHandler();
@@ -180,10 +180,10 @@ public partial class TownHud : CanvasLayer
 
 		_speedToggleButton.Icon = _timeState.CurrentSpeed switch
 		{
-			TownTimeState.TimeSpeed.X100 => SpeedX10Icon,
-			TownTimeState.TimeSpeed.X10 => SpeedX1Icon,
-			TownTimeState.TimeSpeed.X0 => SpeedX0Icon,
-			_ => SpeedSlowedIcon
+			TownTimeState.TimeSpeed.X100 => _speedX10Icon,
+			TownTimeState.TimeSpeed.X10 => _speedX1Icon,
+			TownTimeState.TimeSpeed.X0 => _speedX0Icon,
+			_ => _speedSlowedIcon
 		};
 	}
 }

@@ -8,12 +8,23 @@ public partial class LocalInputConfig : Node
 {
 	public const int MaxLocalPlayers = 4;
 
-	private static readonly Texture2D XboxAIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/xbox_button_a.svg");
-	private static readonly Texture2D XboxBIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/xbox_button_b.svg");
-	private static readonly Texture2D MouseIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/mouse_left_button.svg");
-	private static readonly Texture2D EnterIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/keyboard_enter.svg");
-	private static readonly Texture2D BackspaceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/keyboard_backspace.svg");
-	private static readonly Texture2D PhoneIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_phone.png");
+	[Export]
+	public Texture2D XboxAIcon { get; private set; }
+
+	[Export]
+	public Texture2D XboxBIcon { get; private set; }
+
+	[Export]
+	public Texture2D MouseIcon { get; private set; }
+
+	[Export]
+	public Texture2D EnterIcon { get; private set; }
+
+	[Export]
+	public Texture2D BackspaceIcon { get; private set; }
+
+	[Export]
+	public Texture2D PhoneIcon { get; private set; }
 
 	[Export]
 	public Array<LocalInputControllerConfig> ControllerSetups { get; private set; } = new();
@@ -36,6 +47,11 @@ public partial class LocalInputConfig : Node
 	public override void _Ready()
 	{
 		InitializeCurrentControllerSetups();
+	}
+
+	public override void _ExitTree()
+	{
+		ControllerSetups.Clear();
 	}
 
 	public void InitializeCurrentControllerSetups()
