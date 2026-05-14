@@ -18,4 +18,4 @@ Priorities:
 - Keep disk persistence out for now unless explicitly requested.
 - Make the data usable by Town, Roster Hall, and future arena combat without duplicating state.
 - Keep the first version minimal and focused on supporting one starting gladiator, roster display, death/replacement, and future contract rewards that update both current state and career counters correctly.
-- When input work resumes, add actual join/leave mutation to `LocalInputConfig` and keep `ControlsOverlay` as a renderer/editor for `SaveNode.SettingsConfig` plus `LocalInputConfig.ControllerSetups`.
+- When input work resumes, wire `LocalInputConfig.ControllerSetups` into gameplay player input routing; `ControlsOverlay` already handles rendering and join/leave editing for current setups.
