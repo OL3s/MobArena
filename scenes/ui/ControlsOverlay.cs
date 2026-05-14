@@ -198,12 +198,6 @@ public partial class ControlsOverlay : Control
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 
-		var middleLabel = new Label
-		{
-			Text = middleText,
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-
 		var iconRow = new HBoxContainer();
 		iconRow.AddThemeConstantOverride("separation", 8);
 		iconRow.Alignment = BoxContainer.AlignmentMode.Center;
@@ -220,14 +214,6 @@ public partial class ControlsOverlay : Control
 			iconRow.AddChild(textureRect);
 		}
 
-		var touchLabel = new Label
-		{
-			Text = touchText,
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-		touchLabel.AddThemeFontSizeOverride("font_size", 13);
-		touchLabel.Modulate = new Color(1, 1, 1, 0.72f);
-
 		var bottomLabel = new Label
 		{
 			Text = bottomText,
@@ -236,11 +222,27 @@ public partial class ControlsOverlay : Control
 
 		chip.AddChild(topLabel);
 		if (!string.IsNullOrEmpty(middleText))
+		{
+			var middleLabel = new Label
+			{
+				Text = middleText,
+				HorizontalAlignment = HorizontalAlignment.Center
+			};
 			chip.AddChild(middleLabel);
+		}
 		if (icons.Count > 0)
 			chip.AddChild(iconRow);
 		if (!string.IsNullOrEmpty(touchText))
+		{
+			var touchLabel = new Label
+			{
+				Text = touchText,
+				HorizontalAlignment = HorizontalAlignment.Center
+			};
+			touchLabel.AddThemeFontSizeOverride("font_size", 13);
+			touchLabel.Modulate = new Color(1, 1, 1, 0.72f);
 			chip.AddChild(touchLabel);
+		}
 		chip.AddChild(bottomLabel);
 		margin.AddChild(chip);
 		panel.AddChild(margin);
