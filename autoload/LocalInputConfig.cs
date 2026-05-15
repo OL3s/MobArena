@@ -36,6 +36,8 @@ public partial class LocalInputConfig : Node
 	public string JoinPromptLabel => ControllerSetups.Count >= MaxLocalPlayers ? "All 4 local slots filled" : "Press A to join";
 	public string LeavePromptLabel => IsMobilePlatform() ? "Leave on phone: not set yet" : IsConsoleLikePlatform() ? "Press B to leave" : "Press Backspace to leave";
 	public bool HasControllerSetups => ControllerSetups.Count > 0;
+	public bool HasKeyboardPlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Keyboard);
+	public bool HasTouchPlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Touch);
 	public bool CanJoin => ControllerSetups.Count < MaxLocalPlayers;
 
 	public static LocalInputConfig Get()
@@ -76,7 +78,7 @@ public partial class LocalInputConfig : Node
 
 	public bool TryJoinGamepad(int deviceId)
 	{
-		if (!CanJoin || HasGamepadSetup(deviceId))
+		if (!CanJoin || HasGamepadPlayer(deviceId))
 			return false;
 
 		ControllerSetups.Add(LocalInputControllerConfig.Create(
@@ -89,7 +91,7 @@ public partial class LocalInputConfig : Node
 
 	public bool TryJoinKeyboard()
 	{
-		if (!CanJoin || HasKeyboardSetup())
+		if (!CanJoin || HasKeyboardPlayer)
 			return false;
 
 		ControllerSetups.Add(LocalInputControllerConfig.Create("Keyboard", LocalInputControllerConfig.ControllerKind.Keyboard, -1, MouseIcon));
@@ -98,7 +100,7 @@ public partial class LocalInputConfig : Node
 
 	public bool TryJoinTouch()
 	{
-		if (!CanJoin || HasTouchSetup())
+		if (!CanJoin || HasTouchPlayer)
 			return false;
 
 		ControllerSetups.Add(LocalInputControllerConfig.Create("Touch", LocalInputControllerConfig.ControllerKind.Touch, -1, PhoneIcon));
@@ -131,14 +133,30 @@ public partial class LocalInputConfig : Node
 		return TryLeaveFirst(LocalInputControllerConfig.ControllerKind.Touch);
 	}
 
+	public bool HasGamepadPlayer()
+	{
+		return HasControllerKind(LocalInputControllerConfig.ControllerKind.Gamepad);
+	}
+
+	public bool HasGamepadPlayer(int deviceId)
+	{
+		foreach (var controllerSetup in ControllerSetups)
+		{
+			if (controllerSetup.Kind == LocalInputControllerConfig.ControllerKind.Gamepad && controllerSetup.DeviceId == deviceId)
+				return true;
+		}
+
+		return false;
+	}
+
 	public bool HasKeyboardSetup()
 	{
-		return HasControllerKind(LocalInputControllerConfig.ControllerKind.Keyboard);
+		return HasKeyboardPlayer;
 	}
 
 	public bool HasTouchSetup()
 	{
-		return HasControllerKind(LocalInputControllerConfig.ControllerKind.Touch);
+		return HasTouchPlayer;
 	}
 
 	public Texture2D GetLeavePromptIcon(LocalInputControllerConfig controllerSetup)
@@ -201,7 +219,7 @@ public partial class LocalInputConfig : Node
 			if (ControllerSetups.Count >= MaxLocalPlayers)
 				break;
 
-			if (HasGamepadSetup(joypadId))
+			if (HasGamepadPlayer(joypadId))
 				continue;
 
 			ControllerSetups.Add(LocalInputControllerConfig.Create(
@@ -210,17 +228,6 @@ public partial class LocalInputConfig : Node
 				joypadId,
 				XboxAIcon));
 		}
-	}
-
-	private bool HasGamepadSetup(int deviceId)
-	{
-		foreach (var controllerSetup in ControllerSetups)
-		{
-			if (controllerSetup.Kind == LocalInputControllerConfig.ControllerKind.Gamepad && controllerSetup.DeviceId == deviceId)
-				return true;
-		}
-
-		return false;
 	}
 
 	private bool TryLeaveFirst(LocalInputControllerConfig.ControllerKind kind)
