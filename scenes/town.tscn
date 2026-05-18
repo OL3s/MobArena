@@ -80,6 +80,7 @@ BuildingName = "Roster Hall"
 BuildingTexture = ExtResource("13_roster_building")
 IconTexture = ExtResource("14_roster_icon")
 SceneToOpen = ExtResource("22_roster_hall")
+RequireConfirmation = false
 
 [node name="TrainingHall" parent="World" unique_id=639749834 instance=ExtResource("2_townbuilding")]
 position = Vector2(300, 250)

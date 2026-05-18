@@ -5,6 +5,8 @@ namespace MobArena.Scripts.Resources;
 
 public partial class CompanyRunData : Resource
 {
+    private const float ConditionWarningThreshold = 5f;
+
     [Signal]
     public delegate void RunChangedEventHandler();
 
@@ -86,6 +88,30 @@ public partial class CompanyRunData : Resource
     public void NotifyRunChanged()
     {
         EmitSignal(SignalName.RunChanged);
+    }
+
+    public int GetStarvingGladiatorCount()
+    {
+        var count = 0;
+        foreach (var gladiator in Gladiators)
+        {
+            if (gladiator?.Provisions < ConditionWarningThreshold)
+                count++;
+        }
+
+        return count;
+    }
+
+    public int GetExhaustedGladiatorCount()
+    {
+        var count = 0;
+        foreach (var gladiator in Gladiators)
+        {
+            if (gladiator?.Exhaustion < ConditionWarningThreshold)
+                count++;
+        }
+
+        return count;
     }
 
     public void KillGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)

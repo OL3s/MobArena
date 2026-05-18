@@ -4,10 +4,15 @@ This file captures what to focus on next. Update it near the end of a session so
 
 ## Next Focus
 
-Continue building the management loop around the current company/gladiator data layer, while keeping the controls/input configuration path ready for future gameplay input work.
+Remove the separate Roster Hall scene path and fold roster management into the town as an open management area where gladiators are visible as idling characters.
 
 Priorities:
 
+- Replace the current `Town -> Roster Hall -> Town` scene navigation with in-town roster management. Roster Hall should become part of the town management space rather than a separate scene.
+- Aim for an open area where the player can see current gladiators idling, then drag and drop them into management sections.
+- Put the Training Hall section on the left side of this roster management space.
+- Put the healing/rest section on the right side of this roster management space.
+- Keep a clear way to access market functions from this flow: hiring new gladiators, buying rations/supplies, and future weapon/blacksmith equipment work.
 - Build the next management actions around the current `GladiatorData`, `CompanyRunData`, ration, cemetery, and time-progression resources instead of adding parallel state.
 - Keep gladiator death centralized through `CompanyRunData.KillGladiator`; dead gladiators should move from active `Gladiators` to `Cemetery`, not remain in the active roster with a dead flag.
 - Keep adding gladiators through `CompanyRunData.AddGladiator` so `CompanyCareerData.TotalGladiatorsInCareer` stays correct.
@@ -20,6 +25,6 @@ Priorities:
 - Keep gameplay mutation helpers on the relevant resources, not on `SaveNode`; `SaveNode` should remain the save/load boundary.
 - Store runtime company/roster data through `SaveNode`, matching the current runtime-only save approach.
 - Disk persistence is now present. Keep autosave deliberate: company create/edit, app exit, and town day rollover at 00:00.
-- Make the data usable by Town, Roster Hall, and future arena combat without duplicating state.
+- Make the data usable by Town and future arena combat without duplicating state; avoid adding new Roster Hall-only state.
 - Keep the first combat prototype minimal and focused on using the existing two-starting-gladiator company, roster display, death/cemetery flow, and future contract rewards that update both current state and career counters correctly.
 - When input work resumes, wire `LocalInputConfig.ControllerSetups` into gameplay player input routing; `ControlsOverlay` already handles rendering and join/leave editing for current setups.

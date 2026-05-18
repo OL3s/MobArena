@@ -13,6 +13,8 @@
 [ext_resource type="Texture2D" uid="uid://i30yynsg5d60" path="res://assets/ui/icons/speed_slowed.svg" id="11_speed_slowed_icon"]
 [ext_resource type="Script" uid="uid://daig828dffkkv" path="res://scenes/components/ui/TimelineLine.cs" id="12_timeline_line"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/provisions.svg" id="13_ration_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/exhaustion.svg" id="14_exhaustion_icon"]
+[ext_resource type="Texture2D" uid="uid://cuwjn0ry6whd7" path="res://assets/town/icons/roster_icon.svg" id="15_roster_icon"]
 
 [node name="TownHud" type="CanvasLayer" unique_id=1424046690]
 script = ExtResource("1_town_hud")
@@ -61,48 +63,123 @@ text = "Gladiators owned: 1"
 layout_mode = 2
 text = "Champions slayed: 0"
 
+[node name="GladiatorsButton" type="Button" parent="TopPanel/Row"]
+custom_minimum_size = Vector2(96, 64)
+layout_mode = 2
+tooltip_text = "Open gladiators overview."
+text = "Gladiators"
+icon = ExtResource("15_roster_icon")
+icon_alignment = 1
+vertical_icon_alignment = 0
+
 [node name="GoldPanel" type="PanelContainer" parent="TopPanel/Row" unique_id=2053172263]
 custom_minimum_size = Vector2(112, 0)
 layout_mode = 2
+tooltip_text = "Company gold and ration supplies."
 
-[node name="GoldRow" type="HBoxContainer" parent="TopPanel/Row/GoldPanel" unique_id=1591558064]
+[node name="ResourceColumn" type="VBoxContainer" parent="TopPanel/Row/GoldPanel"]
 layout_mode = 2
-theme_override_constants/separation = 6
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
 alignment = 1
 
-[node name="GoldIcon" type="TextureRect" parent="TopPanel/Row/GoldPanel/GoldRow" unique_id=672277612]
-custom_minimum_size = Vector2(32, 32)
+[node name="SupplyTitle" type="Label" parent="TopPanel/Row/GoldPanel/ResourceColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Supply"
+horizontal_alignment = 0
+
+[node name="GoldRow" type="HBoxContainer" parent="TopPanel/Row/GoldPanel/ResourceColumn" unique_id=1591558064]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+alignment = 0
+
+[node name="GoldIcon" type="TextureRect" parent="TopPanel/Row/GoldPanel/ResourceColumn/GoldRow" unique_id=672277612]
+custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 texture = ExtResource("5_gold_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="GoldLabel" type="Label" parent="TopPanel/Row/GoldPanel/GoldRow" unique_id=1433043190]
+[node name="GoldLabel" type="Label" parent="TopPanel/Row/GoldPanel/ResourceColumn/GoldRow" unique_id=1433043190]
 layout_mode = 2
 text = "100"
-horizontal_alignment = 1
+horizontal_alignment = 0
 vertical_alignment = 1
 
-[node name="RationsPanel" type="PanelContainer" parent="TopPanel/Row"]
-custom_minimum_size = Vector2(112, 0)
+[node name="RationsRow" type="HBoxContainer" parent="TopPanel/Row/GoldPanel/ResourceColumn"]
 layout_mode = 2
-
-[node name="RationsRow" type="HBoxContainer" parent="TopPanel/Row/RationsPanel"]
-layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 6
-alignment = 1
+alignment = 0
 
-[node name="RationsIcon" type="TextureRect" parent="TopPanel/Row/RationsPanel/RationsRow"]
-custom_minimum_size = Vector2(32, 32)
+[node name="RationsIcon" type="TextureRect" parent="TopPanel/Row/GoldPanel/ResourceColumn/RationsRow"]
+custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 texture = ExtResource("13_ration_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="RationsLabel" type="Label" parent="TopPanel/Row/RationsPanel/RationsRow"]
+[node name="RationsSupplyLabel" type="Label" parent="TopPanel/Row/GoldPanel/ResourceColumn/RationsRow"]
 layout_mode = 2
 text = "0"
-horizontal_alignment = 1
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="ConditionPanel" type="PanelContainer" parent="TopPanel/Row"]
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+tooltip_text = "Roster warnings: starving gladiators and exhausted gladiators under 50%."
+
+[node name="ConditionColumn" type="VBoxContainer" parent="TopPanel/Row/ConditionPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="RiskTitle" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Risk"
+horizontal_alignment = 0
+
+[node name="StarvingRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+alignment = 0
+
+[node name="StarvingIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/StarvingRow"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+texture = ExtResource("13_ration_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StarvingLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/StarvingRow"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="ExhaustionRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+alignment = 0
+
+[node name="ExhaustionIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/ExhaustionRow"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+texture = ExtResource("14_exhaustion_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ExhaustedLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/ExhaustionRow"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 0
 vertical_alignment = 1
 
 [node name="SettingsButton" parent="TopPanel/Row" unique_id=665519815 instance=ExtResource("4_settings_button")]

@@ -8,6 +8,8 @@ public partial class GladiatorCard : PanelContainer
     private const string HealthIconPath = "res://assets/ui/gladiator_icons/health.svg";
     private const string StaminaIconPath = "res://assets/ui/gladiator_icons/stamina.svg";
     private const float MaxConditionValue = 10f;
+    private static readonly Color NormalStatColor = Colors.White;
+    private static readonly Color CappedStatColor = new(0.92f, 0.18f, 0.14f);
 
     private TextureRect _portrait;
     private Label _nameLabel;
@@ -68,7 +70,7 @@ public partial class GladiatorCard : PanelContainer
         ConfigureConditionBar(_exhaustionBar, gladiatorData.Exhaustion);
         _skillIcon.Texture = ResourceLoader.Load<Texture2D>(GetSkillIconPath(gladiatorData.Equipment.Skill));
         _skillLabel.Text = gladiatorData.Equipment.Skill.ToString();
-        _maxStaminaLabel.Text = gladiatorData.MaxStamina.ToString();
+        ConfigureStaminaValue(gladiatorData);
         _strengthLabel.Text = $"Str {gladiatorData.Level.Strength}";
         _agilityLabel.Text = $"Agi {gladiatorData.Level.Agility}";
         _vitalityLabel.Text = $"Vit {gladiatorData.Level.Vitality}";
@@ -86,6 +88,17 @@ public partial class GladiatorCard : PanelContainer
     {
         bar.MaxValue = MaxConditionValue;
         bar.Value = Mathf.Clamp(value, 0f, MaxConditionValue);
+    }
+
+    private void ConfigureStaminaValue(GladiatorData gladiatorData)
+    {
+        var recoverableMaxStamina = gladiatorData.RecoverableMaxStamina;
+        var isCapped = recoverableMaxStamina < gladiatorData.MaxStamina;
+        var color = isCapped ? CappedStatColor : NormalStatColor;
+
+        _maxStaminaLabel.Text = recoverableMaxStamina.ToString();
+        _maxStaminaLabel.AddThemeColorOverride("font_color", color);
+        _staminaIcon.Modulate = color;
     }
 
     private static void ConfigureHealthCapMarker(Control marker, float recoverableRatio)

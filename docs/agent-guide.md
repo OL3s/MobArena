@@ -13,8 +13,8 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 - `LocalInputConfig` is autoloaded from `autoload/LocalInputConfig.tscn` for runtime local input/controller setup. It reads user-facing input preferences from `SaveNode.SettingsConfig` and exposes `ControllerSetups` for UI to render.
 - The game concept comes from `../GameIdeas/MobGladiator.md`.
 - `docs/game-design.md` contains the local implementation-oriented summary of that concept.
-- The initial scene flow is `scenes/main_menu.tscn` to `scenes/town.tscn`. Roster Hall opens as `scenes/roster_hall.tscn` and returns to town. Other town buildings currently open modal overlay packed scenes.
-- Roster Hall should stay town-like: neutral root, empty `World`, shared `TownHud.tscn`, and room-specific action buttons on the left side. Current roster actions should open overlays rather than replacing the room.
+- The initial scene flow is `scenes/main_menu.tscn` to `scenes/town.tscn`. Roster Hall currently opens as `scenes/roster_hall.tscn` and returns to town, but the next direction is to remove that separate scene path and fold roster management into the town. Other town buildings currently open modal overlay packed scenes.
+- Roster management should move toward an in-town open area where current gladiators are visible idling and can be dragged into management sections. Aim for Training Hall on the left, healing/rest on the right, and clear access to market functions for new gladiators, rations/supplies, and future weapon/blacksmith equipment work.
 - `scenes/town.tscn` and `scenes/arena.tscn` both use neutral roots with a separate `Node2D` world and `CanvasLayer` controller UI.
 - Town uses an implied horizontal-road layout with 1:1 buildings as `Node2D` instances of `scenes/components/town/TownBuilding.tscn` arranged in a 3x2 grid. The road is layout space only and is not drawn.
 - `TownBuilding` has exported `PackedScene` targets for `OverlayToOpen` and `SceneToOpen`. Use `OverlayToOpen` for town building UI that should stay over town; use `SceneToOpen` for full scene navigation such as Roster Hall.
