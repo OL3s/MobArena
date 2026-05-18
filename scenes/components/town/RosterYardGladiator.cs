@@ -28,6 +28,9 @@ public partial class RosterYardGladiator : Node2D
     [Signal]
     public delegate void PressedEventHandler(RosterYardGladiator gladiator);
 
+    [Signal]
+    public delegate void PointerPressedEventHandler(RosterYardGladiator gladiator, Vector2 viewportPosition);
+
     public GladiatorData GladiatorData
     {
         get => _gladiatorData;
@@ -143,11 +146,16 @@ public partial class RosterYardGladiator : Node2D
 
     private void OnInputEvent(Node viewport, InputEvent inputEvent, long shapeIdx)
     {
-        if (inputEvent is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left }
-            && inputEvent is not InputEventScreenTouch { Pressed: true })
+        Vector2 viewportPosition;
+        if (inputEvent is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } mouseButton)
+            viewportPosition = mouseButton.Position;
+        else if (inputEvent is InputEventScreenTouch { Pressed: true } screenTouch)
+            viewportPosition = screenTouch.Position;
+        else
             return;
 
         GetViewport()?.SetInputAsHandled();
+        EmitSignal(SignalName.PointerPressed, this, viewportPosition);
         EmitSignal(SignalName.Pressed, this);
     }
 
@@ -155,6 +163,11 @@ public partial class RosterYardGladiator : Node2D
     {
         _isSelected = selected;
         RefreshDetails();
+    }
+
+    public void SetDragHidden(bool dragHidden)
+    {
+        Visible = !dragHidden;
     }
 
     private void SetDisplayDetail(bool displayDetail)
