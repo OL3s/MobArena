@@ -91,8 +91,13 @@ public partial class MainMenu : Control
 
 	private void OnCompanyApplied(MobArena.Scripts.Resources.CompanyLogoData logoData)
 	{
+		var isNewCompany = !_saveNode.HasCompany;
 		_saveNode.CompanyLogoData.CopyFrom(logoData);
+		if (isNewCompany)
+			_saveNode.StartNewCompanyRun();
+
 		_saveNode.HasCompany = true;
+		_saveNode.Save();
 		RefreshCompanyUi();
 	}
 

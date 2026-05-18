@@ -7,6 +7,7 @@ namespace MobArena.Scenes.UI;
 
 public partial class SettingsOverlay : Control
 {
+	private const string MainMenuScene = "res://scenes/main_menu.tscn";
 	private const int ControlsCategory = 0;
 	private const int VideoCategory = 1;
 	private const int SoundCategory = 2;
@@ -23,7 +24,9 @@ public partial class SettingsOverlay : Control
 	private Label _defaultInputLabel;
 	private OptionButton _defaultInputOption;
 	private Control _controlsSettings;
+	private Control _gameplaySettings;
 	private Control _saveDataSettings;
+	private CheckBox _debugCheckBox;
 	private Label _placeholderLabel;
 	private bool _refreshingUi;
 
@@ -36,11 +39,13 @@ public partial class SettingsOverlay : Control
 		_saveDataButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/SaveDataButton");
 		_categoryTitle = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/CategoryTitle");
 		_controlsSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings");
+		_gameplaySettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings");
 		_saveDataSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings");
 		_placeholderLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/PlaceholderLabel");
 		_autoDetectCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/AutoDetectCheckBox");
 		_defaultInputLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/DefaultInputRow/DefaultInputLabel");
 		_defaultInputOption = GetNode<OptionButton>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/DefaultInputRow/DefaultInputOption");
+		_debugCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/DebugCheckBox");
 
 		_defaultInputOption.AddItem("None", (int)SettingsConfig.PrimaryInputMode.None);
 		_defaultInputOption.AddItem("Keyboard", (int)SettingsConfig.PrimaryInputMode.Keyboard);
@@ -54,6 +59,7 @@ public partial class SettingsOverlay : Control
 		_saveDataButton.Pressed += () => ShowCategory(SaveDataCategory);
 		_autoDetectCheckBox.Toggled += OnAutoDetectToggled;
 		_defaultInputOption.ItemSelected += OnDefaultInputSelected;
+		_debugCheckBox.Toggled += OnDebugToggled;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteRunButton").Pressed += OnDeleteRunDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteCompanyButton").Pressed += OnDeleteCompanyDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteSettingsButton").Pressed += OnDeleteSettingsDataPressed;
@@ -61,15 +67,16 @@ public partial class SettingsOverlay : Control
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Actions/ApplyButton").Pressed += OnApplyPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Actions/CloseButton").Pressed += QueueFree;
 
-		RefreshControlsSettings();
+		RefreshSettingsUi();
 		ShowCategory(ControlsCategory);
 	}
 
 	private void ShowCategory(int category)
 	{
 		_controlsSettings.Visible = category == ControlsCategory;
+		_gameplaySettings.Visible = category == GameplayCategory;
 		_saveDataSettings.Visible = category == SaveDataCategory;
-		_placeholderLabel.Visible = category != ControlsCategory && category != SaveDataCategory;
+		_placeholderLabel.Visible = category != ControlsCategory && category != GameplayCategory && category != SaveDataCategory;
 
 		_categoryTitle.Text = category switch
 		{
@@ -84,7 +91,6 @@ public partial class SettingsOverlay : Control
 		{
 			VideoCategory => "Video settings will live here: resolution, fullscreen, scale, and visual effects.",
 			SoundCategory => "Sound settings will live here: master, music, UI, and effects volume.",
-			GameplayCategory => "Gameplay settings will live here: difficulty, camera, and quality-of-life toggles.",
 			_ => string.Empty
 		};
 
@@ -95,14 +101,15 @@ public partial class SettingsOverlay : Control
 		_saveDataButton.Disabled = category == SaveDataCategory;
 	}
 
-	private void RefreshControlsSettings()
+	private void RefreshSettingsUi()
 	{
 		_refreshingUi = true;
-		var settingsConfig = SaveNode.Get()?.SettingsConfig ?? new SettingsConfig();
+		var settingsConfig = SaveNode.Get().SettingsConfig;
 		_autoDetectCheckBox.ButtonPressed = settingsConfig.AutoDetectPrimaryInput;
 		_defaultInputOption.Disabled = settingsConfig.AutoDetectPrimaryInput;
 		_defaultInputLabel.Modulate = _defaultInputOption.Disabled ? new Color(1, 1, 1, 0.45f) : Colors.White;
 		_defaultInputOption.Select(_defaultInputOption.GetItemIndex((int)settingsConfig.DefaultPrimaryInput));
+		_debugCheckBox.ButtonPressed = settingsConfig.DebugEnabled;
 		_refreshingUi = false;
 	}
 
@@ -111,12 +118,12 @@ public partial class SettingsOverlay : Control
 		if (_refreshingUi)
 			return;
 
-		var settingsConfig = SaveNode.Get()?.SettingsConfig;
+		var settingsConfig = SaveNode.Get().SettingsConfig;
 		if (settingsConfig == null)
 			return;
 
 		settingsConfig.AutoDetectPrimaryInput = enabled;
-		RefreshControlsSettings();
+		RefreshSettingsUi();
 	}
 
 	private void OnDefaultInputSelected(long itemIndex)
@@ -124,17 +131,30 @@ public partial class SettingsOverlay : Control
 		if (_refreshingUi)
 			return;
 
-		var settingsConfig = SaveNode.Get()?.SettingsConfig;
+		var settingsConfig = SaveNode.Get().SettingsConfig;
 		if (settingsConfig == null)
 			return;
 
 		settingsConfig.DefaultPrimaryInput = (SettingsConfig.PrimaryInputMode)_defaultInputOption.GetItemId((int)itemIndex);
-		RefreshControlsSettings();
+		RefreshSettingsUi();
+	}
+
+	private void OnDebugToggled(bool enabled)
+	{
+		if (_refreshingUi)
+			return;
+
+		var settingsConfig = SaveNode.Get().SettingsConfig;
+		if (settingsConfig == null)
+			return;
+
+		settingsConfig.DebugEnabled = enabled;
+		RefreshSettingsUi();
 	}
 
 	private static void OnApplyPressed()
 	{
-		var error = SaveNode.Get()?.Save() ?? Error.Failed;
+		var error = SaveNode.Get().Save();
 		if (error == Error.Ok)
 		{
 			GlobalOverlay.Get()?.ShowBlurredPopup(
@@ -160,15 +180,15 @@ public partial class SettingsOverlay : Control
 
 	private void OnDeleteSettingsDataPressed()
 	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSettingsData(), RefreshControlsSettings);
+		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSettingsData());
 	}
 
 	private void OnDeleteAllSaveDataPressed()
 	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSave(), RefreshControlsSettings);
+		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSave());
 	}
 
-	private static void ConfirmDeleteSaveData(Func<SaveNode, Error> deleteAction, Action afterDelete = null)
+	private void ConfirmDeleteSaveData(Func<SaveNode, Error> deleteAction)
 	{
 		GlobalOverlay.Get()?.ShowGoCancelPopup(
 			"Delete Save Data?",
@@ -176,23 +196,21 @@ public partial class SettingsOverlay : Control
 			() =>
 			{
 				DeleteSaveData(deleteAction);
-				afterDelete?.Invoke();
 			},
 			"Delete");
 	}
 
-	private static void DeleteSaveData(Func<SaveNode, Error> deleteAction)
+	private void DeleteSaveData(Func<SaveNode, Error> deleteAction)
 	{
 		var saveNode = SaveNode.Get();
-		if (saveNode == null)
+
+		var error = deleteAction(saveNode);
+		if (error != Error.Ok)
 		{
-			GlobalOverlay.Get()?.ShowBlurredPopup("Save Data", "Save data could not be changed. SaveNode is missing.");
+			GlobalOverlay.Get()?.ShowBlurredPopup("Save Data", $"Save data could not be deleted. Error: {error}.");
 			return;
 		}
 
-		var error = deleteAction(saveNode);
-		GlobalOverlay.Get()?.ShowBlurredPopup(
-			"Save Data",
-			error == Error.Ok ? "Save data deleted." : $"Save data could not be deleted. Error: {error}.");
+		GetTree().ChangeSceneToFile(MainMenuScene);
 	}
 }

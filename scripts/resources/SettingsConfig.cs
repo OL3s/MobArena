@@ -17,4 +17,7 @@ public partial class SettingsConfig : Resource
 
 	[Export]
 	public PrimaryInputMode DefaultPrimaryInput { get; set; } = PrimaryInputMode.Keyboard;
+
+	[Export]
+	public bool DebugEnabled { get; set; } = true;
 }

@@ -7,15 +7,19 @@ public partial class GladiatorCard : PanelContainer
 {
     private const string HealthIconPath = "res://assets/ui/gladiator_icons/health.svg";
     private const string StaminaIconPath = "res://assets/ui/gladiator_icons/stamina.svg";
+    private const float MaxConditionValue = 10f;
 
     private TextureRect _portrait;
     private Label _nameLabel;
     private TextureRect _healthIcon;
     private ProgressBar _healthBar;
     private Label _healthLabel;
+    private ColorRect _recoverableHealthRange;
+    private ColorRect _recoverableMaxHealthMarker;
     private TextureRect _staminaIcon;
-    private ProgressBar _staminaBar;
-    private Label _staminaLabel;
+    private Label _maxStaminaLabel;
+    private ProgressBar _provisionsBar;
+    private ProgressBar _exhaustionBar;
     private TextureRect _skillIcon;
     private Label _skillLabel;
     private Label _strengthLabel;
@@ -30,11 +34,14 @@ public partial class GladiatorCard : PanelContainer
         _healthIcon = GetNode<TextureRect>("MarginContainer/Layout/Vitals/HealthLine/Icon");
         _healthBar = GetNode<ProgressBar>("MarginContainer/Layout/Vitals/HealthLine/Bar");
         _healthLabel = GetNode<Label>("MarginContainer/Layout/Vitals/HealthLine/Bar/Value");
-        _staminaIcon = GetNode<TextureRect>("MarginContainer/Layout/Vitals/StaminaLine/Icon");
-        _staminaBar = GetNode<ProgressBar>("MarginContainer/Layout/Vitals/StaminaLine/Bar");
-        _staminaLabel = GetNode<Label>("MarginContainer/Layout/Vitals/StaminaLine/Bar/Value");
+        _recoverableHealthRange = GetNode<ColorRect>("MarginContainer/Layout/Vitals/HealthLine/Bar/RecoverableHealthRange");
+        _recoverableMaxHealthMarker = GetNode<ColorRect>("MarginContainer/Layout/Vitals/HealthLine/Bar/RecoverableMaxMarker");
+        _provisionsBar = GetNode<ProgressBar>("MarginContainer/Layout/Vitals/ConditionLine/ProvisionsBar");
+        _exhaustionBar = GetNode<ProgressBar>("MarginContainer/Layout/Vitals/ConditionLine/ExhaustionBar");
         _skillIcon = GetNode<TextureRect>("MarginContainer/Layout/Stats/SkillLine/Icon");
         _skillLabel = GetNode<Label>("MarginContainer/Layout/Stats/SkillLine/Skill");
+        _staminaIcon = GetNode<TextureRect>("MarginContainer/Layout/Stats/SkillLine/StaminaIcon");
+        _maxStaminaLabel = GetNode<Label>("MarginContainer/Layout/Stats/SkillLine/MaxStamina");
         _strengthLabel = GetNode<Label>("MarginContainer/Layout/Stats/PrimaryStats/Strength");
         _agilityLabel = GetNode<Label>("MarginContainer/Layout/Stats/PrimaryStats/Agility");
         _vitalityLabel = GetNode<Label>("MarginContainer/Layout/Stats/BodyStats/Vitality");
@@ -55,9 +62,13 @@ public partial class GladiatorCard : PanelContainer
         _portrait.Texture = gladiatorData.GetPortraitTexture();
         _nameLabel.Text = gladiatorData.GladiatorName;
         ConfigureBar(_healthBar, _healthLabel, gladiatorData.Health, gladiatorData.MaxHealth);
-        ConfigureBar(_staminaBar, _staminaLabel, gladiatorData.Stamina, gladiatorData.MaxStamina);
+        ConfigureRecoverableHealthRange(_recoverableHealthRange, gladiatorData.Health, gladiatorData.RecoverableConditionRatio, gladiatorData.MaxHealth);
+        ConfigureHealthCapMarker(_recoverableMaxHealthMarker, gladiatorData.RecoverableConditionRatio);
+        ConfigureConditionBar(_provisionsBar, gladiatorData.Provisions);
+        ConfigureConditionBar(_exhaustionBar, gladiatorData.Exhaustion);
         _skillIcon.Texture = ResourceLoader.Load<Texture2D>(GetSkillIconPath(gladiatorData.Equipment.Skill));
         _skillLabel.Text = gladiatorData.Equipment.Skill.ToString();
+        _maxStaminaLabel.Text = gladiatorData.MaxStamina.ToString();
         _strengthLabel.Text = $"Str {gladiatorData.Level.Strength}";
         _agilityLabel.Text = $"Agi {gladiatorData.Level.Agility}";
         _vitalityLabel.Text = $"Vit {gladiatorData.Level.Vitality}";
@@ -69,6 +80,33 @@ public partial class GladiatorCard : PanelContainer
         bar.MaxValue = Mathf.Max(1, maxValue);
         bar.Value = Mathf.Clamp(value, 0, maxValue);
         label.Text = $"{value}/{maxValue}";
+    }
+
+    private static void ConfigureConditionBar(ProgressBar bar, float value)
+    {
+        bar.MaxValue = MaxConditionValue;
+        bar.Value = Mathf.Clamp(value, 0f, MaxConditionValue);
+    }
+
+    private static void ConfigureHealthCapMarker(Control marker, float recoverableRatio)
+    {
+        var ratio = Mathf.Clamp(recoverableRatio, 0f, 1f);
+        marker.AnchorLeft = ratio;
+        marker.AnchorRight = ratio;
+        marker.OffsetLeft = -1f;
+        marker.OffsetRight = 1f;
+    }
+
+    private static void ConfigureRecoverableHealthRange(Control range, int health, float recoverableRatio, int maxHealth)
+    {
+        var currentRatio = maxHealth <= 0 ? 0f : Mathf.Clamp(health / (float)maxHealth, 0f, 1f);
+        var recoverableHealthRatio = Mathf.Clamp(recoverableRatio, 0f, 1f);
+
+        range.Visible = recoverableHealthRatio > currentRatio;
+        range.AnchorLeft = currentRatio;
+        range.AnchorRight = recoverableHealthRatio;
+        range.OffsetLeft = 0f;
+        range.OffsetRight = 0f;
     }
 
     private static string GetSkillIconPath(GladiatorEquipmentData.SignatureSkill skill)
