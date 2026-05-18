@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/components/panels/BuildingOverlayPanel.tscn" id="1_panel"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/equipment.svg" id="2_icon"]
+
+[node name="EquipmentInventoryOverlay" instance=ExtResource("1_panel")]
+Title = "Equipment Inventory"
+Body = "Company equipment and inventory will be managed here. Later this overlay should list owned weapons, armor, shields, and carried items so they can be assigned to gladiators."
+IconTexture = ExtResource("2_icon")

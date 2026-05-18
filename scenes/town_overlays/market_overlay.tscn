@@ -1,0 +1,115 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scenes/town_overlays/MarketOverlay.cs" id="1_script"]
+[ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="Texture2D" path="res://assets/town/icons/market_icon.svg" id="3_market_icon"]
+[ext_resource type="Texture2D" path="res://assets/town/icons/roster_icon.svg" id="4_roster_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/provisions.svg" id="5_rations_icon"]
+[ext_resource type="Texture2D" path="res://assets/town/icons/blacksmith_icon.svg" id="6_blacksmith_icon"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
+shader = ExtResource("2_blur_shader")
+
+[node name="MarketOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="BlurBackdrop" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_popup_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Layout" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+texture = ExtResource("3_market_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Market"
+vertical_alignment = 1
+
+[node name="Body" type="RichTextLabel" parent="CenterContainer/Panel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+bbcode_enabled = true
+text = "Choose what the company needs. Later this becomes the shared market for recruitment, supplies, and equipment."
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="Actions" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="GladiatorsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "Gladiators"
+icon = ExtResource("4_roster_icon")
+
+[node name="RationsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "Rations"
+icon = ExtResource("5_rations_icon")
+
+[node name="BlacksmithButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "Blacksmith"
+icon = ExtResource("6_blacksmith_icon")
+
+[node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+focus_mode = 2
+text = "Close"

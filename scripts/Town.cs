@@ -7,6 +7,8 @@ namespace MobArena.Scripts;
 public partial class Town : Node
 {
     private const string MainMenuScene = "res://scenes/main_menu.tscn";
+    private const string GladiatorsOverlayScene = "res://scenes/ui/GladiatorsOverlay.tscn";
+    private const string EquipmentOverlayScene = "res://scenes/ui/EquipmentInventoryOverlay.tscn";
 
     private TownBuilding _contractBoard;
 
@@ -14,6 +16,8 @@ public partial class Town : Node
     {
         _contractBoard = GetNode<TownBuilding>("World/ContractBoard");
         GetNode<TownHud>("TownHud").BackPressed += OnMainMenuPressed;
+        GetNode<Button>("World/RosterYard/GladiatorsButton").Pressed += OnGladiatorsPressed;
+        GetNode<Button>("World/RosterYard/EquipmentButton").Pressed += OnEquipmentPressed;
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
@@ -28,5 +32,25 @@ public partial class Town : Node
     private void OnMainMenuPressed()
     {
         GetTree().ChangeSceneToFile(MainMenuScene);
+    }
+
+    private static void OnGladiatorsPressed()
+    {
+        OpenOverlay(GladiatorsOverlayScene);
+    }
+
+    private static void OnEquipmentPressed()
+    {
+        OpenOverlay(EquipmentOverlayScene);
+    }
+
+    private static void OpenOverlay(string scenePath)
+    {
+        var globalOverlay = GlobalOverlay.Get();
+        var overlayScene = ResourceLoader.Load<PackedScene>(scenePath);
+        if (globalOverlay == null || overlayScene == null)
+            return;
+
+        globalOverlay.AddOverlay(overlayScene);
     }
 }

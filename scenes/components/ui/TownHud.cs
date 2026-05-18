@@ -9,7 +9,6 @@ public partial class TownHud : CanvasLayer
 {
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
-	private const string GladiatorsOverlayScenePath = "res://scenes/ui/GladiatorsOverlay.tscn";
 	private const string GladiatorDeathOverlayScenePath = "res://scenes/ui/GladiatorDeathOverlay.tscn";
 	private readonly Texture2D _speedX0Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/pause.svg");
 	private readonly Texture2D _speedSlowedIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_slowed.svg");
@@ -22,7 +21,6 @@ public partial class TownHud : CanvasLayer
 	private SaveNode _saveNode;
 	private TownTimeState _timeState;
 	private CompanyLogo _companyLogo;
-	private Button _gladiatorsButton;
 	private Label _companyNameLabel;
 	private Label _gladiatorCountLabel;
 	private Label _championsWonCountLabel;
@@ -44,7 +42,6 @@ public partial class TownHud : CanvasLayer
 		_timeState = _saveNode?.TownTimeState ?? new TownTimeState();
 
 		_companyLogo = GetNode<CompanyLogo>("TopPanel/Row/CompanyStatus/Shield");
-		_gladiatorsButton = GetNode<Button>("TopPanel/Row/GladiatorsButton");
 		_companyNameLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/CompanyName");
 		_gladiatorCountLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/StatsRow/GladiatorCount");
 		_championsWonCountLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/StatsRow/ChampionsWonCount");
@@ -64,7 +61,6 @@ public partial class TownHud : CanvasLayer
 		_companyLogo.Pressed += OpenCompanyOverview;
 		_companyLogo.MouseEntered += OnCompanyLogoMouseEntered;
 		_companyLogo.MouseExited += OnCompanyLogoMouseExited;
-		_gladiatorsButton.Pressed += OpenGladiatorsOverview;
 		companyStatus.GuiInput += OnCompanyStatusGuiInput;
 		GetNode<Button>("TopPanel/Row/BackButton").Pressed += OnBackPressed;
 		GetNode<Button>("BottomPanel/TimeRow/SpeedDownButton").Pressed += OnSpeedDownPressed;
@@ -99,11 +95,6 @@ public partial class TownHud : CanvasLayer
 			_companyLogo.Pressed -= OpenCompanyOverview;
 			_companyLogo.MouseEntered -= OnCompanyLogoMouseEntered;
 			_companyLogo.MouseExited -= OnCompanyLogoMouseExited;
-		}
-
-		if (_gladiatorsButton != null)
-		{
-			_gladiatorsButton.Pressed -= OpenGladiatorsOverview;
 		}
 
 		if (_saveNode?.CompanyRunData != null)
@@ -195,16 +186,6 @@ public partial class TownHud : CanvasLayer
 		var overview = companyOverviewScene.Instantiate<CompanyOverviewOverlay>();
 		overview.EditCompanyRequested += OnEditCompanyRequested;
 		globalOverlay.AddOverlay(overview);
-	}
-
-	private void OpenGladiatorsOverview()
-	{
-		var globalOverlay = GlobalOverlay.Get();
-		var gladiatorsOverlayScene = ResourceLoader.Load<PackedScene>(GladiatorsOverlayScenePath);
-		if (globalOverlay == null || gladiatorsOverlayScene == null)
-			return;
-
-		globalOverlay.AddOverlay(gladiatorsOverlayScene.Instantiate<GladiatorsOverlay>());
 	}
 
 	private static void SetHoverScale(Control control, bool hovered)
