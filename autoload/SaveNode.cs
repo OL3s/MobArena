@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using MobArena.Scripts.Resources;
 
@@ -32,15 +33,36 @@ public partial class SaveNode : Node
 	[Export]
 	public SettingsConfig SettingsConfig { get; private set; } = new();
 
+	public bool DebugEnabled => SettingsConfig?.DebugEnabled == true;
+
+	public void StartNewCompanyRun()
+	{
+		CompanyCareerData = new CompanyCareerData();
+		CompanyRunData = new CompanyRunData();
+		CompanyRunData.AddDefaultGladiators(CompanyCareerData, 2);
+		TownTimeState = new TownTimeState();
+	}
+
     public static SaveNode Get()
     {
         var sceneTree = Engine.GetMainLoop() as SceneTree;
-        return sceneTree?.Root?.GetNodeOrNull<SaveNode>("/root/SaveNode");
+        var saveNode = sceneTree?.Root?.GetNodeOrNull<SaveNode>("/root/SaveNode");
+        if (saveNode != null)
+            return saveNode;
+
+        const string message = "SaveNode autoload is missing. Check project.godot autoload registration before loading save-dependent scenes.";
+        GD.PushError(message);
+        throw new InvalidOperationException(message);
     }
 
 	public override void _Ready()
 	{
 		Load();
+	}
+
+	public override void _ExitTree()
+	{
+		Save();
 	}
 
     public bool HasSave()
@@ -50,7 +72,6 @@ public partial class SaveNode : Node
 
 	public Error Save()
 	{
-		GD.Print("SaveNode: Saving data.");
 		var error = EnsureSaveDirectory();
 		if (error != Error.Ok)
 		{
@@ -94,7 +115,9 @@ public partial class SaveNode : Node
 		}
 
 		error = SaveManifest(CreateManifest());
-		GD.Print(error == Error.Ok ? "SaveNode: Save complete." : $"SaveNode: Save failed for manifest. Error: {error}.");
+		if (error != Error.Ok)
+			GD.PushError($"SaveNode: Save failed for manifest. Error: {error}.");
+
 		return error;
     }
 
@@ -155,9 +178,9 @@ public partial class SaveNode : Node
 		CompanyLogoData = companyLogoData;
 		CompanyCareerData = companyCareerData;
 		CompanyRunData = companyRunData;
+		CompanyRunData.ApplyGladiatorRecoverableCaps();
 		TownTimeState = townTimeState;
 		SettingsConfig = settingsConfig;
-		GD.Print("SaveNode: Load complete.");
 		return Error.Ok;
     }
 

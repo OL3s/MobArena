@@ -9,6 +9,7 @@ public partial class TownHud : CanvasLayer
 {
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
+	private const string GladiatorDeathOverlayScenePath = "res://scenes/ui/GladiatorDeathOverlay.tscn";
 	private readonly Texture2D _speedX0Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/pause.svg");
 	private readonly Texture2D _speedSlowedIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_slowed.svg");
 	private readonly Texture2D _speedX1Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x1.svg");
@@ -21,6 +22,8 @@ public partial class TownHud : CanvasLayer
 	private TownTimeState _timeState;
 	private CompanyLogo _companyLogo;
 	private Label _companyNameLabel;
+	private Label _goldLabel;
+	private Label _rationsLabel;
 	private Button _speedToggleButton;
 	private Label _dayLabel;
 	private TimelineLine _dayProgress;
@@ -36,6 +39,8 @@ public partial class TownHud : CanvasLayer
 
 		_companyLogo = GetNode<CompanyLogo>("TopPanel/Row/CompanyStatus/Shield");
 		_companyNameLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/CompanyName");
+		_goldLabel = GetNode<Label>("TopPanel/Row/GoldPanel/GoldRow/GoldLabel");
+		_rationsLabel = GetNode<Label>("TopPanel/Row/RationsPanel/RationsRow/RationsLabel");
 		var companyStatus = GetNode<Control>("TopPanel/Row/CompanyStatus");
 		_speedToggleButton = GetNode<Button>("BottomPanel/TimeRow/PauseButton");
 		_dayLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarRow/DayLabel");
@@ -55,8 +60,14 @@ public partial class TownHud : CanvasLayer
 		_timeTickTimer = GetNode<Timer>("TimeTickTimer");
 		_timeTickTimer.Timeout += OnTimeTickTimerTimeout;
 		_timeState.TimeChanged += RefreshTimeUi;
+		if (_saveNode?.CompanyRunData != null)
+		{
+			_saveNode.CompanyRunData.RunChanged += RefreshRunUi;
+			_saveNode.CompanyRunData.GladiatorDied += OnGladiatorDied;
+		}
 
 		RefreshCompanyUi();
+		RefreshRunUi();
 		ConfigureTimelineLines();
 		RefreshTimeUi();
 	}
@@ -65,6 +76,12 @@ public partial class TownHud : CanvasLayer
 	{
 		if (_timeState != null)
 			_timeState.TimeChanged -= RefreshTimeUi;
+
+		if (_saveNode?.CompanyRunData != null)
+		{
+			_saveNode.CompanyRunData.RunChanged -= RefreshRunUi;
+			_saveNode.CompanyRunData.GladiatorDied -= OnGladiatorDied;
+		}
 	}
 
 	private void OnBackPressed()
@@ -92,7 +109,14 @@ public partial class TownHud : CanvasLayer
 
 	private void OnTimeTickTimerTimeout()
 	{
-		_timeState.TickOneSecond();
+		var currentDay = _timeState.CurrentDay;
+		GameTimeController.TickOneSecond(_timeState, _saveNode.CompanyRunData, _saveNode.CompanyCareerData);
+
+		if (_timeState.CurrentDay > currentDay)
+		{
+			GD.Print($"SaveNode: Autosaving at new day {_timeState.CurrentDay}.");
+			_saveNode.Save();
+		}
 	}
 
 	private void OnCompanyStatusGuiInput(InputEvent inputEvent)
@@ -103,6 +127,20 @@ public partial class TownHud : CanvasLayer
 
 		GetViewport()?.SetInputAsHandled();
 		OpenCompanyOverview();
+	}
+
+	private void OnGladiatorDied(GladiatorData gladiatorData)
+	{
+		_timeState.ResetToPause();
+
+		var deathOverlayScene = ResourceLoader.Load<PackedScene>(GladiatorDeathOverlayScenePath);
+		if (deathOverlayScene == null)
+			return;
+
+		var overlay = deathOverlayScene.Instantiate<GladiatorDeathOverlay>();
+		overlay.Configure(gladiatorData);
+		GlobalOverlay.Get()?.AddOverlay(overlay);
+		_saveNode.Save();
 	}
 
 	private void OpenCompanyOverview()
@@ -136,8 +174,13 @@ public partial class TownHud : CanvasLayer
 
 	private void OnCompanyApplied(CompanyLogoData logoData)
 	{
+		var isNewCompany = !_saveNode.HasCompany;
 		_saveNode.CompanyLogoData.CopyFrom(logoData);
+		if (isNewCompany)
+			_saveNode.StartNewCompanyRun();
+
 		_saveNode.HasCompany = true;
+		_saveNode.Save();
 		_companyLogo.SetLogoData(_saveNode.CompanyLogoData);
 		RefreshCompanyUi();
 	}
@@ -145,6 +188,13 @@ public partial class TownHud : CanvasLayer
 	private void RefreshCompanyUi()
 	{
 		_companyNameLabel.Text = (_saveNode?.CompanyLogoData ?? CompanyLogoData.CreateDefault()).CompanyName;
+	}
+
+	private void RefreshRunUi()
+	{
+		var runData = _saveNode?.CompanyRunData ?? new CompanyRunData();
+		_goldLabel.Text = runData.Gold.ToString();
+		_rationsLabel.Text = (runData.Rations?.GetTotal() ?? 0).ToString();
 	}
 
 	private void RefreshTimeUi()

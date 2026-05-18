@@ -60,7 +60,7 @@ public partial class LocalInputConfig : Node
 	{
 		ControllerSetups.Clear();
 
-		var settingsConfig = SaveNode.Get()?.SettingsConfig ?? new SettingsConfig();
+		var settingsConfig = SaveNode.Get().SettingsConfig;
 		if (settingsConfig.AutoDetectPrimaryInput)
 		{
 			AddAutoDetectedPrimaryControllerSetup();

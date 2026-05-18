@@ -1,0 +1,75 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/GladiatorDeathOverlay.cs" id="1_death_overlay"]
+[ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/GladiatorCard.tscn" id="3_gladiator_card"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_death_blur"]
+shader = ExtResource("2_blur_shader")
+
+[node name="GladiatorDeathOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_death_overlay")
+
+[node name="BlurBackdrop" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_death_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PopupPanel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(430, 520)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
+
+[node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Gladiator Died"
+horizontal_alignment = 1
+
+[node name="MessageLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+text = "A gladiator has died."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="GladiatorCard" parent="CenterContainer/PopupPanel/MarginContainer/Content" instance=ExtResource("3_gladiator_card")]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(180, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 2
+text = "Continue"

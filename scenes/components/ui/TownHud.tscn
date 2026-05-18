@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://bxdsorjywjjot" path="res://assets/ui/icons/moon.svg" id="10_moon_icon"]
 [ext_resource type="Texture2D" uid="uid://i30yynsg5d60" path="res://assets/ui/icons/speed_slowed.svg" id="11_speed_slowed_icon"]
 [ext_resource type="Script" uid="uid://daig828dffkkv" path="res://scenes/components/ui/TimelineLine.cs" id="12_timeline_line"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/provisions.svg" id="13_ration_icon"]
 
 [node name="TownHud" type="CanvasLayer" unique_id=1424046690]
 script = ExtResource("1_town_hud")
@@ -79,6 +80,28 @@ stretch_mode = 5
 [node name="GoldLabel" type="Label" parent="TopPanel/Row/GoldPanel/GoldRow" unique_id=1433043190]
 layout_mode = 2
 text = "100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RationsPanel" type="PanelContainer" parent="TopPanel/Row"]
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+
+[node name="RationsRow" type="HBoxContainer" parent="TopPanel/Row/RationsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="RationsIcon" type="TextureRect" parent="TopPanel/Row/RationsPanel/RationsRow"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+texture = ExtResource("13_ration_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RationsLabel" type="Label" parent="TopPanel/Row/RationsPanel/RationsRow"]
+layout_mode = 2
+text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 

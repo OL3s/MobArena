@@ -132,6 +132,20 @@ layout_mode = 2
 text = "This is a startup preference only. It does not change the active runtime controllers while an in-game menu is open."
 autowrap_mode = 3
 
+[node name="GameplaySettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="DebugCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
+layout_mode = 2
+text = "Enable debug mode"
+
+[node name="DebugHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
+layout_mode = 2
+text = "Temporary project-wide debug flag for development-only behavior."
+autowrap_mode = 3
+
 [node name="SaveDataSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
 visible = false
 layout_mode = 2
