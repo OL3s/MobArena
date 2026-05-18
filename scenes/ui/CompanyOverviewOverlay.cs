@@ -6,6 +6,8 @@ namespace MobArena.Scenes.UI;
 
 public partial class CompanyOverviewOverlay : Control
 {
+    private const string CemeteryOverlayScenePath = "res://scenes/ui/CemeteryOverlay.tscn";
+
     [Signal]
     public delegate void EditCompanyRequestedEventHandler();
 
@@ -34,6 +36,7 @@ public partial class CompanyOverviewOverlay : Control
         _championsDefeatedLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Stats/ChampionsDefeatedValue");
 
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/EditCompanyButton").Pressed += OnEditCompanyPressed;
+        GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/CemeteryButton").Pressed += OnCemeteryPressed;
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/CloseButton").Pressed += QueueFree;
 
         RefreshUi();
@@ -50,6 +53,7 @@ public partial class CompanyOverviewOverlay : Control
         _companyNameLabel.Text = logoData.CompanyName;
         _companyLogo.SetLogoData(logoData);
         _totalGladiatorsLabel.Text = careerData.TotalGladiatorsInCareer.ToString();
+        _aliveGladiatorsLabel.Text = _saveNode.CompanyRunData.AliveGladiators.ToString();
         _gladiatorsDeadLabel.Text = careerData.GladiatorsDead.ToString();
         _totalGoldEarnedLabel.Text = careerData.TotalGoldEarned.ToString();
         _contractsCompletedLabel.Text = careerData.ContractsCompleted.ToString();
@@ -60,5 +64,14 @@ public partial class CompanyOverviewOverlay : Control
     private void OnEditCompanyPressed()
     {
         EmitSignal(SignalName.EditCompanyRequested);
+    }
+
+    private void OnCemeteryPressed()
+    {
+        var cemeteryOverlayScene = ResourceLoader.Load<PackedScene>(CemeteryOverlayScenePath);
+        if (cemeteryOverlayScene == null)
+            return;
+
+        GlobalOverlay.Get()?.AddOverlay(cemeteryOverlayScene.Instantiate<CemeteryOverlay>());
     }
 }

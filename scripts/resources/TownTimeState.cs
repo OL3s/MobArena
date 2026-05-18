@@ -37,13 +37,14 @@ public partial class TownTimeState : Resource
     [Export]
     public TimeSpeed LastRunningSpeed { get; private set; } = TimeSpeed.X1;
 
-    public void TickOneSecond()
+    public int TickOneSecond()
     {
         var minutesToAdvance = GetMinutesPerTick();
         if (minutesToAdvance <= 0)
-            return;
+            return 0;
 
         AdvanceMinutes(minutesToAdvance);
+        return minutesToAdvance;
     }
 
     public void AdvanceMinutes(int minutes)

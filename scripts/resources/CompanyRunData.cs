@@ -8,16 +8,47 @@ public partial class CompanyRunData : Resource
     [Signal]
     public delegate void RunChangedEventHandler();
 
+    [Signal]
+    public delegate void GladiatorDiedEventHandler(GladiatorData gladiatorData);
+
     [Export]
     public int Gold { get; private set; } = 100;
 
     [Export]
-    public Array<GladiatorData> Gladiators { get; private set; } = new() { GladiatorData.CreateDefault() };
+    public Array<GladiatorData> Gladiators { get; private set; } = new();
+
+    [Export]
+    public Array<GladiatorData> Cemetery { get; private set; } = new();
+
+    [Export]
+    public RationInventory Rations { get; private set; } = new();
 
     public int AliveGladiators => Gladiators.Count;
 
     [Export]
     public int MobsKilled { get; private set; }
+
+    public void AddGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)
+    {
+        if (gladiatorData == null)
+            return;
+
+        Gladiators.Add(gladiatorData);
+        careerData?.AddGladiator();
+        GD.Print($"CompanyRunData: Added gladiator '{gladiatorData.GladiatorName}'. Active gladiators: {Gladiators.Count}.");
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void AddDefaultGladiators(CompanyCareerData careerData, int count)
+    {
+        if (count <= 0)
+            return;
+
+        for (var index = 0; index < count; index++)
+        {
+            AddGladiator(GladiatorData.CreateDefault(), careerData);
+        }
+    }
 
     public void AddGold(int amount, CompanyCareerData careerData)
     {
@@ -50,5 +81,43 @@ public partial class CompanyRunData : Resource
         MobsKilled += amount;
         careerData?.AddMobsKilled(amount);
         EmitSignal(SignalName.RunChanged);
+    }
+
+    public void NotifyRunChanged()
+    {
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void KillGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)
+    {
+        if (gladiatorData == null)
+            return;
+
+        var gladiatorIndex = Gladiators.IndexOf(gladiatorData);
+        if (gladiatorIndex < 0)
+            return;
+
+        gladiatorData.ApplyDeathState();
+        Cemetery ??= new Array<GladiatorData>();
+        if (!Cemetery.Contains(gladiatorData))
+            Cemetery.Add(gladiatorData);
+
+        Gladiators.RemoveAt(gladiatorIndex);
+        GD.Print($"CompanyRunData: Removed gladiator '{gladiatorData.GladiatorName}' from active roster and moved to cemetery. Active gladiators: {Gladiators.Count}. Cemetery: {Cemetery.Count}.");
+
+        careerData?.AddGladiatorDeath();
+        EmitSignal(SignalName.GladiatorDied, gladiatorData);
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void ApplyGladiatorRecoverableCaps()
+    {
+        Rations ??= new RationInventory();
+        Cemetery ??= new Array<GladiatorData>();
+
+        foreach (var gladiator in Gladiators)
+        {
+            gladiator?.ApplyRecoverableCaps();
+        }
     }
 }

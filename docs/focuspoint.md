@@ -10,6 +10,7 @@ Priorities:
 
 - Expand the initial `GladiatorData` resource beyond its current name-only placeholder.
 - Include core gladiator fields: name, health, stamina, status, basic stats, and alive/dead state.
+- Convert gladiator equipment fields from placeholder strings into real Godot resource data: armor, main item, second item, and signature skill should be backed by authored `.tres` resources when equipment work starts.
 - Expand reusable gladiator UI from the current portrait/name card as more gladiator fields become real data.
 - Expand `CompanyRunData` or split it into a fuller current company/roster resource when roster data is introduced.
 - Keep long-term career totals in `CompanyCareerData`; do not mix current spendable values with lifetime stats.

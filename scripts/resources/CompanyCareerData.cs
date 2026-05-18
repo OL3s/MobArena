@@ -8,7 +8,7 @@ public partial class CompanyCareerData : Resource
     public delegate void CareerChangedEventHandler();
 
     [Export]
-    public int TotalGladiatorsInCareer { get; private set; } = 1;
+    public int TotalGladiatorsInCareer { get; private set; }
 
     [Export]
     public int GladiatorsDead { get; private set; }
@@ -27,7 +27,15 @@ public partial class CompanyCareerData : Resource
 
     public void AddGladiator()
     {
-        TotalGladiatorsInCareer++;
+        AddGladiators(1);
+    }
+
+    public void AddGladiators(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        TotalGladiatorsInCareer += amount;
         EmitSignal(SignalName.CareerChanged);
     }
 

@@ -16,7 +16,7 @@ public partial class Arena : Node
 
     private void OnReturnToTownPressed()
     {
-        SaveNode.Get()?.TownTimeState.ResetToPause();
+        SaveNode.Get().TownTimeState.ResetToPause();
         GetTree().ChangeSceneToFile(TownScene);
     }
 }
