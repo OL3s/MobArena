@@ -83,7 +83,7 @@ Local input setup is split between `LocalInputConfig` and resources. `LocalInput
 - Support phone, controller, and desktop play from the start.
 - Balance real-time town management around upkeep costs, arena income, healing, stamina, provisions, exhaustion, training, and mandatory champion deadlines.
 - Keep permanent death meaningful: losing a gladiator should also risk the investment made in that fighter.
-- Keep the first prototype small: one gladiator, one arena, slime enemies, basic movement and attack, simple contract rewards, and death/replacement.
+- Keep the first combat prototype small: use the current two-starting-gladiator company, one arena, slime enemies, basic movement and attack, simple contract rewards, and death/cemetery flow.
 
 ## Notes For AI Agents
 

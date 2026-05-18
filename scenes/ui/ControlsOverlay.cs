@@ -35,23 +35,40 @@ public partial class ControlsOverlay : Control
 		_joinChipStyle = null;
 	}
 
+	public override void _Input(InputEvent inputEvent)
+	{
+		var localInputConfig = LocalInputConfig.Get();
+		if (localInputConfig == null)
+			return;
+
+		if (inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Enter or Key.KpEnter })
+		{
+			if (localInputConfig.HasKeyboardPlayer)
+				return;
+
+			GetViewport()?.SetInputAsHandled();
+			if (localInputConfig.TryJoinKeyboard())
+				RefreshUi();
+			return;
+		}
+
+		if (inputEvent is not InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.A } joypadButton)
+			return;
+
+		if (localInputConfig.HasGamepadPlayer(joypadButton.Device))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+		if (localInputConfig.TryJoinGamepad(joypadButton.Device))
+			RefreshUi();
+	}
+
 	public override void _UnhandledInput(InputEvent inputEvent)
 	{
 		if (inputEvent is InputEventScreenTouch { Pressed: true } screenTouch)
 		{
 			if (TryHandleChipTouch(screenTouch.Position))
 				GetViewport()?.SetInputAsHandled();
-
-			return;
-		}
-
-		if (inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Enter or Key.KpEnter })
-		{
-			if (LocalInputConfig.Get()?.TryJoinKeyboard() == true)
-			{
-				GetViewport()?.SetInputAsHandled();
-				RefreshUi();
-			}
 
 			return;
 		}
@@ -108,6 +125,11 @@ public partial class ControlsOverlay : Control
 
 		_resetButton.Disabled = localInputConfig.ControllerSetups.Count <= 0;
 		_closeButton.Disabled = false;
+		FocusMode = FocusModeEnum.None;
+		_resetButton.FocusMode = FocusModeEnum.All;
+		_closeButton.FocusMode = FocusModeEnum.All;
+		if (!OwnsFocus(GetViewport()?.GuiGetFocusOwner()))
+			GrabFirstAvailableButtonFocus();
 
 		for (var index = 0; index < localInputConfig.ControllerSetups.Count; index++)
 			AddDeviceChip(localInputConfig.ControllerSetups[index], index + 1);
@@ -146,6 +168,7 @@ public partial class ControlsOverlay : Control
 		if (controllerSetup.Kind == LocalInputControllerConfig.ControllerKind.Touch)
 		{
 			_touchLeaveChip = AddChip($"{slotNumber} Connected", controllerSetup.ControllerName, localInputConfig?.TouchJoinPromptIcon, "To Leave", _connectedChipStyle);
+			_touchLeaveChip.GuiInput += OnTouchLeaveChipGuiInput;
 			_touchLeaveControllerSetup = controllerSetup;
 			return;
 		}
@@ -156,14 +179,15 @@ public partial class ControlsOverlay : Control
 	private void AddJoinChip(LocalInputConfig localInputConfig)
 	{
 		var icons = new Godot.Collections.Array<Texture2D>();
-		if (!localInputConfig.HasKeyboardSetup())
+		if (!localInputConfig.HasKeyboardPlayer)
 			icons.Add(localInputConfig.KeyboardJoinPromptIcon);
 
 		icons.Add(localInputConfig.JoinPromptIcon);
-		if (!localInputConfig.HasTouchSetup())
+		if (!localInputConfig.HasTouchPlayer)
 			icons.Add(localInputConfig.TouchJoinPromptIcon);
 
 		_touchJoinChip = AddChip("Press", string.Empty, icons, string.Empty, "to join", _joinChipStyle);
+		_touchJoinChip.GuiInput += OnTouchJoinChipGuiInput;
 	}
 
 	private PanelContainer AddChip(string topText, string middleText, Texture2D icon, string bottomText, StyleBoxFlat style)
@@ -275,6 +299,30 @@ public partial class ControlsOverlay : Control
 		return LocalInputConfig.Get()?.TryJoinTouch() == true;
 	}
 
+	private void OnTouchJoinChipGuiInput(InputEvent inputEvent)
+	{
+		if (inputEvent is not InputEventScreenTouch { Pressed: true })
+			return;
+
+		if (!TryJoinTouch())
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+		CallDeferred(MethodName.RefreshUi);
+	}
+
+	private void OnTouchLeaveChipGuiInput(InputEvent inputEvent)
+	{
+		if (inputEvent is not InputEventScreenTouch { Pressed: true })
+			return;
+
+		if (!TryLeaveController(_touchLeaveControllerSetup))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+		CallDeferred(MethodName.RefreshUi);
+	}
+
 	private bool TryLeaveController(LocalInputControllerConfig controllerSetup)
 	{
 		if (controllerSetup == null)
@@ -298,6 +346,22 @@ public partial class ControlsOverlay : Control
 		return GodotObject.IsInstanceValid(control)
 			&& control.IsVisibleInTree()
 			&& control.GetGlobalRect().HasPoint(position);
+	}
+
+	private bool OwnsFocus(Control focusOwner)
+	{
+		return focusOwner != null && (focusOwner == this || IsAncestorOf(focusOwner));
+	}
+
+	private void GrabFirstAvailableButtonFocus()
+	{
+		if (!_resetButton.Disabled)
+		{
+			_resetButton.GrabFocus();
+			return;
+		}
+
+		_closeButton.GrabFocus();
 	}
 
 	private static StyleBoxFlat CreateChipStyle(Color backgroundColor, Color borderColor)

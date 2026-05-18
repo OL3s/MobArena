@@ -14,6 +14,7 @@ public partial class MainMenu : Control
 	private CompanyLogo _companyLogo;
 	private Button _createCompanyButton;
 	private Button _enterTownButton;
+	private Button _buildCompanyButton;
 	private SaveNode _saveNode;
 
 	public override void _Ready()
@@ -22,16 +23,18 @@ public partial class MainMenu : Control
 		_companyLogo = GetNode<CompanyLogo>("MenuRow/Shield");
 		_createCompanyButton = GetNode<Button>("MenuRow/CreateCompanyButton");
 		_enterTownButton = GetNode<Button>("MenuRow/Content/EnterTownButton");
+		_buildCompanyButton = GetNode<Button>("MenuRow/Content/BuildCompanyButton");
 
 		_createCompanyButton.Pressed += OnCreateCompanyPressed;
 		_companyLogo.Pressed += OnCompanyLogoPressed;
 		_enterTownButton.Pressed += OnEnterTownPressed;
+		_buildCompanyButton.Pressed += OnCreateCompanyPressed;
 
 		GetNode<Button>("TopRightActions/ControlsButton").Pressed += OnControlsPressed;
 		GetNode<Button>("MenuRow/Content/QuitButton").Pressed += OnQuitPressed;
 
 		RefreshCompanyUi();
-		_createCompanyButton.CallDeferred(Control.MethodName.GrabFocus);
+		CallDeferred(MethodName.GrabDefaultFocus);
 	}
 
 	private void OnEnterTownPressed()
@@ -109,7 +112,16 @@ public partial class MainMenu : Control
 		_companyLogo.SetLogoData(_saveNode.CompanyLogoData);
 		_companyLogo.Visible = _saveNode.HasCompany;
 		_createCompanyButton.Visible = !_saveNode.HasCompany;
-		_enterTownButton.Disabled = !_saveNode.HasCompany;
+		_enterTownButton.Visible = _saveNode.HasCompany;
+		_buildCompanyButton.Visible = !_saveNode.HasCompany;
+	}
+
+	private void GrabDefaultFocus()
+	{
+		if (_saveNode is { HasCompany: true })
+			_enterTownButton.GrabFocus();
+		else
+			_buildCompanyButton.GrabFocus();
 	}
 
 	private void OnQuitPressed()
