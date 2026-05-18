@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scenes/components/ui/GladiatorCard.cs" id="1_card"]
 
 [node name="GladiatorCard" type="PanelContainer"]
-custom_minimum_size = Vector2(156, 204)
+custom_minimum_size = Vector2(190, 286)
 script = ExtResource("1_card")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
@@ -15,10 +15,10 @@ theme_override_constants/margin_bottom = 14
 
 [node name="Layout" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="Portrait" type="TextureRect" parent="MarginContainer/Layout"]
-custom_minimum_size = Vector2(128, 128)
+custom_minimum_size = Vector2(96, 96)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
@@ -28,3 +28,117 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Aulus"
 horizontal_alignment = 1
+
+[node name="Vitals" type="VBoxContainer" parent="MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HealthLine" type="HBoxContainer" parent="MarginContainer/Layout/Vitals"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/Layout/Vitals/HealthLine"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Bar" type="ProgressBar" parent="MarginContainer/Layout/Vitals/HealthLine"]
+custom_minimum_size = Vector2(128, 18)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 40.0
+value = 32.0
+show_percentage = false
+
+[node name="Value" type="Label" parent="MarginContainer/Layout/Vitals/HealthLine/Bar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 11
+text = "32/40"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StaminaLine" type="HBoxContainer" parent="MarginContainer/Layout/Vitals"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/Layout/Vitals/StaminaLine"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Bar" type="ProgressBar" parent="MarginContainer/Layout/Vitals/StaminaLine"]
+custom_minimum_size = Vector2(128, 18)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 28.0
+value = 22.0
+show_percentage = false
+
+[node name="Value" type="Label" parent="MarginContainer/Layout/Vitals/StaminaLine/Bar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 11
+text = "22/28"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Stats" type="VBoxContainer" parent="MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SkillLine" type="HBoxContainer" parent="MarginContainer/Layout/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/Layout/Stats/SkillLine"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Skill" type="Label" parent="MarginContainer/Layout/Stats/SkillLine"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Dodge"
+
+[node name="PrimaryStats" type="HBoxContainer" parent="MarginContainer/Layout/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Strength" type="Label" parent="MarginContainer/Layout/Stats/PrimaryStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Str 5"
+
+[node name="Agility" type="Label" parent="MarginContainer/Layout/Stats/PrimaryStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Agi 5"
+
+[node name="BodyStats" type="HBoxContainer" parent="MarginContainer/Layout/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Vitality" type="Label" parent="MarginContainer/Layout/Stats/BodyStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Vit 5"
+
+[node name="Endurance" type="Label" parent="MarginContainer/Layout/Stats/BodyStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "End 5"
