@@ -147,10 +147,16 @@ theme_override_constants/separation = 12
 alignment = 1
 
 [node name="EditCompanyButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
-custom_minimum_size = Vector2(180, 50)
+custom_minimum_size = Vector2(150, 50)
 layout_mode = 2
 focus_mode = 2
 text = "Edit Company"
+
+[node name="CemeteryButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+focus_mode = 2
+text = "Cemetery"
 
 [node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
 custom_minimum_size = Vector2(150, 50)

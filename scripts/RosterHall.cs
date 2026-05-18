@@ -6,9 +6,8 @@ namespace MobArena.Scripts;
 
 public partial class RosterHall : Node
 {
-    private const string TownScene = "res://scenes/town.tscn";
-    private const string GladiatorsOverlayScenePath = "res://scenes/ui/GladiatorsOverlay.tscn";
-    private static readonly PackedScene GladiatorsOverlayScene = ResourceLoader.Load<PackedScene>(GladiatorsOverlayScenePath);
+	private const string TownScene = "res://scenes/town.tscn";
+	private const string GladiatorsOverlayScenePath = "res://scenes/ui/GladiatorsOverlay.tscn";
 
     public override void _Ready()
     {
@@ -21,12 +20,13 @@ public partial class RosterHall : Node
         GetTree().ChangeSceneToFile(TownScene);
     }
 
-    private static void OnGladiatorsPressed()
-    {
-        var globalOverlay = GlobalOverlay.Get();
-        if (globalOverlay == null || GladiatorsOverlayScene == null)
-            return;
+	private static void OnGladiatorsPressed()
+	{
+		var globalOverlay = GlobalOverlay.Get();
+		var gladiatorsOverlayScene = ResourceLoader.Load<PackedScene>(GladiatorsOverlayScenePath);
+		if (globalOverlay == null || gladiatorsOverlayScene == null)
+			return;
 
-        globalOverlay.AddOverlay(GladiatorsOverlayScene.Instantiate<GladiatorsOverlay>());
-    }
+		globalOverlay.AddOverlay(gladiatorsOverlayScene.Instantiate<GladiatorsOverlay>());
+	}
 }

@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/ui/SettingsButton.cs" id="1_settings_button"]
+[ext_resource type="Texture2D" uid="uid://c141ktn80ivn1" path="res://assets/ui/icons/settings.svg" id="2_settings_icon"]
+
+[node name="SettingsButton" type="Button"]
+custom_minimum_size = Vector2(128, 56)
+text = "Settings"
+icon = ExtResource("2_settings_icon")
+script = ExtResource("1_settings_button")

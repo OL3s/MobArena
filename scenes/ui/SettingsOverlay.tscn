@@ -1,0 +1,200 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/SettingsOverlay.cs" id="1_settings_overlay"]
+[ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_settings_blur"]
+shader = ExtResource("2_blur_shader")
+
+[node name="SettingsOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_settings_overlay")
+
+[node name="BlurBackdrop" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_settings_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PopupPanel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(860, 470)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Layout" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="Body" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="CategoryList" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body"]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ControlsButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Controls"
+
+[node name="VideoButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Video"
+
+[node name="SoundButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Sound"
+
+[node name="GameplayButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Gameplay"
+
+[node name="SaveDataButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Save Data"
+
+[node name="SettingsPanel" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SettingsContent" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="CategoryTitle" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Controls"
+horizontal_alignment = 1
+
+[node name="ControlsSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="AutoDetectCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings"]
+layout_mode = 2
+text = "Auto-detect primary input when game starts"
+
+[node name="DefaultInputRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="DefaultInputLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/DefaultInputRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+text = "Primary input"
+vertical_alignment = 1
+
+[node name="DefaultInputOption" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/DefaultInputRow"]
+custom_minimum_size = Vector2(210, 44)
+layout_mode = 2
+
+[node name="ControlsHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings"]
+layout_mode = 2
+text = "This is a startup preference only. It does not change the active runtime controllers while an in-game menu is open."
+autowrap_mode = 3
+
+[node name="GameplaySettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="DebugCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
+layout_mode = 2
+text = "Enable debug mode"
+
+[node name="DebugHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
+layout_mode = 2
+text = "Temporary project-wide debug flag for development-only behavior."
+autowrap_mode = 3
+
+[node name="SaveDataSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SaveDataHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+layout_mode = 2
+text = "Delete saved data from disk. These actions apply immediately."
+autowrap_mode = 3
+
+[node name="DeleteRunButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Delete Run Data"
+
+[node name="DeleteCompanyButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Delete Company Data"
+
+[node name="DeleteSettingsButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Delete Settings Data"
+
+[node name="DeleteAllButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Delete All Save Data"
+
+[node name="PlaceholderLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
+visible = false
+layout_mode = 2
+text = "Placeholder"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 2
+
+[node name="ApplyButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(180, 52)
+layout_mode = 2
+text = "Apply"
+
+[node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(180, 52)
+layout_mode = 2
+text = "Close"

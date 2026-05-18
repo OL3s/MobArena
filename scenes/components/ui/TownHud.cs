@@ -9,12 +9,11 @@ public partial class TownHud : CanvasLayer
 {
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
-	private static readonly PackedScene CompanyLogoEditorScene = ResourceLoader.Load<PackedScene>(CompanyLogoEditorScenePath);
-	private static readonly PackedScene CompanyOverviewScene = ResourceLoader.Load<PackedScene>(CompanyOverviewScenePath);
-	private static readonly Texture2D SpeedX0Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/pause.svg");
-	private static readonly Texture2D SpeedSlowedIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_slowed.svg");
-	private static readonly Texture2D SpeedX1Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x1.svg");
-	private static readonly Texture2D SpeedX10Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x10.svg");
+	private const string GladiatorDeathOverlayScenePath = "res://scenes/ui/GladiatorDeathOverlay.tscn";
+	private readonly Texture2D _speedX0Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/pause.svg");
+	private readonly Texture2D _speedSlowedIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_slowed.svg");
+	private readonly Texture2D _speedX1Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x1.svg");
+	private readonly Texture2D _speedX10Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x10.svg");
 
 	[Signal]
 	public delegate void BackPressedEventHandler();
@@ -23,6 +22,8 @@ public partial class TownHud : CanvasLayer
 	private TownTimeState _timeState;
 	private CompanyLogo _companyLogo;
 	private Label _companyNameLabel;
+	private Label _goldLabel;
+	private Label _rationsLabel;
 	private Button _speedToggleButton;
 	private Label _dayLabel;
 	private TimelineLine _dayProgress;
@@ -38,6 +39,8 @@ public partial class TownHud : CanvasLayer
 
 		_companyLogo = GetNode<CompanyLogo>("TopPanel/Row/CompanyStatus/Shield");
 		_companyNameLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/CompanyName");
+		_goldLabel = GetNode<Label>("TopPanel/Row/GoldPanel/GoldRow/GoldLabel");
+		_rationsLabel = GetNode<Label>("TopPanel/Row/RationsPanel/RationsRow/RationsLabel");
 		var companyStatus = GetNode<Control>("TopPanel/Row/CompanyStatus");
 		_speedToggleButton = GetNode<Button>("BottomPanel/TimeRow/PauseButton");
 		_dayLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarRow/DayLabel");
@@ -49,7 +52,6 @@ public partial class TownHud : CanvasLayer
 		_companyLogo.SetLogoData(_saveNode?.CompanyLogoData ?? CompanyLogoData.CreateDefault());
 		_companyLogo.Pressed += OpenCompanyOverview;
 		companyStatus.GuiInput += OnCompanyStatusGuiInput;
-		GetNode<Button>("TopPanel/Row/SettingsButton").Pressed += OnSettingsPressed;
 		GetNode<Button>("TopPanel/Row/BackButton").Pressed += OnBackPressed;
 		GetNode<Button>("BottomPanel/TimeRow/SpeedDownButton").Pressed += OnSpeedDownPressed;
 		_speedToggleButton.Pressed += OnPausePressed;
@@ -58,8 +60,14 @@ public partial class TownHud : CanvasLayer
 		_timeTickTimer = GetNode<Timer>("TimeTickTimer");
 		_timeTickTimer.Timeout += OnTimeTickTimerTimeout;
 		_timeState.TimeChanged += RefreshTimeUi;
+		if (_saveNode?.CompanyRunData != null)
+		{
+			_saveNode.CompanyRunData.RunChanged += RefreshRunUi;
+			_saveNode.CompanyRunData.GladiatorDied += OnGladiatorDied;
+		}
 
 		RefreshCompanyUi();
+		RefreshRunUi();
 		ConfigureTimelineLines();
 		RefreshTimeUi();
 	}
@@ -68,18 +76,17 @@ public partial class TownHud : CanvasLayer
 	{
 		if (_timeState != null)
 			_timeState.TimeChanged -= RefreshTimeUi;
+
+		if (_saveNode?.CompanyRunData != null)
+		{
+			_saveNode.CompanyRunData.RunChanged -= RefreshRunUi;
+			_saveNode.CompanyRunData.GladiatorDied -= OnGladiatorDied;
+		}
 	}
 
 	private void OnBackPressed()
 	{
 		EmitSignal(SignalName.BackPressed);
-	}
-
-	private static void OnSettingsPressed()
-	{
-		GlobalOverlay.Get()?.ShowBlurredPopup(
-			"Settings",
-			"Settings are not implemented yet. This button is wired so it gives clear feedback instead of doing nothing.");
 	}
 
 	private void OnSpeedDownPressed()
@@ -102,7 +109,14 @@ public partial class TownHud : CanvasLayer
 
 	private void OnTimeTickTimerTimeout()
 	{
-		_timeState.TickOneSecond();
+		var currentDay = _timeState.CurrentDay;
+		GameTimeController.TickOneSecond(_timeState, _saveNode.CompanyRunData, _saveNode.CompanyCareerData);
+
+		if (_timeState.CurrentDay > currentDay)
+		{
+			GD.Print($"SaveNode: Autosaving at new day {_timeState.CurrentDay}.");
+			_saveNode.Save();
+		}
 	}
 
 	private void OnCompanyStatusGuiInput(InputEvent inputEvent)
@@ -115,13 +129,28 @@ public partial class TownHud : CanvasLayer
 		OpenCompanyOverview();
 	}
 
+	private void OnGladiatorDied(GladiatorData gladiatorData)
+	{
+		_timeState.ResetToPause();
+
+		var deathOverlayScene = ResourceLoader.Load<PackedScene>(GladiatorDeathOverlayScenePath);
+		if (deathOverlayScene == null)
+			return;
+
+		var overlay = deathOverlayScene.Instantiate<GladiatorDeathOverlay>();
+		overlay.Configure(gladiatorData);
+		GlobalOverlay.Get()?.AddOverlay(overlay);
+		_saveNode.Save();
+	}
+
 	private void OpenCompanyOverview()
 	{
 		var globalOverlay = GlobalOverlay.Get();
-		if (globalOverlay == null || CompanyOverviewScene == null)
+		var companyOverviewScene = ResourceLoader.Load<PackedScene>(CompanyOverviewScenePath);
+		if (globalOverlay == null || companyOverviewScene == null)
 			return;
 
-		var overview = CompanyOverviewScene.Instantiate<CompanyOverviewOverlay>();
+		var overview = companyOverviewScene.Instantiate<CompanyOverviewOverlay>();
 		overview.EditCompanyRequested += OnEditCompanyRequested;
 		globalOverlay.AddOverlay(overview);
 	}
@@ -134,18 +163,24 @@ public partial class TownHud : CanvasLayer
 	private void OpenCompanyEditor()
 	{
 		var globalOverlay = GlobalOverlay.Get();
-		if (globalOverlay == null || CompanyLogoEditorScene == null || _saveNode == null)
+		var companyLogoEditorScene = ResourceLoader.Load<PackedScene>(CompanyLogoEditorScenePath);
+		if (globalOverlay == null || companyLogoEditorScene == null || _saveNode == null)
 			return;
 
-		var editor = CompanyLogoEditorScene.Instantiate<CompanyLogoEditorOverlay>();
+		var editor = companyLogoEditorScene.Instantiate<CompanyLogoEditorOverlay>();
 		editor.Configure(_saveNode.CompanyLogoData.CreateCopy(), _saveNode.HasCompany, OnCompanyApplied);
 		globalOverlay.AddOverlay(editor);
 	}
 
 	private void OnCompanyApplied(CompanyLogoData logoData)
 	{
+		var isNewCompany = !_saveNode.HasCompany;
 		_saveNode.CompanyLogoData.CopyFrom(logoData);
+		if (isNewCompany)
+			_saveNode.StartNewCompanyRun();
+
 		_saveNode.HasCompany = true;
+		_saveNode.Save();
 		_companyLogo.SetLogoData(_saveNode.CompanyLogoData);
 		RefreshCompanyUi();
 	}
@@ -153,6 +188,13 @@ public partial class TownHud : CanvasLayer
 	private void RefreshCompanyUi()
 	{
 		_companyNameLabel.Text = (_saveNode?.CompanyLogoData ?? CompanyLogoData.CreateDefault()).CompanyName;
+	}
+
+	private void RefreshRunUi()
+	{
+		var runData = _saveNode?.CompanyRunData ?? new CompanyRunData();
+		_goldLabel.Text = runData.Gold.ToString();
+		_rationsLabel.Text = (runData.Rations?.GetTotal() ?? 0).ToString();
 	}
 
 	private void RefreshTimeUi()
@@ -188,10 +230,10 @@ public partial class TownHud : CanvasLayer
 
 		_speedToggleButton.Icon = _timeState.CurrentSpeed switch
 		{
-			TownTimeState.TimeSpeed.X100 => SpeedX10Icon,
-			TownTimeState.TimeSpeed.X10 => SpeedX1Icon,
-			TownTimeState.TimeSpeed.X0 => SpeedX0Icon,
-			_ => SpeedSlowedIcon
+			TownTimeState.TimeSpeed.X100 => _speedX10Icon,
+			TownTimeState.TimeSpeed.X10 => _speedX1Icon,
+			TownTimeState.TimeSpeed.X0 => _speedX0Icon,
+			_ => _speedSlowedIcon
 		};
 	}
 }

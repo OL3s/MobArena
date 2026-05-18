@@ -1,0 +1,18 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://autoload/LocalInputConfig.cs" id="1_local_input_config"]
+[ext_resource type="Texture2D" path="res://assets/ui/input_icons/xbox_button_a.svg" id="2_xbox_a"]
+[ext_resource type="Texture2D" path="res://assets/ui/input_icons/xbox_button_b.svg" id="3_xbox_b"]
+[ext_resource type="Texture2D" path="res://assets/ui/input_icons/mouse_left_button.svg" id="4_mouse_left"]
+[ext_resource type="Texture2D" path="res://assets/ui/input_icons/keyboard_enter.svg" id="5_enter"]
+[ext_resource type="Texture2D" path="res://assets/ui/input_icons/keyboard_backspace.svg" id="6_backspace"]
+[ext_resource type="Texture2D" path="res://assets/ui/input_icons/phone_touch.svg" id="7_phone"]
+
+[node name="LocalInputConfig" type="Node"]
+script = ExtResource("1_local_input_config")
+XboxAIcon = ExtResource("2_xbox_a")
+XboxBIcon = ExtResource("3_xbox_b")
+MouseIcon = ExtResource("4_mouse_left")
+EnterIcon = ExtResource("5_enter")
+BackspaceIcon = ExtResource("6_backspace")
+PhoneIcon = ExtResource("7_phone")

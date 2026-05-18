@@ -6,11 +6,8 @@ namespace MobArena.Scripts.UI;
 public partial class SceneOverlay : CanvasLayer
 {
     private const string BlurBackdropName = "BlurBackdrop";
-    private const string OverlayScenePath = "res://scenes/ui/SceneOverlay.tscn";
-    private const string BlurShaderPath = "res://assets/shaders/PopupBlurBackdrop.gdshader";
-
-    private static readonly PackedScene OverlayScene = ResourceLoader.Load<PackedScene>(OverlayScenePath);
-    private static readonly Shader BlurShader = ResourceLoader.Load<Shader>(BlurShaderPath);
+	private const string OverlayScenePath = "res://scenes/ui/SceneOverlay.tscn";
+	private const string BlurShaderPath = "res://assets/shaders/PopupBlurBackdrop.gdshader";
 
     private ColorRect _blurBackdrop;
     private readonly Dictionary<ulong, Control> _overlayFocusRestoreTargets = new();
@@ -42,13 +39,14 @@ public partial class SceneOverlay : CanvasLayer
         if (existing != null)
             return existing;
 
-        if (OverlayScene == null)
-        {
-            GD.PushError($"Failed to load overlay scene at '{OverlayScenePath}'.");
-            return null;
-        }
+		var overlayScene = ResourceLoader.Load<PackedScene>(OverlayScenePath);
+		if (overlayScene == null)
+		{
+			GD.PushError($"Failed to load overlay scene at '{OverlayScenePath}'.");
+			return null;
+		}
 
-        var overlay = OverlayScene.Instantiate<SceneOverlay>();
+		var overlay = overlayScene.Instantiate<SceneOverlay>();
         owner.AddChild(overlay);
         return overlay;
     }
@@ -138,8 +136,9 @@ public partial class SceneOverlay : CanvasLayer
         };
         _blurBackdrop.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 
-        if (BlurShader != null)
-            _blurBackdrop.Material = new ShaderMaterial { Shader = BlurShader };
+		var blurShader = ResourceLoader.Load<Shader>(BlurShaderPath);
+		if (blurShader != null)
+			_blurBackdrop.Material = new ShaderMaterial { Shader = blurShader };
 
         AddChild(_blurBackdrop);
         MoveChild(_blurBackdrop, 0);
