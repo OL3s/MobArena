@@ -7,6 +7,9 @@ public partial class RationInventory : Resource
     public const float PoorRationValue = 5f;
     public const float CommonRationValue = 8f;
     public const float FineRationValue = 10f;
+    public const int PoorRationGoldValue = 2;
+    public const int CommonRationGoldValue = 4;
+    public const int FineRationGoldValue = 7;
 
     [Export]
     public int PoorRations { get; private set; }
@@ -121,6 +124,24 @@ public partial class RationInventory : Resource
         }
     }
 
+    public bool TryRemoveRation(RationStoreData.RationQuality quality)
+    {
+        switch (quality)
+        {
+            case RationStoreData.RationQuality.Poor when PoorRations > 0:
+                PoorRations--;
+                return true;
+            case RationStoreData.RationQuality.Common when CommonRations > 0:
+                CommonRations--;
+                return true;
+            case RationStoreData.RationQuality.Fine when FineRations > 0:
+                FineRations--;
+                return true;
+            default:
+                return false;
+        }
+    }
+
     public int GetCount(RationStoreData.RationQuality quality)
     {
         return quality switch
@@ -130,6 +151,22 @@ public partial class RationInventory : Resource
             RationStoreData.RationQuality.Fine => FineRations,
             _ => 0
         };
+    }
+
+    public static int GetGoldValue(RationStoreData.RationQuality quality)
+    {
+        return quality switch
+        {
+            RationStoreData.RationQuality.Poor => PoorRationGoldValue,
+            RationStoreData.RationQuality.Common => CommonRationGoldValue,
+            RationStoreData.RationQuality.Fine => FineRationGoldValue,
+            _ => 0
+        };
+    }
+
+    public static int GetMarketSaleValue(RationStoreData.RationQuality quality)
+    {
+        return Mathf.Max(1, GetGoldValue(quality) / 2);
     }
 
     private int ConsumeRations(int amount)

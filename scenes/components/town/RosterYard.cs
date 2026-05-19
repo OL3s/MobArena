@@ -8,6 +8,8 @@ namespace MobArena.Scenes.Components.Town;
 
 public partial class RosterYard : Node2D
 {
+    public const string DragDropTargetGroup = "town_drag_drop_targets";
+
     private const string RosterYardGladiatorScenePath = "res://scenes/components/town/RosterYardGladiator.tscn";
     private const float DragStartDistance = 8f;
     private const float DragTokenHeight = 72f;
@@ -29,6 +31,7 @@ public partial class RosterYard : Node2D
     private RationStoreData.RationQuality? _draggedRationQuality;
     private Sprite2D _dragToken;
     private RosterYardGladiator _selectedGladiator;
+    private ITownDragDropTarget _previewedDropTarget;
 
     public override void _Ready()
     {
@@ -86,11 +89,12 @@ public partial class RosterYard : Node2D
         if (runData == null || _rosterYardGladiatorScene == null)
             return;
 
-        var activeGladiators = new HashSet<GladiatorData>();
-        foreach (var gladiator in runData.Gladiators)
+        runData.EnsureResources();
+        var courtyardGladiators = new HashSet<GladiatorData>();
+        foreach (var gladiator in runData.TownAssignments.CourtyardGladiators)
         {
             if (gladiator != null)
-                activeGladiators.Add(gladiator);
+                courtyardGladiators.Add(gladiator);
         }
 
         var existingGladiators = new Dictionary<GladiatorData, RosterYardGladiator>();
@@ -99,7 +103,8 @@ public partial class RosterYard : Node2D
             if (child is not RosterYardGladiator yardGladiator)
                 continue;
 
-            if (yardGladiator.GladiatorData == null || !activeGladiators.Contains(yardGladiator.GladiatorData))
+            if (yardGladiator.GladiatorData == null
+                || !courtyardGladiators.Contains(yardGladiator.GladiatorData))
             {
                 yardGladiator.PointerPressed -= OnGladiatorPointerPressed;
                 if (_selectedGladiator == yardGladiator)
@@ -124,7 +129,7 @@ public partial class RosterYard : Node2D
             positions.Add(yardGladiator.Position);
         }
 
-        foreach (var gladiator in runData.Gladiators)
+        foreach (var gladiator in runData.TownAssignments.CourtyardGladiators)
         {
             if (gladiator == null)
                 continue;
@@ -164,13 +169,17 @@ public partial class RosterYard : Node2D
         }
 
         if (_dragToken != null)
+        {
             UpdateDragToken(viewportPosition);
+            UpdateDropPreview(viewportPosition);
+        }
     }
 
     private void FinishPointerInteraction(Vector2 viewportPosition)
     {
         if (_draggedGladiator != null || _draggedItem != null || _draggedRationQuality != null)
         {
+            TryDropPayload(viewportPosition);
             CancelDrag();
             return;
         }
@@ -248,12 +257,80 @@ public partial class RosterYard : Node2D
         _draggedItem = null;
         _draggedRationQuality = null;
         _pendingGladiator = null;
+        _previewedDropTarget?.SetTownDragDropPreview(null, Vector2.Zero);
+        _previewedDropTarget = null;
 
         if (_dragToken == null)
             return;
 
         _dragToken.QueueFree();
         _dragToken = null;
+    }
+
+    private void TryDropPayload(Vector2 viewportPosition)
+    {
+        var payload = GetCurrentDragPayload();
+        if (payload == null)
+            return;
+
+        GetBestDropTarget(payload.Value, viewportPosition)?.ReceiveTownDragDrop(payload.Value, viewportPosition);
+    }
+
+    private void UpdateDropPreview(Vector2 viewportPosition)
+    {
+        var payload = GetCurrentDragPayload();
+        var target = payload == null ? null : GetBestPreviewTarget(payload.Value);
+        if (_previewedDropTarget != target)
+        {
+            _previewedDropTarget?.SetTownDragDropPreview(null, viewportPosition);
+            _previewedDropTarget = target;
+        }
+
+        _previewedDropTarget?.SetTownDragDropPreview(payload, viewportPosition);
+    }
+
+    private ITownDragDropTarget GetBestDropTarget(TownDragPayload payload, Vector2 viewportPosition)
+    {
+        ITownDragDropTarget bestTarget = null;
+        foreach (var node in GetTree().GetNodesInGroup(DragDropTargetGroup))
+        {
+            if (node is not ITownDragDropTarget target || !target.CanReceiveTownDragDrop(payload, viewportPosition))
+                continue;
+
+            if (bestTarget == null || target.TownDragDropPriority > bestTarget.TownDragDropPriority)
+                bestTarget = target;
+        }
+
+        return bestTarget;
+    }
+
+    private ITownDragDropTarget GetBestPreviewTarget(TownDragPayload payload)
+    {
+        ITownDragDropTarget bestTarget = null;
+        foreach (var node in GetTree().GetNodesInGroup(DragDropTargetGroup))
+        {
+            if (node is not ITownDragDropTarget target || !target.CanPreviewTownDragDrop(payload))
+                continue;
+
+            if (bestTarget == null || target.TownDragDropPriority > bestTarget.TownDragDropPriority)
+                bestTarget = target;
+        }
+
+        return bestTarget;
+    }
+
+    private TownDragPayload? GetCurrentDragPayload()
+    {
+        if (_draggedGladiator?.GladiatorData != null)
+            return new TownDragPayload(_draggedGladiator.GladiatorData);
+
+        if (_draggedItem != null)
+            return new TownDragPayload(_draggedItem);
+
+        if (_draggedRationQuality != null)
+            return new TownDragPayload(_draggedRationQuality.Value);
+
+        return null;
     }
 
     private void OnGladiatorPressed(RosterYardGladiator gladiator)

@@ -25,7 +25,11 @@ public partial class TownHud : CanvasLayer
 	private Label _gladiatorCountLabel;
 	private Label _championsWonCountLabel;
 	private Label _goldLabel;
-	private Label _rationsSupplyLabel;
+	private Label _fameLabel;
+	private Label _poorRationsSupplyLabel;
+	private Label _commonRationsSupplyLabel;
+	private Label _fineRationsSupplyLabel;
+	private Label _totalRationsSupplyLabel;
 	private Label _starvingLabel;
 	private Label _exhaustedLabel;
 	private Button _speedToggleButton;
@@ -48,8 +52,12 @@ public partial class TownHud : CanvasLayer
 		_companyNameLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/CompanyName");
 		_gladiatorCountLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/StatsRow/GladiatorCount");
 		_championsWonCountLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/StatsRow/ChampionsWonCount");
-		_goldLabel = GetNode<Label>("TopPanel/Row/GoldPanel/ResourceColumn/GoldRow/GoldLabel");
-		_rationsSupplyLabel = GetNode<Label>("TopPanel/Row/GoldPanel/ResourceColumn/RationsRow/RationsSupplyLabel");
+		_goldLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/GoldRow/GoldLabel");
+		_fameLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/FameRow/FameLabel");
+		_poorRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/PoorRow/Label");
+		_commonRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/CommonRow/Label");
+		_fineRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/FineRow/Label");
+		_totalRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/TotalRow/Label");
 		_starvingLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/StarvingRow/StarvingLabel");
 		_exhaustedLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/ExhaustionRow/ExhaustedLabel");
 		var companyStatus = GetNode<Control>("TopPanel/Row/CompanyStatus");
@@ -272,7 +280,11 @@ public partial class TownHud : CanvasLayer
 		_gladiatorCountLabel.Text = $"Gladiators: {runData.AliveGladiators}";
 		_championsWonCountLabel.Text = $"Champions slayed: {careerData.ChampionsDefeated}";
 		_goldLabel.Text = runData.Gold.ToString();
-		_rationsSupplyLabel.Text = (runData.Rations?.GetTotal() ?? 0).ToString();
+		_fameLabel.Text = runData.Fame.ToString();
+		_poorRationsSupplyLabel.Text = (runData.Rations?.PoorRations ?? 0).ToString();
+		_commonRationsSupplyLabel.Text = (runData.Rations?.CommonRations ?? 0).ToString();
+		_fineRationsSupplyLabel.Text = (runData.Rations?.FineRations ?? 0).ToString();
+		_totalRationsSupplyLabel.Text = (runData.Rations?.GetTotal() ?? 0).ToString();
 		_starvingLabel.Text = runData.GetStarvingGladiatorCount().ToString();
 		_exhaustedLabel.Text = runData.GetExhaustedGladiatorCount().ToString();
 	}

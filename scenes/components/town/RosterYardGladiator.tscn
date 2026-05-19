@@ -97,7 +97,7 @@ visible = false
 offset_left = 42.0
 offset_top = -42.0
 offset_right = 126.0
-offset_bottom = 26.0
+offset_bottom = 48.0
 mouse_filter = 2
 theme_override_constants/separation = 1
 
@@ -121,6 +121,34 @@ mouse_filter = 2
 theme_override_font_sizes/font_size = 10
 text = "Drag"
 vertical_alignment = 1
+
+[node name="EquipmentRow" type="HBoxContainer" parent="Details"]
+custom_minimum_size = Vector2(84, 22)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="MainItemIcon" type="TextureRect" parent="Details/EquipmentRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="ArmorIcon" type="TextureRect" parent="Details/EquipmentRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="OffItemIcon" type="TextureRect" parent="Details/EquipmentRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 5
 
 [node name="HealthRow" type="HBoxContainer" parent="Details"]
 custom_minimum_size = Vector2(84, 12)

@@ -33,6 +33,7 @@ public partial class Town : Node
 
     private void OnMainMenuPressed()
     {
+        SaveNode.Get()?.Save();
         GetTree().ChangeSceneToFile(MainMenuScene);
     }
 

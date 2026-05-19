@@ -1,11 +1,18 @@
 using Godot;
 using MobArena.Scripts;
+using MobArena.Scripts.Resources;
 
 namespace MobArena.Scenes.Components.Town;
 
 [Tool]
-public partial class TownBuilding : Node2D
+public partial class TownBuilding : Node2D, ITownDragDropTarget
 {
+    public enum GladiatorCapacityMode
+    {
+        Fixed,
+        LocalInputSetups
+    }
+
     private static readonly Rect2 InteractionBounds = new(new Vector2(-75.0f, -75.0f), new Vector2(150.0f, 150.0f));
     private const ulong InputActivationDebounceMsec = 250;
 
@@ -82,12 +89,42 @@ public partial class TownBuilding : Node2D
     [Export]
     public bool DebugInteraction { get; set; }
 
+    [Export]
+    public int TownDragDropPriority { get; set; }
+
+    [Export]
+    public bool SellDroppedPayloads { get; set; }
+
+    [Export]
+    public bool AssignDroppedGladiators { get; set; } = true;
+
+    [Export]
+    public GladiatorCapacityMode AssignmentCapacityMode { get; set; } = GladiatorCapacityMode.Fixed;
+
+    [Export]
+    public int MaxAssignedGladiators { get; set; } = 1;
+
+    [Export]
+    public TownAssignmentData.AssignmentLocation AssignmentLocation { get; set; } = TownAssignmentData.AssignmentLocation.Courtyard;
+
+    [Export]
+    public Godot.Collections.Array<TownDragPayloadKind> AcceptedTownDragDropKinds { get; set; } = TownDragDropRules.GetAllAcceptedKinds();
+
     private Area2D _interactionArea;
     private Label _nameLabel;
     private Node2D _visuals;
     private Sprite2D _buildingSprite;
     private Sprite2D _iconSprite;
+    private PanelContainer _sellPreview;
+    private Label _sellPreviewValueLabel;
+    private PanelContainer _occupancyBadge;
+    private Label _occupancyCountLabel;
+    private CompanyRunData _runData;
     private ulong _lastInputActivationMsec;
+
+    public string DropTargetName => string.IsNullOrWhiteSpace(BuildingName) ? "Town Building" : BuildingName;
+
+    public Godot.Collections.Array<GladiatorData> AssignedGladiators => SaveNode.Get()?.CompanyRunData?.TownAssignments?.GetGladiators(AssignmentLocation) ?? new Godot.Collections.Array<GladiatorData>();
 
     public override void _Ready()
     {
@@ -96,16 +133,32 @@ public partial class TownBuilding : Node2D
         _visuals = GetNode<Node2D>("Visuals");
         _buildingSprite = GetNode<Sprite2D>("Visuals/BuildingSprite");
         _iconSprite = GetNode<Sprite2D>("Visuals/IconSprite");
+        _sellPreview = GetNode<PanelContainer>("Visuals/SellPreview");
+        _sellPreviewValueLabel = GetNode<Label>("Visuals/SellPreview/Row/ValueLabel");
+        _occupancyBadge = GetNode<PanelContainer>("Visuals/OccupancyBadge");
+        _occupancyCountLabel = GetNode<Label>("Visuals/OccupancyBadge/Row/CountLabel");
 
         RefreshVisuals();
 
         if (Engine.IsEditorHint())
             return;
 
+        AddToGroup(RosterYard.DragDropTargetGroup);
+        _runData = SaveNode.Get()?.CompanyRunData;
+        if (_runData != null)
+            _runData.RunChanged += RefreshOccupancyBadge;
+
         _interactionArea.InputPickable = true;
         _interactionArea.InputEvent += OnInteractionInputEvent;
         _interactionArea.MouseEntered += OnMouseEntered;
         _interactionArea.MouseExited += OnMouseExited;
+        RefreshOccupancyBadge();
+    }
+
+    public override void _ExitTree()
+    {
+        if (_runData != null)
+            _runData.RunChanged -= RefreshOccupancyBadge;
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
@@ -152,6 +205,239 @@ public partial class TownBuilding : Node2D
         }
 
         globalOverlay.ShowGoCancelPopup(ConfirmationTitle, ConfirmationMessage, OpenScene, GoText, CancelText);
+    }
+
+    public bool CanReceiveTownDragDrop(TownDragPayload payload, Vector2 viewportPosition)
+    {
+        if (!this.AcceptsTownDragPayloadKind(payload))
+            return false;
+
+        if (Disabled || !IsVisibleInTree())
+            return false;
+
+        if (SellDroppedPayloads && GetSaleValue(payload) <= 0)
+            return false;
+
+        if (SellDroppedPayloads && !PayloadExistsInRunState(payload))
+            return false;
+
+        if (!SellDroppedPayloads && payload.Kind == TownDragPayloadKind.Gladiator && !CanTakeGladiator(payload.Gladiator))
+            return false;
+
+        return TownDragDropRules.IsViewportPositionInside(this, InteractionBounds, viewportPosition);
+    }
+
+    public bool CanPreviewTownDragDrop(TownDragPayload payload)
+    {
+        return SellDroppedPayloads
+            && !Disabled
+            && IsVisibleInTree()
+            && this.AcceptsTownDragPayloadKind(payload)
+            && GetSaleValue(payload) > 0
+            && PayloadExistsInRunState(payload);
+    }
+
+    public void ReceiveTownDragDrop(TownDragPayload payload, Vector2 viewportPosition)
+    {
+        if (SellDroppedPayloads)
+        {
+            TrySellDroppedPayload(payload);
+            SetTownDragDropPreview(null, viewportPosition);
+            return;
+        }
+
+        if (payload.Kind == TownDragPayloadKind.Gladiator)
+        {
+            TryTakeGladiator(payload.Gladiator);
+            return;
+        }
+
+        GD.Print(TownDragDropRules.FormatDropMessage(payload, "building", DropTargetName));
+    }
+
+    public int GetAssignedGladiatorCapacity()
+    {
+        return AssignmentCapacityMode switch
+        {
+            GladiatorCapacityMode.LocalInputSetups => Mathf.Max(0, LocalInputConfig.Get()?.ControllerSetups.Count ?? 0),
+            _ => Mathf.Max(0, MaxAssignedGladiators)
+        };
+    }
+
+    public bool CanTakeGladiator(GladiatorData gladiatorData)
+    {
+        if (!AssignDroppedGladiators || gladiatorData == null)
+            return false;
+
+        var runData = SaveNode.Get()?.CompanyRunData;
+        if (runData == null || !runData.HasGladiator(gladiatorData))
+            return false;
+
+        var assignedGladiators = AssignedGladiators;
+        if (assignedGladiators.Contains(gladiatorData))
+            return true;
+
+        return assignedGladiators.Count < GetAssignedGladiatorCapacity();
+    }
+
+    public bool TryTakeGladiator(GladiatorData gladiatorData)
+    {
+        if (!AssignDroppedGladiators)
+        {
+            GD.PushError($"Building assignment failed: '{DropTargetName}' does not assign dropped gladiators.");
+            return false;
+        }
+
+        if (gladiatorData == null)
+        {
+            GD.PushError($"Building assignment failed: null gladiator dropped on '{DropTargetName}'.");
+            return false;
+        }
+
+        var runData = SaveNode.Get()?.CompanyRunData;
+        if (runData == null || !runData.HasGladiator(gladiatorData))
+        {
+            GD.PushError($"Building assignment failed: gladiator '{gladiatorData.GladiatorName}' is not in the active roster.");
+            return false;
+        }
+
+        var assignedGladiators = AssignedGladiators;
+        if (assignedGladiators.Contains(gladiatorData))
+        {
+            GD.Print($"Building assignment: gladiator '{gladiatorData.GladiatorName}' is already assigned to '{DropTargetName}'.");
+            return true;
+        }
+
+        var capacity = GetAssignedGladiatorCapacity();
+        if (assignedGladiators.Count >= capacity)
+        {
+            GD.PushError($"Building assignment failed: '{DropTargetName}' is full ({assignedGladiators.Count}/{capacity}).");
+            return false;
+        }
+
+        if (!runData.TryAssignGladiatorToTownLocation(gladiatorData, AssignmentLocation, capacity))
+            return false;
+
+        GD.Print($"Building assignment: gladiator '{gladiatorData.GladiatorName}' assigned to '{DropTargetName}' ({AssignedGladiators.Count}/{capacity}).");
+        return true;
+    }
+
+    public bool RemoveAssignedGladiator(GladiatorData gladiatorData)
+    {
+        if (gladiatorData == null || !HasAssignedGladiator(gladiatorData))
+            return false;
+
+        var runData = SaveNode.Get()?.CompanyRunData;
+        return runData?.TryMoveGladiatorToCourtyard(gladiatorData) == true;
+    }
+
+    public void ClearAssignedGladiators()
+    {
+        var runData = SaveNode.Get()?.CompanyRunData;
+        if (runData?.TownAssignments == null)
+            return;
+
+        var assignedGladiators = AssignedGladiators;
+        while (assignedGladiators.Count > 0)
+            runData.TryMoveGladiatorToCourtyard(assignedGladiators[0]);
+    }
+
+    public bool HasAssignedGladiator(GladiatorData gladiatorData)
+    {
+        return gladiatorData != null && AssignedGladiators?.Contains(gladiatorData) == true;
+    }
+
+    public void SetTownDragDropPreview(TownDragPayload? payload, Vector2 viewportPosition)
+    {
+        if (_sellPreview == null || _sellPreviewValueLabel == null)
+            return;
+
+        if (!SellDroppedPayloads || payload == null || !CanPreviewTownDragDrop(payload.Value))
+        {
+            _sellPreview.Visible = false;
+            return;
+        }
+
+        var saleValue = GetSaleValue(payload.Value);
+        _sellPreviewValueLabel.Text = saleValue.ToString();
+        _sellPreview.Visible = saleValue > 0;
+    }
+
+    private bool TrySellDroppedPayload(TownDragPayload payload)
+    {
+        var saleValue = GetSaleValue(payload);
+        var globalOverlay = GlobalOverlay.Get();
+        if (globalOverlay == null)
+        {
+            GD.PushError($"Market sale failed: GlobalOverlay missing while trying to confirm sale of {payload.Kind} '{payload.GetDebugName()}'.");
+            return false;
+        }
+
+        globalOverlay.ShowGoCancelPopup(
+            "Confirm Sale",
+            $"Are you sure you want to sell {payload.GetDebugName()} for {saleValue} gold?",
+            () => ExecuteConfirmedSale(payload, saleValue),
+            "Sell",
+            "Cancel",
+            pauseGameUntilClosed: true);
+
+        return true;
+    }
+
+    private static void ExecuteConfirmedSale(TownDragPayload payload, int expectedSaleValue)
+    {
+        var saveNode = SaveNode.Get();
+        var runData = saveNode?.CompanyRunData;
+        if (runData == null)
+        {
+            GD.PushError($"Market sale failed: company run data missing for {payload.Kind} '{payload.GetDebugName()}'.");
+            return;
+        }
+
+        var currentSaleValue = GetSaleValue(payload);
+        if (currentSaleValue != expectedSaleValue)
+            GD.PushError($"Market sale warning: {payload.Kind} '{payload.GetDebugName()}' sale value changed from {expectedSaleValue} to {currentSaleValue} before confirmation.");
+
+        var sold = payload.Kind switch
+        {
+            TownDragPayloadKind.Item => runData.TrySellItem(payload.Item, saveNode.CompanyCareerData),
+            TownDragPayloadKind.Gladiator => runData.TrySellGladiator(payload.Gladiator, saveNode.CompanyCareerData),
+            TownDragPayloadKind.Ration when payload.RationQuality != null => runData.TrySellRation(payload.RationQuality.Value, saveNode.CompanyCareerData),
+            _ => false
+        };
+
+        if (sold)
+            GD.Print($"Market sale: sold {payload.Kind} '{payload.GetDebugName()}' for {currentSaleValue} gold.");
+    }
+
+    private static int GetSaleValue(TownDragPayload payload)
+    {
+        var runData = SaveNode.Get()?.CompanyRunData;
+        if (runData == null)
+            return 0;
+
+        return payload.Kind switch
+        {
+            TownDragPayloadKind.Item => runData.GetSaleValue(payload.Item),
+            TownDragPayloadKind.Gladiator => runData.GetSaleValue(payload.Gladiator),
+            TownDragPayloadKind.Ration when payload.RationQuality != null => runData.GetSaleValue(payload.RationQuality.Value),
+            _ => 0
+        };
+    }
+
+    private static bool PayloadExistsInRunState(TownDragPayload payload)
+    {
+        var runData = SaveNode.Get()?.CompanyRunData;
+        if (runData == null)
+            return false;
+
+        return payload.Kind switch
+        {
+            TownDragPayloadKind.Item => runData.HasItem(payload.Item),
+            TownDragPayloadKind.Gladiator => runData.HasGladiator(payload.Gladiator),
+            TownDragPayloadKind.Ration when payload.RationQuality != null => runData.Rations.GetCount(payload.RationQuality.Value) > 0,
+            _ => false
+        };
     }
 
     private void OpenOverlay()
@@ -255,5 +541,17 @@ public partial class TownBuilding : Node2D
             _iconSprite.Texture = IconTexture;
 
         Modulate = Disabled ? new Color(0.55f, 0.55f, 0.55f, 1.0f) : Colors.White;
+        RefreshOccupancyBadge();
+    }
+
+    private void RefreshOccupancyBadge()
+    {
+        if (_occupancyBadge == null || _occupancyCountLabel == null || Engine.IsEditorHint())
+            return;
+
+        var capacity = GetAssignedGladiatorCapacity();
+        var count = AssignedGladiators.Count;
+        _occupancyBadge.Visible = AssignDroppedGladiators && capacity > 0 && count > 0 && !SellDroppedPayloads;
+        _occupancyCountLabel.Text = $"{count}/{capacity}";
     }
 }

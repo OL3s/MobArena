@@ -1,12 +1,17 @@
 using Godot;
+using MobArena.Scripts;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scenes.Components.Town;
 
-public partial class RosterYardGladiator : Node2D
+public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
 {
     private const float DisplayHeight = 72f;
     private const float RiskWarningThreshold = 5f;
+    private static readonly Rect2 DropBounds = new(new Vector2(-56f, -68f), new Vector2(112f, 136f));
+
+    private readonly Godot.Collections.Array<TownDragPayloadKind> _acceptedTownDragDropKinds = TownDragDropRules.GetAllAcceptedKinds();
 
     private bool _displayDetail;
     private bool _isHovered;
@@ -21,6 +26,9 @@ public partial class RosterYardGladiator : Node2D
     private TextureRect _provisionsWarningIcon;
     private TextureRect _exhaustionWarningIcon;
     private VBoxContainer _detailRows;
+    private TextureRect _mainItemIcon;
+    private TextureRect _armorIcon;
+    private TextureRect _offItemIcon;
     private ProgressBar _healthBar;
     private ProgressBar _provisionsBar;
     private ProgressBar _exhaustionBar;
@@ -55,8 +63,15 @@ public partial class RosterYardGladiator : Node2D
 
     public bool IsSelected => _isSelected;
 
+    public string DropTargetName => _gladiatorData?.GladiatorName ?? "Town Gladiator";
+
+    public int TownDragDropPriority => 10;
+
+    public Godot.Collections.Array<TownDragPayloadKind> AcceptedTownDragDropKinds => _acceptedTownDragDropKinds;
+
 	public override void _Ready()
 	{
+		AddToGroup(RosterYard.DragDropTargetGroup);
 		_background = GetNode<ColorRect>("Background");
 		_portrait = GetNode<Sprite2D>("Portrait");
         _interactionArea = GetNode<Area2D>("InteractionArea");
@@ -65,6 +80,9 @@ public partial class RosterYardGladiator : Node2D
         _provisionsWarningIcon = GetNode<TextureRect>("RiskWarnings/ProvisionsIcon");
         _exhaustionWarningIcon = GetNode<TextureRect>("RiskWarnings/ExhaustionIcon");
         _detailRows = GetNode<VBoxContainer>("Details");
+        _mainItemIcon = GetNode<TextureRect>("Details/EquipmentRow/MainItemIcon");
+        _armorIcon = GetNode<TextureRect>("Details/EquipmentRow/ArmorIcon");
+        _offItemIcon = GetNode<TextureRect>("Details/EquipmentRow/OffItemIcon");
 		_healthBar = GetNode<ProgressBar>("Details/HealthRow/Bar");
 		_provisionsBar = GetNode<ProgressBar>("Details/ProvisionsRow/Bar");
 		_exhaustionBar = GetNode<ProgressBar>("Details/ExhaustionRow/Bar");
@@ -114,7 +132,16 @@ public partial class RosterYardGladiator : Node2D
         ConfigureBar(_healthBar, _gladiatorData.Health, _gladiatorData.MaxHealth);
         ConfigureBar(_provisionsBar, _gladiatorData.Provisions, 10f);
         ConfigureBar(_exhaustionBar, _gladiatorData.Exhaustion, 10f);
+        RefreshEquipmentIcons();
         RefreshDetails();
+    }
+
+    private void RefreshEquipmentIcons()
+    {
+        var equipment = _gladiatorData?.Equipment;
+        SetEquipmentIcon(_mainItemIcon, equipment?.MainHand);
+        SetEquipmentIcon(_armorIcon, equipment?.Armor);
+        SetEquipmentIcon(_offItemIcon, equipment?.OffHand);
     }
 
     private void RefreshRiskWarnings()
@@ -170,6 +197,40 @@ public partial class RosterYardGladiator : Node2D
         Visible = !dragHidden;
     }
 
+    public bool CanReceiveTownDragDrop(TownDragPayload payload, Vector2 viewportPosition)
+    {
+        if (!this.AcceptsTownDragPayloadKind(payload))
+            return false;
+
+        if (!TownDragDropRules.IsViewportPositionInside(this, DropBounds, viewportPosition))
+            return false;
+
+        return payload.Kind != TownDragPayloadKind.Gladiator || payload.Gladiator != _gladiatorData;
+    }
+
+    public bool CanPreviewTownDragDrop(TownDragPayload payload)
+    {
+        return false;
+    }
+
+    public void ReceiveTownDragDrop(TownDragPayload payload, Vector2 viewportPosition)
+    {
+        if (payload.Kind == TownDragPayloadKind.Ration)
+        {
+            TryFeedRation(payload);
+            return;
+        }
+
+        if (payload.Kind == TownDragPayloadKind.Item)
+            ValidateDroppedItemExists(payload);
+
+        GD.Print(TownDragDropRules.FormatDropMessage(payload, "gladiator", DropTargetName));
+    }
+
+    public void SetTownDragDropPreview(TownDragPayload? payload, Vector2 viewportPosition)
+    {
+    }
+
     private void SetDisplayDetail(bool displayDetail)
     {
         _displayDetail = displayDetail;
@@ -191,5 +252,46 @@ public partial class RosterYardGladiator : Node2D
 
         bar.MaxValue = Mathf.Max(1f, maxValue);
         bar.Value = Mathf.Clamp(value, 0f, maxValue);
+    }
+
+    private static void SetEquipmentIcon(TextureRect icon, ItemData item)
+    {
+        if (icon == null)
+            return;
+
+        icon.Texture = item?.Icon;
+        icon.TooltipText = item?.DisplayName ?? string.Empty;
+    }
+
+    private void TryFeedRation(TownDragPayload payload)
+    {
+        if (payload.RationQuality == null)
+        {
+            GD.PushError($"Drop feed failed: ration payload dropped on gladiator '{DropTargetName}' without a ration quality.");
+            return;
+        }
+
+        var runData = SaveNode.Get()?.CompanyRunData;
+        if (runData == null)
+        {
+            GD.PushError($"Drop feed failed: company run data missing while feeding gladiator '{DropTargetName}'.");
+            return;
+        }
+
+        if (runData.TryFeedGladiatorRation(_gladiatorData, payload.RationQuality.Value))
+            GD.Print($"Drop feed: fed {payload.RationQuality.Value} ration to gladiator '{DropTargetName}'.");
+    }
+
+    private static void ValidateDroppedItemExists(TownDragPayload payload)
+    {
+        var runData = SaveNode.Get()?.CompanyRunData;
+        if (runData == null)
+        {
+            GD.PushError($"Drop item failed: company run data missing for item '{payload.Item?.DisplayName ?? "null"}'.");
+            return;
+        }
+
+        if (!runData.HasItem(payload.Item))
+            GD.PushError($"Drop item failed: item '{payload.Item?.DisplayName ?? "null"}' is not in company inventory.");
     }
 }
