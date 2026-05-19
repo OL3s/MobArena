@@ -32,6 +32,12 @@ public partial class TownTimeState : Resource
     public int ChampionDeadlineDay { get; private set; } = 7;
 
     [Export]
+    public bool ChampionContractDue { get; private set; }
+
+    [Export]
+    public int StarvingWarningDay { get; private set; }
+
+    [Export]
     public TimeSpeed CurrentSpeed { get; private set; } = TimeSpeed.X0;
 
     [Export]
@@ -204,6 +210,31 @@ public partial class TownTimeState : Resource
     public bool IsChampionDue()
     {
         return CurrentDay >= ChampionDeadlineDay;
+    }
+
+    public void ApplyNewDayWarnings(bool championContractDue, bool starvingWarningDue)
+    {
+        var changed = false;
+
+        if (championContractDue && !ChampionContractDue)
+        {
+            ChampionContractDue = true;
+            changed = true;
+        }
+
+        if (starvingWarningDue && StarvingWarningDay != CurrentDay)
+        {
+            StarvingWarningDay = CurrentDay;
+            changed = true;
+        }
+
+        if (changed)
+            EmitSignal(SignalName.TimeChanged);
+    }
+
+    public bool IsStarvingWarningDueToday()
+    {
+        return StarvingWarningDay == CurrentDay;
     }
 
     private int GetMinutesPerTick()

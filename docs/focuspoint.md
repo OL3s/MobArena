@@ -4,7 +4,7 @@ This file captures what to focus on next. Update it near the end of a session so
 
 ## Next Focus
 
-Remove the separate Roster Hall scene path and fold roster management into the town as an open management area where gladiators are visible as idling characters.
+Finish the champion-contract due flow around the new-day hook, then continue folding roster management into the town as an open management area where gladiators are visible as idling characters.
 
 Priorities:
 
@@ -21,6 +21,8 @@ Priorities:
 - Convert gladiator equipment fields from placeholder strings into real Godot resource data: armor, main item, second item, and signature skill should be backed by authored `.tres` resources when equipment work starts.
 - Expand reusable gladiator UI only as new real data needs it; current cards already show health, recoverable cap, provisions, exhaustion, max stamina, skill, and stats.
 - Keep `GameTimeController` as a static tick coordinator. Persistent time state belongs in `TownTimeState`; persistent run state belongs in `CompanyRunData`.
+- Use `GameTimeController.ExecuteNewDay` for future day-start rules. It currently enables `TownTimeState.ChampionContractDue` when the champion deadline day is reached, records the current day in `TownTimeState.StarvingWarningDay` when any gladiator is starving, and pauses time for either warning. `TownHud` shows the warning popup and combines champion/starving warnings if both trigger on the same day.
+- Continue the champion-contract due flow next by wiring actual champion contract selection/completion and the end-of-day progression block once contracts exist.
 - Keep long-term career totals in `CompanyCareerData`; do not mix current spendable values with lifetime stats.
 - Keep gameplay mutation helpers on the relevant resources, not on `SaveNode`; `SaveNode` should remain the save/load boundary.
 - Store runtime company/roster data through `SaveNode`, matching the current runtime-only save approach.

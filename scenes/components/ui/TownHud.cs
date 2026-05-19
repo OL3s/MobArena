@@ -35,6 +35,8 @@ public partial class TownHud : CanvasLayer
 	private TimelineLine _championProgress;
 	private Label _championProgressValue;
 	private Timer _timeTickTimer;
+	private bool _championContractDuePopupShown;
+	private int _starvingWarningPopupShownDay;
 
 	public override void _Ready()
 	{
@@ -253,6 +255,42 @@ public partial class TownHud : CanvasLayer
 		_championProgress.SetValue(_timeState.GetChampionProgressValue(), _timeState.GetChampionProgressMax());
 		_championProgressValue.Text = _timeState.GetChampionDeadlineLabel();
 		RefreshSpeedToggleButton();
+		ShowNewDayWarningPopupIfNeeded();
+	}
+
+	private void ShowNewDayWarningPopupIfNeeded()
+	{
+		var shouldShowChampionWarning = _timeState.ChampionContractDue && !_championContractDuePopupShown;
+		var shouldShowStarvingWarning = _timeState.IsStarvingWarningDueToday()
+			&& _starvingWarningPopupShownDay != _timeState.CurrentDay;
+
+		if (!shouldShowChampionWarning && !shouldShowStarvingWarning)
+			return;
+
+		var title = shouldShowChampionWarning && shouldShowStarvingWarning
+			? "Company Warnings"
+			: shouldShowChampionWarning
+				? "Champion Contract Due"
+				: "Gladiators Starving";
+		var body = string.Empty;
+
+		if (shouldShowChampionWarning)
+		{
+			_championContractDuePopupShown = true;
+			body += "A champion contract is now due. Complete it before the end of the day to proceed.";
+		}
+
+		if (shouldShowStarvingWarning)
+		{
+			_starvingWarningPopupShownDay = _timeState.CurrentDay;
+			if (!string.IsNullOrEmpty(body))
+				body += "\n\n";
+
+			body += "One or more gladiators are starving. Buy or assign rations before their provisions run out.";
+		}
+
+		_timeState.ResetToPause();
+		GlobalOverlay.Get()?.ShowBlurredPopup(title, body);
 	}
 
 	private void ConfigureTimelineLines()
