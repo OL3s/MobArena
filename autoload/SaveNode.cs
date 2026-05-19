@@ -40,6 +40,7 @@ public partial class SaveNode : Node
 		CompanyCareerData = new CompanyCareerData();
 		CompanyRunData = new CompanyRunData();
 		CompanyRunData.AddDefaultGladiators(CompanyCareerData, 2);
+		CompanyRunData.AddStartingRations();
 		TownTimeState = new TownTimeState();
 	}
 

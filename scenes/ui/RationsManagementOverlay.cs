@@ -6,39 +6,31 @@ namespace MobArena.Scenes.UI;
 
 public partial class RationsManagementOverlay : Control
 {
+    private const string AutoFeedingOverlayScene = "res://scenes/ui/AutoFeedingOverlay.tscn";
+
     private CompanyRunData _runData;
-    private Label _inventoryLabel;
-    private Label _poorThresholdValueLabel;
-    private Label _commonThresholdValueLabel;
-    private Label _fineThresholdValueLabel;
-    private HSlider _poorThresholdSlider;
-    private HSlider _commonThresholdSlider;
-    private HSlider _fineThresholdSlider;
-    private OptionButton _priorityOptionButton;
+    private Label _poorCountLabel;
+    private Label _poorFeedBelowLabel;
+    private Label _commonCountLabel;
+    private Label _commonFeedBelowLabel;
+    private Label _fineCountLabel;
+    private Label _fineFeedBelowLabel;
+    private Label _priorityLabel;
 
     public override void _Ready()
     {
         _runData = SaveNode.Get().CompanyRunData;
         _runData.EnsureResources();
 
-        _inventoryLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/InventoryLabel");
-        _poorThresholdValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/PoorRow/ValueLabel");
-        _commonThresholdValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/CommonRow/ValueLabel");
-        _fineThresholdValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/FineRow/ValueLabel");
-        _poorThresholdSlider = GetNode<HSlider>("CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/PoorRow/ThresholdSlider");
-        _commonThresholdSlider = GetNode<HSlider>("CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/CommonRow/ThresholdSlider");
-        _fineThresholdSlider = GetNode<HSlider>("CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/FineRow/ThresholdSlider");
-        _priorityOptionButton = GetNode<OptionButton>("CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/PriorityRow/PriorityOptionButton");
+        _poorCountLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content/CountLabel");
+        _poorFeedBelowLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content/FeedBelowLabel");
+        _commonCountLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content/CountLabel");
+        _commonFeedBelowLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content/FeedBelowLabel");
+        _fineCountLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content/CountLabel");
+        _fineFeedBelowLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content/FeedBelowLabel");
+        _priorityLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/PriorityLabel");
 
-        ConfigureSlider(_poorThresholdSlider, RationFeedingPolicyData.PoorFeedBelowMax);
-        ConfigureSlider(_commonThresholdSlider, RationFeedingPolicyData.CommonFeedBelowMax);
-        ConfigureSlider(_fineThresholdSlider, RationFeedingPolicyData.FineFeedBelowMax);
-        ConfigurePriorityOptions();
-
-        _poorThresholdSlider.ValueChanged += value => OnThresholdChanged(RationStoreData.RationQuality.Poor, value);
-        _commonThresholdSlider.ValueChanged += value => OnThresholdChanged(RationStoreData.RationQuality.Common, value);
-        _fineThresholdSlider.ValueChanged += value => OnThresholdChanged(RationStoreData.RationQuality.Fine, value);
-        _priorityOptionButton.ItemSelected += OnPrioritySelected;
+        GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedingButton").Pressed += OnAutoFeedingPressed;
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/CloseButton").Pressed += QueueFree;
 
         _runData.RunChanged += RefreshUi;
@@ -51,30 +43,15 @@ public partial class RationsManagementOverlay : Control
             _runData.RunChanged -= RefreshUi;
     }
 
-    private static void ConfigureSlider(HSlider slider, float maxValue)
+    private void OnAutoFeedingPressed()
     {
-        slider.MinValue = 0.0;
-        slider.MaxValue = maxValue;
-        slider.Step = 0.5;
-    }
+        var overlayScene = ResourceLoader.Load<PackedScene>(AutoFeedingOverlayScene);
+        var globalOverlay = GlobalOverlay.Get();
+        if (overlayScene == null || globalOverlay == null)
+            return;
 
-    private void ConfigurePriorityOptions()
-    {
-        _priorityOptionButton.Clear();
-        _priorityOptionButton.AddItem("Closest Fit", (int)RationFeedingPolicyData.FeedPriority.ClosestFit);
-        _priorityOptionButton.AddItem("Cheapest First", (int)RationFeedingPolicyData.FeedPriority.CheapestFirst);
-        _priorityOptionButton.AddItem("Best First", (int)RationFeedingPolicyData.FeedPriority.BestFirst);
-    }
-
-    private void OnThresholdChanged(RationStoreData.RationQuality quality, double value)
-    {
-        _runData.SetAutoFeedThreshold(quality, (float)value);
-    }
-
-    private void OnPrioritySelected(long index)
-    {
-        var priority = (RationFeedingPolicyData.FeedPriority)_priorityOptionButton.GetItemId((int)index);
-        _runData.SetAutoFeedPriority(priority);
+        QueueFree();
+        globalOverlay.AddOverlay(overlayScene);
     }
 
     private void RefreshUi()
@@ -83,26 +60,25 @@ public partial class RationsManagementOverlay : Control
         var rations = _runData.Rations;
         var policy = _runData.RationFeedingPolicy;
 
-        _inventoryLabel.Text = $"Company rations: {rations.GetTotal()} total ({rations.PoorRations} poor, {rations.CommonRations} common, {rations.FineRations} fine)";
-
-        RefreshThresholdRow(RationStoreData.RationQuality.Poor, _poorThresholdSlider, _poorThresholdValueLabel);
-        RefreshThresholdRow(RationStoreData.RationQuality.Common, _commonThresholdSlider, _commonThresholdValueLabel);
-        RefreshThresholdRow(RationStoreData.RationQuality.Fine, _fineThresholdSlider, _fineThresholdValueLabel);
-
-        for (var index = 0; index < _priorityOptionButton.ItemCount; index++)
-        {
-            if (_priorityOptionButton.GetItemId(index) == (int)policy.Priority)
-            {
-                _priorityOptionButton.Select(index);
-                break;
-            }
-        }
+        RefreshCard(_poorCountLabel, _poorFeedBelowLabel, rations.PoorRations, policy.GetFeedBelow(RationStoreData.RationQuality.Poor));
+        RefreshCard(_commonCountLabel, _commonFeedBelowLabel, rations.CommonRations, policy.GetFeedBelow(RationStoreData.RationQuality.Common));
+        RefreshCard(_fineCountLabel, _fineFeedBelowLabel, rations.FineRations, policy.GetFeedBelow(RationStoreData.RationQuality.Fine));
+        _priorityLabel.Text = $"Priority: {GetPriorityName(policy.Priority)}";
     }
 
-    private void RefreshThresholdRow(RationStoreData.RationQuality quality, HSlider slider, Label valueLabel)
+    private static void RefreshCard(Label countLabel, Label feedBelowLabel, int count, float feedBelow)
     {
-        var threshold = _runData.RationFeedingPolicy.GetFeedBelow(quality);
-        slider.SetValueNoSignal(threshold);
-        valueLabel.Text = $"Feed below: {threshold:0.0}";
+        countLabel.Text = count.ToString();
+        feedBelowLabel.Text = $"Feed below {feedBelow:0.0}";
+    }
+
+    private static string GetPriorityName(RationFeedingPolicyData.FeedPriority priority)
+    {
+        return priority switch
+        {
+            RationFeedingPolicyData.FeedPriority.CheapestFirst => "Cheapest First",
+            RationFeedingPolicyData.FeedPriority.BestFirst => "Best First",
+            _ => "Closest Fit"
+        };
     }
 }

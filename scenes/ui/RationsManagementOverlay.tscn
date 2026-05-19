@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/RationsManagementOverlay.cs" id="1_overlay"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
@@ -9,6 +9,18 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
 shader = ExtResource("2_blur_shader")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_count_badge"]
+bg_color = Color(0.25, 0.17, 0.08, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.74, 0.32, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
 
 [node name="RationsManagementOverlay" type="Control"]
 layout_mode = 3
@@ -76,148 +88,125 @@ theme_override_font_sizes/font_size = 28
 text = "Rations"
 vertical_alignment = 1
 
-[node name="InventoryLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="RationCards" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2
-text = "Company rations: 0 total"
-autowrap_mode = 3
+theme_override_constants/separation = 12
+alignment = 1
 
-[node name="AutoFeedPanel" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="PoorCard" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards"]
 layout_mode = 2
+size_flags_horizontal = 3
 
-[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel"]
+[node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard"]
 layout_mode = 2
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 14
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 14
+theme_override_constants/separation = 8
+alignment = 1
 
-[node name="AutoFeedLayout" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="AutoFeedLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout"]
+[node name="NameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Automatic feeding"
+text = "Poor"
+horizontal_alignment = 1
 
-[node name="DescriptionLabel" type="RichTextLabel" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout"]
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-bbcode_enabled = true
-text = "During town time, each ration type feeds only when a gladiator falls below that type's threshold. Caps stay below the ration value so the same gladiator is not fed every tick."
-fit_content = true
-scroll_active = false
-autowrap_mode = 3
-
-[node name="PoorRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/PoorRow"]
-custom_minimum_size = Vector2(36, 36)
+[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content"]
+custom_minimum_size = Vector2(96, 96)
 layout_mode = 2
 texture = ExtResource("4_poor_ration")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="NameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/PoorRow"]
-custom_minimum_size = Vector2(84, 0)
+[node name="CountLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content"]
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
-text = "Poor"
+theme_override_styles/normal = SubResource("StyleBoxFlat_count_badge")
+text = "0"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ThresholdSlider" type="HSlider" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/PoorRow"]
+[node name="FeedBelowLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content"]
+layout_mode = 2
+text = "Feed below 4.5"
+horizontal_alignment = 1
+
+[node name="CommonCard" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards"]
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 4.5
-step = 0.5
-value = 4.5
 
-[node name="ValueLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/PoorRow"]
-custom_minimum_size = Vector2(128, 0)
+[node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard"]
 layout_mode = 2
-text = "Feed below: 4.5"
-vertical_alignment = 1
+theme_override_constants/separation = 8
+alignment = 1
 
-[node name="CommonRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout"]
+[node name="NameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_font_sizes/font_size = 18
+text = "Common"
+horizontal_alignment = 1
 
-[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/CommonRow"]
-custom_minimum_size = Vector2(36, 36)
+[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content"]
+custom_minimum_size = Vector2(96, 96)
 layout_mode = 2
 texture = ExtResource("5_common_ration")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="NameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/CommonRow"]
-custom_minimum_size = Vector2(84, 0)
+[node name="CountLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content"]
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
-text = "Common"
+theme_override_styles/normal = SubResource("StyleBoxFlat_count_badge")
+text = "0"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ThresholdSlider" type="HSlider" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/CommonRow"]
+[node name="FeedBelowLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content"]
+layout_mode = 2
+text = "Feed below 7.5"
+horizontal_alignment = 1
+
+[node name="FineCard" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards"]
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 7.5
-step = 0.5
-value = 7.5
 
-[node name="ValueLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/CommonRow"]
-custom_minimum_size = Vector2(128, 0)
+[node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard"]
 layout_mode = 2
-text = "Feed below: 7.5"
-vertical_alignment = 1
+theme_override_constants/separation = 8
+alignment = 1
 
-[node name="FineRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout"]
+[node name="NameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_font_sizes/font_size = 18
+text = "Fine"
+horizontal_alignment = 1
 
-[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/FineRow"]
-custom_minimum_size = Vector2(36, 36)
+[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content"]
+custom_minimum_size = Vector2(96, 96)
 layout_mode = 2
 texture = ExtResource("6_fine_ration")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="NameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/FineRow"]
-custom_minimum_size = Vector2(84, 0)
+[node name="CountLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content"]
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
-text = "Fine"
+theme_override_styles/normal = SubResource("StyleBoxFlat_count_badge")
+text = "0"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ThresholdSlider" type="HSlider" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/FineRow"]
+[node name="FeedBelowLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content"]
 layout_mode = 2
-size_flags_horizontal = 3
-max_value = 9.0
-step = 0.5
-value = 9.0
+text = "Feed below 9.0"
+horizontal_alignment = 1
 
-[node name="ValueLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/FineRow"]
-custom_minimum_size = Vector2(128, 0)
+[node name="PriorityLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2
-text = "Feed below: 9.0"
-vertical_alignment = 1
+text = "Priority: Closest Fit"
+horizontal_alignment = 1
 
-[node name="PriorityRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout"]
+[node name="AutoFeedingButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="PriorityLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/PriorityRow"]
-custom_minimum_size = Vector2(104, 0)
-layout_mode = 2
-text = "Priority"
-vertical_alignment = 1
-
-[node name="PriorityOptionButton" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout/PriorityRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="StatusLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
-custom_minimum_size = Vector2(0, 24)
-layout_mode = 2
-text = "Closest Fit picks the threshold nearest to the gladiator's current provisions."
-autowrap_mode = 3
+text = "Automatic Feeding"
 
 [node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 custom_minimum_size = Vector2(0, 54)

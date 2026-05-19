@@ -11,27 +11,23 @@ public partial class RationsOverlay : Control
     private RationStoreData _rationStore;
 
     private Label _goldLabel;
-    private Label _ownedSummaryLabel;
     private Label _feedbackLabel;
 
-    private Label _poorOwnedLabel;
-    private Label _poorStockLabel;
+    private Label _poorOwnedBadge;
     private Label _poorCostLabel;
-    private Label _poorValueLabel;
+    private Label _poorStockLabel;
     private Button _poorBuyOneButton;
     private Button _poorBuyFiveButton;
 
-    private Label _commonOwnedLabel;
-    private Label _commonStockLabel;
+    private Label _commonOwnedBadge;
     private Label _commonCostLabel;
-    private Label _commonValueLabel;
+    private Label _commonStockLabel;
     private Button _commonBuyOneButton;
     private Button _commonBuyFiveButton;
 
-    private Label _fineOwnedLabel;
-    private Label _fineStockLabel;
+    private Label _fineOwnedBadge;
     private Label _fineCostLabel;
-    private Label _fineValueLabel;
+    private Label _fineStockLabel;
     private Button _fineBuyOneButton;
     private Button _fineBuyFiveButton;
 
@@ -43,12 +39,11 @@ public partial class RationsOverlay : Control
         _rationStore = _runData.Market.RationStore;
 
         _goldLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/Summary/GoldLabel");
-        _ownedSummaryLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/Summary/OwnedSummaryLabel");
         _feedbackLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/FeedbackLabel");
 
-        BindPoorRow();
-        BindCommonRow();
-        BindFineRow();
+        BindCard(RationStoreData.RationQuality.Poor, "PoorCard", out _poorOwnedBadge, out _poorCostLabel, out _poorStockLabel, out _poorBuyOneButton, out _poorBuyFiveButton);
+        BindCard(RationStoreData.RationQuality.Common, "CommonCard", out _commonOwnedBadge, out _commonCostLabel, out _commonStockLabel, out _commonBuyOneButton, out _commonBuyFiveButton);
+        BindCard(RationStoreData.RationQuality.Fine, "FineCard", out _fineOwnedBadge, out _fineCostLabel, out _fineStockLabel, out _fineBuyOneButton, out _fineBuyFiveButton);
 
         GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/CloseButton").Pressed += QueueFree;
         _runData.RunChanged += RefreshUi;
@@ -61,43 +56,23 @@ public partial class RationsOverlay : Control
             _runData.RunChanged -= RefreshUi;
     }
 
-    private void BindPoorRow()
+    private void BindCard(
+        RationStoreData.RationQuality quality,
+        string cardName,
+        out Label ownedBadge,
+        out Label costLabel,
+        out Label stockLabel,
+        out Button buyOneButton,
+        out Button buyFiveButton)
     {
-        const string rowPath = "CenterContainer/Panel/MarginContainer/Layout/RationRows/PoorRow/Content";
-        _poorOwnedLabel = GetNode<Label>($"{rowPath}/Details/OwnedLabel");
-        _poorStockLabel = GetNode<Label>($"{rowPath}/Details/StockLabel");
-        _poorCostLabel = GetNode<Label>($"{rowPath}/Details/CostLabel");
-        _poorValueLabel = GetNode<Label>($"{rowPath}/Details/ValueLabel");
-        _poorBuyOneButton = GetNode<Button>($"{rowPath}/Buttons/BuyOneButton");
-        _poorBuyFiveButton = GetNode<Button>($"{rowPath}/Buttons/BuyFiveButton");
-        _poorBuyOneButton.Pressed += () => TryBuy(RationStoreData.RationQuality.Poor, 1);
-        _poorBuyFiveButton.Pressed += () => TryBuy(RationStoreData.RationQuality.Poor, 5);
-    }
-
-    private void BindCommonRow()
-    {
-        const string rowPath = "CenterContainer/Panel/MarginContainer/Layout/RationRows/CommonRow/Content";
-        _commonOwnedLabel = GetNode<Label>($"{rowPath}/Details/OwnedLabel");
-        _commonStockLabel = GetNode<Label>($"{rowPath}/Details/StockLabel");
-        _commonCostLabel = GetNode<Label>($"{rowPath}/Details/CostLabel");
-        _commonValueLabel = GetNode<Label>($"{rowPath}/Details/ValueLabel");
-        _commonBuyOneButton = GetNode<Button>($"{rowPath}/Buttons/BuyOneButton");
-        _commonBuyFiveButton = GetNode<Button>($"{rowPath}/Buttons/BuyFiveButton");
-        _commonBuyOneButton.Pressed += () => TryBuy(RationStoreData.RationQuality.Common, 1);
-        _commonBuyFiveButton.Pressed += () => TryBuy(RationStoreData.RationQuality.Common, 5);
-    }
-
-    private void BindFineRow()
-    {
-        const string rowPath = "CenterContainer/Panel/MarginContainer/Layout/RationRows/FineRow/Content";
-        _fineOwnedLabel = GetNode<Label>($"{rowPath}/Details/OwnedLabel");
-        _fineStockLabel = GetNode<Label>($"{rowPath}/Details/StockLabel");
-        _fineCostLabel = GetNode<Label>($"{rowPath}/Details/CostLabel");
-        _fineValueLabel = GetNode<Label>($"{rowPath}/Details/ValueLabel");
-        _fineBuyOneButton = GetNode<Button>($"{rowPath}/Buttons/BuyOneButton");
-        _fineBuyFiveButton = GetNode<Button>($"{rowPath}/Buttons/BuyFiveButton");
-        _fineBuyOneButton.Pressed += () => TryBuy(RationStoreData.RationQuality.Fine, 1);
-        _fineBuyFiveButton.Pressed += () => TryBuy(RationStoreData.RationQuality.Fine, 5);
+        var cardPath = $"CenterContainer/Panel/MarginContainer/Layout/RationCards/{cardName}/Content";
+        ownedBadge = GetNode<Label>($"{cardPath}/Header/OwnedBadge");
+        costLabel = GetNode<Label>($"{cardPath}/CostRow/CostLabel");
+        stockLabel = GetNode<Label>($"{cardPath}/StockLabel");
+        buyOneButton = GetNode<Button>($"{cardPath}/Buttons/BuyOneButton");
+        buyFiveButton = GetNode<Button>($"{cardPath}/Buttons/BuyFiveButton");
+        buyOneButton.Pressed += () => TryBuy(quality, 1);
+        buyFiveButton.Pressed += () => TryBuy(quality, 5);
     }
 
     private void TryBuy(RationStoreData.RationQuality quality, int amount)
@@ -110,8 +85,8 @@ public partial class RationsOverlay : Control
 
         var totalCost = _rationStore.GetCost(quality) * amount;
         _feedbackLabel.Text = _rationStore.GetStock(quality) < amount
-            ? $"The market does not have {amount} {GetQualityName(quality).ToLowerInvariant()} rations left."
-            : $"Not enough gold. Need {totalCost} gold.";
+            ? $"Only {_rationStore.GetStock(quality)} {GetQualityName(quality).ToLowerInvariant()} left."
+            : $"Need {totalCost} gold.";
         RefreshUi();
     }
 
@@ -121,28 +96,25 @@ public partial class RationsOverlay : Control
         _rationStore = _runData.Market.RationStore;
 
         _goldLabel.Text = $"Gold: {_runData.Gold}";
-        _ownedSummaryLabel.Text = $"Owned: {_runData.Rations.GetTotal()} total ({_runData.Rations.PoorRations} poor, {_runData.Rations.CommonRations} common, {_runData.Rations.FineRations} fine)";
 
-        RefreshRow(RationStoreData.RationQuality.Poor, _poorOwnedLabel, _poorStockLabel, _poorCostLabel, _poorValueLabel, _poorBuyOneButton, _poorBuyFiveButton);
-        RefreshRow(RationStoreData.RationQuality.Common, _commonOwnedLabel, _commonStockLabel, _commonCostLabel, _commonValueLabel, _commonBuyOneButton, _commonBuyFiveButton);
-        RefreshRow(RationStoreData.RationQuality.Fine, _fineOwnedLabel, _fineStockLabel, _fineCostLabel, _fineValueLabel, _fineBuyOneButton, _fineBuyFiveButton);
+        RefreshCard(RationStoreData.RationQuality.Poor, _poorOwnedBadge, _poorCostLabel, _poorStockLabel, _poorBuyOneButton, _poorBuyFiveButton);
+        RefreshCard(RationStoreData.RationQuality.Common, _commonOwnedBadge, _commonCostLabel, _commonStockLabel, _commonBuyOneButton, _commonBuyFiveButton);
+        RefreshCard(RationStoreData.RationQuality.Fine, _fineOwnedBadge, _fineCostLabel, _fineStockLabel, _fineBuyOneButton, _fineBuyFiveButton);
     }
 
-    private void RefreshRow(
+    private void RefreshCard(
         RationStoreData.RationQuality quality,
-        Label ownedLabel,
-        Label stockLabel,
+        Label ownedBadge,
         Label costLabel,
-        Label valueLabel,
+        Label stockLabel,
         Button buyOneButton,
         Button buyFiveButton)
     {
         var cost = _rationStore.GetCost(quality);
         var stock = _rationStore.GetStock(quality);
-        ownedLabel.Text = $"Owned: {GetOwnedCount(quality)}";
-        stockLabel.Text = $"Stock: {stock}";
-        costLabel.Text = $"Cost: {cost} gold";
-        valueLabel.Text = $"Provision value: {_rationStore.GetProvisionValue(quality):0}";
+        ownedBadge.Text = GetOwnedCount(quality).ToString();
+        costLabel.Text = cost.ToString();
+        stockLabel.Text = $"Stock {stock}";
         buyOneButton.Disabled = stock < 1 || _runData.Gold < cost;
         buyFiveButton.Disabled = stock < 5 || _runData.Gold < cost * 5;
     }

@@ -59,6 +59,14 @@ public partial class CompanyRunData : Resource
         }
     }
 
+    public void AddStartingRations()
+    {
+        EnsureResources();
+        Rations.AddPoorRations(2);
+        Rations.AddCommonRations(1);
+        EmitSignal(SignalName.RunChanged);
+    }
+
     public void AddGold(int amount, CompanyCareerData careerData)
     {
         if (amount <= 0)
