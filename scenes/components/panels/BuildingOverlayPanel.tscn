@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/panels/BuildingOverlayPanel.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/drag_hand.svg" id="3_drag_hand"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
 shader = ExtResource("2_blur_shader")
@@ -79,6 +80,25 @@ bbcode_enabled = true
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
+
+[node name="AssignedGladiatorsRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+visible = false
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GrabIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/AssignedGladiatorsRow"]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3_drag_hand")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="Gladiators" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/AssignedGladiatorsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
 
 [node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout"]
 custom_minimum_size = Vector2(0, 56)

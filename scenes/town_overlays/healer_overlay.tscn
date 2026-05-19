@@ -7,3 +7,5 @@
 Title = "Healer"
 Body = "Pay for faster health recovery here. Stamina recovery should remain time-based and should not be healed by this building."
 IconTexture = ExtResource("2_icon")
+ShowAssignedGladiators = true
+AssignmentLocation = 2
