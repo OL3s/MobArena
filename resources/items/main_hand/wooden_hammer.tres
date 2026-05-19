@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="MainHandItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+
+[resource]
+script = ExtResource("1_main")
+DisplayName = "Wooden Hammer"
+Description = "A heavy two-handed practice hammer."
+Cost = 16
+Condition = 1.0
+IsTwoHanded = true

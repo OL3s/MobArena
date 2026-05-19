@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="MainHandItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+
+[resource]
+script = ExtResource("1_main")
+DisplayName = "Training Sword"
+Description = "A blunt one-handed sword for basic arena drills."
+Cost = 10
+Condition = 1.0
+IsTwoHanded = false

@@ -8,7 +8,7 @@ public partial class Town : Node
 {
     private const string MainMenuScene = "res://scenes/main_menu.tscn";
     private const string GladiatorsOverlayScene = "res://scenes/ui/GladiatorsOverlay.tscn";
-    private const string EquipmentOverlayScene = "res://scenes/ui/EquipmentInventoryOverlay.tscn";
+    private const string BlacksmithStoreOverlayScene = "res://scenes/ui/BlacksmithStoreOverlay.tscn";
     private const string RationsManagementOverlayScene = "res://scenes/ui/RationsManagementOverlay.tscn";
 
     private TownBuilding _contractBoard;
@@ -43,7 +43,7 @@ public partial class Town : Node
 
     private static void OnEquipmentPressed()
     {
-        OpenOverlay(EquipmentOverlayScene);
+        OpenOverlay(BlacksmithStoreOverlayScene);
     }
 
     private static void OnRationsPressed()

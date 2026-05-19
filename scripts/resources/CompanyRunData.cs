@@ -1,5 +1,6 @@
 using Godot;
 using Godot.Collections;
+using MobArena.Scripts.Resources.Items;
 using System.Linq;
 
 namespace MobArena.Scripts.Resources;
@@ -25,6 +26,9 @@ public partial class CompanyRunData : Resource
 
     [Export]
     public RationInventory Rations { get; private set; } = new();
+
+    [Export]
+    public Array<ItemData> Inventory { get; private set; } = new();
 
     [Export]
     public MarketData Market { get; private set; } = new();
@@ -90,6 +94,44 @@ public partial class CompanyRunData : Resource
         return true;
     }
 
+    public void AddItem(ItemData item)
+    {
+        if (item == null)
+            return;
+
+        EnsureResources();
+        Inventory.Add(item);
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public bool RemoveItem(ItemData item)
+    {
+        if (item == null || Inventory == null)
+            return false;
+
+        var removed = Inventory.Remove(item);
+        if (removed)
+            EmitSignal(SignalName.RunChanged);
+
+        return removed;
+    }
+
+    public bool TryBuyItem(ItemData item, int price)
+    {
+        if (item == null || !TrySpendGold(price))
+            return false;
+
+        EnsureResources();
+        Inventory.Add(item);
+        EmitSignal(SignalName.RunChanged);
+        return true;
+    }
+
+    public bool TryBuyItem(ItemData item)
+    {
+        return TryBuyItem(item, item?.Cost ?? 0);
+    }
+
     public void AddMobKilled(CompanyCareerData careerData, int amount = 1)
     {
         if (amount <= 0)
@@ -148,6 +190,7 @@ public partial class CompanyRunData : Resource
     public void EnsureResources()
     {
         Rations ??= new RationInventory();
+        Inventory ??= new Array<ItemData>();
         Market ??= new MarketData();
         Market.EnsureResources();
         RationFeedingPolicy ??= new RationFeedingPolicyData();

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="OffHandItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/OffHandItemData.cs" id="1_off"]
+
+[resource]
+script = ExtResource("1_off")
+DisplayName = "Wooden Buckler"
+Description = "A light shield for the off hand."
+Cost = 8
+Condition = 1.0

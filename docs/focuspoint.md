@@ -19,6 +19,11 @@ Completed:
 - Automatic feeding runs during town time progression, prioritizes the lowest-provisions gladiator, and consumes eligible ration types according to the feeding policy.
 - Starvation warnings remain one popup per day and only show when gladiators are starving and no rations are available.
 - Ration UI uses the existing run state and `CompanyRunData.RunChanged` paths rather than duplicating inventory state.
+- The first equipment inventory foundation is implemented: `ItemData` resources now have armor, main-hand, and off-hand subclasses; starter `.tres` item templates exist for cloth wraps, training sword, spear, wooden hammer, wooden buckler, and dagger.
+- `GladiatorEquipmentData` now stores item resource references instead of placeholder strings, and main-hand equipment owns the `IsTwoHanded` rule. Wooden hammer is two-handed; spear is one-handed.
+- `CompanyRunData.Inventory` stores owned unequipped items, and `MarketData.ItemStock` is ready for item market stock.
+- Authored item `.tres` files are treated as immutable templates. Runtime default equipment and market stock use duplicated item resource instances so future condition/wear changes do not mutate templates.
+- The town equipment button now opens `BlacksmithStoreOverlay.tscn`, which lists one runtime-stock copy of each starter item and lets the player buy items into `CompanyRunData.Inventory` with current gold.
 
 ## Next Focus
 
@@ -30,8 +35,8 @@ Priorities:
 - Add a functional gladiator market flow for hiring new gladiators with current gold.
 - Keep hiring centralized through `CompanyRunData.AddGladiator` so `CompanyCareerData.TotalGladiatorsInCareer` stays correct.
 - Add market stock/state for available recruitable gladiators under the existing market/run-state resources instead of adding UI-local recruit state.
-- Create real Godot `.tres` item resources for equipment data before expanding item buying: armor, main item, second item, and signature skill should stop being placeholder strings.
-- Add item market buying after item resources exist, spending current gold through `CompanyRunData.TrySpendGold` and storing owned items in current run state.
+- Add equipment assignment UI that moves items between `CompanyRunData.Inventory` and each gladiator's `GladiatorEquipmentData`, while preserving the two-handed main-hand/off-hand rule.
+- Later, make town building interactions respond to dragging a gladiator onto any town building, so roster management can become physical and location-based instead of only button/overlay driven.
 - Keep market access clear from town roster management: hiring new gladiators, buying rations/supplies, and buying future weapon/blacksmith equipment.
 - Continue building management actions around `GladiatorData`, `CompanyRunData`, `RationInventory`, cemetery, market, and time-progression resources instead of adding parallel state.
 - Keep gladiator death centralized through `CompanyRunData.KillGladiator`; dead gladiators should move from active `Gladiators` to `Cemetery`, not remain in the active roster with a dead flag.

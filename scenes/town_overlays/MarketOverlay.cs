@@ -7,7 +7,7 @@ public partial class MarketOverlay : Control
 {
     private const string GladiatorMarketOverlayScene = "res://scenes/town_overlays/gladiator_market_overlay.tscn";
     private const string RationsOverlayScene = "res://scenes/town_overlays/rations_overlay.tscn";
-    private const string BlacksmithOverlayScene = "res://scenes/town_overlays/blacksmith_overlay.tscn";
+    private const string BlacksmithOverlayScene = "res://scenes/ui/BlacksmithStoreOverlay.tscn";
 
     public override void _Ready()
     {
