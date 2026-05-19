@@ -32,6 +32,7 @@ public partial class GladiatorCard : PanelContainer
     private Label _agilityLabel;
     private Label _vitalityLabel;
     private Label _enduranceLabel;
+    private GladiatorData _pendingGladiatorData;
 
     public override void _Ready()
     {
@@ -58,6 +59,9 @@ public partial class GladiatorCard : PanelContainer
 
         _healthIcon.Texture = ResourceLoader.Load<Texture2D>(HealthIconPath);
         _staminaIcon.Texture = ResourceLoader.Load<Texture2D>(StaminaIconPath);
+
+        if (_pendingGladiatorData != null)
+            Apply(_pendingGladiatorData);
     }
 
     public void Configure(GladiatorData gladiatorData)
@@ -66,7 +70,17 @@ public partial class GladiatorCard : PanelContainer
             return;
 
         if (!IsNodeReady())
+        {
+            _pendingGladiatorData = gladiatorData;
             return;
+        }
+
+        Apply(gladiatorData);
+    }
+
+    private void Apply(GladiatorData gladiatorData)
+    {
+        _pendingGladiatorData = null;
 
         _portrait.Texture = gladiatorData.GetPortraitTexture();
         _nameLabel.Text = gladiatorData.GladiatorName;

@@ -11,7 +11,7 @@ Completed:
 - The market has a functional rations overlay for buying poor, common, and fine rations.
 - Buying rations spends current gold through `CompanyRunData.TrySpendGold` and adds inventory to `CompanyRunData.Rations`.
 - Ration market stock is saved as run state under `CompanyRunData.Market` and refreshes through `GameTimeController.ExecuteNewDay`.
-- Ration values remain aligned with `RationInventory`: poor/common/fine rations provide 5/8/10 provisions.
+- Ration values remain aligned with `RationInventory`: poor/common/fine rations set provisions to 6/8/10 when the gladiator is below that ration value.
 - New company runs start with 2 poor rations and 1 common ration.
 - The town center has a rations button alongside gladiators and equipment.
 - The town rations overlay shows current counts and current automatic feed-below settings with ration icons.
@@ -38,6 +38,9 @@ Completed:
 - Market drop-selling now opens a confirmation popup before mutating state, using the previewed sale value in the message.
 - Gladiator sale and death now return equipped main-hand, armor, and off-hand items to company inventory through `CompanyRunData.ReturnGladiatorEquipmentToInventory` before the gladiator leaves the active roster.
 - Purchased equipment items halve their resale value when bought. The future gladiator hiring path should use `CompanyRunData.TryBuyGladiator` so hired fighters also halve `InitialCost` on purchase. Gladiator sale value now comes from `GladiatorData.GetMarketSaleValue()`, which is half of a computed market value based on initial cost, level-derived stats, vitals, provisions, and exhaustion. Ration sale value applies `/2` only at sale time because rations are count-based inventory, not individual purchased resources.
+- The Arena building overlay now keeps the same draggable assigned-gladiator row pattern as Healer and Training Hall, shows mocked contracts through reusable horizontal `ArenaContractCard.tscn` cards, and opens a separate `ArenaControlConfigOverlay.tscn` for controller-to-gladiator assignment. Arena control assignments live on `CompanyRunData.ArenaControlAssignments`, are kept unique per current `LocalInputConfig.ControllerSetups`, and must be complete before the overlay enables arena launch.
+- Default gladiators now start with no off-hand item, a 50% chance to have cloth-wrap armor, and a 50% chance to have a training-sword main weapon. The signature skill is still randomized. Existing saved gladiators keep their current equipment.
+- The Gladiator Market overlay is now functional: `MarketData.GladiatorStock` holds three recruitable default gladiators, daily market refresh rebuilds that stock, and hiring spends current gold through `CompanyRunData.TryBuyGladiator` before adding the recruit to the active roster/career totals.
 
 ## Next Focus
 
@@ -46,8 +49,10 @@ Expand the market beyond rations: buy new gladiators, create real item resources
 Priorities:
 
 - Keep the current town-center roster yard as the main roster-management direction. The old separate Roster Hall direction is no longer the focus.
-- Add a functional gladiator market flow for hiring new gladiators with current gold.
-- Keep hiring centralized through `CompanyRunData.AddGladiator` so `CompanyCareerData.TotalGladiatorsInCareer` stays correct.
+- Continue the town-building pass from the Arena implementation: each building should get a purpose-built overlay/interaction flow instead of generic placeholder text as its management rules become real.
+- When combat startup is implemented, read `CompanyRunData.TownAssignments.ArenaGladiators` together with `CompanyRunData.ArenaControlAssignments` to spawn each selected gladiator and bind it to its chosen local control setup.
+- Continue improving the functional gladiator market flow: better recruit cards, recruit variety, clearer affordability feedback, and later traits/rarity.
+- Keep hiring centralized through `CompanyRunData.TryBuyGladiator`/`AddGladiator` so purchased value and `CompanyCareerData.TotalGladiatorsInCareer` stay correct.
 - Add market stock/state for available recruitable gladiators under the existing market/run-state resources instead of adding UI-local recruit state.
 - Add equipment assignment UI that moves items between `CompanyRunData.Inventory` and each gladiator's `GladiatorEquipmentData`, while preserving the two-handed main-hand/off-hand rule.
 - Continue drop resolution for the shared drag system: drag equipment onto gladiators to equip. Market selling and ration feeding are already wired through drops.

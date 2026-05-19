@@ -81,13 +81,19 @@ fit_content = true
 scroll_active = false
 autowrap_mode = 3
 
-[node name="AssignedGladiatorsRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+[node name="Actions" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 2
+
+[node name="AssignedGladiatorsRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 visible = false
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="GrabIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/AssignedGladiatorsRow"]
+[node name="GrabIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow"]
 custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 mouse_filter = 2
@@ -95,13 +101,13 @@ texture = ExtResource("3_drag_hand")
 expand_mode = 2
 stretch_mode = 5
 
-[node name="Gladiators" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/AssignedGladiatorsRow"]
+[node name="Gladiators" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout"]
-custom_minimum_size = Vector2(0, 56)
+[node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(150, 56)
 layout_mode = 2
 focus_mode = 2
 text = "Close"

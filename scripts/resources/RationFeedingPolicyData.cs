@@ -25,7 +25,15 @@ public partial class RationFeedingPolicyData : Resource
     public float FineFeedBelow { get; private set; } = FineFeedBelowMax;
 
     [Export]
+    public bool Enabled { get; private set; }
+
+    [Export]
     public FeedPriority Priority { get; private set; } = FeedPriority.ClosestFit;
+
+    public void SetEnabled(bool enabled)
+    {
+        Enabled = enabled;
+    }
 
     public void SetFeedBelow(RationStoreData.RationQuality quality, float value)
     {

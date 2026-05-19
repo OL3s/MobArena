@@ -1,0 +1,51 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/ui/ArenaContractCard.cs" id="1_script"]
+
+[node name="ArenaContractCard" type="Button"]
+custom_minimum_size = Vector2(220, 190)
+layout_mode = 2
+size_flags_horizontal = 4
+toggle_mode = true
+alignment = 1
+vertical_icon_alignment = 1
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Layout" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="MarginContainer/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Contract"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="EnemyPreview" type="Label" parent="MarginContainer/Layout"]
+layout_mode = 2
+text = "Enemies unknown"
+autowrap_mode = 3
+
+[node name="Reward" type="Label" parent="MarginContainer/Layout"]
+layout_mode = 2
+text = "Reward unknown"
+autowrap_mode = 3
+
+[node name="Risk" type="Label" parent="MarginContainer/Layout"]
+layout_mode = 2
+text = "Risk unknown"
+autowrap_mode = 3

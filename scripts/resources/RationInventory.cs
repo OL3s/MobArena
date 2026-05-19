@@ -4,7 +4,7 @@ namespace MobArena.Scripts.Resources;
 
 public partial class RationInventory : Resource
 {
-    public const float PoorRationValue = 5f;
+    public const float PoorRationValue = 6f;
     public const float CommonRationValue = 8f;
     public const float FineRationValue = 10f;
     public const int PoorRationGoldValue = 2;

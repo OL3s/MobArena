@@ -1,11 +1,136 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=7 format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/components/panels/BuildingOverlayPanel.tscn" id="1_panel"]
-[ext_resource type="Texture2D" path="res://assets/town/icons/arena_icon.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scenes/town_overlays/ArenaContractsOverlay.cs" id="1_script"]
+[ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="PackedScene" path="res://scenes/arena.tscn" id="3_arena"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/drag_hand.svg" id="4_drag_hand"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/ArenaContractCard.tscn" id="5_contract_card"]
+[ext_resource type="PackedScene" path="res://scenes/town_overlays/arena_control_config_overlay.tscn" id="6_control_config"]
 
-[node name="ArenaContractsOverlay" instance=ExtResource("1_panel")]
-Title = "Arena Contracts"
-Body = "Choose arena contracts here. The prototype still needs the contract list, enemy preview, reward display, and launch flow."
-IconTexture = ExtResource("2_icon")
-ShowAssignedGladiators = true
-AssignmentLocation = 1
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_arena_blur"]
+shader = ExtResource("2_blur_shader")
+
+[node name="ArenaContractsOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_script")
+ArenaScene = ExtResource("3_arena")
+ContractCardScene = ExtResource("5_contract_card")
+ControlConfigOverlayScene = ExtResource("6_control_config")
+
+[node name="BlurBackdrop" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_arena_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(920, 560)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Layout" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Arena"
+horizontal_alignment = 1
+
+[node name="ContractArea" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Choose Contract"
+
+[node name="Description" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea"]
+layout_mode = 2
+text = "Mock contracts for now. Each card can become a richer contract preview as real contracts are added."
+autowrap_mode = 3
+
+[node name="ContractsScroll" type="ScrollContainer" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea"]
+custom_minimum_size = Vector2(0, 210)
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_scroll_mode = 1
+vertical_scroll_mode = 0
+
+[node name="ContractsRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea/ContractsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Actions" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 2
+
+[node name="AssignedGladiatorsRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+visible = false
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="GrabIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow"]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_drag_hand")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="Gladiators" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="ConfigureControlsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(220, 54)
+layout_mode = 2
+text = "Choose Control Config"
+
+[node name="StartButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(150, 54)
+layout_mode = 2
+text = "Start"
+
+[node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(150, 54)
+layout_mode = 2
+text = "Close"
