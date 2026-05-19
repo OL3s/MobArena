@@ -1,5 +1,6 @@
 using Godot;
 using Godot.Collections;
+using System.Linq;
 
 namespace MobArena.Scripts.Resources;
 
@@ -24,6 +25,12 @@ public partial class CompanyRunData : Resource
 
     [Export]
     public RationInventory Rations { get; private set; } = new();
+
+    [Export]
+    public MarketData Market { get; private set; } = new();
+
+    [Export]
+    public RationFeedingPolicyData RationFeedingPolicy { get; private set; } = new();
 
     public int AliveGladiators => Gladiators.Count;
 
@@ -90,6 +97,101 @@ public partial class CompanyRunData : Resource
         EmitSignal(SignalName.RunChanged);
     }
 
+    public void SetAutoFeedThreshold(RationStoreData.RationQuality quality, float threshold)
+    {
+        EnsureResources();
+        RationFeedingPolicy.SetFeedBelow(quality, threshold);
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void SetAutoFeedPriority(RationFeedingPolicyData.FeedPriority priority)
+    {
+        EnsureResources();
+        RationFeedingPolicy.SetPriority(priority);
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public int AutoFeedGladiatorsBelowThreshold()
+    {
+        EnsureResources();
+        var fedCount = 0;
+
+        while (Rations.GetTotal() > 0)
+        {
+            var gladiator = Gladiators
+                .Where(current => current != null && GetAutoFeedRationQuality(current) != null)
+                .OrderBy(current => current.Provisions)
+                .FirstOrDefault();
+
+            var rationQuality = gladiator == null ? null : GetAutoFeedRationQuality(gladiator);
+            if (rationQuality == null || !Rations.TryConsumeRation(rationQuality.Value, out var provisionValue))
+                break;
+
+            gladiator.SetProvisions(gladiator.Provisions + provisionValue);
+            fedCount++;
+        }
+
+        if (fedCount > 0)
+            EmitSignal(SignalName.RunChanged);
+
+        return fedCount;
+    }
+
+    public void EnsureResources()
+    {
+        Rations ??= new RationInventory();
+        Market ??= new MarketData();
+        Market.EnsureResources();
+        RationFeedingPolicy ??= new RationFeedingPolicyData();
+        RationFeedingPolicy.ClampValues();
+        Cemetery ??= new Array<GladiatorData>();
+    }
+
+    private RationStoreData.RationQuality? GetAutoFeedRationQuality(GladiatorData gladiator)
+    {
+        if (gladiator == null || Rations.GetTotal() <= 0)
+            return null;
+
+        var eligibleQualities = new System.Collections.Generic.List<RationStoreData.RationQuality>();
+        AddEligibleRationQuality(eligibleQualities, gladiator, RationStoreData.RationQuality.Poor);
+        AddEligibleRationQuality(eligibleQualities, gladiator, RationStoreData.RationQuality.Common);
+        AddEligibleRationQuality(eligibleQualities, gladiator, RationStoreData.RationQuality.Fine);
+
+        if (eligibleQualities.Count <= 0)
+            return null;
+
+        return RationFeedingPolicy.Priority switch
+        {
+            RationFeedingPolicyData.FeedPriority.CheapestFirst => eligibleQualities
+                .OrderBy(GetRationSortValue)
+                .First(),
+            RationFeedingPolicyData.FeedPriority.BestFirst => eligibleQualities
+                .OrderByDescending(GetRationSortValue)
+                .First(),
+            _ => eligibleQualities
+                .OrderBy(quality => Mathf.Abs(RationFeedingPolicy.GetFeedBelow(quality) - gladiator.Provisions))
+                .ThenBy(GetRationSortValue)
+                .First()
+        };
+    }
+
+    private void AddEligibleRationQuality(System.Collections.Generic.List<RationStoreData.RationQuality> eligibleQualities, GladiatorData gladiator, RationStoreData.RationQuality quality)
+    {
+        if (Rations.GetCount(quality) > 0 && gladiator.Provisions < RationFeedingPolicy.GetFeedBelow(quality))
+            eligibleQualities.Add(quality);
+    }
+
+    private static int GetRationSortValue(RationStoreData.RationQuality quality)
+    {
+        return quality switch
+        {
+            RationStoreData.RationQuality.Poor => 0,
+            RationStoreData.RationQuality.Common => 1,
+            RationStoreData.RationQuality.Fine => 2,
+            _ => 0
+        };
+    }
+
     public int GetStarvingGladiatorCount()
     {
         var count = 0;
@@ -138,8 +240,7 @@ public partial class CompanyRunData : Resource
 
     public void ApplyGladiatorRecoverableCaps()
     {
-        Rations ??= new RationInventory();
-        Cemetery ??= new Array<GladiatorData>();
+        EnsureResources();
 
         foreach (var gladiator in Gladiators)
         {

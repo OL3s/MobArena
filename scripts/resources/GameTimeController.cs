@@ -28,8 +28,13 @@ public static class GameTimeController
             return;
 
         var isChampionDue = townTimeState.IsChampionDue();
-        var starvingGladiatorCount = companyRunData?.GetStarvingGladiatorCount() ?? 0;
+        companyRunData?.EnsureResources();
+        companyRunData?.Market.ExecuteNewDay();
+        var starvingGladiatorCount = companyRunData?.Rations.GetTotal() <= 0
+            ? companyRunData.GetStarvingGladiatorCount()
+            : 0;
 
         townTimeState.ApplyNewDayWarnings(isChampionDue, starvingGladiatorCount);
+        companyRunData?.NotifyRunChanged();
     }
 }

@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://fv0g0l1nqvou" path="res://assets/town/buildings/training_hall.svg" id="16_training_building"]
 [ext_resource type="Texture2D" uid="uid://g4gp1s1aiim8" path="res://assets/town/icons/training_icon.svg" id="17_training_icon"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/equipment.svg" id="25_equipment_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/provisions.svg" id="27_rations_icon"]
 [ext_resource type="PackedScene" path="res://scenes/town_overlays/arena_contracts_overlay.tscn" id="18_arena_overlay"]
 [ext_resource type="PackedScene" path="res://scenes/town_overlays/market_overlay.tscn" id="19_market_overlay"]
 [ext_resource type="PackedScene" path="res://scenes/town_overlays/healer_overlay.tscn" id="21_healer_overlay"]
@@ -79,18 +80,27 @@ color = Color(0.2, 0.15, 0.1, 0.86)
 [node name="Gladiators" type="Node2D" parent="World/RosterYard"]
 
 [node name="GladiatorsButton" type="Button" parent="World/RosterYard"]
-offset_left = -64.0
+offset_left = -100.0
 offset_top = 92.0
-offset_right = -8.0
+offset_right = -44.0
 offset_bottom = 136.0
 tooltip_text = "Open gladiators overview."
 icon = ExtResource("14_roster_icon")
 expand_icon = true
 
-[node name="EquipmentButton" type="Button" parent="World/RosterYard"]
-offset_left = 8.0
+[node name="RationsButton" type="Button" parent="World/RosterYard"]
+offset_left = -28.0
 offset_top = 92.0
-offset_right = 64.0
+offset_right = 28.0
+offset_bottom = 136.0
+tooltip_text = "Open rations overview."
+icon = ExtResource("27_rations_icon")
+expand_icon = true
+
+[node name="EquipmentButton" type="Button" parent="World/RosterYard"]
+offset_left = 44.0
+offset_top = 92.0
+offset_right = 100.0
 offset_bottom = 136.0
 tooltip_text = "Open equipment overview."
 icon = ExtResource("25_equipment_icon")

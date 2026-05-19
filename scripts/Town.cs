@@ -9,6 +9,7 @@ public partial class Town : Node
     private const string MainMenuScene = "res://scenes/main_menu.tscn";
     private const string GladiatorsOverlayScene = "res://scenes/ui/GladiatorsOverlay.tscn";
     private const string EquipmentOverlayScene = "res://scenes/ui/EquipmentInventoryOverlay.tscn";
+    private const string RationsManagementOverlayScene = "res://scenes/ui/RationsManagementOverlay.tscn";
 
     private TownBuilding _contractBoard;
 
@@ -17,6 +18,7 @@ public partial class Town : Node
         _contractBoard = GetNode<TownBuilding>("World/ContractBoard");
         GetNode<TownHud>("TownHud").BackPressed += OnMainMenuPressed;
         GetNode<Button>("World/RosterYard/GladiatorsButton").Pressed += OnGladiatorsPressed;
+        GetNode<Button>("World/RosterYard/RationsButton").Pressed += OnRationsPressed;
         GetNode<Button>("World/RosterYard/EquipmentButton").Pressed += OnEquipmentPressed;
     }
 
@@ -42,6 +44,11 @@ public partial class Town : Node
     private static void OnEquipmentPressed()
     {
         OpenOverlay(EquipmentOverlayScene);
+    }
+
+    private static void OnRationsPressed()
+    {
+        OpenOverlay(RationsManagementOverlayScene);
     }
 
     private static void OpenOverlay(string scenePath)
