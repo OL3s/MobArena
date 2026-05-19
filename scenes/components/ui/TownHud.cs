@@ -22,8 +22,16 @@ public partial class TownHud : CanvasLayer
 	private TownTimeState _timeState;
 	private CompanyLogo _companyLogo;
 	private Label _companyNameLabel;
+	private Label _gladiatorCountLabel;
+	private Label _championsWonCountLabel;
 	private Label _goldLabel;
-	private Label _rationsLabel;
+	private Label _fameLabel;
+	private Label _poorRationsSupplyLabel;
+	private Label _commonRationsSupplyLabel;
+	private Label _fineRationsSupplyLabel;
+	private Label _totalRationsSupplyLabel;
+	private Label _starvingLabel;
+	private Label _exhaustedLabel;
 	private Button _speedToggleButton;
 	private Label _dayLabel;
 	private TimelineLine _dayProgress;
@@ -31,6 +39,9 @@ public partial class TownHud : CanvasLayer
 	private TimelineLine _championProgress;
 	private Label _championProgressValue;
 	private Timer _timeTickTimer;
+	private bool _championContractDuePopupShown;
+	private bool _resumeAfterPopupPause;
+	private int _starvingWarningPopupShownDay;
 
 	public override void _Ready()
 	{
@@ -39,8 +50,16 @@ public partial class TownHud : CanvasLayer
 
 		_companyLogo = GetNode<CompanyLogo>("TopPanel/Row/CompanyStatus/Shield");
 		_companyNameLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/CompanyName");
-		_goldLabel = GetNode<Label>("TopPanel/Row/GoldPanel/GoldRow/GoldLabel");
-		_rationsLabel = GetNode<Label>("TopPanel/Row/RationsPanel/RationsRow/RationsLabel");
+		_gladiatorCountLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/StatsRow/GladiatorCount");
+		_championsWonCountLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/StatsRow/ChampionsWonCount");
+		_goldLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/GoldRow/GoldLabel");
+		_fameLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/FameRow/FameLabel");
+		_poorRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/PoorRow/Label");
+		_commonRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/CommonRow/Label");
+		_fineRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/FineRow/Label");
+		_totalRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/TotalRow/Label");
+		_starvingLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/StarvingRow/StarvingLabel");
+		_exhaustedLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/ExhaustionRow/ExhaustedLabel");
 		var companyStatus = GetNode<Control>("TopPanel/Row/CompanyStatus");
 		_speedToggleButton = GetNode<Button>("BottomPanel/TimeRow/PauseButton");
 		_dayLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarRow/DayLabel");
@@ -51,6 +70,8 @@ public partial class TownHud : CanvasLayer
 
 		_companyLogo.SetLogoData(_saveNode?.CompanyLogoData ?? CompanyLogoData.CreateDefault());
 		_companyLogo.Pressed += OpenCompanyOverview;
+		_companyLogo.MouseEntered += OnCompanyLogoMouseEntered;
+		_companyLogo.MouseExited += OnCompanyLogoMouseExited;
 		companyStatus.GuiInput += OnCompanyStatusGuiInput;
 		GetNode<Button>("TopPanel/Row/BackButton").Pressed += OnBackPressed;
 		GetNode<Button>("BottomPanel/TimeRow/SpeedDownButton").Pressed += OnSpeedDownPressed;
@@ -60,11 +81,21 @@ public partial class TownHud : CanvasLayer
 		_timeTickTimer = GetNode<Timer>("TimeTickTimer");
 		_timeTickTimer.Timeout += OnTimeTickTimerTimeout;
 		_timeState.TimeChanged += RefreshTimeUi;
+		var globalOverlay = GlobalOverlay.Get();
+		if (globalOverlay != null)
+		{
+			globalOverlay.PopupGamePauseRequested += OnPopupGamePauseRequested;
+			globalOverlay.PopupGameResumeRequested += OnPopupGameResumeRequested;
+		}
+
 		if (_saveNode?.CompanyRunData != null)
 		{
 			_saveNode.CompanyRunData.RunChanged += RefreshRunUi;
 			_saveNode.CompanyRunData.GladiatorDied += OnGladiatorDied;
 		}
+
+		if (_saveNode?.CompanyCareerData != null)
+			_saveNode.CompanyCareerData.CareerChanged += RefreshRunUi;
 
 		RefreshCompanyUi();
 		RefreshRunUi();
@@ -77,11 +108,28 @@ public partial class TownHud : CanvasLayer
 		if (_timeState != null)
 			_timeState.TimeChanged -= RefreshTimeUi;
 
+		var globalOverlay = GlobalOverlay.Get();
+		if (globalOverlay != null)
+		{
+			globalOverlay.PopupGamePauseRequested -= OnPopupGamePauseRequested;
+			globalOverlay.PopupGameResumeRequested -= OnPopupGameResumeRequested;
+		}
+
+		if (_companyLogo != null)
+		{
+			_companyLogo.Pressed -= OpenCompanyOverview;
+			_companyLogo.MouseEntered -= OnCompanyLogoMouseEntered;
+			_companyLogo.MouseExited -= OnCompanyLogoMouseExited;
+		}
+
 		if (_saveNode?.CompanyRunData != null)
 		{
 			_saveNode.CompanyRunData.RunChanged -= RefreshRunUi;
 			_saveNode.CompanyRunData.GladiatorDied -= OnGladiatorDied;
 		}
+
+		if (_saveNode?.CompanyCareerData != null)
+			_saveNode.CompanyCareerData.CareerChanged -= RefreshRunUi;
 	}
 
 	private void OnBackPressed()
@@ -107,6 +155,21 @@ public partial class TownHud : CanvasLayer
 		RefreshSpeedToggleButton();
 	}
 
+	private void OnPopupGamePauseRequested()
+	{
+		_resumeAfterPopupPause = _timeState.CurrentSpeed != TownTimeState.TimeSpeed.X0;
+		_timeState.ResetToPause();
+	}
+
+	private void OnPopupGameResumeRequested()
+	{
+		if (!_resumeAfterPopupPause)
+			return;
+
+		_resumeAfterPopupPause = false;
+		_timeState.ResumeLastRunningSpeed();
+	}
+
 	private void OnTimeTickTimerTimeout()
 	{
 		var currentDay = _timeState.CurrentDay;
@@ -127,6 +190,16 @@ public partial class TownHud : CanvasLayer
 
 		GetViewport()?.SetInputAsHandled();
 		OpenCompanyOverview();
+	}
+
+	private void OnCompanyLogoMouseEntered()
+	{
+		SetHoverScale(_companyLogo, true);
+	}
+
+	private void OnCompanyLogoMouseExited()
+	{
+		SetHoverScale(_companyLogo, false);
 	}
 
 	private void OnGladiatorDied(GladiatorData gladiatorData)
@@ -153,6 +226,15 @@ public partial class TownHud : CanvasLayer
 		var overview = companyOverviewScene.Instantiate<CompanyOverviewOverlay>();
 		overview.EditCompanyRequested += OnEditCompanyRequested;
 		globalOverlay.AddOverlay(overview);
+	}
+
+	private static void SetHoverScale(Control control, bool hovered)
+	{
+		if (control == null)
+			return;
+
+		control.PivotOffset = control.Size * 0.5f;
+		control.Scale = hovered ? new Vector2(1.04f, 1.04f) : Vector2.One;
 	}
 
 	private void OnEditCompanyRequested()
@@ -193,8 +275,18 @@ public partial class TownHud : CanvasLayer
 	private void RefreshRunUi()
 	{
 		var runData = _saveNode?.CompanyRunData ?? new CompanyRunData();
+		var careerData = _saveNode?.CompanyCareerData ?? new CompanyCareerData();
+
+		_gladiatorCountLabel.Text = $"Gladiators: {runData.AliveGladiators}";
+		_championsWonCountLabel.Text = $"Champions slayed: {careerData.ChampionsDefeated}";
 		_goldLabel.Text = runData.Gold.ToString();
-		_rationsLabel.Text = (runData.Rations?.GetTotal() ?? 0).ToString();
+		_fameLabel.Text = runData.Fame.ToString();
+		_poorRationsSupplyLabel.Text = (runData.Rations?.PoorRations ?? 0).ToString();
+		_commonRationsSupplyLabel.Text = (runData.Rations?.CommonRations ?? 0).ToString();
+		_fineRationsSupplyLabel.Text = (runData.Rations?.FineRations ?? 0).ToString();
+		_totalRationsSupplyLabel.Text = (runData.Rations?.GetTotal() ?? 0).ToString();
+		_starvingLabel.Text = runData.GetStarvingGladiatorCount().ToString();
+		_exhaustedLabel.Text = runData.GetExhaustedGladiatorCount().ToString();
 	}
 
 	private void RefreshTimeUi()
@@ -205,6 +297,39 @@ public partial class TownHud : CanvasLayer
 		_championProgress.SetValue(_timeState.GetChampionProgressValue(), _timeState.GetChampionProgressMax());
 		_championProgressValue.Text = _timeState.GetChampionDeadlineLabel();
 		RefreshSpeedToggleButton();
+		ShowNewDayWarningPopupIfNeeded();
+	}
+
+	private void ShowNewDayWarningPopupIfNeeded()
+	{
+		var shouldShowChampionWarning = _timeState.ChampionContractDue && !_championContractDuePopupShown;
+		var shouldShowStarvingWarning = _timeState.IsStarvingWarningDueToday()
+			&& _starvingWarningPopupShownDay != _timeState.CurrentDay;
+
+		if (!shouldShowChampionWarning && !shouldShowStarvingWarning)
+			return;
+
+		var globalOverlay = GlobalOverlay.Get();
+
+		if (shouldShowChampionWarning)
+		{
+			_championContractDuePopupShown = true;
+			globalOverlay?.ShowBlurredPopup(
+				"Champion Contract Due",
+				"A champion contract is now due. Complete it before the end of the day to proceed.",
+				pauseGameUntilClosed: true);
+		}
+
+		if (shouldShowStarvingWarning)
+		{
+			_starvingWarningPopupShownDay = _timeState.CurrentDay;
+			var starvingGladiatorCount = _timeState.StarvingWarningCount;
+			var starvingGladiatorLabel = starvingGladiatorCount == 1 ? "1 gladiator is" : $"{starvingGladiatorCount} gladiators are";
+			globalOverlay?.ShowBlurredPopup(
+				"Gladiators Starving",
+				$"{starvingGladiatorLabel} starving. Buy or assign rations before their provisions run out.",
+				pauseGameUntilClosed: true);
+		}
 	}
 
 	private void ConfigureTimelineLines()

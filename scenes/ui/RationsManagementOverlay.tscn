@@ -1,0 +1,233 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/RationsManagementOverlay.cs" id="1_overlay"]
+[ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/provisions.svg" id="3_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/rations/poor_ration.svg" id="4_poor_ration"]
+[ext_resource type="Texture2D" path="res://assets/ui/rations/common_ration.svg" id="5_common_ration"]
+[ext_resource type="Texture2D" path="res://assets/ui/rations/fine_ration.svg" id="6_fine_ration"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
+shader = ExtResource("2_blur_shader")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_count_badge"]
+bg_color = Color(0.25, 0.17, 0.08, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.74, 0.32, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[node name="RationsManagementOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_overlay")
+
+[node name="BlurBackdrop" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_popup_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PopupPanel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(680, 0)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
+
+[node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/Header"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+texture = ExtResource("3_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Rations"
+vertical_alignment = 1
+
+[node name="RationCards" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="PoorCard" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Poor"
+horizontal_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+texture = ExtResource("4_poor_ration")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CountLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_count_badge")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FeedBelowLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content"]
+layout_mode = 2
+text = "Feed below 4.5"
+horizontal_alignment = 1
+
+[node name="DragButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Feed"
+expand_icon = true
+
+[node name="CommonCard" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Common"
+horizontal_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+texture = ExtResource("5_common_ration")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CountLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_count_badge")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FeedBelowLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content"]
+layout_mode = 2
+text = "Feed below 7.5"
+horizontal_alignment = 1
+
+[node name="DragButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Feed"
+expand_icon = true
+
+[node name="FineCard" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Fine"
+horizontal_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+texture = ExtResource("6_fine_ration")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CountLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_count_badge")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FeedBelowLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content"]
+layout_mode = 2
+text = "Feed below 9.0"
+horizontal_alignment = 1
+
+[node name="DragButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Feed"
+expand_icon = true
+
+[node name="PriorityLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+text = "Priority: Closest Fit"
+horizontal_alignment = 1
+
+[node name="AutoFeedingButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+text = "Automatic Feeding"
+
+[node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_mode = 2
+text = "Close"

@@ -1,0 +1,343 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scenes/town_overlays/RationsOverlay.cs" id="1_script"]
+[ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/provisions.svg" id="3_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/rations/poor_ration.svg" id="4_poor_ration"]
+[ext_resource type="Texture2D" path="res://assets/ui/rations/common_ration.svg" id="5_common_ration"]
+[ext_resource type="Texture2D" path="res://assets/ui/rations/fine_ration.svg" id="6_fine_ration"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="7_gold_icon"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
+shader = ExtResource("2_blur_shader")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_owned_badge"]
+bg_color = Color(0.25, 0.17, 0.08, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.74, 0.32, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[node name="RationsOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="BlurBackdrop" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_popup_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(720, 0)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Layout" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+texture = ExtResource("3_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Rations"
+vertical_alignment = 1
+
+[node name="Body" type="RichTextLabel" parent="CenterContainer/Panel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+bbcode_enabled = true
+text = "Buy supplies. Stock refreshes each morning."
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="Summary" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="GoldLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/Summary"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Gold: 0"
+
+[node name="RationCards" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="PoorCard" type="PanelContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Content" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Header" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Poor"
+horizontal_alignment = 1
+
+[node name="OwnedBadge" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content/Header"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_owned_badge")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+texture = ExtResource("4_poor_ration")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CostRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="GoldIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content/CostRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+texture = ExtResource("7_gold_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CostLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content/CostRow"]
+layout_mode = 2
+text = "2"
+vertical_alignment = 1
+
+[node name="StockLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content"]
+layout_mode = 2
+text = "Stock 0"
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="BuyOneButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content/Buttons"]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+text = "+1"
+
+[node name="BuyFiveButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/PoorCard/Content/Buttons"]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+text = "+5"
+
+[node name="CommonCard" type="PanelContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Content" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Header" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Common"
+horizontal_alignment = 1
+
+[node name="OwnedBadge" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content/Header"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_owned_badge")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+texture = ExtResource("5_common_ration")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CostRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="GoldIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content/CostRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+texture = ExtResource("7_gold_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CostLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content/CostRow"]
+layout_mode = 2
+text = "4"
+vertical_alignment = 1
+
+[node name="StockLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content"]
+layout_mode = 2
+text = "Stock 0"
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="BuyOneButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content/Buttons"]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+text = "+1"
+
+[node name="BuyFiveButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/CommonCard/Content/Buttons"]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+text = "+5"
+
+[node name="FineCard" type="PanelContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Content" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Header" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Fine"
+horizontal_alignment = 1
+
+[node name="OwnedBadge" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content/Header"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_owned_badge")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+texture = ExtResource("6_fine_ration")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CostRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="GoldIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content/CostRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+texture = ExtResource("7_gold_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CostLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content/CostRow"]
+layout_mode = 2
+text = "7"
+vertical_alignment = 1
+
+[node name="StockLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content"]
+layout_mode = 2
+text = "Stock 0"
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="BuyOneButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content/Buttons"]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+text = "+1"
+
+[node name="BuyFiveButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/RationCards/FineCard/Content/Buttons"]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+text = "+5"
+
+[node name="FeedbackLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+text = "Choose a ration type to buy."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+focus_mode = 2
+text = "Close"

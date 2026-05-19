@@ -1,0 +1,409 @@
+using Godot;
+using System.Collections.Generic;
+using MobArena.Scripts;
+using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Items;
+
+namespace MobArena.Scenes.Components.Town;
+
+public partial class RosterYard : Node2D
+{
+    public const string DragDropTargetGroup = "town_drag_drop_targets";
+
+    private const string RosterYardGladiatorScenePath = "res://scenes/components/town/RosterYardGladiator.tscn";
+    private const float DragStartDistance = 8f;
+    private const float DragTokenHeight = 72f;
+    private const float DragTokenPointerOffsetY = 32f;
+    private const float DragTiltPerPixel = 0.03f;
+    private const float MaxDragTiltRadians = 0.28f;
+    private const float MinimumSpacing = 76f;
+    private static readonly Rect2 SpawnArea = new(new Vector2(-220f, -104f), new Vector2(440f, 148f));
+
+    private readonly RandomNumberGenerator _random = new();
+    private SaveNode _saveNode;
+    private Node2D _gladiators;
+    private PackedScene _rosterYardGladiatorScene;
+    private RosterYardGladiator _pendingGladiator;
+    private Vector2 _pendingPressViewportPosition;
+    private Vector2 _lastDragViewportPosition;
+    private RosterYardGladiator _draggedGladiator;
+    private GladiatorData _draggedGladiatorData;
+    private ItemData _draggedItem;
+    private RationStoreData.RationQuality? _draggedRationQuality;
+    private Sprite2D _dragToken;
+    private RosterYardGladiator _selectedGladiator;
+    private ITownDragDropTarget _previewedDropTarget;
+
+    public override void _Ready()
+    {
+        AddToGroup("roster_yard");
+        _saveNode = SaveNode.Get();
+        _gladiators = GetNode<Node2D>("Gladiators");
+        _rosterYardGladiatorScene = ResourceLoader.Load<PackedScene>(RosterYardGladiatorScenePath);
+        _random.Randomize();
+
+        if (_saveNode?.CompanyRunData != null)
+            _saveNode.CompanyRunData.RunChanged += RefreshGladiators;
+
+        RefreshGladiators();
+    }
+
+    public override void _ExitTree()
+    {
+        if (_saveNode?.CompanyRunData != null)
+            _saveNode.CompanyRunData.RunChanged -= RefreshGladiators;
+    }
+
+    public override void _Input(InputEvent inputEvent)
+    {
+        if (_pendingGladiator == null && _draggedGladiator == null && _draggedGladiatorData == null && _draggedItem == null && _draggedRationQuality == null)
+            return;
+
+        if (inputEvent is InputEventMouseMotion mouseMotion)
+        {
+            UpdatePointerDrag(mouseMotion.Position);
+            return;
+        }
+
+        if (inputEvent is InputEventScreenDrag screenDrag)
+        {
+            UpdatePointerDrag(screenDrag.Position);
+            return;
+        }
+
+        if (inputEvent is InputEventMouseButton { Pressed: false, ButtonIndex: MouseButton.Left } mouseButton)
+        {
+            FinishPointerInteraction(mouseButton.Position);
+            return;
+        }
+
+        if (inputEvent is InputEventScreenTouch { Pressed: false } screenTouch)
+            FinishPointerInteraction(screenTouch.Position);
+    }
+
+    private void RefreshGladiators()
+    {
+        if (_gladiators == null)
+            return;
+
+        var runData = _saveNode?.CompanyRunData;
+        if (runData == null || _rosterYardGladiatorScene == null)
+            return;
+
+        runData.EnsureResources();
+        var courtyardGladiators = new HashSet<GladiatorData>();
+        foreach (var gladiator in runData.TownAssignments.CourtyardGladiators)
+        {
+            if (gladiator != null)
+                courtyardGladiators.Add(gladiator);
+        }
+
+        var existingGladiators = new Dictionary<GladiatorData, RosterYardGladiator>();
+        foreach (var child in _gladiators.GetChildren())
+        {
+            if (child is not RosterYardGladiator yardGladiator)
+                continue;
+
+            if (yardGladiator.GladiatorData == null
+                || !courtyardGladiators.Contains(yardGladiator.GladiatorData))
+            {
+                yardGladiator.PointerPressed -= OnGladiatorPointerPressed;
+                if (_selectedGladiator == yardGladiator)
+                    _selectedGladiator = null;
+
+                if (_pendingGladiator == yardGladiator)
+                    _pendingGladiator = null;
+
+                if (_draggedGladiator == yardGladiator)
+                    CancelDrag();
+
+                yardGladiator.QueueFree();
+                continue;
+            }
+
+            existingGladiators[yardGladiator.GladiatorData] = yardGladiator;
+        }
+
+        var positions = new Godot.Collections.Array<Vector2>();
+        foreach (var yardGladiator in existingGladiators.Values)
+        {
+            positions.Add(yardGladiator.Position);
+        }
+
+        foreach (var gladiator in runData.TownAssignments.CourtyardGladiators)
+        {
+            if (gladiator == null)
+                continue;
+
+            if (existingGladiators.TryGetValue(gladiator, out var existingGladiator))
+            {
+                existingGladiator.Configure(gladiator);
+                continue;
+            }
+
+            var yardGladiator = _rosterYardGladiatorScene.Instantiate<RosterYardGladiator>();
+            yardGladiator.Configure(gladiator);
+            yardGladiator.PointerPressed += OnGladiatorPointerPressed;
+            yardGladiator.Position = PickOpenPosition(positions);
+            positions.Add(yardGladiator.Position);
+            _gladiators.AddChild(yardGladiator);
+        }
+    }
+
+    private void OnGladiatorPointerPressed(RosterYardGladiator gladiator, Vector2 viewportPosition)
+    {
+        if (gladiator == null)
+            return;
+
+        _pendingGladiator = gladiator;
+        _pendingPressViewportPosition = viewportPosition;
+    }
+
+    private void UpdatePointerDrag(Vector2 viewportPosition)
+    {
+        if (_draggedGladiator == null && _pendingGladiator != null)
+        {
+            if (viewportPosition.DistanceTo(_pendingPressViewportPosition) < DragStartDistance)
+                return;
+
+            StartDrag(_pendingGladiator, viewportPosition);
+        }
+
+        if (_dragToken != null)
+        {
+            UpdateDragToken(viewportPosition);
+            UpdateDropPreview(viewportPosition);
+        }
+    }
+
+    private void FinishPointerInteraction(Vector2 viewportPosition)
+    {
+        if (_draggedGladiator != null || _draggedGladiatorData != null || _draggedItem != null || _draggedRationQuality != null)
+        {
+            TryDropPayload(viewportPosition);
+            CancelDrag();
+            return;
+        }
+
+        if (_pendingGladiator != null)
+            OnGladiatorPressed(_pendingGladiator);
+
+        _pendingGladiator = null;
+    }
+
+    private void StartDrag(RosterYardGladiator gladiator, Vector2 viewportPosition)
+    {
+        _draggedGladiator = gladiator;
+        _pendingGladiator = null;
+        _draggedGladiator.SetDragHidden(true);
+
+        var texture = _draggedGladiator.GladiatorData?.GetPortraitTexture();
+        StartDragToken(texture, viewportPosition);
+    }
+
+    public void StartGladiatorDrag(GladiatorData gladiatorData, Vector2 viewportPosition)
+    {
+        if (gladiatorData == null)
+            return;
+
+        CancelDrag();
+        _draggedGladiatorData = gladiatorData;
+        StartDragToken(gladiatorData.GetPortraitTexture(), viewportPosition);
+    }
+
+    public void StartItemDrag(ItemData item, Vector2 viewportPosition)
+    {
+        if (item == null)
+            return;
+
+        CancelDrag();
+        _draggedItem = item;
+        StartDragToken(item.Icon, viewportPosition);
+    }
+
+    public void StartRationDrag(RationStoreData.RationQuality quality, Texture2D texture, Vector2 viewportPosition)
+    {
+        CancelDrag();
+        _draggedRationQuality = quality;
+        StartDragToken(texture, viewportPosition);
+    }
+
+    private void StartDragToken(Texture2D texture, Vector2 viewportPosition)
+    {
+        _dragToken = new Sprite2D
+        {
+            Name = "DragToken",
+            Texture = texture,
+            Centered = true,
+            Position = GetDragTokenPosition(viewportPosition),
+            Modulate = new Color(1f, 1f, 1f, 0.82f)
+        };
+
+        _lastDragViewportPosition = viewportPosition;
+
+        if (texture != null && texture.GetHeight() > 0)
+            _dragToken.Scale = Vector2.One * (DragTokenHeight / texture.GetHeight());
+
+        AddChild(_dragToken);
+    }
+
+    private void UpdateDragToken(Vector2 viewportPosition)
+    {
+        var horizontalDelta = viewportPosition.X - _lastDragViewportPosition.X;
+        _lastDragViewportPosition = viewportPosition;
+
+        _dragToken.Position = GetDragTokenPosition(viewportPosition);
+        _dragToken.Rotation = Mathf.Clamp(horizontalDelta * DragTiltPerPixel, -MaxDragTiltRadians, MaxDragTiltRadians);
+    }
+
+    private Vector2 GetDragTokenPosition(Vector2 viewportPosition)
+    {
+        return ViewportToLocal(viewportPosition) + new Vector2(0f, DragTokenPointerOffsetY);
+    }
+
+    private void CancelDrag()
+    {
+        _draggedGladiator?.SetDragHidden(false);
+        _draggedGladiator = null;
+        _draggedGladiatorData = null;
+        _draggedItem = null;
+        _draggedRationQuality = null;
+        _pendingGladiator = null;
+        _previewedDropTarget?.SetTownDragDropPreview(null, Vector2.Zero);
+        _previewedDropTarget = null;
+
+        if (_dragToken == null)
+            return;
+
+        _dragToken.QueueFree();
+        _dragToken = null;
+    }
+
+    private void TryDropPayload(Vector2 viewportPosition)
+    {
+        var payload = GetCurrentDragPayload();
+        if (payload == null)
+            return;
+
+        var target = GetBestDropTarget(payload.Value, viewportPosition);
+        if (target != null)
+        {
+            target.ReceiveTownDragDrop(payload.Value, viewportPosition);
+            return;
+        }
+
+        if (payload.Value.Kind == TownDragPayloadKind.Gladiator)
+            _saveNode?.CompanyRunData?.TryMoveGladiatorToCourtyard(payload.Value.Gladiator);
+    }
+
+    private void UpdateDropPreview(Vector2 viewportPosition)
+    {
+        var payload = GetCurrentDragPayload();
+        var target = payload == null ? null : GetBestPreviewTarget(payload.Value);
+        if (_previewedDropTarget != target)
+        {
+            _previewedDropTarget?.SetTownDragDropPreview(null, viewportPosition);
+            _previewedDropTarget = target;
+        }
+
+        _previewedDropTarget?.SetTownDragDropPreview(payload, viewportPosition);
+    }
+
+    private ITownDragDropTarget GetBestDropTarget(TownDragPayload payload, Vector2 viewportPosition)
+    {
+        ITownDragDropTarget bestTarget = null;
+        foreach (var node in GetTree().GetNodesInGroup(DragDropTargetGroup))
+        {
+            if (node is not ITownDragDropTarget target || !target.CanReceiveTownDragDrop(payload, viewportPosition))
+                continue;
+
+            if (bestTarget == null || target.TownDragDropPriority > bestTarget.TownDragDropPriority)
+                bestTarget = target;
+        }
+
+        return bestTarget;
+    }
+
+    private ITownDragDropTarget GetBestPreviewTarget(TownDragPayload payload)
+    {
+        ITownDragDropTarget bestTarget = null;
+        foreach (var node in GetTree().GetNodesInGroup(DragDropTargetGroup))
+        {
+            if (node is not ITownDragDropTarget target || !target.CanPreviewTownDragDrop(payload))
+                continue;
+
+            if (bestTarget == null || target.TownDragDropPriority > bestTarget.TownDragDropPriority)
+                bestTarget = target;
+        }
+
+        return bestTarget;
+    }
+
+    private TownDragPayload? GetCurrentDragPayload()
+    {
+        if (_draggedGladiator?.GladiatorData != null)
+            return new TownDragPayload(_draggedGladiator.GladiatorData);
+
+        if (_draggedGladiatorData != null)
+            return new TownDragPayload(_draggedGladiatorData);
+
+        if (_draggedItem != null)
+            return new TownDragPayload(_draggedItem);
+
+        if (_draggedRationQuality != null)
+            return new TownDragPayload(_draggedRationQuality.Value);
+
+        return null;
+    }
+
+    private void OnGladiatorPressed(RosterYardGladiator gladiator)
+    {
+        if (gladiator == null)
+            return;
+
+        if (_selectedGladiator == gladiator)
+        {
+            _selectedGladiator.SetSelected(false);
+            _selectedGladiator = null;
+            return;
+        }
+
+        _selectedGladiator?.SetSelected(false);
+        _selectedGladiator = gladiator;
+        _selectedGladiator.SetSelected(true);
+    }
+
+    private Vector2 ViewportToLocal(Vector2 viewportPosition)
+    {
+        var worldPosition = GetCanvasTransform().AffineInverse() * viewportPosition;
+        return ToLocal(worldPosition);
+    }
+
+    private Vector2 PickOpenPosition(Godot.Collections.Array<Vector2> existingPositions)
+    {
+        for (var attempt = 0; attempt < 32; attempt++)
+        {
+            var position = new Vector2(
+                _random.RandfRange(SpawnArea.Position.X, SpawnArea.End.X),
+                _random.RandfRange(SpawnArea.Position.Y, SpawnArea.End.Y));
+
+            if (IsFarEnoughFromExisting(position, existingPositions))
+                return position;
+        }
+
+        return new Vector2(
+            _random.RandfRange(SpawnArea.Position.X, SpawnArea.End.X),
+            _random.RandfRange(SpawnArea.Position.Y, SpawnArea.End.Y));
+    }
+
+    private static bool IsFarEnoughFromExisting(Vector2 position, Godot.Collections.Array<Vector2> existingPositions)
+    {
+        foreach (var existingPosition in existingPositions)
+        {
+            if (position.DistanceTo(existingPosition) < MinimumSpacing)
+                return false;
+        }
+
+        return true;
+    }
+}

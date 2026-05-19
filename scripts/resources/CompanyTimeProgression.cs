@@ -20,7 +20,6 @@ public partial class CompanyTimeProgression : Resource
 
         var days = minutes / MinutesPerDay;
         companyRunData.Rations?.AddConsumptionProgress(companyRunData.AliveGladiators * days);
-        var deadGladiators = new List<GladiatorData>();
 
         foreach (var gladiator in companyRunData.Gladiators)
         {
@@ -29,6 +28,15 @@ public partial class CompanyTimeProgression : Resource
 
             gladiator.SetProvisions(gladiator.Provisions - ProvisionsDecayPerDay * days);
             gladiator.SetExhaustion(gladiator.Exhaustion + ExhaustionRecoveryPerDay * days);
+        }
+
+        companyRunData.AutoFeedGladiatorsBelowThreshold();
+
+        var deadGladiators = new List<GladiatorData>();
+        foreach (var gladiator in companyRunData.Gladiators)
+        {
+            if (gladiator == null)
+                continue;
 
             if (gladiator.Provisions <= 0f)
                 deadGladiators.Add(gladiator);

@@ -13,6 +13,11 @@
 [ext_resource type="Texture2D" uid="uid://i30yynsg5d60" path="res://assets/ui/icons/speed_slowed.svg" id="11_speed_slowed_icon"]
 [ext_resource type="Script" uid="uid://daig828dffkkv" path="res://scenes/components/ui/TimelineLine.cs" id="12_timeline_line"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/provisions.svg" id="13_ration_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/exhaustion.svg" id="14_exhaustion_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/rations/poor_ration.svg" id="15_poor_ration_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/rations/common_ration.svg" id="16_common_ration_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/rations/fine_ration.svg" id="17_fine_ration_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/fame.svg" id="18_fame_icon"]
 
 [node name="TownHud" type="CanvasLayer" unique_id=1424046690]
 script = ExtResource("1_town_hud")
@@ -61,48 +66,201 @@ text = "Gladiators owned: 1"
 layout_mode = 2
 text = "Champions slayed: 0"
 
-[node name="GoldPanel" type="PanelContainer" parent="TopPanel/Row" unique_id=2053172263]
+[node name="WealthPanel" type="PanelContainer" parent="TopPanel/Row" unique_id=2053172263]
 custom_minimum_size = Vector2(112, 0)
 layout_mode = 2
+tooltip_text = "Spendable company gold and fame."
 
-[node name="GoldRow" type="HBoxContainer" parent="TopPanel/Row/GoldPanel" unique_id=1591558064]
+[node name="WealthColumn" type="VBoxContainer" parent="TopPanel/Row/WealthPanel"]
 layout_mode = 2
-theme_override_constants/separation = 6
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
 alignment = 1
 
-[node name="GoldIcon" type="TextureRect" parent="TopPanel/Row/GoldPanel/GoldRow" unique_id=672277612]
-custom_minimum_size = Vector2(32, 32)
+[node name="WealthTitle" type="Label" parent="TopPanel/Row/WealthPanel/WealthColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Wealth"
+horizontal_alignment = 0
+
+[node name="GoldRow" type="HBoxContainer" parent="TopPanel/Row/WealthPanel/WealthColumn" unique_id=1591558064]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+alignment = 0
+
+[node name="GoldIcon" type="TextureRect" parent="TopPanel/Row/WealthPanel/WealthColumn/GoldRow" unique_id=672277612]
+custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 texture = ExtResource("5_gold_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="GoldLabel" type="Label" parent="TopPanel/Row/GoldPanel/GoldRow" unique_id=1433043190]
+[node name="GoldLabel" type="Label" parent="TopPanel/Row/WealthPanel/WealthColumn/GoldRow" unique_id=1433043190]
 layout_mode = 2
 text = "100"
-horizontal_alignment = 1
+horizontal_alignment = 0
 vertical_alignment = 1
 
-[node name="RationsPanel" type="PanelContainer" parent="TopPanel/Row"]
-custom_minimum_size = Vector2(112, 0)
+[node name="FameRow" type="HBoxContainer" parent="TopPanel/Row/WealthPanel/WealthColumn"]
 layout_mode = 2
-
-[node name="RationsRow" type="HBoxContainer" parent="TopPanel/Row/RationsPanel"]
-layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 6
+alignment = 0
+
+[node name="FameIcon" type="TextureRect" parent="TopPanel/Row/WealthPanel/WealthColumn/FameRow"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+texture = ExtResource("18_fame_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FameLabel" type="Label" parent="TopPanel/Row/WealthPanel/WealthColumn/FameRow"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="SupplyPanel" type="PanelContainer" parent="TopPanel/Row"]
+custom_minimum_size = Vector2(154, 0)
+layout_mode = 2
+tooltip_text = "Company ration supplies."
+
+[node name="SupplyColumn" type="VBoxContainer" parent="TopPanel/Row/SupplyPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
 alignment = 1
 
-[node name="RationsIcon" type="TextureRect" parent="TopPanel/Row/RationsPanel/RationsRow"]
-custom_minimum_size = Vector2(32, 32)
+[node name="SupplyTitle" type="Label" parent="TopPanel/Row/SupplyPanel/SupplyColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Supply"
+horizontal_alignment = 0
+
+[node name="RationGrid" type="GridContainer" parent="TopPanel/Row/SupplyPanel/SupplyColumn"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 2
+columns = 2
+
+[node name="PoorRow" type="HBoxContainer" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="TextureRect" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/PoorRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+texture = ExtResource("15_poor_ration_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/PoorRow"]
+layout_mode = 2
+text = "0"
+vertical_alignment = 1
+
+[node name="CommonRow" type="HBoxContainer" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="TextureRect" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/CommonRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+texture = ExtResource("16_common_ration_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/CommonRow"]
+layout_mode = 2
+text = "0"
+vertical_alignment = 1
+
+[node name="FineRow" type="HBoxContainer" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="TextureRect" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/FineRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+texture = ExtResource("17_fine_ration_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/FineRow"]
+layout_mode = 2
+text = "0"
+vertical_alignment = 1
+
+[node name="TotalRow" type="HBoxContainer" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="TextureRect" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/TotalRow"]
+custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
 texture = ExtResource("13_ration_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="RationsLabel" type="Label" parent="TopPanel/Row/RationsPanel/RationsRow"]
+[node name="Label" type="Label" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/TotalRow"]
 layout_mode = 2
 text = "0"
-horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ConditionPanel" type="PanelContainer" parent="TopPanel/Row"]
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+tooltip_text = "Roster warnings: starving gladiators and exhausted gladiators under 50%."
+
+[node name="ConditionColumn" type="VBoxContainer" parent="TopPanel/Row/ConditionPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="RiskTitle" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Risk"
+horizontal_alignment = 0
+
+[node name="StarvingRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+alignment = 0
+
+[node name="StarvingIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/StarvingRow"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+texture = ExtResource("13_ration_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StarvingLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/StarvingRow"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="ExhaustionRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+alignment = 0
+
+[node name="ExhaustionIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/ExhaustionRow"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+texture = ExtResource("14_exhaustion_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ExhaustedLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/ExhaustionRow"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 0
 vertical_alignment = 1
 
 [node name="SettingsButton" parent="TopPanel/Row" unique_id=665519815 instance=ExtResource("4_settings_button")]
