@@ -24,6 +24,9 @@ Completed:
 - `CompanyRunData.Inventory` stores owned unequipped items, and `MarketData.ItemStock` is ready for item market stock.
 - Authored item `.tres` files are treated as immutable templates. Runtime default equipment and market stock use duplicated item resource instances so future condition/wear changes do not mutate templates.
 - The town equipment button now opens `BlacksmithStoreOverlay.tscn`, which lists one runtime-stock copy of each starter item and lets the player buy items into `CompanyRunData.Inventory` with current gold.
+- Equipment inventory now opens from the town roster yard and shows owned unequipped items as reusable item cards. Blacksmith and equipment inventory both use `ItemCard.tscn` grids.
+- Item cards show item art, a distinct type badge, condition bar, gold price/value, and context action buttons. Bought items halve their value when they move into company inventory.
+- Town dragging is moving toward a shared roster-yard drag system: gladiators, equipment items, and rations now use the same drag token movement/tilt behavior. Actual drop/equip/feed/sell resolution is still pending.
 
 ## Next Focus
 
@@ -36,6 +39,7 @@ Priorities:
 - Keep hiring centralized through `CompanyRunData.AddGladiator` so `CompanyCareerData.TotalGladiatorsInCareer` stays correct.
 - Add market stock/state for available recruitable gladiators under the existing market/run-state resources instead of adding UI-local recruit state.
 - Add equipment assignment UI that moves items between `CompanyRunData.Inventory` and each gladiator's `GladiatorEquipmentData`, while preserving the two-handed main-hand/off-hand rule.
+- Finish drop resolution for the shared drag system: drag equipment onto gladiators to equip, drag rations onto gladiators to feed, and later drag owned items to the market/blacksmith to sell.
 - Later, make town building interactions respond to dragging a gladiator onto any town building, so roster management can become physical and location-based instead of only button/overlay driven.
 - Keep market access clear from town roster management: hiring new gladiators, buying rations/supplies, and buying future weapon/blacksmith equipment.
 - Continue building management actions around `GladiatorData`, `CompanyRunData`, `RationInventory`, cemetery, market, and time-progression resources instead of adding parallel state.

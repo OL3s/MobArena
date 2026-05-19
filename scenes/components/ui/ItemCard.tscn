@@ -1,0 +1,105 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/ui/ItemCard.cs" id="1_card"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_type_badge"]
+bg_color = Color(0.05, 0.06, 0.075, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.74, 0.32, 1)
+corner_radius_top_left = 15
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+corner_radius_bottom_left = 15
+
+[node name="ItemCard" type="PanelContainer"]
+custom_minimum_size = Vector2(180, 248)
+script = ExtResource("1_card")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Layout" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="IconPanel" type="Control" parent="MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 86)
+layout_mode = 2
+
+[node name="ItemIcon" type="TextureRect" parent="MarginContainer/Layout/IconPanel"]
+custom_minimum_size = Vector2(78, 78)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -39.0
+offset_top = -39.0
+offset_right = 39.0
+offset_bottom = 39.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TypeBadge" type="PanelContainer" parent="MarginContainer/Layout/IconPanel"]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_type_badge")
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 36.0
+offset_bottom = 34.0
+
+[node name="TypeIcon" type="TextureRect" parent="MarginContainer/Layout/IconPanel/TypeBadge"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="MarginContainer/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "Item"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ConditionRow" type="HBoxContainer" parent="MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/Layout/ConditionRow"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Bar" type="ProgressBar" parent="MarginContainer/Layout/ConditionRow"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
+show_percentage = false
+
+[node name="GoldLabel" type="Label" parent="MarginContainer/Layout"]
+layout_mode = 2
+text = "Value 0g"
+horizontal_alignment = 1
+
+[node name="BuyButton" type="Button" parent="MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Buy"
+
+[node name="DragButton" type="Button" parent="MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Equip"
+expand_icon = true

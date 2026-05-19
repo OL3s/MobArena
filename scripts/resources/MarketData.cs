@@ -29,7 +29,7 @@ public partial class MarketData : Resource
     {
         RationStore ??= new RationStoreData();
         ItemStock ??= new Array<ItemData>();
-        if (!HasInitializedItemStock)
+        if (!HasInitializedItemStock || HasItemStockMissingIcons())
             RefreshItemStock();
     }
 
@@ -53,5 +53,19 @@ public partial class MarketData : Resource
         }
 
         HasInitializedItemStock = true;
+    }
+
+    private bool HasItemStockMissingIcons()
+    {
+        if (ItemStock == null || ItemStock.Count <= 0)
+            return true;
+
+        foreach (var item in ItemStock)
+        {
+            if (item?.Icon == null)
+                return true;
+        }
+
+        return false;
     }
 }

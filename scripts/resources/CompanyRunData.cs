@@ -122,6 +122,7 @@ public partial class CompanyRunData : Resource
             return false;
 
         EnsureResources();
+        item.ApplyPurchasedValue();
         Inventory.Add(item);
         EmitSignal(SignalName.RunChanged);
         return true;

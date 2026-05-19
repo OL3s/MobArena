@@ -1,11 +1,13 @@
-[gd_resource type="Resource" script_class="MainHandItemData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="MainHandItemData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/spear.svg" id="2_icon"]
 
 [resource]
 script = ExtResource("1_main")
 DisplayName = "Spear"
 Description = "A one-handed spear suited to fighting with a shield."
+Icon = ExtResource("2_icon")
 Cost = 18
 Condition = 1.0
 IsTwoHanded = false

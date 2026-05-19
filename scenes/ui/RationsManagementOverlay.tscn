@@ -128,6 +128,12 @@ layout_mode = 2
 text = "Feed below 4.5"
 horizontal_alignment = 1
 
+[node name="DragButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Feed"
+expand_icon = true
+
 [node name="CommonCard" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -163,6 +169,12 @@ layout_mode = 2
 text = "Feed below 7.5"
 horizontal_alignment = 1
 
+[node name="DragButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Feed"
+expand_icon = true
+
 [node name="FineCard" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -197,6 +209,12 @@ vertical_alignment = 1
 layout_mode = 2
 text = "Feed below 9.0"
 horizontal_alignment = 1
+
+[node name="DragButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Feed"
+expand_icon = true
 
 [node name="PriorityLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2

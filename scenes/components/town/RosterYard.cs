@@ -2,6 +2,7 @@ using Godot;
 using System.Collections.Generic;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scenes.Components.Town;
 
@@ -24,11 +25,14 @@ public partial class RosterYard : Node2D
     private Vector2 _pendingPressViewportPosition;
     private Vector2 _lastDragViewportPosition;
     private RosterYardGladiator _draggedGladiator;
+    private ItemData _draggedItem;
+    private RationStoreData.RationQuality? _draggedRationQuality;
     private Sprite2D _dragToken;
     private RosterYardGladiator _selectedGladiator;
 
     public override void _Ready()
     {
+        AddToGroup("roster_yard");
         _saveNode = SaveNode.Get();
         _gladiators = GetNode<Node2D>("Gladiators");
         _rosterYardGladiatorScene = ResourceLoader.Load<PackedScene>(RosterYardGladiatorScenePath);
@@ -48,7 +52,7 @@ public partial class RosterYard : Node2D
 
     public override void _Input(InputEvent inputEvent)
     {
-        if (_pendingGladiator == null && _draggedGladiator == null)
+        if (_pendingGladiator == null && _draggedGladiator == null && _draggedItem == null && _draggedRationQuality == null)
             return;
 
         if (inputEvent is InputEventMouseMotion mouseMotion)
@@ -165,7 +169,7 @@ public partial class RosterYard : Node2D
 
     private void FinishPointerInteraction(Vector2 viewportPosition)
     {
-        if (_draggedGladiator != null)
+        if (_draggedGladiator != null || _draggedItem != null || _draggedRationQuality != null)
         {
             CancelDrag();
             return;
@@ -184,6 +188,28 @@ public partial class RosterYard : Node2D
         _draggedGladiator.SetDragHidden(true);
 
         var texture = _draggedGladiator.GladiatorData?.GetPortraitTexture();
+        StartDragToken(texture, viewportPosition);
+    }
+
+    public void StartItemDrag(ItemData item, Vector2 viewportPosition)
+    {
+        if (item == null)
+            return;
+
+        CancelDrag();
+        _draggedItem = item;
+        StartDragToken(item.Icon, viewportPosition);
+    }
+
+    public void StartRationDrag(RationStoreData.RationQuality quality, Texture2D texture, Vector2 viewportPosition)
+    {
+        CancelDrag();
+        _draggedRationQuality = quality;
+        StartDragToken(texture, viewportPosition);
+    }
+
+    private void StartDragToken(Texture2D texture, Vector2 viewportPosition)
+    {
         _dragToken = new Sprite2D
         {
             Name = "DragToken",
@@ -219,6 +245,8 @@ public partial class RosterYard : Node2D
     {
         _draggedGladiator?.SetDragHidden(false);
         _draggedGladiator = null;
+        _draggedItem = null;
+        _draggedRationQuality = null;
         _pendingGladiator = null;
 
         if (_dragToken == null)

@@ -102,7 +102,7 @@ offset_left = 44.0
 offset_top = 92.0
 offset_right = 100.0
 offset_bottom = 136.0
-tooltip_text = "Open blacksmith store."
+tooltip_text = "Open equipment inventory."
 icon = ExtResource("25_equipment_icon")
 expand_icon = true
 

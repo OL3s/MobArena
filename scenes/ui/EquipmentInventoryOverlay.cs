@@ -1,4 +1,5 @@
 using Godot;
+using MobArena.Scenes.Components.Town;
 using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
@@ -6,12 +7,12 @@ using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scenes.UI;
 
-public partial class BlacksmithStoreOverlay : Control
+public partial class EquipmentInventoryOverlay : Control
 {
     private const string ItemCardScenePath = "res://scenes/components/ui/ItemCard.tscn";
 
     private CompanyRunData _runData;
-    private Label _goldLabel;
+    private Label _summaryLabel;
     private GridContainer _itemGrid;
     private PackedScene _itemCardScene;
 
@@ -20,7 +21,7 @@ public partial class BlacksmithStoreOverlay : Control
         _runData = SaveNode.Get().CompanyRunData;
         _runData.EnsureResources();
 
-        _goldLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Header/GoldLabel");
+        _summaryLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/SummaryLabel");
         _itemGrid = GetNode<GridContainer>("CenterContainer/PopupPanel/MarginContainer/Content/ScrollContainer/ItemGrid");
         _itemCardScene = ResourceLoader.Load<PackedScene>(ItemCardScenePath);
 
@@ -38,39 +39,46 @@ public partial class BlacksmithStoreOverlay : Control
     private void RefreshUi()
     {
         _runData.EnsureResources();
-        _goldLabel.Text = $"Gold: {_runData.Gold}";
+        _summaryLabel.Text = $"Unequipped items: {_runData.Inventory.Count}";
 
         foreach (var child in _itemGrid.GetChildren())
             child.QueueFree();
 
-        foreach (var item in _runData.Market.ItemStock)
+        if (_runData.Inventory.Count <= 0)
+        {
+            _itemGrid.AddChild(new Label
+            {
+                Text = "No unequipped company items yet. Buy equipment at the market blacksmith.",
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                CustomMinimumSize = new Vector2(680, 0),
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+            return;
+        }
+
+        foreach (var item in _runData.Inventory)
         {
             if (item != null)
                 _itemGrid.AddChild(CreateItemCard(item));
         }
     }
 
-    private void OnBuyPressed(ItemData item)
-    {
-        if (item == null || _runData.Gold < item.Cost)
-            return;
-
-        if (!_runData.Market.ItemStock.Remove(item))
-            return;
-
-        if (!_runData.TryBuyItem(item))
-        {
-            _runData.Market.ItemStock.Add(item);
-            RefreshUi();
-        }
-    }
-
     private ItemCard CreateItemCard(ItemData item)
     {
         var card = _itemCardScene.Instantiate<ItemCard>();
-        card.Configure(item, ItemCard.CardMode.Purchase, _runData.Gold >= item.Cost);
-        card.BuyPressed += OnBuyPressed;
+        card.Configure(item, ItemCard.CardMode.Equipment);
+        card.DragRequested += OnDragRequested;
         return card;
     }
 
+    private void OnDragRequested(ItemData item)
+    {
+        var rosterYard = GetTree().GetFirstNodeInGroup("roster_yard") as RosterYard;
+        if (rosterYard == null || item == null)
+            return;
+
+        rosterYard.StartItemDrag(item, GetViewport().GetMousePosition());
+        QueueFree();
+    }
 }
