@@ -64,7 +64,7 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 220)
 layout_mode = 2
 size_flags_horizontal = 3
-horizontal_scroll_mode = 2
+horizontal_scroll_mode = 1
 vertical_scroll_mode = 0
 
 [node name="GladiatorRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/ScrollContainer"]

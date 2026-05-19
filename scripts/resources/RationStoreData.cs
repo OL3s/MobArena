@@ -82,7 +82,7 @@ public partial class RationStoreData : Resource
         };
     }
 
-    public float GetProvisionValue(RationQuality quality)
+    public static float GetProvisionValue(RationQuality quality)
     {
         return quality switch
         {

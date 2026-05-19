@@ -16,7 +16,6 @@ public partial class RationsManagementOverlay : Control
     private Label _commonFeedBelowLabel;
     private Label _fineCountLabel;
     private Label _fineFeedBelowLabel;
-    private Label _priorityLabel;
     private Button _poorDragButton;
     private Button _commonDragButton;
     private Button _fineDragButton;
@@ -36,7 +35,6 @@ public partial class RationsManagementOverlay : Control
         _commonFeedBelowLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content/FeedBelowLabel");
         _fineCountLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content/CountLabel");
         _fineFeedBelowLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content/FeedBelowLabel");
-        _priorityLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/PriorityLabel");
         _poorDragButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/PoorCard/Content/DragButton");
         _commonDragButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/CommonCard/Content/DragButton");
         _fineDragButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/RationCards/FineCard/Content/DragButton");
@@ -85,7 +83,6 @@ public partial class RationsManagementOverlay : Control
         _poorDragButton.Disabled = rations.PoorRations <= 0;
         _commonDragButton.Disabled = rations.CommonRations <= 0;
         _fineDragButton.Disabled = rations.FineRations <= 0;
-        _priorityLabel.Text = $"Priority: {GetPriorityName(policy.Priority)}";
     }
 
     private void ConfigureDragButton(Button button, RationStoreData.RationQuality quality)
@@ -120,13 +117,4 @@ public partial class RationsManagementOverlay : Control
         feedBelowLabel.Text = $"Feed below {feedBelow:0.0}";
     }
 
-    private static string GetPriorityName(RationFeedingPolicyData.FeedPriority priority)
-    {
-        return priority switch
-        {
-            RationFeedingPolicyData.FeedPriority.CheapestFirst => "Cheapest First",
-            RationFeedingPolicyData.FeedPriority.BestFirst => "Best First",
-            _ => "Closest Fit"
-        };
-    }
 }

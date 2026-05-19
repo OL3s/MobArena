@@ -6,6 +6,7 @@ public partial class GladiatorData : Resource
 {
     private const float MaxConditionValue = 10f;
     private const float DefaultConditionValue = MaxConditionValue * 0.8f;
+    private const float DefaultConditionMin = 6f;
     private const float ConditionPenaltyThreshold = 0.5f;
     private const int AttributeValueGold = 2;
     private const int VitalsValueDivisor = 4;
@@ -36,12 +37,12 @@ public partial class GladiatorData : Resource
     [Export]
     public int Health { get; private set; } = 35;
 
-    public int MaxHealth => Level.GetMaxHealth();
+    public int MaxHealth => Level?.GetMaxHealth() ?? 0;
 
     [Export]
     public int Stamina { get; private set; } = 22;
 
-    public int MaxStamina => Level.GetMaxStamina();
+    public int MaxStamina => Level?.GetMaxStamina() ?? 0;
 
     public int RecoverableMaxHealth => ApplyConditionLimit(MaxHealth);
 
@@ -96,8 +97,8 @@ public partial class GladiatorData : Resource
             Level = level,
             Health = level.GetMaxHealth(),
             Stamina = level.GetMaxStamina(),
-            Exhaustion = DefaultConditionValue,
-            Provisions = DefaultConditionValue,
+            Exhaustion = random.RandfRange(DefaultConditionMin, MaxConditionValue),
+            Provisions = random.RandfRange(DefaultConditionMin, MaxConditionValue),
             Equipment = GladiatorEquipmentData.CreateDefault(random),
             GladiatorCareer = new GladiatorCareerData(),
             InitialCost = random.RandiRange(20, 45)

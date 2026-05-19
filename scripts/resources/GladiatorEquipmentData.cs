@@ -33,9 +33,9 @@ public partial class GladiatorEquipmentData : Resource
     {
         return new GladiatorEquipmentData
         {
-            Armor = ItemData.LoadRuntimeCopy<ArmorItemData>(DefaultArmorPath),
-            MainHand = ItemData.LoadRuntimeCopy<MainHandItemData>(DefaultMainHandPath),
-            OffHand = ItemData.LoadRuntimeCopy<OffHandItemData>(DefaultOffHandPath),
+            Armor = random.Randf() < 0.5f ? ItemData.LoadRuntimeCopy<ArmorItemData>(DefaultArmorPath) : null,
+            MainHand = random.Randf() < 0.5f ? ItemData.LoadRuntimeCopy<MainHandItemData>(DefaultMainHandPath) : null,
+            OffHand = null,
             Skill = (SignatureSkill)random.RandiRange(0, (int)SignatureSkill.Cleave)
         };
     }

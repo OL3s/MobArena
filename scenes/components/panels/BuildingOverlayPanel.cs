@@ -41,9 +41,9 @@ public partial class BuildingOverlayPanel : Control
         _icon = GetNode<TextureRect>("CenterContainer/Panel/MarginContainer/Layout/Header/Icon");
         _title = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/Header/Title");
         _body = GetNode<RichTextLabel>("CenterContainer/Panel/MarginContainer/Layout/Body");
-        _assignedGladiatorsRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/AssignedGladiatorsRow");
-        _assignedGladiators = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/AssignedGladiatorsRow/Gladiators");
-        _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/CloseButton");
+        _assignedGladiatorsRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow");
+        _assignedGladiators = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow/Gladiators");
+        _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
         _runData = SaveNode.Get()?.CompanyRunData;
 
         _title.Text = Title;

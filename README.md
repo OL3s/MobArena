@@ -18,7 +18,8 @@ The source idea lives outside this repository in `../GameIdeas/MobGladiator.md`.
 1. Install Godot 4.6 or a compatible Godot 4 version.
 2. Open this folder as a Godot project.
 3. Read `docs/agent-guide.md` before making code, scene, or asset changes.
-4. Start from the current main scene flow in `scenes/main_menu.tscn`, `scenes/town.tscn`, and `scenes/arena.tscn`.
+4. Check the GitHub issues and milestones for the active backlog and current implementation priorities.
+5. Start from the current main scene flow in `scenes/main_menu.tscn`, `scenes/town.tscn`, and `scenes/arena.tscn`.
 
 ## Validation
 
@@ -47,15 +48,14 @@ Run these from the project root after changing assets, scenes, or C# code:
 
 - `scenes/main_menu.tscn`: Main menu and entry point.
 - `scenes/town.tscn`: Between-fights town/company management scene with a neutral root, separate `World` node, and separate `ControllerUi` layer.
-- `scenes/roster_hall.tscn`: Roster Hall management placeholder; unlike other town buildings, it opens as a separate scene.
 - `scenes/arena.tscn`: Arena combat placeholder with a neutral root, separate `World` node, and separate `ControllerUi` layer.
 
-The current flow is `Main Menu -> Town`, with `Town -> Roster Hall -> Town` for roster management. Roster Hall is a town-like room with an empty `World`, the shared `TownHud`, and left-side room action buttons. Other town buildings currently open modal overlay packed scenes.
+The current flow is `Main Menu -> Town`, with roster management folded into the town-center `RosterYard` and modal overlays opened through `GlobalOverlay`. Town buildings currently open modal overlay packed scenes; full scene navigation from town is not used for roster management.
 
 The company shield in `assets/ui/company_shield_highres.svg` is also the project/app icon. In-game company logos use `CompanyLogo.tscn`, which layers a selectable shield and inner logo.
 
 Town currently uses an implied horizontal-road layout with buildings arranged in a 3x2 grid. The road is layout space only and is not drawn.
-Each town building can assign `OverlayToOpen` for modal packed-scene overlays or `SceneToOpen` for scene navigation. Roster Hall uses `SceneToOpen`; other current buildings use `OverlayToOpen`.
+Each town building can assign `OverlayToOpen` for modal packed-scene overlays. `SceneToOpen` remains available for future full-scene navigation, but current town management uses overlays and the in-town roster yard.
 Town building art and icons are assigned per instance through exported `BuildingTexture` and `IconTexture` fields.
 Town drag/drop is a core town interaction system, not a one-off UI helper. `RosterYard` coordinates drag state for town management actions, and drop targets implement `ITownDragDropTarget`, expose accepted `TownDragPayloadKind` values, and register in the shared town drop-target group. Current draggable payloads are gladiators, equipment items, and rations. Town buildings and roaming roster-yard gladiators can receive drops; overlapping targets resolve by `TownDragDropPriority`. The Market building currently sells dropped gladiators, equipment items, and rations, with a gold-value preview above the building while dragging over it. Dropping rations on roaming gladiators feeds them through run-data APIs.
 Town assignment state is centralized in `CompanyRunData.TownAssignments`. `CompanyRunData.Gladiators` remains the owned active company roster, while `TownAssignmentData` stores location lists for courtyard, arena, healer, and training hall. The roster yard displays only `CourtyardGladiators`; dragging a gladiator to a building moves them from courtyard to that building's assignment list. Assignment mutations should go through `CompanyRunData.TryAssignGladiatorToTownLocation`, `TryMoveGladiatorToCourtyard`, and `RemoveGladiatorFromTownAssignments` so the core active roster is validated before location lists change. `TownBuilding.TryTakeGladiator`/`CanTakeGladiator` enforce active-roster validation and capacity before moving through those APIs. `MaxAssignedGladiators` controls fixed-cap buildings such as healer and training hall. Arena uses `AssignmentCapacityMode = LocalInputSetups`, so its capacity follows the current local input/controller setup count. Market keeps its sale behavior for dropped gladiators instead of assigning them.
@@ -70,7 +70,7 @@ Market sale values live on the relevant run/resource APIs. Purchased equipment i
 Autosave currently runs when a company is created or edited, when the app exits through `SaveNode._ExitTree`, when the player presses Back from town to main menu, and when town time crosses into a new day at 00:00.
 Current spendable fame lives on `CompanyRunData.Fame` beside current gold and should be mutated through `AddFame`, `LoseFame`, and `TrySpendFame`. `LoseFame` clamps at zero. Fame should be awarded when contracts are won, scaled by contract difficulty and special contract modifiers once contracts are implemented.
 The next management focus is working rations and markets: buying poor/common/fine rations for gold, updating `CompanyRunData.Rations`, reflecting totals in town UI, and applying supplies through the existing provisions systems instead of adding parallel market state.
-The first roster overlay is `GladiatorsOverlay.tscn`, opened from Roster Hall's `Gladiators` button. It uses reusable `GladiatorCard.tscn` cards to show each current gladiator horizontally with portrait and name.
+The first roster overlay is `GladiatorsOverlay.tscn`, opened from the town-center roster yard. It uses reusable `GladiatorCard.tscn` cards to show each current gladiator horizontally with portrait and name.
 Main menu requires creating a company before `Enter Town` is enabled. The default suggested company name is `The Bronze Lions`.
 The main menu top-right controls include reusable `SettingsButton.tscn` and a `Controls` button. The Controls button opens `ControlsOverlay.tscn` through `GlobalOverlay`; this overlay uses the shared blur backdrop shader and renders connected input setups from `LocalInputConfig.ControllerSetups`.
 Local input setup is split between `LocalInputConfig` and resources. `LocalInputConfig` is an autoload `Node` because Godot autoloads need scene/node ownership. It owns a runtime `Array<LocalInputControllerConfig>` where each resource describes one setup with name, kind, device id, icon, and joined state. Backend join/leave behavior is not implemented yet; the current overlay is configuration/display scaffolding for up to four local players.
@@ -98,3 +98,5 @@ Local input setup is split between `LocalInputConfig` and resources. `LocalInput
 AI agents should read `docs/agent-guide.md` first before making changes. The `docs/` directory is intentionally agent-focused so implementation work stays aligned with the current project state, Godot conventions, and repository expectations.
 
 Also read `docs/focuspoint.md` before starting a new work session. It records what to focus on next and should usually be updated near the end of a session.
+
+Active implementation work is tracked in GitHub issues and milestones for this repository. Use them together with `docs/focuspoint.md` to choose the next task and keep issue descriptions aligned with the current architecture.

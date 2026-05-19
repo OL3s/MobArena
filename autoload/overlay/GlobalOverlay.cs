@@ -179,10 +179,7 @@ public partial class GlobalOverlay : CanvasLayer
         _popupQueue.Clear();
 
 		foreach (Node child in GetChildren())
-		{
-			RemoveChild(child);
-			child.Free();
-		}
+            child.QueueFree();
 	}
 
 	public bool HasOverlays()

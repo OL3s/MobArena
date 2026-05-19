@@ -42,6 +42,9 @@ public partial class CompanyRunData : Resource
     [Export]
     public TownAssignmentData TownAssignments { get; private set; } = new();
 
+    [Export]
+    public Array<ArenaControlAssignmentData> ArenaControlAssignments { get; private set; } = new();
+
     public int AliveGladiators => Gladiators.Count;
 
     [Export]
@@ -347,19 +350,26 @@ public partial class CompanyRunData : Resource
             return false;
         }
 
+        var provisionValue = RationStoreData.GetProvisionValue(quality);
+        if (gladiatorData.Provisions >= provisionValue)
+        {
+            GD.Print($"Drop feed skipped: gladiator '{gladiatorData.GladiatorName}' already has {gladiatorData.Provisions:0.0}/{provisionValue:0.0} provisions for {quality} ration.");
+            return false;
+        }
+
         if (Rations.GetCount(quality) <= 0)
         {
             GD.PushError($"Drop feed failed: company inventory has no {quality} rations.");
             return false;
         }
 
-        if (!Rations.TryConsumeRation(quality, out var provisionValue))
+        if (!Rations.TryConsumeRation(quality, out _))
         {
             GD.PushError($"Drop feed failed: could not consume {quality} ration despite positive inventory count.");
             return false;
         }
 
-        gladiatorData.SetProvisions(gladiatorData.Provisions + provisionValue);
+        gladiatorData.SetProvisions(provisionValue);
         EmitSignal(SignalName.RunChanged);
         return true;
     }
@@ -420,10 +430,134 @@ public partial class CompanyRunData : Resource
         EmitSignal(SignalName.RunChanged);
     }
 
+    public ArenaControlAssignmentData GetArenaControlAssignment(GladiatorData gladiatorData)
+    {
+        EnsureResources();
+        if (gladiatorData == null)
+            return null;
+
+        foreach (var assignment in ArenaControlAssignments)
+        {
+            if (assignment?.Gladiator == gladiatorData)
+                return assignment;
+        }
+
+        return null;
+    }
+
+    public bool TrySetArenaControlAssignment(GladiatorData gladiatorData, LocalInputControllerConfig controllerSetup)
+    {
+        EnsureResources();
+        if (gladiatorData == null || controllerSetup == null)
+            return false;
+
+        if (!HasGladiator(gladiatorData) || TownAssignments.GetLocation(gladiatorData) != TownAssignmentData.AssignmentLocation.Arena)
+        {
+            GD.PushError($"Arena control assignment failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not assigned to the Arena building.");
+            return false;
+        }
+
+        var controllerKey = ArenaControlAssignmentData.GetControllerKey(controllerSetup);
+        for (var index = ArenaControlAssignments.Count - 1; index >= 0; index--)
+        {
+            var assignment = ArenaControlAssignments[index];
+            if (assignment == null)
+            {
+                ArenaControlAssignments.RemoveAt(index);
+                continue;
+            }
+
+            if (assignment.Gladiator == gladiatorData || assignment.ControllerKey == controllerKey)
+                ArenaControlAssignments.RemoveAt(index);
+        }
+
+        ArenaControlAssignments.Add(ArenaControlAssignmentData.Create(gladiatorData, controllerSetup));
+        EmitSignal(SignalName.RunChanged);
+        return true;
+    }
+
+    public bool ClearArenaControlAssignment(GladiatorData gladiatorData)
+    {
+        EnsureResources();
+        if (gladiatorData == null)
+            return false;
+
+        var removed = false;
+        for (var index = ArenaControlAssignments.Count - 1; index >= 0; index--)
+        {
+            if (ArenaControlAssignments[index]?.Gladiator != gladiatorData)
+                continue;
+
+            ArenaControlAssignments.RemoveAt(index);
+            removed = true;
+        }
+
+        if (removed)
+            EmitSignal(SignalName.RunChanged);
+
+        return removed;
+    }
+
+    public bool SyncArenaControlAssignments(Array<LocalInputControllerConfig> controllerSetups)
+    {
+        EnsureResources();
+        controllerSetups ??= new Array<LocalInputControllerConfig>();
+
+        var changed = PruneArenaControlAssignments(controllerSetups);
+        var usedControllerKeys = new System.Collections.Generic.HashSet<string>();
+        foreach (var assignment in ArenaControlAssignments)
+        {
+            if (assignment != null)
+                usedControllerKeys.Add(assignment.ControllerKey);
+        }
+
+        foreach (var gladiator in TownAssignments.ArenaGladiators)
+        {
+            if (gladiator == null || GetArenaControlAssignment(gladiator) != null)
+                continue;
+
+            var controllerSetup = GetFirstUnusedControllerSetup(controllerSetups, usedControllerKeys);
+            if (controllerSetup == null)
+                break;
+
+            ArenaControlAssignments.Add(ArenaControlAssignmentData.Create(gladiator, controllerSetup));
+            usedControllerKeys.Add(ArenaControlAssignmentData.GetControllerKey(controllerSetup));
+            changed = true;
+        }
+
+        if (changed)
+            EmitSignal(SignalName.RunChanged);
+
+        return changed;
+    }
+
+    public bool AreArenaGladiatorsReadyForLaunch(Array<LocalInputControllerConfig> controllerSetups)
+    {
+        EnsureResources();
+        if (TownAssignments.ArenaGladiators.Count <= 0)
+            return false;
+
+        foreach (var gladiator in TownAssignments.ArenaGladiators)
+        {
+            var assignment = GetArenaControlAssignment(gladiator);
+            if (assignment == null || !ControllerSetupExists(controllerSetups, assignment.ControllerKey))
+                return false;
+        }
+
+        return true;
+    }
+
     public void SetAutoFeedThreshold(RationStoreData.RationQuality quality, float threshold)
     {
         EnsureResources();
         RationFeedingPolicy.SetFeedBelow(quality, threshold);
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void SetAutoFeedEnabled(bool enabled)
+    {
+        EnsureResources();
+        RationFeedingPolicy.SetEnabled(enabled);
         EmitSignal(SignalName.RunChanged);
     }
 
@@ -437,6 +571,9 @@ public partial class CompanyRunData : Resource
     public int AutoFeedGladiatorsBelowThreshold()
     {
         EnsureResources();
+        if (!RationFeedingPolicy.Enabled)
+            return 0;
+
         var fedCount = 0;
 
         while (Rations.GetTotal() > 0)
@@ -447,10 +584,14 @@ public partial class CompanyRunData : Resource
                 .FirstOrDefault();
 
             var rationQuality = gladiator == null ? null : GetAutoFeedRationQuality(gladiator);
-            if (rationQuality == null || !Rations.TryConsumeRation(rationQuality.Value, out var provisionValue))
+            if (rationQuality == null)
                 break;
 
-            gladiator.SetProvisions(gladiator.Provisions + provisionValue);
+            var provisionValue = RationStoreData.GetProvisionValue(rationQuality.Value);
+            if (gladiator.Provisions >= provisionValue || !Rations.TryConsumeRation(rationQuality.Value, out _))
+                break;
+
+            gladiator.SetProvisions(provisionValue);
             fedCount++;
         }
 
@@ -471,6 +612,61 @@ public partial class CompanyRunData : Resource
         Cemetery ??= new Array<GladiatorData>();
         TownAssignments ??= new TownAssignmentData();
         TownAssignments.SyncWithActiveRoster(Gladiators);
+        ArenaControlAssignments ??= new Array<ArenaControlAssignmentData>();
+        PruneArenaControlAssignments(null);
+    }
+
+    private bool PruneArenaControlAssignments(Array<LocalInputControllerConfig> controllerSetups)
+    {
+        var changed = false;
+        var usedControllerKeys = new System.Collections.Generic.HashSet<string>();
+        for (var index = ArenaControlAssignments.Count - 1; index >= 0; index--)
+        {
+            var assignment = ArenaControlAssignments[index];
+            var shouldRemove = assignment == null
+                || !HasGladiator(assignment.Gladiator)
+                || TownAssignments.GetLocation(assignment.Gladiator) != TownAssignmentData.AssignmentLocation.Arena
+                || !usedControllerKeys.Add(assignment.ControllerKey);
+
+            if (!shouldRemove && controllerSetups != null)
+                shouldRemove = !ControllerSetupExists(controllerSetups, assignment.ControllerKey);
+
+            if (!shouldRemove)
+                continue;
+
+            ArenaControlAssignments.RemoveAt(index);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private static LocalInputControllerConfig GetFirstUnusedControllerSetup(Array<LocalInputControllerConfig> controllerSetups, System.Collections.Generic.HashSet<string> usedControllerKeys)
+    {
+        foreach (var controllerSetup in controllerSetups)
+        {
+            if (controllerSetup == null)
+                continue;
+
+            if (!usedControllerKeys.Contains(ArenaControlAssignmentData.GetControllerKey(controllerSetup)))
+                return controllerSetup;
+        }
+
+        return null;
+    }
+
+    private static bool ControllerSetupExists(Array<LocalInputControllerConfig> controllerSetups, string controllerKey)
+    {
+        if (controllerSetups == null || string.IsNullOrEmpty(controllerKey))
+            return false;
+
+        foreach (var controllerSetup in controllerSetups)
+        {
+            if (ArenaControlAssignmentData.GetControllerKey(controllerSetup) == controllerKey)
+                return true;
+        }
+
+        return false;
     }
 
     private RationStoreData.RationQuality? GetAutoFeedRationQuality(GladiatorData gladiator)
@@ -503,7 +699,8 @@ public partial class CompanyRunData : Resource
 
     private void AddEligibleRationQuality(System.Collections.Generic.List<RationStoreData.RationQuality> eligibleQualities, GladiatorData gladiator, RationStoreData.RationQuality quality)
     {
-        if (Rations.GetCount(quality) > 0 && gladiator.Provisions < RationFeedingPolicy.GetFeedBelow(quality))
+        var provisionValue = RationStoreData.GetProvisionValue(quality);
+        if (Rations.GetCount(quality) > 0 && gladiator.Provisions < RationFeedingPolicy.GetFeedBelow(quality) && gladiator.Provisions < provisionValue)
             eligibleQualities.Add(quality);
     }
 

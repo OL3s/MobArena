@@ -94,10 +94,15 @@ theme_override_constants/separation = 8
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 bbcode_enabled = true
-text = "Each ration type feeds only when a gladiator falls below that type's threshold. Caps stay below the ration value so the same gladiator is not fed every tick."
+text = "Automatic feeding is off by default. When enabled, each ration type feeds only when a gladiator falls below that type's threshold."
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
+
+[node name="EnabledCheckButton" type="CheckButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Enable automatic feeding"
 
 [node name="PoorRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout"]
 custom_minimum_size = Vector2(0, 40)
@@ -224,7 +229,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 
-[node name="StatusLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="StatusLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/AutoFeedPanel/MarginContainer/AutoFeedLayout"]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 text = "Closest Fit picks the threshold nearest to the gladiator's current provisions."

@@ -23,14 +23,23 @@ public partial class MarketData : Resource
     public Array<ItemData> ItemStock { get; private set; } = new();
 
     [Export]
+    public Array<GladiatorData> GladiatorStock { get; private set; } = new();
+
+    [Export]
     public bool HasInitializedItemStock { get; private set; }
+
+    [Export]
+    public bool HasInitializedGladiatorStock { get; private set; }
 
     public void EnsureResources()
     {
         RationStore ??= new RationStoreData();
         ItemStock ??= new Array<ItemData>();
+        GladiatorStock ??= new Array<GladiatorData>();
         if (!HasInitializedItemStock || HasItemStockMissingIcons())
             RefreshItemStock();
+        if (!HasInitializedGladiatorStock || HasGladiatorStockMissingPortraits())
+            RefreshGladiatorStock();
     }
 
     public void ExecuteNewDay()
@@ -38,6 +47,7 @@ public partial class MarketData : Resource
         EnsureResources();
         RationStore.RefreshDailyStock();
         RefreshItemStock();
+        RefreshGladiatorStock();
     }
 
     public void RefreshItemStock()
@@ -55,6 +65,17 @@ public partial class MarketData : Resource
         HasInitializedItemStock = true;
     }
 
+    public void RefreshGladiatorStock()
+    {
+        GladiatorStock ??= new Array<GladiatorData>();
+        GladiatorStock.Clear();
+
+        for (var index = 0; index < 3; index++)
+            GladiatorStock.Add(GladiatorData.CreateDefault());
+
+        HasInitializedGladiatorStock = true;
+    }
+
     private bool HasItemStockMissingIcons()
     {
         if (ItemStock == null || ItemStock.Count <= 0)
@@ -63,6 +84,20 @@ public partial class MarketData : Resource
         foreach (var item in ItemStock)
         {
             if (item?.Icon == null)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool HasGladiatorStockMissingPortraits()
+    {
+        if (GladiatorStock == null || GladiatorStock.Count <= 0)
+            return true;
+
+        foreach (var gladiator in GladiatorStock)
+        {
+            if (gladiator == null || gladiator.GetPortraitTexture() == null)
                 return true;
         }
 

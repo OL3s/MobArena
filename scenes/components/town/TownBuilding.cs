@@ -492,6 +492,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
 
     private void OpenScene()
     {
+        GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
         GetTree().ChangeSceneToPacked(SceneToOpen);
     }
 
