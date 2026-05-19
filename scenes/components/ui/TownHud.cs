@@ -35,6 +35,9 @@ public partial class TownHud : CanvasLayer
 	private TimelineLine _championProgress;
 	private Label _championProgressValue;
 	private Timer _timeTickTimer;
+	private bool _championContractDuePopupShown;
+	private bool _resumeAfterPopupPause;
+	private int _starvingWarningPopupShownDay;
 
 	public override void _Ready()
 	{
@@ -70,6 +73,13 @@ public partial class TownHud : CanvasLayer
 		_timeTickTimer = GetNode<Timer>("TimeTickTimer");
 		_timeTickTimer.Timeout += OnTimeTickTimerTimeout;
 		_timeState.TimeChanged += RefreshTimeUi;
+		var globalOverlay = GlobalOverlay.Get();
+		if (globalOverlay != null)
+		{
+			globalOverlay.PopupGamePauseRequested += OnPopupGamePauseRequested;
+			globalOverlay.PopupGameResumeRequested += OnPopupGameResumeRequested;
+		}
+
 		if (_saveNode?.CompanyRunData != null)
 		{
 			_saveNode.CompanyRunData.RunChanged += RefreshRunUi;
@@ -89,6 +99,13 @@ public partial class TownHud : CanvasLayer
 	{
 		if (_timeState != null)
 			_timeState.TimeChanged -= RefreshTimeUi;
+
+		var globalOverlay = GlobalOverlay.Get();
+		if (globalOverlay != null)
+		{
+			globalOverlay.PopupGamePauseRequested -= OnPopupGamePauseRequested;
+			globalOverlay.PopupGameResumeRequested -= OnPopupGameResumeRequested;
+		}
 
 		if (_companyLogo != null)
 		{
@@ -128,6 +145,21 @@ public partial class TownHud : CanvasLayer
 	{
 		_timeState.IncreaseSpeed();
 		RefreshSpeedToggleButton();
+	}
+
+	private void OnPopupGamePauseRequested()
+	{
+		_resumeAfterPopupPause = _timeState.CurrentSpeed != TownTimeState.TimeSpeed.X0;
+		_timeState.ResetToPause();
+	}
+
+	private void OnPopupGameResumeRequested()
+	{
+		if (!_resumeAfterPopupPause)
+			return;
+
+		_resumeAfterPopupPause = false;
+		_timeState.ResumeLastRunningSpeed();
 	}
 
 	private void OnTimeTickTimerTimeout()
@@ -253,6 +285,39 @@ public partial class TownHud : CanvasLayer
 		_championProgress.SetValue(_timeState.GetChampionProgressValue(), _timeState.GetChampionProgressMax());
 		_championProgressValue.Text = _timeState.GetChampionDeadlineLabel();
 		RefreshSpeedToggleButton();
+		ShowNewDayWarningPopupIfNeeded();
+	}
+
+	private void ShowNewDayWarningPopupIfNeeded()
+	{
+		var shouldShowChampionWarning = _timeState.ChampionContractDue && !_championContractDuePopupShown;
+		var shouldShowStarvingWarning = _timeState.IsStarvingWarningDueToday()
+			&& _starvingWarningPopupShownDay != _timeState.CurrentDay;
+
+		if (!shouldShowChampionWarning && !shouldShowStarvingWarning)
+			return;
+
+		var globalOverlay = GlobalOverlay.Get();
+
+		if (shouldShowChampionWarning)
+		{
+			_championContractDuePopupShown = true;
+			globalOverlay?.ShowBlurredPopup(
+				"Champion Contract Due",
+				"A champion contract is now due. Complete it before the end of the day to proceed.",
+				pauseGameUntilClosed: true);
+		}
+
+		if (shouldShowStarvingWarning)
+		{
+			_starvingWarningPopupShownDay = _timeState.CurrentDay;
+			var starvingGladiatorCount = _timeState.StarvingWarningCount;
+			var starvingGladiatorLabel = starvingGladiatorCount == 1 ? "1 gladiator is" : $"{starvingGladiatorCount} gladiators are";
+			globalOverlay?.ShowBlurredPopup(
+				"Gladiators Starving",
+				$"{starvingGladiatorLabel} starving. Buy or assign rations before their provisions run out.",
+				pauseGameUntilClosed: true);
+		}
 	}
 
 	private void ConfigureTimelineLines()

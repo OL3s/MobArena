@@ -10,6 +10,9 @@ public partial class RosterYard : Node2D
     private const string RosterYardGladiatorScenePath = "res://scenes/components/town/RosterYardGladiator.tscn";
     private const float DragStartDistance = 8f;
     private const float DragTokenHeight = 72f;
+    private const float DragTokenPointerOffsetY = 32f;
+    private const float DragTiltPerPixel = 0.03f;
+    private const float MaxDragTiltRadians = 0.28f;
     private const float MinimumSpacing = 76f;
     private static readonly Rect2 SpawnArea = new(new Vector2(-220f, -104f), new Vector2(440f, 148f));
 
@@ -19,6 +22,7 @@ public partial class RosterYard : Node2D
     private PackedScene _rosterYardGladiatorScene;
     private RosterYardGladiator _pendingGladiator;
     private Vector2 _pendingPressViewportPosition;
+    private Vector2 _lastDragViewportPosition;
     private RosterYardGladiator _draggedGladiator;
     private Sprite2D _dragToken;
     private RosterYardGladiator _selectedGladiator;
@@ -156,7 +160,7 @@ public partial class RosterYard : Node2D
         }
 
         if (_dragToken != null)
-            _dragToken.Position = ViewportToLocal(viewportPosition);
+            UpdateDragToken(viewportPosition);
     }
 
     private void FinishPointerInteraction(Vector2 viewportPosition)
@@ -185,14 +189,30 @@ public partial class RosterYard : Node2D
             Name = "DragToken",
             Texture = texture,
             Centered = true,
-            Position = ViewportToLocal(viewportPosition),
+            Position = GetDragTokenPosition(viewportPosition),
             Modulate = new Color(1f, 1f, 1f, 0.82f)
         };
+
+        _lastDragViewportPosition = viewportPosition;
 
         if (texture != null && texture.GetHeight() > 0)
             _dragToken.Scale = Vector2.One * (DragTokenHeight / texture.GetHeight());
 
         AddChild(_dragToken);
+    }
+
+    private void UpdateDragToken(Vector2 viewportPosition)
+    {
+        var horizontalDelta = viewportPosition.X - _lastDragViewportPosition.X;
+        _lastDragViewportPosition = viewportPosition;
+
+        _dragToken.Position = GetDragTokenPosition(viewportPosition);
+        _dragToken.Rotation = Mathf.Clamp(horizontalDelta * DragTiltPerPixel, -MaxDragTiltRadians, MaxDragTiltRadians);
+    }
+
+    private Vector2 GetDragTokenPosition(Vector2 viewportPosition)
+    {
+        return ViewportToLocal(viewportPosition) + new Vector2(0f, DragTokenPointerOffsetY);
     }
 
     private void CancelDrag()
