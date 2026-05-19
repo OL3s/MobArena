@@ -28,8 +28,8 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 
 1. `scenes/main_menu.tscn` starts the game.
 2. `scenes/town.tscn` represents the between-fights city/company phase.
-3. `scenes/roster_hall.tscn` represents roster management as a separate scene and can return to town.
-4. Other current town buildings open modal overlay packed scenes over town.
+3. Town-center `RosterYard` represents the active roster-management surface.
+4. Current town buildings open modal overlay packed scenes over town through `GlobalOverlay`.
 5. `scenes/arena.tscn` is still present as an arena combat placeholder.
 
 ## Scene Structure
@@ -51,8 +51,8 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - `TownBuilding.tscn` contains the building SVG sprite, icon SVG sprite, text label, and `Area2D` interaction hitbox in one scene file.
 - Each `TownBuilding` instance can assign unique `BuildingTexture` and `IconTexture` exports.
 - Town buildings should use a 1:1 square footprint. The current town layout is a 3x2 grid split by an implied horizontal road gap; the road is not drawn.
-- Town currently includes Arena, Gladiator Market, Blacksmith, Healer, Roster Hall, and Training Hall buildings.
-- `TownBuilding.OverlayToOpen` opens modal packed-scene building UI over town. `TownBuilding.SceneToOpen` navigates to another scene and should be reserved for buildings like Roster Hall.
+- Town currently includes Arena, Market, Healer, Training Hall, and the central RosterYard management area with gladiator, ration, and equipment buttons.
+- `TownBuilding.OverlayToOpen` opens modal packed-scene building UI over town. `TownBuilding.SceneToOpen` exists for future full-scene navigation but is not used by the current town management flow.
 - Shared modal popups should go through `GlobalOverlay` instead of being attached directly to town or arena scenes.
 - Custom overlays such as `ControlsOverlay.tscn` should also be opened through `GlobalOverlay.AddOverlay`. If they need a blurred modal feel, reuse `assets/shaders/PopupBlurBackdrop.gdshader` on a fullscreen backdrop.
 - Keep this split intact so phone, controller, and desktop interactions can share the same scene without mixing gameplay world nodes and interface overlays.
@@ -60,7 +60,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - Use neutral scene roots when combining world and controller UI. Do not put controller UI under a `Node2D` root.
 - World layouts are authored for `1152x648`. Town and arena use centered `Camera2D` nodes so aspect-ratio expansion grows outward from the center through engine scene behavior.
 - Company overview is currently a `GlobalOverlay` modal opened from the town shield. It displays lifetime counters from `CompanyCareerData`, held by `SaveNode` until real persistence is implemented.
-- Roster Hall is a town-like room with an empty `World`, shared `TownHud`, and left-side room actions. The current `Gladiators` action opens a horizontal gladiator-list overlay using reusable gladiator cards.
+- The old separate Roster Hall scene path has been removed. Roster inspection opens from the town-center `RosterYard` using a horizontal gladiator-list overlay with reusable gladiator cards.
 - Current gladiator condition state lives on `GladiatorData`. `Provisions` and `Exhaustion` are 0-10 floats that affect recoverable health and stamina caps; passed-time changes are applied through `CompanyTimeProgression` via static `GameTimeController`.
 - Current ration inventory lives on `CompanyRunData.Rations` as a `RationInventory` resource with poor, common, and fine counts plus saved fractional consumption progress. Poor, common, and fine ration values set provisions to 6, 8, and 10 when the gladiator is below that ration value. `RationInventory.GetTotal()` feeds the top town HUD ration total next to gold.
 - Gladiator death is centralized in `CompanyRunData.KillGladiator`. When time progression drops a gladiator's provisions to 0, the gladiator is removed from active `Gladiators`, moved to `Cemetery`, and `GladiatorDeathOverlay.tscn` displays the dead gladiator card. `CemeteryOverlay.tscn` lists all dead gladiators from `CompanyRunData.Cemetery` through the company overview Cemetery button.

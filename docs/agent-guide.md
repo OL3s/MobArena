@@ -13,11 +13,12 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 - `LocalInputConfig` is autoloaded from `autoload/LocalInputConfig.tscn` for runtime local input/controller setup. It reads user-facing input preferences from `SaveNode.SettingsConfig` and exposes `ControllerSetups` for UI to render.
 - The game concept comes from `../GameIdeas/MobGladiator.md`.
 - `docs/game-design.md` contains the local implementation-oriented summary of that concept.
-- The initial scene flow is `scenes/main_menu.tscn` to `scenes/town.tscn`. Roster Hall currently opens as `scenes/roster_hall.tscn` and returns to town, but the next direction is to remove that separate scene path and fold roster management into the town. Other town buildings currently open modal overlay packed scenes.
-- Roster management should move toward an in-town open area where current gladiators are visible idling and can be dragged into management sections. Aim for Training Hall on the left, healing/rest on the right, and clear access to market functions for new gladiators, rations/supplies, and future weapon/blacksmith equipment work.
+- Active backlog and milestone planning live in GitHub issues for this repository. Check the GitHub issues and milestones together with `docs/focuspoint.md` before choosing the next implementation task.
+- The initial scene flow is `scenes/main_menu.tscn` to `scenes/town.tscn`. Roster management is folded into the town through the town-center `RosterYard`; the old separate Roster Hall scene path has been removed. Town buildings currently open modal overlay packed scenes.
+- Roster management should stay centered on an in-town open area where current gladiators are visible idling and can be dragged into management sections. Aim for Training Hall on the left, healing/rest on the right, and clear access to market functions for new gladiators, rations/supplies, and future weapon/blacksmith equipment work.
 - `scenes/town.tscn` and `scenes/arena.tscn` both use neutral roots with a separate `Node2D` world and `CanvasLayer` controller UI.
 - Town uses an implied horizontal-road layout with 1:1 buildings as `Node2D` instances of `scenes/components/town/TownBuilding.tscn` arranged in a 3x2 grid. The road is layout space only and is not drawn.
-- `TownBuilding` has exported `PackedScene` targets for `OverlayToOpen` and `SceneToOpen`. Use `OverlayToOpen` for town building UI that should stay over town; use `SceneToOpen` for full scene navigation such as Roster Hall.
+- `TownBuilding` has exported `PackedScene` targets for `OverlayToOpen` and `SceneToOpen`. Use `OverlayToOpen` for town building UI that should stay over town; reserve `SceneToOpen` for future full-scene navigation only when there is a concrete need.
 - `TownBuilding` visuals are per-instance exported textures: `BuildingTexture` and `IconTexture`.
 - Town UI should represent champion pressure as time remaining before a mandatory champion fight deadline, not as a simple number of arena fights completed.
 - Town phase is intended to use real time with Paused, Slowed, Normal, and Fast speed states. The bottom UI should put left/right speed arrows and a speed toggle on the left, then show current day and a sun-to-moon day progress bar for readability. Champion deadline belongs with the bottom timeline.
@@ -78,7 +79,7 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 - Do not use a `Node2D` root for scenes that also own controller UI. Use a neutral `Node` root, with `World` and `ControllerUi` as siblings.
 - Author world layouts in the `1152x648` frame. Use centered `Camera2D` nodes for scenes with a `World` node so wider/taller aspect ratios expand from the center through engine scene behavior, not resize code.
 - Use `GlobalOverlay.ShowBlurredPopup` for informational modal text and `GlobalOverlay.ShowGoCancelPopup` for confirmation flows.
-- Use `GlobalOverlay.AddOverlay` for custom overlay scenes such as `ControlsOverlay.tscn`; custom overlays that should visually match popups can reuse `assets/shaders/PopupBlurBackdrop.gdshader` on a fullscreen `ColorRect`.
+- Use `GlobalOverlay.AddOverlay` for custom overlay scenes such as `ControlsOverlay.tscn`; custom overlays that should visually match popups can reuse `assets/shaders/PopupBlurBackdrop.gdshader` on a fullscreen `ColorRect`. Do not add scene-local overlay managers; `GlobalOverlay` is the single overlay path.
 - Preserve Godot-generated file formats and avoid hand-editing generated files unless there is a specific reason.
 - Keep repository files text-normalized with LF line endings.
 
@@ -94,9 +95,10 @@ This directory is primarily for AI agents working on MobArena. Use it to preserv
 ## Before Changing Code
 
 1. Inspect the current tree. This project may grow quickly from its initial state.
-2. Check whether scenes, scripts, or assets already exist before creating new ones.
-3. Prefer following existing naming and folder conventions once they are established.
-4. If conventions are absent, use standard Godot project organization and document the choice.
+2. Read `docs/focuspoint.md` and check the GitHub issues/milestones for current priority and issue-specific acceptance notes.
+3. Check whether scenes, scripts, or assets already exist before creating new ones.
+4. Prefer following existing naming and folder conventions once they are established.
+5. If conventions are absent, use standard Godot project organization and document the choice.
 
 ## Suggested Future Docs
 
