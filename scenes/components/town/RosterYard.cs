@@ -11,7 +11,7 @@ public partial class RosterYard : Node2D
     private const float DragStartDistance = 8f;
     private const float DragTokenHeight = 72f;
     private const float DragTokenPointerOffsetY = 32f;
-    private const float DragTiltPerPixel = 0.015f;
+    private const float DragTiltPerPixel = 0.03f;
     private const float MaxDragTiltRadians = 0.28f;
     private const float MinimumSpacing = 76f;
     private static readonly Rect2 SpawnArea = new(new Vector2(-220f, -104f), new Vector2(440f, 148f));

@@ -38,6 +38,9 @@ public partial class TownTimeState : Resource
     public int StarvingWarningDay { get; private set; }
 
     [Export]
+    public int StarvingWarningCount { get; private set; }
+
+    [Export]
     public TimeSpeed CurrentSpeed { get; private set; } = TimeSpeed.X0;
 
     [Export]
@@ -117,10 +120,20 @@ public partial class TownTimeState : Resource
 
     public void ResetToPause()
     {
-        if (CurrentSpeed != TimeSpeed.X0)
-            LastRunningSpeed = CurrentSpeed;
+        if (CurrentSpeed == TimeSpeed.X0)
+            return;
 
+        LastRunningSpeed = CurrentSpeed;
         CurrentSpeed = TimeSpeed.X0;
+        EmitSignal(SignalName.TimeChanged);
+    }
+
+    public void ResumeLastRunningSpeed()
+    {
+        if (CurrentSpeed != TimeSpeed.X0)
+            return;
+
+        CurrentSpeed = LastRunningSpeed == TimeSpeed.X0 ? TimeSpeed.X1 : LastRunningSpeed;
         EmitSignal(SignalName.TimeChanged);
     }
 
@@ -212,9 +225,10 @@ public partial class TownTimeState : Resource
         return CurrentDay >= ChampionDeadlineDay;
     }
 
-    public void ApplyNewDayWarnings(bool championContractDue, bool starvingWarningDue)
+    public void ApplyNewDayWarnings(bool championContractDue, int starvingGladiatorCount)
     {
         var changed = false;
+        var clampedStarvingGladiatorCount = Mathf.Max(0, starvingGladiatorCount);
 
         if (championContractDue && !ChampionContractDue)
         {
@@ -222,9 +236,10 @@ public partial class TownTimeState : Resource
             changed = true;
         }
 
-        if (starvingWarningDue && StarvingWarningDay != CurrentDay)
+        if (clampedStarvingGladiatorCount > 0 && (StarvingWarningDay != CurrentDay || StarvingWarningCount != clampedStarvingGladiatorCount))
         {
             StarvingWarningDay = CurrentDay;
+            StarvingWarningCount = clampedStarvingGladiatorCount;
             changed = true;
         }
 
