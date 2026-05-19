@@ -1,5 +1,6 @@
 using Godot;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scenes.Components.UI;
 
@@ -13,6 +14,9 @@ public partial class GladiatorCard : PanelContainer
 
     private TextureRect _portrait;
     private Label _nameLabel;
+    private TextureRect _mainItemIcon;
+    private TextureRect _armorIcon;
+    private TextureRect _offItemIcon;
     private TextureRect _healthIcon;
     private ProgressBar _healthBar;
     private Label _healthLabel;
@@ -33,6 +37,9 @@ public partial class GladiatorCard : PanelContainer
     {
         _portrait = GetNode<TextureRect>("MarginContainer/Layout/Portrait");
         _nameLabel = GetNode<Label>("MarginContainer/Layout/Name");
+        _mainItemIcon = GetNode<TextureRect>("MarginContainer/Layout/EquipmentRow/MainItemIcon");
+        _armorIcon = GetNode<TextureRect>("MarginContainer/Layout/EquipmentRow/ArmorIcon");
+        _offItemIcon = GetNode<TextureRect>("MarginContainer/Layout/EquipmentRow/OffItemIcon");
         _healthIcon = GetNode<TextureRect>("MarginContainer/Layout/Vitals/HealthLine/Icon");
         _healthBar = GetNode<ProgressBar>("MarginContainer/Layout/Vitals/HealthLine/Bar");
         _healthLabel = GetNode<Label>("MarginContainer/Layout/Vitals/HealthLine/Bar/Value");
@@ -63,6 +70,7 @@ public partial class GladiatorCard : PanelContainer
 
         _portrait.Texture = gladiatorData.GetPortraitTexture();
         _nameLabel.Text = gladiatorData.GladiatorName;
+        ConfigureEquipmentIcons(gladiatorData.Equipment);
         ConfigureBar(_healthBar, _healthLabel, gladiatorData.Health, gladiatorData.MaxHealth);
         ConfigureRecoverableHealthRange(_recoverableHealthRange, gladiatorData.Health, gladiatorData.RecoverableConditionRatio, gladiatorData.MaxHealth);
         ConfigureHealthCapMarker(_recoverableMaxHealthMarker, gladiatorData.RecoverableConditionRatio);
@@ -75,6 +83,13 @@ public partial class GladiatorCard : PanelContainer
         _agilityLabel.Text = $"Agi {gladiatorData.Level.Agility}";
         _vitalityLabel.Text = $"Vit {gladiatorData.Level.Vitality}";
         _enduranceLabel.Text = $"End {gladiatorData.Level.Endurance}";
+    }
+
+    private void ConfigureEquipmentIcons(GladiatorEquipmentData equipment)
+    {
+        SetEquipmentIcon(_mainItemIcon, equipment?.MainHand);
+        SetEquipmentIcon(_armorIcon, equipment?.Armor);
+        SetEquipmentIcon(_offItemIcon, equipment?.OffHand);
     }
 
     private static void ConfigureBar(ProgressBar bar, Label label, int value, int maxValue)
@@ -131,5 +146,14 @@ public partial class GladiatorCard : PanelContainer
             GladiatorEquipmentData.SignatureSkill.Cleave => "res://assets/ui/gladiator_icons/skill_cleave.svg",
             _ => "res://assets/ui/gladiator_icons/skill_dodge.svg"
         };
+    }
+
+    private static void SetEquipmentIcon(TextureRect icon, ItemData item)
+    {
+        if (icon == null)
+            return;
+
+        icon.Texture = item?.Icon;
+        icon.TooltipText = item?.DisplayName ?? string.Empty;
     }
 }

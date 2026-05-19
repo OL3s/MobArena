@@ -1,11 +1,37 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/town/TownBuilding.cs" id="1_townbuilding"]
 [ext_resource type="Texture2D" path="res://assets/town/building.svg" id="2_building"]
 [ext_resource type="Texture2D" path="res://assets/town/building_icon.svg" id="3_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="4_gold"]
+[ext_resource type="Texture2D" path="res://assets/town/icons/roster_icon.svg" id="5_roster"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_interaction"]
 size = Vector2(150, 150)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sell_preview"]
+bg_color = Color(0.08, 0.06, 0.03, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.74, 0.28, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_occupancy"]
+bg_color = Color(0.045, 0.055, 0.07, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.62, 0.76, 0.92, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [node name="TownBuilding" type="Node2D"]
 script = ExtResource("1_townbuilding")
@@ -18,6 +44,66 @@ texture = ExtResource("2_building")
 [node name="IconSprite" type="Sprite2D" parent="Visuals"]
 position = Vector2(0, -92)
 texture = ExtResource("3_icon")
+
+[node name="SellPreview" type="PanelContainer" parent="Visuals"]
+visible = false
+offset_left = -70.0
+offset_top = -28.0
+offset_right = 70.0
+offset_bottom = 28.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_sell_preview")
+
+[node name="Row" type="HBoxContainer" parent="Visuals/SellPreview"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="GoldIcon" type="TextureRect" parent="Visuals/SellPreview/Row"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_gold")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="ValueLabel" type="Label" parent="Visuals/SellPreview/Row"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 32
+text = "0"
+vertical_alignment = 1
+
+[node name="OccupancyBadge" type="PanelContainer" parent="Visuals"]
+visible = false
+offset_left = -56.0
+offset_top = -22.0
+offset_right = 56.0
+offset_bottom = 22.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_occupancy")
+
+[node name="Row" type="HBoxContainer" parent="Visuals/OccupancyBadge"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="GladiatorIcon" type="TextureRect" parent="Visuals/OccupancyBadge/Row"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("5_roster")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="CountLabel" type="Label" parent="Visuals/OccupancyBadge/Row"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 24
+text = "0/0"
+vertical_alignment = 1
 
 [node name="NamePlate" type="PanelContainer" parent="Visuals"]
 offset_left = -82.0

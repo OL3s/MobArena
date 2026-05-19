@@ -7,3 +7,5 @@
 Title = "Arena Contracts"
 Body = "Choose arena contracts here. The prototype still needs the contract list, enemy preview, reward display, and launch flow."
 IconTexture = ExtResource("2_icon")
+ShowAssignedGladiators = true
+AssignmentLocation = 1

@@ -73,6 +73,7 @@ public partial class SaveNode : Node
 
 	public Error Save()
 	{
+		GD.Print("SaveNode: Saving data.");
 		var error = EnsureSaveDirectory();
 		if (error != Error.Ok)
 		{

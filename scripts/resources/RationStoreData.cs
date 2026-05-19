@@ -12,13 +12,13 @@ public partial class RationStoreData : Resource
     }
 
     [Export]
-    public int PoorRationCost { get; private set; } = 2;
+    public int PoorRationCost { get; private set; } = RationInventory.PoorRationGoldValue;
 
     [Export]
-    public int CommonRationCost { get; private set; } = 4;
+    public int CommonRationCost { get; private set; } = RationInventory.CommonRationGoldValue;
 
     [Export]
-    public int FineRationCost { get; private set; } = 7;
+    public int FineRationCost { get; private set; } = RationInventory.FineRationGoldValue;
 
     [Export]
     public int DailyPoorRationStock { get; private set; } = 24;

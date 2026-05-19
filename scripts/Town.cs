@@ -8,7 +8,7 @@ public partial class Town : Node
 {
     private const string MainMenuScene = "res://scenes/main_menu.tscn";
     private const string GladiatorsOverlayScene = "res://scenes/ui/GladiatorsOverlay.tscn";
-    private const string EquipmentOverlayScene = "res://scenes/ui/EquipmentInventoryOverlay.tscn";
+    private const string EquipmentInventoryOverlayScene = "res://scenes/ui/EquipmentInventoryOverlay.tscn";
     private const string RationsManagementOverlayScene = "res://scenes/ui/RationsManagementOverlay.tscn";
 
     private TownBuilding _contractBoard;
@@ -33,6 +33,7 @@ public partial class Town : Node
 
     private void OnMainMenuPressed()
     {
+        SaveNode.Get()?.Save();
         GetTree().ChangeSceneToFile(MainMenuScene);
     }
 
@@ -43,7 +44,7 @@ public partial class Town : Node
 
     private static void OnEquipmentPressed()
     {
-        OpenOverlay(EquipmentOverlayScene);
+        OpenOverlay(EquipmentInventoryOverlayScene);
     }
 
     private static void OnRationsPressed()

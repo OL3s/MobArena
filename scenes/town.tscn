@@ -50,6 +50,8 @@ SceneToOpen = ExtResource("3_arena")
 OverlayToOpen = ExtResource("18_arena_overlay")
 ConfirmationTitle = "Start Contract?"
 ConfirmationMessage = "Travel to the arena for the starter contract? Current prototype goal: defeat slimes and return to town."
+AssignmentCapacityMode = 1
+AssignmentLocation = 1
 
 [node name="Market" parent="World" unique_id=580056267 instance=ExtResource("2_townbuilding")]
 position = Vector2(1008, 262)
@@ -57,6 +59,9 @@ BuildingName = "Market"
 BuildingTexture = ExtResource("7_market_building")
 IconTexture = ExtResource("8_market_icon")
 OverlayToOpen = ExtResource("19_market_overlay")
+TownDragDropPriority = 5
+SellDroppedPayloads = true
+MaxAssignedGladiators = 0
 
 [node name="Healer" parent="World" unique_id=668293402 instance=ExtResource("2_townbuilding")]
 position = Vector2(1008, 480)
@@ -64,6 +69,8 @@ BuildingName = "Healer"
 BuildingTexture = ExtResource("11_healer_building")
 IconTexture = ExtResource("12_healer_icon")
 OverlayToOpen = ExtResource("21_healer_overlay")
+MaxAssignedGladiators = 2
+AssignmentLocation = 2
 
 [node name="RosterYard" type="Node2D" parent="World"]
 position = Vector2(576, 324)
@@ -102,7 +109,7 @@ offset_left = 44.0
 offset_top = 92.0
 offset_right = 100.0
 offset_bottom = 136.0
-tooltip_text = "Open equipment overview."
+tooltip_text = "Open equipment inventory."
 icon = ExtResource("25_equipment_icon")
 expand_icon = true
 
@@ -112,5 +119,7 @@ BuildingName = "Training Hall"
 BuildingTexture = ExtResource("16_training_building")
 IconTexture = ExtResource("17_training_icon")
 OverlayToOpen = ExtResource("23_training_overlay")
+MaxAssignedGladiators = 2
+AssignmentLocation = 3
 
 [node name="TownHud" parent="." instance=ExtResource("24_town_hud")]

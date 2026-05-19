@@ -7,6 +7,8 @@ public partial class GladiatorData : Resource
     private const float MaxConditionValue = 10f;
     private const float DefaultConditionValue = MaxConditionValue * 0.8f;
     private const float ConditionPenaltyThreshold = 0.5f;
+    private const int AttributeValueGold = 2;
+    private const int VitalsValueDivisor = 4;
 
     private static readonly string[] DefaultNames =
     {
@@ -65,6 +67,21 @@ public partial class GladiatorData : Resource
     [Export]
     public int InitialCost { get; private set; } = 25;
 
+    public int GetMarketValue()
+    {
+        var attributeValue = Level == null
+            ? 0
+            : (Level.Strength + Level.Agility + Level.Vitality + Level.Endurance) * AttributeValueGold;
+        var vitalsValue = Mathf.RoundToInt((MaxHealth + MaxStamina) / (float)VitalsValueDivisor);
+        var baseValue = Mathf.Max(1, InitialCost + attributeValue + vitalsValue);
+        return Mathf.Max(1, Mathf.RoundToInt(baseValue * GetSaleConditionMultiplier()));
+    }
+
+    public int GetMarketSaleValue()
+    {
+        return Mathf.Max(1, GetMarketValue() / 2);
+    }
+
     public static GladiatorData CreateDefault()
     {
         var random = new RandomNumberGenerator();
@@ -85,6 +102,11 @@ public partial class GladiatorData : Resource
             GladiatorCareer = new GladiatorCareerData(),
             InitialCost = random.RandiRange(20, 45)
         };
+    }
+
+    public void ApplyPurchasedValue()
+    {
+        InitialCost = Mathf.Max(1, InitialCost / 2);
     }
 
     public void SetGladiatorName(string gladiatorName)
@@ -163,6 +185,16 @@ public partial class GladiatorData : Resource
         return conditionRatio >= ConditionPenaltyThreshold
             ? 1f
             : conditionRatio / ConditionPenaltyThreshold;
+    }
+
+    private float GetSaleConditionMultiplier()
+    {
+        var lowestConditionRatio = Mathf.Clamp(Mathf.Min(Exhaustion, Provisions) / MaxConditionValue, 0f, 1f);
+        var healthRatio = MaxHealth <= 0 ? 0f : Mathf.Clamp(Health / (float)MaxHealth, 0f, 1f);
+        var staminaRatio = MaxStamina <= 0 ? 0f : Mathf.Clamp(Stamina / (float)MaxStamina, 0f, 1f);
+        var readinessRatio = (healthRatio + staminaRatio) * 0.5f;
+
+        return Mathf.Clamp(0.25f + lowestConditionRatio * 0.55f + readinessRatio * 0.2f, 0.1f, 1f);
     }
 
     private void ClampCurrentVitalsToRecoverableCaps()

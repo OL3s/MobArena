@@ -7,3 +7,5 @@
 Title = "Training Hall"
 Body = "Spend gold and gladiator stamina to train stats here. The training system is planned, but not implemented yet."
 IconTexture = ExtResource("2_icon")
+ShowAssignedGladiators = true
+AssignmentLocation = 3
