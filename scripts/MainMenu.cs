@@ -9,7 +9,6 @@ public partial class MainMenu : Control
 	private const string TownScene = "res://scenes/town.tscn";
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
-	private const string ControlsOverlayScenePath = "res://scenes/ui/ControlsOverlay.tscn";
 
 	private CompanyLogo _companyLogo;
 	private Button _createCompanyButton;
@@ -30,7 +29,6 @@ public partial class MainMenu : Control
 		_enterTownButton.Pressed += OnEnterTownPressed;
 		_buildCompanyButton.Pressed += OnCreateCompanyPressed;
 
-		GetNode<Button>("TopRightActions/ControlsButton").Pressed += OnControlsPressed;
 		GetNode<Button>("MenuRow/Content/QuitButton").Pressed += OnQuitPressed;
 
 		RefreshCompanyUi();
@@ -42,22 +40,12 @@ public partial class MainMenu : Control
 		if (_saveNode is not { HasCompany: true })
 			return;
 
-		_saveNode.TownTimeState.ResetToPause();
 		GetTree().ChangeSceneToFile(TownScene);
 	}
 
 	private void OnCreateCompanyPressed()
 	{
 		OpenCompanyEditor();
-	}
-
-	private static void OnControlsPressed()
-	{
-		var controlsOverlayScene = ResourceLoader.Load<PackedScene>(ControlsOverlayScenePath);
-		if (controlsOverlayScene == null)
-			return;
-
-		GlobalOverlay.Get()?.AddOverlay(controlsOverlayScene.Instantiate<ControlsOverlay>());
 	}
 
 	private void OnCompanyLogoPressed()

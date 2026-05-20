@@ -6,18 +6,13 @@
 [ext_resource type="PackedScene" path="res://scenes/components/ui/SettingsButton.tscn" id="4_settings_button"]
 [ext_resource type="Texture2D" uid="uid://budosbjkhbjtt" path="res://assets/ui/icons/gold.svg" id="5_gold_icon"]
 [ext_resource type="Texture2D" uid="uid://ouifl3o34tw2" path="res://assets/ui/icons/back.svg" id="6_back_icon"]
-[ext_resource type="Texture2D" uid="uid://e8d8p35m62tr" path="res://assets/ui/icons/speed_down.svg" id="7_speed_down_icon"]
-[ext_resource type="Texture2D" uid="uid://d1awpgeuweqvk" path="res://assets/ui/icons/speed_up.svg" id="8_speed_up_icon"]
 [ext_resource type="Texture2D" uid="uid://71u2e2ca07pv" path="res://assets/ui/icons/sun.svg" id="9_sun_icon"]
 [ext_resource type="Texture2D" uid="uid://bxdsorjywjjot" path="res://assets/ui/icons/moon.svg" id="10_moon_icon"]
-[ext_resource type="Texture2D" uid="uid://i30yynsg5d60" path="res://assets/ui/icons/speed_slowed.svg" id="11_speed_slowed_icon"]
-[ext_resource type="Script" uid="uid://daig828dffkkv" path="res://scenes/components/ui/TimelineLine.cs" id="12_timeline_line"]
-[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/provisions.svg" id="13_ration_icon"]
-[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/exhaustion.svg" id="14_exhaustion_icon"]
-[ext_resource type="Texture2D" path="res://assets/ui/rations/poor_ration.svg" id="15_poor_ration_icon"]
-[ext_resource type="Texture2D" path="res://assets/ui/rations/common_ration.svg" id="16_common_ration_icon"]
-[ext_resource type="Texture2D" path="res://assets/ui/rations/fine_ration.svg" id="17_fine_ration_icon"]
-[ext_resource type="Texture2D" path="res://assets/ui/icons/fame.svg" id="18_fame_icon"]
+[ext_resource type="Texture2D" uid="uid://cf7aixee5gvkk" path="res://assets/ui/gladiator_icons/exhaustion.svg" id="14_exhaustion_icon"]
+[ext_resource type="Texture2D" uid="uid://b0gshbr2bohpy" path="res://assets/ui/icons/fame.svg" id="18_fame_icon"]
+[ext_resource type="Texture2D" uid="uid://bvgxuygtyooc0" path="res://assets/ui/gladiator_icons/health.svg" id="19_health_icon"]
+[ext_resource type="Texture2D" uid="uid://0c5jjlvt76rv" path="res://assets/ui/gladiator_icons/critical_risk.svg" id="20_critical_risk_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/idle.svg" id="21_idle_icon"]
 
 [node name="TownHud" type="CanvasLayer" unique_id=1424046690]
 script = ExtResource("1_town_hud")
@@ -71,23 +66,21 @@ custom_minimum_size = Vector2(112, 0)
 layout_mode = 2
 tooltip_text = "Spendable company gold and fame."
 
-[node name="WealthColumn" type="VBoxContainer" parent="TopPanel/Row/WealthPanel"]
+[node name="WealthColumn" type="VBoxContainer" parent="TopPanel/Row/WealthPanel" unique_id=403379349]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 2
 alignment = 1
 
-[node name="WealthTitle" type="Label" parent="TopPanel/Row/WealthPanel/WealthColumn"]
+[node name="WealthTitle" type="Label" parent="TopPanel/Row/WealthPanel/WealthColumn" unique_id=1421146852]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Wealth"
-horizontal_alignment = 0
 
 [node name="GoldRow" type="HBoxContainer" parent="TopPanel/Row/WealthPanel/WealthColumn" unique_id=1591558064]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
-alignment = 0
 
 [node name="GoldIcon" type="TextureRect" parent="TopPanel/Row/WealthPanel/WealthColumn/GoldRow" unique_id=672277612]
 custom_minimum_size = Vector2(28, 28)
@@ -99,172 +92,124 @@ stretch_mode = 5
 [node name="GoldLabel" type="Label" parent="TopPanel/Row/WealthPanel/WealthColumn/GoldRow" unique_id=1433043190]
 layout_mode = 2
 text = "100"
-horizontal_alignment = 0
 vertical_alignment = 1
 
-[node name="FameRow" type="HBoxContainer" parent="TopPanel/Row/WealthPanel/WealthColumn"]
+[node name="FameRow" type="HBoxContainer" parent="TopPanel/Row/WealthPanel/WealthColumn" unique_id=679022104]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
-alignment = 0
 
-[node name="FameIcon" type="TextureRect" parent="TopPanel/Row/WealthPanel/WealthColumn/FameRow"]
+[node name="FameIcon" type="TextureRect" parent="TopPanel/Row/WealthPanel/WealthColumn/FameRow" unique_id=255085053]
 custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 texture = ExtResource("18_fame_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="FameLabel" type="Label" parent="TopPanel/Row/WealthPanel/WealthColumn/FameRow"]
+[node name="FameLabel" type="Label" parent="TopPanel/Row/WealthPanel/WealthColumn/FameRow" unique_id=999784142]
 layout_mode = 2
 text = "0"
-horizontal_alignment = 0
 vertical_alignment = 1
 
-[node name="SupplyPanel" type="PanelContainer" parent="TopPanel/Row"]
-custom_minimum_size = Vector2(154, 0)
+[node name="ConditionPanel" type="PanelContainer" parent="TopPanel/Row" unique_id=504678889]
+custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
-tooltip_text = "Company ration supplies."
+tooltip_text = "Roster warnings: exhausted gladiators and low-health gladiators."
 
-[node name="SupplyColumn" type="VBoxContainer" parent="TopPanel/Row/SupplyPanel"]
+[node name="ConditionColumn" type="VBoxContainer" parent="TopPanel/Row/ConditionPanel" unique_id=1866568211]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 2
 alignment = 1
 
-[node name="SupplyTitle" type="Label" parent="TopPanel/Row/SupplyPanel/SupplyColumn"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Supply"
-horizontal_alignment = 0
-
-[node name="RationGrid" type="GridContainer" parent="TopPanel/Row/SupplyPanel/SupplyColumn"]
-layout_mode = 2
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 2
-columns = 2
-
-[node name="PoorRow" type="HBoxContainer" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Icon" type="TextureRect" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/PoorRow"]
-custom_minimum_size = Vector2(22, 22)
-layout_mode = 2
-texture = ExtResource("15_poor_ration_icon")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Label" type="Label" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/PoorRow"]
-layout_mode = 2
-text = "0"
-vertical_alignment = 1
-
-[node name="CommonRow" type="HBoxContainer" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Icon" type="TextureRect" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/CommonRow"]
-custom_minimum_size = Vector2(22, 22)
-layout_mode = 2
-texture = ExtResource("16_common_ration_icon")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Label" type="Label" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/CommonRow"]
-layout_mode = 2
-text = "0"
-vertical_alignment = 1
-
-[node name="FineRow" type="HBoxContainer" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Icon" type="TextureRect" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/FineRow"]
-custom_minimum_size = Vector2(22, 22)
-layout_mode = 2
-texture = ExtResource("17_fine_ration_icon")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Label" type="Label" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/FineRow"]
-layout_mode = 2
-text = "0"
-vertical_alignment = 1
-
-[node name="TotalRow" type="HBoxContainer" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Icon" type="TextureRect" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/TotalRow"]
-custom_minimum_size = Vector2(22, 22)
-layout_mode = 2
-texture = ExtResource("13_ration_icon")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Label" type="Label" parent="TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/TotalRow"]
-layout_mode = 2
-text = "0"
-vertical_alignment = 1
-
-[node name="ConditionPanel" type="PanelContainer" parent="TopPanel/Row"]
-custom_minimum_size = Vector2(112, 0)
-layout_mode = 2
-tooltip_text = "Roster warnings: starving gladiators and exhausted gladiators under 50%."
-
-[node name="ConditionColumn" type="VBoxContainer" parent="TopPanel/Row/ConditionPanel"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 2
-alignment = 1
-
-[node name="RiskTitle" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn"]
+[node name="RiskTitle" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn" unique_id=856177333]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Risk"
-horizontal_alignment = 0
 
-[node name="StarvingRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn"]
+[node name="RiskGrid" type="GridContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn" unique_id=1145757958]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 2
+columns = 2
+
+[node name="CriticalRiskRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid" unique_id=2031227940]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 6
-alignment = 0
+theme_override_constants/separation = 4
 
-[node name="StarvingIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/StarvingRow"]
-custom_minimum_size = Vector2(28, 28)
+[node name="CriticalRiskIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/CriticalRiskRow" unique_id=1455365050]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
-texture = ExtResource("13_ration_icon")
+texture = ExtResource("20_critical_risk_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="StarvingLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/StarvingRow"]
+[node name="CriticalRiskLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/CriticalRiskRow" unique_id=1726470802]
 layout_mode = 2
 text = "0"
-horizontal_alignment = 0
 vertical_alignment = 1
 
-[node name="ExhaustionRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn"]
+[node name="ExhaustionRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid" unique_id=135757897]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 6
-alignment = 0
+theme_override_constants/separation = 4
 
-[node name="ExhaustionIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/ExhaustionRow"]
-custom_minimum_size = Vector2(28, 28)
+[node name="ExhaustionIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/ExhaustionRow" unique_id=103744063]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture = ExtResource("14_exhaustion_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ExhaustedLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/ExhaustionRow"]
+[node name="ExhaustedLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/ExhaustionRow" unique_id=1902031360]
 layout_mode = 2
 text = "0"
-horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="LowHealthRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid" unique_id=2062544788]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="LowHealthIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/LowHealthRow" unique_id=1385269905]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("19_health_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LowHealthLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/LowHealthRow" unique_id=638070991]
+layout_mode = 2
+text = "0"
+vertical_alignment = 1
+
+[node name="IdleRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="IdleIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/IdleRow"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("21_idle_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="IdleLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/IdleRow"]
+layout_mode = 2
+text = "0"
 vertical_alignment = 1
 
 [node name="SettingsButton" parent="TopPanel/Row" unique_id=665519815 instance=ExtResource("4_settings_button")]
 layout_mode = 2
+
+[node name="DevButton" type="MenuButton" parent="TopPanel/Row"]
+visible = false
+custom_minimum_size = Vector2(56, 34)
+layout_mode = 2
+tooltip_text = "Debug-only developer actions."
+text = "Dev"
 
 [node name="BackButton" type="Button" parent="TopPanel/Row" unique_id=649788314]
 custom_minimum_size = Vector2(112, 56)
@@ -278,7 +223,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = -72.0
+offset_top = -116.0
 offset_right = -16.0
 offset_bottom = -16.0
 grow_horizontal = 2
@@ -288,40 +233,32 @@ grow_vertical = 0
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="SpeedDownButton" type="Button" parent="BottomPanel/TimeRow" unique_id=625896876]
-custom_minimum_size = Vector2(52, 44)
-layout_mode = 2
-icon = ExtResource("7_speed_down_icon")
-expand_icon = true
-
-[node name="PauseButton" type="Button" parent="BottomPanel/TimeRow" unique_id=462193485]
-custom_minimum_size = Vector2(152, 44)
+[node name="PhaseActionButton" type="Button" parent="BottomPanel/TimeRow" unique_id=462193485]
+custom_minimum_size = Vector2(152, 34)
 layout_mode = 2
 size_flags_horizontal = 8
-text = "Slowed"
-icon = ExtResource("11_speed_slowed_icon")
-
-[node name="SpeedUpButton" type="Button" parent="BottomPanel/TimeRow" unique_id=740510679]
-custom_minimum_size = Vector2(52, 44)
-layout_mode = 2
-icon = ExtResource("8_speed_up_icon")
-expand_icon = true
+text = "Select Contract"
 
 [node name="CalendarPanel" type="PanelContainer" parent="BottomPanel/TimeRow" unique_id=157375266]
-custom_minimum_size = Vector2(360, 0)
+custom_minimum_size = Vector2(190, 0)
 layout_mode = 2
 
-[node name="CalendarRow" type="HBoxContainer" parent="BottomPanel/TimeRow/CalendarPanel" unique_id=237227454]
+[node name="CalendarColumn" type="VBoxContainer" parent="BottomPanel/TimeRow/CalendarPanel" unique_id=1301790417]
+layout_mode = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="CalendarRow" type="HBoxContainer" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn" unique_id=237227454]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="DayLabel" type="Label" parent="BottomPanel/TimeRow/CalendarPanel/CalendarRow" unique_id=1988790989]
+[node name="DayLabel" type="Label" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow" unique_id=1988790989]
 layout_mode = 2
 text = "Day 1"
 vertical_alignment = 1
 
-[node name="SunIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarRow" unique_id=1520285935]
+[node name="SunIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow" unique_id=1520285935]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 4
@@ -329,19 +266,8 @@ texture = ExtResource("9_sun_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="DayProgress" type="Control" parent="BottomPanel/TimeRow/CalendarPanel/CalendarRow" unique_id=783105077]
-custom_minimum_size = Vector2(120, 24)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-script = ExtResource("12_timeline_line")
-MaxValue = 1440.0
-Value = 480.0
-TrackColor = Color(0.86, 0.8, 0.65, 0.14)
-FillColor = Color(0.95, 0.86, 0.52, 0.42)
-LineHeight = 6.0
-
-[node name="MoonIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarRow" unique_id=2009343144]
+[node name="MoonIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow" unique_id=2009343144]
+visible = false
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 4
@@ -349,50 +275,21 @@ texture = ExtResource("10_moon_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="DayPhaseLabel" type="Label" parent="BottomPanel/TimeRow/CalendarPanel/CalendarRow" unique_id=1337437729]
-custom_minimum_size = Vector2(82, 0)
+[node name="ChampionRow" type="HBoxContainer" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn" unique_id=2016355134]
 layout_mode = 2
-text = "Open"
-vertical_alignment = 1
-
-[node name="TimelinePanel" type="PanelContainer" parent="BottomPanel/TimeRow" unique_id=564342358]
-custom_minimum_size = Vector2(430, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TimelineRow" type="HBoxContainer" parent="BottomPanel/TimeRow/TimelinePanel" unique_id=1043189138]
-layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 6
 alignment = 1
 
-[node name="ChampionIcon" type="TextureRect" parent="BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=2081489597]
-custom_minimum_size = Vector2(30, 30)
+[node name="ChampionIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn/ChampionRow" unique_id=550924657]
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 size_flags_vertical = 4
 texture = ExtResource("3_champion_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ChampionDueLabel" type="Label" parent="BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=1322345702]
+[node name="ChampionDueLabel" type="Label" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn/ChampionRow" unique_id=1058837028]
 layout_mode = 2
-text = "Champion due"
+theme_override_font_sizes/font_size = 12
+text = "Champion in 6 days"
 vertical_alignment = 1
-
-[node name="ChampionProgress" type="Control" parent="BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=1386054755]
-custom_minimum_size = Vector2(160, 24)
-layout_mode = 2
-size_flags_vertical = 4
-script = ExtResource("12_timeline_line")
-MaxValue = 7.0
-Value = 1.0
-TrackColor = Color(0.86, 0.8, 0.65, 0.14)
-FillColor = Color(0.86, 0.8, 0.65, 0.42)
-LineHeight = 6.0
-
-[node name="ChampionProgressValue" type="Label" parent="BottomPanel/TimeRow/TimelinePanel/TimelineRow" unique_id=733865192]
-layout_mode = 2
-text = "Day 7"
-vertical_alignment = 1
-
-[node name="TimeTickTimer" type="Timer" parent="." unique_id=1809963637]
-autostart = true

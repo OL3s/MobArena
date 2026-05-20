@@ -66,11 +66,6 @@ custom_minimum_size = Vector2(190, 0)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ControlsButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-text = "Controls"
-
 [node name="VideoButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
@@ -102,38 +97,10 @@ theme_override_constants/separation = 18
 [node name="CategoryTitle" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "Controls"
+text = "Gameplay"
 horizontal_alignment = 1
 
-[node name="ControlsSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="AutoDetectCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings"]
-layout_mode = 2
-text = "Auto-detect primary input when game starts"
-
-[node name="DefaultInputRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="DefaultInputLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/DefaultInputRow"]
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 2
-text = "Primary input"
-vertical_alignment = 1
-
-[node name="DefaultInputOption" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/DefaultInputRow"]
-custom_minimum_size = Vector2(210, 44)
-layout_mode = 2
-
-[node name="ControlsHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings"]
-layout_mode = 2
-text = "This is a startup preference only. It does not change the active runtime controllers while an in-game menu is open."
-autowrap_mode = 3
-
 [node name="GameplaySettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
-visible = false
 layout_mode = 2
 theme_override_constants/separation = 14
 
@@ -145,6 +112,30 @@ text = "Enable debug mode"
 layout_mode = 2
 text = "Temporary project-wide debug flag for development-only behavior."
 autowrap_mode = 3
+
+[node name="LowHealthRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LowHealthLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow"]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+text = "Low health warning"
+vertical_alignment = 1
+
+[node name="LowHealthSpinBox" type="SpinBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow"]
+custom_minimum_size = Vector2(110, 44)
+layout_mode = 2
+min_value = 10.0
+max_value = 100.0
+step = 5.0
+value = 60.0
+suffix = "%"
+
+[node name="LowHealthValueLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow"]
+layout_mode = 2
+text = "60%"
+vertical_alignment = 1
 
 [node name="SaveDataSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
 visible = false

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bdys01sbt03bq"
-path="res://.godot/imported/common_ration.svg-4f3ac7dd97846e0a9429ca0de704d39d.ctex"
+uid="uid://0c5jjlvt76rv"
+path="res://.godot/imported/critical_risk.svg-dccea798af9920383f0f7a3ad51e4b59.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/rations/common_ration.svg"
-dest_files=["res://.godot/imported/common_ration.svg-4f3ac7dd97846e0a9429ca0de704d39d.ctex"]
+source_file="res://assets/ui/gladiator_icons/critical_risk.svg"
+dest_files=["res://.godot/imported/critical_risk.svg-dccea798af9920383f0f7a3ad51e4b59.ctex"]
 
 [params]
 

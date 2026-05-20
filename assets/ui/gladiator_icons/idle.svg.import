@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cv31y6vqtmas2"
-path="res://.godot/imported/provisions.svg-97c0217cb88c90c8b6c25c4cba3eeb9c.ctex"
+uid="uid://cim5klm7pwgff"
+path="res://.godot/imported/idle.svg-1b89b4bedf36f99aae9b654a4fd329e3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/gladiator_icons/provisions.svg"
-dest_files=["res://.godot/imported/provisions.svg-97c0217cb88c90c8b6c25c4cba3eeb9c.ctex"]
+source_file="res://assets/ui/gladiator_icons/idle.svg"
+dest_files=["res://.godot/imported/idle.svg-1b89b4bedf36f99aae9b654a4fd329e3.ctex"]
 
 [params]
 

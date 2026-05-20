@@ -2,11 +2,21 @@ using Godot;
 
 namespace MobArena.Scripts.Resources;
 
+public enum GladiatorRiskStatus
+{
+    None,
+    Idle,
+    Exhausted,
+    LowHealth,
+    Critical
+}
+
 public partial class GladiatorData : Resource
 {
-    private const float MaxConditionValue = 10f;
+    public const float MaxConditionValue = 10f;
     private const float DefaultConditionValue = MaxConditionValue * 0.8f;
     private const float DefaultConditionMin = 6f;
+    private const float DefaultHealthMinRatio = 0.2f;
     private const float ConditionPenaltyThreshold = 0.5f;
     private const int AttributeValueGold = 2;
     private const int VitalsValueDivisor = 4;
@@ -54,9 +64,6 @@ public partial class GladiatorData : Resource
     public float Exhaustion { get; private set; } = DefaultConditionValue;
 
     [Export]
-    public float Provisions { get; private set; } = DefaultConditionValue;
-
-    [Export]
     public GladiatorLevelData Level { get; private set; } = new();
 
     [Export]
@@ -80,7 +87,21 @@ public partial class GladiatorData : Resource
 
     public int GetMarketSaleValue()
     {
-        return Mathf.Max(1, GetMarketValue() / 2);
+        return Mathf.Max(1, Mathf.RoundToInt(GetMarketValue() * 0.5f));
+    }
+
+    public GladiatorRiskStatus GetRiskStatus(float exhaustionWarningThreshold, float lowHealthWarningRatio)
+    {
+        var isExhausted = Exhaustion < exhaustionWarningThreshold;
+        var isLowHealth = MaxHealth > 0 && Health / (float)MaxHealth < Mathf.Clamp(lowHealthWarningRatio, 0f, 1f);
+
+        if (isExhausted && isLowHealth)
+            return GladiatorRiskStatus.Critical;
+
+        if (isExhausted)
+            return GladiatorRiskStatus.Exhausted;
+
+        return isLowHealth ? GladiatorRiskStatus.LowHealth : GladiatorRiskStatus.None;
     }
 
     public static GladiatorData CreateDefault()
@@ -89,25 +110,21 @@ public partial class GladiatorData : Resource
         random.Randomize();
 
         var level = GladiatorLevelData.CreateDefault(random);
+        var maxHealth = level.GetMaxHealth();
+        var health = Mathf.Max(1, Mathf.RoundToInt(maxHealth * random.RandfRange(DefaultHealthMinRatio, 1f)));
 
         return new GladiatorData
         {
             GladiatorName = DefaultNames[random.RandiRange(0, DefaultNames.Length - 1)],
             PortraitIndex = random.RandiRange(0, PortraitPaths.Length - 1),
             Level = level,
-            Health = level.GetMaxHealth(),
+            Health = health,
             Stamina = level.GetMaxStamina(),
             Exhaustion = random.RandfRange(DefaultConditionMin, MaxConditionValue),
-            Provisions = random.RandfRange(DefaultConditionMin, MaxConditionValue),
             Equipment = GladiatorEquipmentData.CreateDefault(random),
             GladiatorCareer = new GladiatorCareerData(),
             InitialCost = random.RandiRange(20, 45)
         };
-    }
-
-    public void ApplyPurchasedValue()
-    {
-        InitialCost = Mathf.Max(1, InitialCost / 2);
     }
 
     public void SetGladiatorName(string gladiatorName)
@@ -135,12 +152,6 @@ public partial class GladiatorData : Resource
         SetExhaustion(Exhaustion + amount);
     }
 
-    public void SetProvisions(float provisions)
-    {
-        Provisions = Mathf.Clamp(provisions, 0f, MaxConditionValue);
-        ClampCurrentVitalsToRecoverableCaps();
-    }
-
     public void SetExhaustion(float exhaustion)
     {
         Exhaustion = Mathf.Clamp(exhaustion, 0f, MaxConditionValue);
@@ -155,12 +166,26 @@ public partial class GladiatorData : Resource
         Health = Mathf.Min(Health + amount, RecoverableMaxHealth);
     }
 
+    public void SetHealth(int health)
+    {
+        Health = Mathf.Clamp(health, 0, MaxHealth);
+        ClampCurrentVitalsToRecoverableCaps();
+    }
+
     public void RestoreStamina(int amount)
     {
         if (amount <= 0)
             return;
 
         Stamina = Mathf.Min(Stamina + amount, RecoverableMaxStamina);
+    }
+
+    public void SpendStamina(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        Stamina = Mathf.Max(0, Stamina - amount);
     }
 
     public void ApplyRecoverableCaps()
@@ -172,7 +197,6 @@ public partial class GladiatorData : Resource
     {
         Health = 0;
         Stamina = 0;
-        Provisions = 0f;
     }
 
     private int ApplyConditionLimit(int baseMax)
@@ -182,7 +206,7 @@ public partial class GladiatorData : Resource
 
     private float GetConditionMultiplier()
     {
-        var conditionRatio = Mathf.Clamp(Mathf.Min(Exhaustion, Provisions) / MaxConditionValue, 0f, 1f);
+        var conditionRatio = Mathf.Clamp(Exhaustion / MaxConditionValue, 0f, 1f);
         return conditionRatio >= ConditionPenaltyThreshold
             ? 1f
             : conditionRatio / ConditionPenaltyThreshold;
@@ -190,7 +214,7 @@ public partial class GladiatorData : Resource
 
     private float GetSaleConditionMultiplier()
     {
-        var lowestConditionRatio = Mathf.Clamp(Mathf.Min(Exhaustion, Provisions) / MaxConditionValue, 0f, 1f);
+        var lowestConditionRatio = Mathf.Clamp(Exhaustion / MaxConditionValue, 0f, 1f);
         var healthRatio = MaxHealth <= 0 ? 0f : Mathf.Clamp(Health / (float)MaxHealth, 0f, 1f);
         var staminaRatio = MaxStamina <= 0 ? 0f : Mathf.Clamp(Stamina / (float)MaxStamina, 0f, 1f);
         var readinessRatio = (healthRatio + staminaRatio) * 0.5f;

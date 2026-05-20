@@ -12,7 +12,7 @@ public partial class SaveNode : Node
 	private const string CompanyLogoPath = SaveDirectory + "/company_logo.tres";
 	private const string CompanyCareerPath = SaveDirectory + "/company_career.tres";
 	private const string CompanyRunPath = SaveDirectory + "/company_run.tres";
-	private const string TownTimePath = SaveDirectory + "/town_time.tres";
+	private const string TownPhasePath = SaveDirectory + "/town_phase.tres";
 	private const string SettingsPath = SaveDirectory + "/settings.tres";
 
     [Export]
@@ -28,7 +28,7 @@ public partial class SaveNode : Node
     public CompanyRunData CompanyRunData { get; private set; } = new();
 
 	[Export]
-	public TownTimeState TownTimeState { get; private set; } = new();
+	public TownPhaseState TownPhaseState { get; private set; } = new();
 
 	[Export]
 	public SettingsConfig SettingsConfig { get; private set; } = new();
@@ -39,9 +39,21 @@ public partial class SaveNode : Node
 	{
 		CompanyCareerData = new CompanyCareerData();
 		CompanyRunData = new CompanyRunData();
-		CompanyRunData.AddDefaultGladiators(CompanyCareerData, 2);
-		CompanyRunData.AddStartingRations();
-		TownTimeState = new TownTimeState();
+		ApplyDebugStartingCondition();
+		TownPhaseState = new TownPhaseState();
+	}
+
+	private void ApplyDebugStartingCondition()
+	{
+		if (!DebugEnabled || CompanyRunData?.Gladiators == null || CompanyRunData.Gladiators.Count <= 0)
+			return;
+
+		var gladiator = CompanyRunData.Gladiators[0];
+		if (gladiator == null)
+			return;
+
+		gladiator.SetExhaustion(2f);
+		gladiator.SetHealth(Mathf.Max(1, Mathf.RoundToInt(gladiator.MaxHealth * 0.35f)));
 	}
 
     public static SaveNode Get()
@@ -102,10 +114,10 @@ public partial class SaveNode : Node
 			return error;
 		}
 
-		error = SaveResource(TownTimeState, TownTimePath);
+		error = SaveResource(TownPhaseState, TownPhasePath);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Save failed for town time. Error: {error}.");
+			GD.Print($"SaveNode: Save failed for town phase. Error: {error}.");
 			return error;
 		}
 
@@ -163,10 +175,10 @@ public partial class SaveNode : Node
 			return error;
 		}
 
-		error = LoadResource(GetResourcePath(manifest, "town_time", TownTimePath), TownTimeState, out var townTimeState);
+		error = LoadResource(GetResourcePath(manifest, "town_phase", TownPhasePath), TownPhaseState, out var townPhaseState);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Load failed for town time. Error: {error}.");
+			GD.Print($"SaveNode: Load failed for town phase. Error: {error}.");
 			return error;
 		}
 
@@ -181,7 +193,7 @@ public partial class SaveNode : Node
 		CompanyCareerData = companyCareerData;
 		CompanyRunData = companyRunData;
 		CompanyRunData.ApplyGladiatorRecoverableCaps();
-		TownTimeState = townTimeState;
+		TownPhaseState = townPhaseState;
 		SettingsConfig = settingsConfig;
 		return Error.Ok;
     }
@@ -205,7 +217,7 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 			return error;
 
-		error = DeleteFileIfExists(TownTimePath);
+		error = DeleteFileIfExists(TownPhasePath);
 		if (error != Error.Ok)
 			return error;
 
@@ -233,7 +245,7 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 			return error;
 
-		error = DeleteFileIfExists(TownTimePath);
+		error = DeleteFileIfExists(TownPhasePath);
 		if (error != Error.Ok)
 			return error;
 
@@ -241,7 +253,7 @@ public partial class SaveNode : Node
 		CompanyLogoData = CompanyLogoData.CreateDefault();
 		CompanyCareerData = new CompanyCareerData();
 		CompanyRunData = new CompanyRunData();
-		TownTimeState = new TownTimeState();
+		TownPhaseState = new TownPhaseState();
 		error = SaveCurrentManifest();
 		GD.Print(error == Error.Ok ? "SaveNode: Company data deleted." : $"SaveNode: Company data delete failed while saving manifest. Error: {error}.");
 		return error;
@@ -254,12 +266,12 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 			return error;
 
-		error = DeleteFileIfExists(TownTimePath);
+		error = DeleteFileIfExists(TownPhasePath);
 		if (error != Error.Ok)
 			return error;
 
 		CompanyRunData = new CompanyRunData();
-		TownTimeState = new TownTimeState();
+		TownPhaseState = new TownPhaseState();
 		error = SaveCurrentManifest();
 		GD.Print(error == Error.Ok ? "SaveNode: Run data deleted." : $"SaveNode: Run data delete failed while saving manifest. Error: {error}.");
 		return error;
@@ -284,7 +296,7 @@ public partial class SaveNode : Node
 		CompanyLogoData = CompanyLogoData.CreateDefault();
 		CompanyCareerData = new CompanyCareerData();
 		CompanyRunData = new CompanyRunData();
-		TownTimeState = new TownTimeState();
+		TownPhaseState = new TownPhaseState();
 		SettingsConfig = new SettingsConfig();
 	}
 
@@ -332,7 +344,7 @@ public partial class SaveNode : Node
 		manifest.SetValue("resources", "company_logo", CompanyLogoPath);
 		manifest.SetValue("resources", "company_career", CompanyCareerPath);
 		manifest.SetValue("resources", "company_run", CompanyRunPath);
-		manifest.SetValue("resources", "town_time", TownTimePath);
+		manifest.SetValue("resources", "town_phase", TownPhasePath);
 		manifest.SetValue("resources", "settings", SettingsPath);
 		return manifest;
 	}
@@ -354,6 +366,13 @@ public partial class SaveNode : Node
 			return Error.Ok;
 		}
 
+		if (ReferencesMissingResourcePaths(path))
+		{
+			GD.PushWarning($"SaveNode: Save resource '{path}' references missing project resources. Using fresh fallback data for the current refactor.");
+			result = fallback;
+			return Error.Ok;
+		}
+
 		var resource = ResourceLoader.Load<T>(path);
 		if (resource == null)
 		{
@@ -364,6 +383,33 @@ public partial class SaveNode : Node
 
 		result = resource;
 		return Error.Ok;
+	}
+
+	private static bool ReferencesMissingResourcePaths(string path)
+	{
+		if (!FileAccess.FileExists(path))
+			return false;
+
+		var text = FileAccess.GetFileAsString(path);
+		var searchStart = 0;
+		const string marker = "path=\"res://";
+		while (true)
+		{
+			var markerIndex = text.IndexOf(marker, searchStart, StringComparison.Ordinal);
+			if (markerIndex < 0)
+				return false;
+
+			var pathStart = markerIndex + "path=\"".Length;
+			var pathEnd = text.IndexOf('"', pathStart);
+			if (pathEnd < 0)
+				return false;
+
+			var resourcePath = text[pathStart..pathEnd];
+			if (!ResourceLoader.Exists(resourcePath) && !FileAccess.FileExists(resourcePath))
+				return true;
+
+			searchStart = pathEnd + 1;
+		}
 	}
 
 	private static string GetResourcePath(ConfigFile manifest, string key, string fallback)

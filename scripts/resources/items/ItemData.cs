@@ -30,9 +30,4 @@ public abstract partial class ItemData : Resource
         var template = ResourceLoader.Load<T>(resourcePath);
         return template?.CreateRuntimeCopy<T>();
     }
-
-    public void ApplyPurchasedValue()
-    {
-        Cost = Mathf.Max(1, Cost / 2);
-    }
 }

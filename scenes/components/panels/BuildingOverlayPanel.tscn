@@ -81,6 +81,23 @@ fit_content = true
 scroll_active = false
 autowrap_mode = 3
 
+[node name="WorkRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+visible = false
+custom_minimum_size = Vector2(0, 210)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="GladiatorDetails" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/WorkRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="ModeButtons" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/WorkRow"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+theme_override_constants/separation = 8
+
 [node name="Actions" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
 theme_override_constants/separation = 12

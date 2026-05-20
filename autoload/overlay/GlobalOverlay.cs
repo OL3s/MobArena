@@ -22,6 +22,7 @@ public partial class GlobalOverlay : CanvasLayer
         public string RichText { get; init; }
         public Texture2D Image { get; init; }
         public Action GoAction { get; init; }
+        public Action CancelAction { get; init; }
         public Action ClosedAction { get; init; }
         public bool PauseGameUntilClosed { get; init; }
         public string GoText { get; init; }
@@ -37,6 +38,7 @@ public partial class GlobalOverlay : CanvasLayer
     private InfoPopupPanel _activeInfoPopup;
     private GoCancelPopupPanel _activeGoCancelPopup;
     private Action _activeGoAction;
+    private Action _activeCancelAction;
     private Action _activePopupClosedAction;
     private bool _activePopupPausesGame;
     private bool _popupGamePaused;
@@ -127,7 +129,7 @@ public partial class GlobalOverlay : CanvasLayer
         });
     }
 
-	public void ShowGoCancelPopup(string title, string richText, Action goAction, string goText = "Go", string cancelText = "Cancel", bool pauseGameUntilClosed = false)
+	public void ShowGoCancelPopup(string title, string richText, Action goAction, string goText = "Go", string cancelText = "Cancel", bool pauseGameUntilClosed = false, Action cancelAction = null)
 	{
         EnqueueOrShowPopup(new PopupRequest
         {
@@ -135,6 +137,7 @@ public partial class GlobalOverlay : CanvasLayer
             Title = title,
             RichText = richText,
             GoAction = goAction,
+            CancelAction = cancelAction,
             PauseGameUntilClosed = pauseGameUntilClosed,
             GoText = goText,
             CancelText = cancelText
@@ -204,7 +207,9 @@ public partial class GlobalOverlay : CanvasLayer
 
     private void OnGoCancelPopupCancelled()
     {
+        var cancelAction = _activeCancelAction;
         CloseGoCancelPopup(true);
+        cancelAction?.Invoke();
     }
 
     private void ClosePopups()
@@ -249,6 +254,7 @@ public partial class GlobalOverlay : CanvasLayer
         }
 
         _activeGoAction = null;
+        _activeCancelAction = null;
 
         if (showNext)
             ShowNextQueuedPopup();
@@ -315,6 +321,7 @@ public partial class GlobalOverlay : CanvasLayer
 			return false;
 
         _activeGoAction = request.GoAction;
+        _activeCancelAction = request.CancelAction;
 		_activePopupPausesGame = request.PauseGameUntilClosed;
 		_activeGoCancelPopup = goCancelPopupPanelScene.Instantiate<GoCancelPopupPanel>();
         AddChild(_activeGoCancelPopup);
