@@ -38,6 +38,8 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
     private VitalProgressBar _compactHealthBar;
     private HBoxContainer _compactExhaustionRow;
     private VitalProgressBar _compactExhaustionBar;
+    private PanelContainer _salaryPreview;
+    private Label _salaryPreviewLabel;
 
     [Signal]
     public delegate void PressedEventHandler(RosterYardGladiator gladiator);
@@ -95,6 +97,8 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
         _compactHealthBar = GetNode<VitalProgressBar>("CompactStatus/CompactHealthRow/Bar");
         _compactExhaustionRow = GetNode<HBoxContainer>("CompactStatus/CompactExhaustionRow");
         _compactExhaustionBar = GetNode<VitalProgressBar>("CompactStatus/CompactExhaustionRow/Bar");
+        _salaryPreview = GetNode<PanelContainer>("SalaryPreview");
+        _salaryPreviewLabel = GetNode<Label>("SalaryPreview/Row/SalaryLabel");
         GetNodeOrNull<Control>("Details/EquipmentRow")?.Hide();
         GetNodeOrNull<Control>("Details/HealthRow")?.Hide();
         GetNodeOrNull<Control>("Details/ExhaustionRow")?.Hide();
@@ -201,6 +205,16 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
         _showCompactEquipment = showEquipment;
         _showCompactHealthBar = showHealthBar;
         RefreshCompactStatus();
+    }
+
+    public void SetSalaryPreviewVisible(bool visible, bool salaryDue)
+    {
+        if (_salaryPreview == null || _salaryPreviewLabel == null)
+            return;
+
+        var salary = salaryDue ? CompanyRunData.GetGladiatorSalaryGoldCost(_gladiatorData) : 0;
+        _salaryPreviewLabel.Text = salary.ToString();
+        _salaryPreview.Visible = visible && salary > 0;
     }
 
     public void ShowTownHoverInfo(TownHud hud)

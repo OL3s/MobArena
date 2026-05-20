@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://b0gshbr2bohpy" path="res://assets/ui/icons/fame.svg" id="18_fame_icon"]
 [ext_resource type="Texture2D" uid="uid://bvgxuygtyooc0" path="res://assets/ui/gladiator_icons/health.svg" id="19_health_icon"]
 [ext_resource type="Texture2D" uid="uid://0c5jjlvt76rv" path="res://assets/ui/gladiator_icons/critical_risk.svg" id="20_critical_risk_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/idle.svg" id="21_idle_icon"]
 
 [node name="TownHud" type="CanvasLayer" unique_id=1424046690]
 script = ExtResource("1_town_hud")
@@ -183,8 +184,32 @@ layout_mode = 2
 text = "0"
 vertical_alignment = 1
 
+[node name="IdleRow" type="HBoxContainer" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="IdleIcon" type="TextureRect" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/IdleRow"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("21_idle_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="IdleLabel" type="Label" parent="TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/IdleRow"]
+layout_mode = 2
+text = "0"
+vertical_alignment = 1
+
 [node name="SettingsButton" parent="TopPanel/Row" unique_id=665519815 instance=ExtResource("4_settings_button")]
 layout_mode = 2
+
+[node name="DevButton" type="MenuButton" parent="TopPanel/Row"]
+visible = false
+custom_minimum_size = Vector2(56, 34)
+layout_mode = 2
+tooltip_text = "Debug-only developer actions."
+text = "Dev"
 
 [node name="BackButton" type="Button" parent="TopPanel/Row" unique_id=649788314]
 custom_minimum_size = Vector2(112, 56)

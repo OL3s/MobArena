@@ -11,14 +11,18 @@ The current town-management foundation is in place.
 - Modal UI should go through `GlobalOverlay`; legacy `SceneOverlay` and `ConfirmationOverlay` have been removed.
 - Company state is split between `CompanyRunData` for current mutable run state and `CompanyCareerData` for long-term totals. `SaveNode` should remain the save/load/runtime boundary.
 - Town drag/drop is a core management system. Current payloads are gladiators and equipment items. Town buildings and roaming roster-yard gladiators can receive drops through `ITownDragDropTarget`.
-- `CompanyRunData.TownAssignments` owns assignment lists for courtyard, arena, healer, and training hall. Arena capacity follows `LocalInputConfig.ControllerSetups.Count`.
-- Arena, Healer, and Training Hall overlays show assigned gladiator rows. Arena currently has control assignment setup stored in `CompanyRunData.ArenaControlAssignments`, but this should move toward per-contract launch configuration.
+- `CompanyRunData.TownAssignments` owns assignment lists for courtyard, arena, Thermae, and training hall. Arena capacity follows `LocalInputConfig.ControllerSetups.Count`.
+- Arena, Thermae, and Training Hall overlays show assigned gladiator rows. Thermae and Training Hall also expose focus selectors. Arena currently has control assignment setup stored in `CompanyRunData.ArenaControlAssignments`, but this should move toward per-contract launch configuration.
 - Market/blacksmith foundations exist: item resources and item stock exist, blacksmith purchasing adds items to `CompanyRunData.Inventory`, and gladiator recruitment is functional through `MarketData.GladiatorStock`.
 - The arena-first branch removes continuous town time, legacy supply upkeep, and the champion deadline timer. The town loop now uses `TownPhaseState` with only Day and Night.
 - Returning from arena completes Day -> Night through `PhaseTransitionController.CompleteArenaDay`. The town HUD `Next Day` button is enabled only at Night and calls `PhaseTransitionController.AdvanceToNextDay`.
 - The town HUD Day action is `Select Contract` and opens the same Arena contracts flow as clicking the Arena building. The bottom HUD scene has been cleaned so the editor layout matches runtime behavior, without hidden legacy speed/timeline controls.
 - Champion cadence is back as a lightweight seven-day cycle. The HUD shows `Champion in X days` or `Champion Day!`; contract filtering for Champion Day is still a next implementation step.
-- Healer and Training Hall phase work runs once on Day -> Night and once on Night -> Day through `CompanyRunData.ExecutePhaseBuildingWork`.
+- Time-passes phase work runs once on Day -> Night and once on Night -> Day through `CompanyRunData.ExecutePhaseBuildingWork`: courtyard/arena gladiators recover 2 exhaustion and 10% max health, Thermae-assigned gladiators pay gold for selected health or exhaustion treatment, and Training Hall work spends gold, stamina, and exhaustion to add attribute XP for the selected focus. Night -> Day also pays gladiator salary through `CompanyRunData.PayNightSalary`, currently the floor of each gladiator's initial cost divided by 10.
+- The RosterYard gold button previews current phase total near the button, building phase costs in both phases, and salary on visible roster-yard gladiator avatars. Salary displays 0 during Day and the upcoming Night -> Day payment during Night. Building hover badges show the building's own phase cost plus salary for gladiators assigned inside that building. Pressing it opens `GoldCostOverlay`, which discovers `IPhaseGoldCostSource` nodes and lays out visible current-phase costs in side-by-side boxes for gladiators, buildings, and payment result. Building cost previews reuse the centered gold badge position and temporarily hide occupancy badges. The Night `Next Day` button is disabled if current gold cannot cover `CompanyRunData.GetCurrentPhaseGoldCost`.
+- Idle assigned gladiators are now a town risk indicator. The clock icon means assigned but no work will run this phase; exhausted uses a separate exhausted icon.
+- The Town HUD `Select Contract` action and arena contract launch both validate `CompanyRunData.CanPayArenaReturnUpkeep`, because returning from arena completes Day -> Night and immediately charges current phase upkeep. If the company cannot afford that return upkeep, the Town HUD action is disabled and the arena start button shows `Upkeep Short`.
+- Current roster capacity lives on `CompanyRunData.GladiatorCapacity` and defaults to 6. Gladiator add/buy paths should use `CanAddGladiator`, `AddGladiator`, and `TryBuyGladiator` so the cap is enforced before spending gold.
 - Equipment ownership exists, but equipping/unequipping items onto gladiators is not implemented yet.
 - Contract/combat resources are not implemented yet. Arena contract cards are still mock cards and arena combat startup is still placeholder.
 
@@ -31,8 +35,8 @@ Work the short-term backlog in this order unless the user redirects.
 3. `#18 Equip inventory items onto gladiators with validation`
 4. `#3 Add item combat stats and equipment requirements`
 5. `#49 Improve gladiator market recruit cards and variety`
-6. `#10 Improve Healer overlay around phase-based paid health recovery`
-7. `#11 Implement Training Hall progression actions on phase transitions`
+6. `#10 Improve Thermae overlay around phase-based paid treatment`
+7. `#11 Expand Training Hall progression actions on phase transitions`
 8. `#16 Implement MVP XP and level progression`
 
 ## Immediate Direction
@@ -51,8 +55,8 @@ Work the short-term backlog in this order unless the user redirects.
 ## Short-Term Direction
 
 - Improve gladiator market cards and recruit variety after the equip path is usable. Hiring must stay centralized through `CompanyRunData.TryBuyGladiator`/`AddGladiator` so purchase value and `CompanyCareerData.TotalGladiatorsInCareer` stay correct.
-- Make Healer UI explain the phase-based paid health recovery that now runs on both phase transitions. Do not restore stamina there.
-- Build Training Hall actions around the XP/progression system once `#16` defines the MVP rules. Keep exhaustion as the limiter for repeated use and overtraining.
+- Tune Thermae treatment balance after playtesting. It currently supports paid health treatment and paid exhaustion recovery, but does not restore stamina.
+- Expand Training Hall progression once `#16` defines final MVP rules. It currently supports overall or focused attribute XP; exhaustion remains the limiter for repeated use and overtraining.
 - Keep gladiator death centralized through `CompanyRunData.KillGladiator`; dead gladiators move from active `Gladiators` to `Cemetery`, not an active-roster dead flag.
 
 ## Later, Not Now

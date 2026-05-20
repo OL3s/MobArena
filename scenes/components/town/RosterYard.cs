@@ -1,16 +1,19 @@
 using Godot;
 using System.Collections.Generic;
+using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scenes.Components.Town;
 
-public partial class RosterYard : Node2D
+public partial class RosterYard : Node2D, IPhaseGoldCostSource
 {
     public const string DragDropTargetGroup = "town_drag_drop_targets";
+    public const string PhaseGoldCostSourceGroup = "phase_gold_cost_sources";
 
     private const string RosterYardGladiatorScenePath = "res://scenes/components/town/RosterYardGladiator.tscn";
+    private const string GoldCostOverlayScenePath = "res://scenes/ui/GoldCostOverlay.tscn";
     private const float DragStartDistance = 8f;
     private const float DragTokenHeight = 72f;
     private const float DragTokenPointerOffsetY = 32f;
@@ -24,6 +27,9 @@ public partial class RosterYard : Node2D
     private Node2D _gladiators;
     private Button _gladiatorsButton;
     private Button _equipmentButton;
+    private Button _goldButton;
+    private PanelContainer _goldTotalPreview;
+    private Label _goldTotalPreviewLabel;
     private PackedScene _rosterYardGladiatorScene;
     private RosterYardGladiator _pendingGladiator;
     private Vector2 _pendingPressViewportPosition;
@@ -36,14 +42,23 @@ public partial class RosterYard : Node2D
     private bool _showingGladiatorDragCapacityHints;
     private bool _gladiatorsButtonHovered;
     private bool _equipmentButtonHovered;
+    private bool _goldButtonHovered;
+
+    public int PhaseGoldCostDisplayOrder => 0;
+
+    public string PhaseGoldCostSection => "Gladiators";
 
     public override void _Ready()
     {
         AddToGroup("roster_yard");
+        AddToGroup(PhaseGoldCostSourceGroup);
         _saveNode = SaveNode.Get();
         _gladiators = GetNode<Node2D>("Gladiators");
         _gladiatorsButton = GetNodeOrNull<Button>("GladiatorsButton");
         _equipmentButton = GetNodeOrNull<Button>("EquipmentButton");
+        _goldButton = GetNodeOrNull<Button>("GoldButton");
+        _goldTotalPreview = GetNodeOrNull<PanelContainer>("GoldTotalPreview");
+        _goldTotalPreviewLabel = GetNodeOrNull<Label>("GoldTotalPreview/Row/TotalLabel");
         _rosterYardGladiatorScene = ResourceLoader.Load<PackedScene>(RosterYardGladiatorScenePath);
         _random.Randomize();
 
@@ -59,16 +74,36 @@ public partial class RosterYard : Node2D
             _equipmentButton.MouseExited += OnEquipmentButtonMouseExited;
         }
 
+        if (_goldButton != null)
+        {
+            _goldButton.MouseEntered += OnGoldButtonMouseEntered;
+            _goldButton.MouseExited += OnGoldButtonMouseExited;
+            _goldButton.Pressed += OnGoldButtonPressed;
+        }
+
         if (_saveNode?.CompanyRunData != null)
+        {
             _saveNode.CompanyRunData.RunChanged += RefreshGladiators;
+            _saveNode.CompanyRunData.RunChanged += RefreshGoldCostPreview;
+        }
+
+        if (_saveNode?.TownPhaseState != null)
+            _saveNode.TownPhaseState.PhaseChanged += RefreshGoldCostPreview;
 
         RefreshGladiators();
+        RefreshGoldCostPreview();
     }
 
     public override void _ExitTree()
     {
         if (_saveNode?.CompanyRunData != null)
+        {
             _saveNode.CompanyRunData.RunChanged -= RefreshGladiators;
+            _saveNode.CompanyRunData.RunChanged -= RefreshGoldCostPreview;
+        }
+
+        if (_saveNode?.TownPhaseState != null)
+            _saveNode.TownPhaseState.PhaseChanged -= RefreshGoldCostPreview;
 
         if (_gladiatorsButton != null)
         {
@@ -80,6 +115,13 @@ public partial class RosterYard : Node2D
         {
             _equipmentButton.MouseEntered -= OnEquipmentButtonMouseEntered;
             _equipmentButton.MouseExited -= OnEquipmentButtonMouseExited;
+        }
+
+        if (_goldButton != null)
+        {
+            _goldButton.MouseEntered -= OnGoldButtonMouseEntered;
+            _goldButton.MouseExited -= OnGoldButtonMouseExited;
+            _goldButton.Pressed -= OnGoldButtonPressed;
         }
     }
 
@@ -182,12 +224,15 @@ public partial class RosterYard : Node2D
     {
         _gladiatorsButtonHovered = true;
         RefreshGladiatorStatusContexts();
+        SetGladiatorDragCapacityHintsVisible(true);
     }
 
     private void OnGladiatorsButtonMouseExited()
     {
         _gladiatorsButtonHovered = false;
         RefreshGladiatorStatusContexts();
+        if (_draggedGladiator == null && _draggedGladiatorData == null)
+            SetGladiatorDragCapacityHintsVisible(false);
     }
 
     private void OnEquipmentButtonMouseEntered()
@@ -200,6 +245,27 @@ public partial class RosterYard : Node2D
     {
         _equipmentButtonHovered = false;
         RefreshGladiatorStatusContexts();
+    }
+
+    private void OnGoldButtonMouseEntered()
+    {
+        _goldButtonHovered = true;
+        RefreshGoldCostPreview();
+    }
+
+    private void OnGoldButtonMouseExited()
+    {
+        _goldButtonHovered = false;
+        RefreshGoldCostPreview();
+    }
+
+    private static void OnGoldButtonPressed()
+    {
+        var overlayScene = ResourceLoader.Load<PackedScene>(GoldCostOverlayScenePath);
+        if (overlayScene == null)
+            return;
+
+        GlobalOverlay.Get()?.AddOverlay(overlayScene);
     }
 
     private void OnGladiatorPointerPressed(RosterYardGladiator gladiator, Vector2 viewportPosition)
@@ -410,6 +476,40 @@ public partial class RosterYard : Node2D
         {
             if (node is TownBuilding townBuilding)
                 townBuilding.SetGladiatorDragCapacityPreview(visible);
+        }
+    }
+
+    private void RefreshGoldCostPreview()
+    {
+        if (_goldTotalPreview != null)
+            _goldTotalPreview.Visible = _goldButtonHovered;
+
+        if (_goldTotalPreviewLabel != null)
+            _goldTotalPreviewLabel.Text = (_saveNode?.CompanyRunData?.GetCurrentPhaseGoldCost(_saveNode.TownPhaseState) ?? 0).ToString();
+
+        foreach (var child in _gladiators?.GetChildren() ?? new Godot.Collections.Array<Node>())
+        {
+            if (child is RosterYardGladiator yardGladiator)
+                yardGladiator.SetSalaryPreviewVisible(_goldButtonHovered, _saveNode?.TownPhaseState?.IsNight() == true);
+        }
+
+        foreach (var node in GetTree().GetNodesInGroup(DragDropTargetGroup))
+        {
+            if (node is TownBuilding townBuilding)
+                townBuilding.SetGoldCostPreviewVisible(_goldButtonHovered);
+        }
+    }
+
+    public IEnumerable<PhaseGoldCostLine> GetPhaseGoldCostLines(CompanyRunData runData, TownPhaseState phaseState)
+    {
+        var sourceRunData = runData ?? _saveNode?.CompanyRunData;
+        if (sourceRunData?.Gladiators == null)
+            yield break;
+
+        foreach (var gladiator in sourceRunData.Gladiators)
+        {
+            if (gladiator != null)
+                yield return new PhaseGoldCostLine(gladiator.GladiatorName, CompanyRunData.GetGladiatorSalaryGoldCost(gladiator), PhaseGoldCostTiming.NightToDay);
         }
     }
 

@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
@@ -6,7 +7,7 @@ using MobArena.Scripts.Resources;
 namespace MobArena.Scenes.Components.Town;
 
 [Tool]
-public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoProvider
+public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoProvider, IPhaseGoldCostSource
 {
     public enum GladiatorCapacityMode
     {
@@ -17,6 +18,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     private static readonly Rect2 InteractionBounds = new(new Vector2(-75.0f, -75.0f), new Vector2(150.0f, 150.0f));
     private const ulong InputActivationDebounceMsec = 250;
     private const float ExhaustionWarningThreshold = 5f;
+    private const string IdleIconPath = "res://assets/ui/gladiator_icons/idle.svg";
     private const string ExhaustionIconPath = "res://assets/ui/gladiator_icons/exhaustion.svg";
     private const string HealthIconPath = "res://assets/ui/gladiator_icons/health.svg";
     private const string CriticalRiskIconPath = "res://assets/ui/gladiator_icons/critical_risk.svg";
@@ -131,8 +133,14 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     private CompanyRunData _runData;
     private ulong _lastInputActivationMsec;
     private bool _showCapacityDuringGladiatorDrag;
+    private bool _showGoldCostPreview;
+    private bool _showSalePreview;
 
     public string DropTargetName => string.IsNullOrWhiteSpace(BuildingName) ? "Town Building" : BuildingName;
+
+    public int PhaseGoldCostDisplayOrder => 10;
+
+    public string PhaseGoldCostSection => "Buildings";
 
     public Godot.Collections.Array<GladiatorData> AssignedGladiators => SaveNode.Get()?.CompanyRunData?.TownAssignments?.GetGladiators(AssignmentLocation) ?? new Godot.Collections.Array<GladiatorData>();
 
@@ -155,9 +163,10 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
             return;
 
         AddToGroup(RosterYard.DragDropTargetGroup);
+        AddToGroup(RosterYard.PhaseGoldCostSourceGroup);
         _runData = SaveNode.Get()?.CompanyRunData;
         if (_runData != null)
-            _runData.RunChanged += RefreshOccupancyBadge;
+            _runData.RunChanged += RefreshBadges;
 
         _interactionArea.InputPickable = true;
         _interactionArea.InputEvent += OnInteractionInputEvent;
@@ -169,7 +178,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     public override void _ExitTree()
     {
         if (_runData != null)
-            _runData.RunChanged -= RefreshOccupancyBadge;
+            _runData.RunChanged -= RefreshBadges;
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
@@ -367,6 +376,16 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         RefreshOccupancyBadge();
     }
 
+    public void SetGoldCostPreviewVisible(bool visible)
+    {
+        if (_showGoldCostPreview == visible)
+            return;
+
+        _showGoldCostPreview = visible;
+        RefreshGoldPreview();
+        RefreshOccupancyBadge();
+    }
+
     public void ShowTownHoverInfo(TownHud hud)
     {
         hud?.ShowBuildingHoverInfo(this, IconTexture, DropTargetName, GetHoverDescription());
@@ -379,13 +398,17 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
         if (!SellDroppedPayloads || payload == null || !CanPreviewTownDragDrop(payload.Value))
         {
-            _sellPreview.Visible = false;
+            _showSalePreview = false;
+            RefreshGoldPreview();
+            RefreshOccupancyBadge();
             return;
         }
 
         var saleValue = GetSaleValue(payload.Value);
         _sellPreviewValueLabel.Text = saleValue.ToString();
-        _sellPreview.Visible = saleValue > 0;
+        _showSalePreview = saleValue > 0;
+        RefreshGoldPreview();
+        RefreshOccupancyBadge();
     }
 
     private bool TrySellDroppedPayload(TownDragPayload payload)
@@ -577,9 +600,60 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         var capacity = GetAssignedGladiatorCapacity();
         var count = AssignedGladiators.Count;
         var shouldShowCapacityHint = _showCapacityDuringGladiatorDrag && count <= 0;
-        _occupancyBadge.Visible = AssignDroppedGladiators && capacity > 0 && !SellDroppedPayloads && (count > 0 || shouldShowCapacityHint);
+        _occupancyBadge.Visible = !_showSalePreview && !IsGoldCostPreviewVisible() && AssignDroppedGladiators && capacity > 0 && !SellDroppedPayloads && (count > 0 || shouldShowCapacityHint);
         _occupancyCountLabel.Text = $"{count}/{capacity}";
         RefreshStatusWarnings();
+    }
+
+    private void RefreshBadges()
+    {
+        RefreshGoldPreview();
+        RefreshOccupancyBadge();
+    }
+
+    private void RefreshGoldPreview()
+    {
+        if (_sellPreview == null || _sellPreviewValueLabel == null || Engine.IsEditorHint())
+            return;
+
+        if (_showSalePreview)
+        {
+            _sellPreview.Visible = true;
+            return;
+        }
+
+        var cost = GetPhaseGoldCost();
+        _sellPreviewValueLabel.Text = cost.ToString();
+        _sellPreview.Visible = _showGoldCostPreview && cost > 0;
+    }
+
+    private bool IsGoldCostPreviewVisible()
+    {
+        return _showGoldCostPreview && GetPhaseGoldCost() > 0;
+    }
+
+    private int GetPhaseGoldCost()
+    {
+        if (SellDroppedPayloads)
+            return 0;
+
+        var saveNode = SaveNode.Get();
+        var sourceRunData = _runData ?? saveNode?.CompanyRunData;
+        var phaseState = saveNode?.TownPhaseState;
+        if (sourceRunData == null)
+            return 0;
+
+        return sourceRunData.GetPhaseBuildingGoldCost(AssignmentLocation)
+            + sourceRunData.GetAssignedGladiatorsSalaryGoldCost(AssignedGladiators, phaseState);
+    }
+
+    public IEnumerable<PhaseGoldCostLine> GetPhaseGoldCostLines(CompanyRunData runData, TownPhaseState phaseState)
+    {
+        if (SellDroppedPayloads)
+            yield break;
+
+        var sourceRunData = runData ?? _runData ?? SaveNode.Get()?.CompanyRunData;
+        yield return new PhaseGoldCostLine(DropTargetName, sourceRunData?.GetPhaseBuildingGoldCost(AssignmentLocation) ?? 0, PhaseGoldCostTiming.Both);
     }
 
     private void RefreshStatusWarnings()
@@ -601,6 +675,13 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         {
             if (gladiator == null)
                 continue;
+
+            if (_runData?.IsGladiatorIdleInTownLocation(gladiator, AssignmentLocation) == true)
+            {
+                AddStatusWarningIcon(IdleIconPath, $"{gladiator.GladiatorName} is assigned here but has no work this phase");
+                addedWarning = true;
+                continue;
+            }
 
             var riskStatus = GetRiskStatus(gladiator);
             if (riskStatus == GladiatorRiskStatus.None)

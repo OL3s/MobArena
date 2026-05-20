@@ -5,6 +5,7 @@ namespace MobArena.Scripts.Resources;
 public enum GladiatorRiskStatus
 {
     None,
+    Idle,
     Exhausted,
     LowHealth,
     Critical
@@ -12,7 +13,7 @@ public enum GladiatorRiskStatus
 
 public partial class GladiatorData : Resource
 {
-    private const float MaxConditionValue = 10f;
+    public const float MaxConditionValue = 10f;
     private const float DefaultConditionValue = MaxConditionValue * 0.8f;
     private const float DefaultConditionMin = 6f;
     private const float ConditionPenaltyThreshold = 0.5f;

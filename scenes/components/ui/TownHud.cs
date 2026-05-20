@@ -7,6 +7,7 @@ namespace MobArena.Scenes.Components.UI;
 
 public partial class TownHud : CanvasLayer
 {
+	private const int DevActionCompleteArenaDay = 1;
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
 	private const string GladiatorDeathOverlayScenePath = "res://scenes/ui/GladiatorDeathOverlay.tscn";
@@ -27,6 +28,7 @@ public partial class TownHud : CanvasLayer
 	private Label _goldLabel;
 	private Label _fameLabel;
 	private Label _criticalRiskLabel;
+	private Label _idleLabel;
 	private Label _exhaustedLabel;
 	private Label _lowHealthLabel;
 	private Button _nextDayButton;
@@ -34,6 +36,7 @@ public partial class TownHud : CanvasLayer
 	private Label _championDueLabel;
 	private TextureRect _sunIcon;
 	private TextureRect _moonIcon;
+	private MenuButton _devButton;
 	private TownHoverInfoPanel _hoverInfoPanel;
 	private object _hoverSource;
 
@@ -49,6 +52,7 @@ public partial class TownHud : CanvasLayer
 		_goldLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/GoldRow/GoldLabel");
 		_fameLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/FameRow/FameLabel");
 		_criticalRiskLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/CriticalRiskRow/CriticalRiskLabel");
+		_idleLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/IdleRow/IdleLabel");
 		_exhaustedLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/ExhaustionRow/ExhaustedLabel");
 		_lowHealthLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/LowHealthRow/LowHealthLabel");
 		var companyStatus = GetNode<Control>("TopPanel/Row/CompanyStatus");
@@ -57,6 +61,7 @@ public partial class TownHud : CanvasLayer
 		_championDueLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/ChampionRow/ChampionDueLabel");
 		_sunIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/SunIcon");
 		_moonIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/MoonIcon");
+		_devButton = GetNode<MenuButton>("TopPanel/Row/DevButton");
 		GetNodeOrNull<Control>("TopPanel/Row/SupplyPanel")?.Hide();
 		CreateHoverInfoPanel(GetNode<HBoxContainer>("BottomPanel/TimeRow"));
 		AddToGroup("town_hover_info");
@@ -68,6 +73,7 @@ public partial class TownHud : CanvasLayer
 		companyStatus.GuiInput += OnCompanyStatusGuiInput;
 		GetNode<Button>("TopPanel/Row/BackButton").Pressed += OnBackPressed;
 		_nextDayButton.Pressed += OnNextDayPressed;
+		SetupDevMenu();
 		_phaseState.PhaseChanged += RefreshPhaseUi;
 
 		if (_saveNode?.CompanyRunData != null)
@@ -81,6 +87,7 @@ public partial class TownHud : CanvasLayer
 
 		RefreshCompanyUi();
 		RefreshRunUi();
+		RefreshDevMenu();
 		RefreshPhaseUi();
 	}
 
@@ -115,6 +122,9 @@ public partial class TownHud : CanvasLayer
 	{
 		if (!_phaseState.CanAdvanceToNextDay)
 		{
+			if (_saveNode?.CompanyRunData?.CanPayArenaReturnUpkeep(_phaseState) == false)
+				return;
+
 			EmitSignal(SignalName.SelectContractPressed);
 			return;
 		}
@@ -123,6 +133,29 @@ public partial class TownHud : CanvasLayer
 			return;
 
 		GD.Print($"SaveNode: Autosaving at day {_phaseState.CurrentDay}.");
+		_saveNode.Save();
+	}
+
+	private void SetupDevMenu()
+	{
+		_devButton.Visible = _saveNode?.DebugEnabled == true;
+		var popup = _devButton.GetPopup();
+		popup.Clear();
+		popup.AddItem("Day -> Night", DevActionCompleteArenaDay);
+		popup.IdPressed += OnDevMenuIdPressed;
+	}
+
+	private void OnDevMenuIdPressed(long id)
+	{
+		if (_saveNode?.DebugEnabled != true)
+			return;
+
+		if (id != DevActionCompleteArenaDay)
+			return;
+
+		if (!PhaseTransitionController.CompleteArenaDay(_phaseState, _saveNode.CompanyRunData))
+			return;
+
 		_saveNode.Save();
 	}
 
@@ -225,6 +258,7 @@ public partial class TownHud : CanvasLayer
 		_fameLabel.Text = runData.Fame.ToString();
 		var lowHealthWarningRatio = _saveNode?.SettingsConfig?.LowHealthWarningRatio ?? 0.6f;
 		_criticalRiskLabel.Text = runData.GetCriticalRiskGladiatorCount(lowHealthWarningRatio).ToString();
+		_idleLabel.Text = runData.GetIdleAssignedGladiatorCount().ToString();
 		_exhaustedLabel.Text = runData.GetExhaustedGladiatorCount().ToString();
 		_lowHealthLabel.Text = runData.GetLowHealthGladiatorCount(lowHealthWarningRatio).ToString();
 	}
@@ -235,14 +269,40 @@ public partial class TownHud : CanvasLayer
 		_championDueLabel.Text = _phaseState.GetChampionLabel();
 		_sunIcon.Visible = _phaseState.IsDay();
 		_moonIcon.Visible = _phaseState.IsNight();
+		RefreshDevMenu();
 		RefreshNextDayButton();
+	}
+
+	private void RefreshDevMenu()
+	{
+		if (_devButton == null)
+			return;
+
+		_devButton.Visible = _saveNode?.DebugEnabled == true;
+		_devButton.GetPopup().SetItemDisabled(0, !_phaseState.IsDay());
 	}
 
 	private void RefreshNextDayButton()
 	{
 		_nextDayButton.Text = _phaseState.CanAdvanceToNextDay ? "Next Day" : "Select Contract";
 		_nextDayButton.Icon = null;
-		_nextDayButton.Disabled = false;
+		var runData = _saveNode?.CompanyRunData;
+		var canPayPhaseCosts = runData?.CanPayCurrentPhaseGoldCost(_phaseState) != false;
+		var canPayArenaReturnUpkeep = runData?.CanPayArenaReturnUpkeep(_phaseState) != false;
+		_nextDayButton.Disabled = _phaseState.CanAdvanceToNextDay ? !canPayPhaseCosts : !canPayArenaReturnUpkeep;
+		_nextDayButton.TooltipText = GetPhaseActionTooltip(runData, canPayPhaseCosts, canPayArenaReturnUpkeep);
+	}
+
+	private string GetPhaseActionTooltip(CompanyRunData runData, bool canPayPhaseCosts, bool canPayArenaReturnUpkeep)
+	{
+		if (_phaseState.CanAdvanceToNextDay)
+			return canPayPhaseCosts
+				? string.Empty
+				: $"Need {runData.GetCurrentPhaseGoldCost(_phaseState)} gold to pay current phase costs.";
+
+		return canPayArenaReturnUpkeep
+			? "Open arena contracts."
+			: $"Need {runData.GetArenaReturnUpkeepGoldCost(_phaseState)} gold for upkeep when the arena day ends.";
 	}
 
 	public void ShowGladiatorHoverInfo(object source, GladiatorData gladiatorData)

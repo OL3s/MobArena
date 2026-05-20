@@ -39,7 +39,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - Phase transitions live in `scripts/resources/PhaseTransitionController.cs` as a static service, not saved state.
 - Town Day/Night phase state lives in `scripts/resources/TownPhaseState.cs` as a Godot `Resource`; the shared runtime instance is stored on `SaveNode.TownPhaseState`.
 - `TownPhaseState` also exposes the seven-day champion cadence through Champion Day/countdown helpers used by the town HUD and future contract filtering.
-- Healer and Training Hall work executes once on Day -> Night and once on Night -> Day through `CompanyRunData.ExecutePhaseBuildingWork`.
+- Time-passes work executes once on Day -> Night and once on Night -> Day through `CompanyRunData.ExecutePhaseBuildingWork`: courtyard/arena gladiators recover 2 exhaustion and 10% max health, Thermae-assigned gladiators pay gold for selected health or exhaustion treatment, and Training Hall work spends gold, stamina, and exhaustion to add attribute XP for the selected focus. Night -> Day also pays gladiator salary through `CompanyRunData.PayNightSalary`, currently the floor of each gladiator's initial cost divided by 10.
 - Settings state lives in `scripts/resources/SettingsConfig.cs` as a Godot `Resource`; the shared runtime instance is stored on `SaveNode.SettingsConfig` until real profile persistence is implemented.
 - Local input controller setup rows live in `scripts/resources/LocalInputControllerConfig.cs` as Godot `Resource`s. `LocalInputConfig.ControllerSetups` is a runtime `Array<LocalInputControllerConfig>` rebuilt from connected devices and settings.
 - `scenes/components/ui/TownHud.tscn` and `TownHud.cs` provide the reusable top and bottom town HUD used by town-like rooms.
@@ -52,7 +52,9 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - `TownBuilding.tscn` contains the building SVG sprite, icon SVG sprite, text label, and `Area2D` interaction hitbox in one scene file.
 - Each `TownBuilding` instance can assign unique `BuildingTexture` and `IconTexture` exports.
 - Town buildings should use a 1:1 square footprint. The current town layout is a 3x2 grid split by an implied horizontal road gap; the road is not drawn.
-- Town currently includes Arena, Market, Healer, Training Hall, and the central RosterYard management area with gladiator and equipment buttons.
+- Town currently includes Arena, Market, Thermae, Training Hall, and the central RosterYard management area with gladiator and equipment buttons.
+- RosterYard also has a compact gold button. Hovering it shows the current phase total near the button, building phase costs in each building's centered gold badge position, and salary on each visible roster-yard gladiator avatar; salary displays as 0 during Day and as the upcoming Night -> Day payment during Night. Building hover badges show the building's own phase cost plus salary for gladiators assigned inside that building. Pressing it opens `GoldCostOverlay`, which discovers `IPhaseGoldCostSource` nodes and lays out visible current-phase costs in side-by-side boxes for gladiators, buildings, and payment result. Building cost previews hide occupancy badges while visible.
+- The Town HUD `Select Contract` action and arena contract launch both validate `CompanyRunData.CanPayArenaReturnUpkeep`, because returning from arena completes Day -> Night and immediately charges current phase upkeep. If the company cannot afford that return upkeep, the Town HUD action is disabled and the arena start button shows `Upkeep Short`.
 - `TownBuilding.OverlayToOpen` opens modal packed-scene building UI over town. `TownBuilding.SceneToOpen` exists for future full-scene navigation but is not used by the current town management flow.
 - Shared modal popups should go through `GlobalOverlay` instead of being attached directly to town or arena scenes.
 - Custom overlays such as `ControlsOverlay.tscn` should also be opened through `GlobalOverlay.AddOverlay`. If they need a blurred modal feel, reuse `assets/shaders/PopupBlurBackdrop.gdshader` on a fullscreen backdrop.
@@ -67,13 +69,15 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - Legacy supply upkeep, continuous town time, and champion deadline timer pressure have been removed for the arena-first loop.
 - Gladiator death is centralized in `CompanyRunData.KillGladiator`. Dead gladiators are removed from active `Gladiators`, moved to `Cemetery`, and `GladiatorDeathOverlay.tscn` displays the dead gladiator card. `CemeteryOverlay.tscn` lists all dead gladiators from `CompanyRunData.Cemetery` through the company overview Cemetery button.
 - New company runs start with two default gladiators through `SaveNode.StartNewCompanyRun()`. Added gladiators should use `CompanyRunData.AddGladiator` so `CompanyCareerData.TotalGladiatorsInCareer` stays correct.
+- Current roster capacity lives on `CompanyRunData.GladiatorCapacity` and defaults to 6. `CompanyRunData.CanAddGladiator`, `AddGladiator`, and `TryBuyGladiator` enforce this cap before adding or spending gold. Phase gold cost timing types live in `scripts/resources/PhaseGoldCost.cs`; scene cost previews use `IPhaseGoldCostSource`, while backend affordability remains in `CompanyRunData`.
 
 ## Settings And Input
 
 - `SettingsConfig.AutoDetectPrimaryInput` controls whether the game chooses the primary input mode from platform/device state.
 - `SettingsConfig.DefaultPrimaryInput` stores the hard-set primary input when auto-detect is off. Valid modes are None, Keyboard, Touch, and Gamepad.
-- `SettingsConfig.DebugEnabled` stores the temporary project-wide debug flag. Settings UI mutates it directly like the other settings fields; gameplay code can read `SaveNode.DebugEnabled` as a convenience.
+- `SettingsConfig.DebugEnabled` stores the temporary project-wide debug flag. Settings UI mutates it directly like the other settings fields; gameplay code can read `SaveNode.DebugEnabled` as a convenience. The Town HUD shows a compact `Dev` menu only while this flag is enabled.
 - `SettingsConfig.LowHealthWarningRatio` stores the low-health warning threshold used by town Risk counts and town-world warning icons. Risk classification is centralized through `GladiatorData.GetRiskStatus(...)`, including the critical combined low-health-and-exhausted state so displays do not duplicate warning icons for one gladiator.
+- Idle assigned gladiators are counted separately through `CompanyRunData.GetIdleAssignedGladiatorCount`. The clock icon is `assets/ui/gladiator_icons/idle.svg` and means assigned but no work will run this phase; `assets/ui/gladiator_icons/exhaustion.svg` is now the exhausted warning icon.
 - Auto-detect currently maps console-like platforms to Gamepad, mobile to Gamepad when a gamepad is connected or Touch otherwise, and desktop to Keyboard.
 - The controls overlay displays currently configured inputs from `LocalInputConfig.ControllerSetups`; it does not yet implement real join/leave backend behavior.
 - Gamepad prompts use imported icons under `assets/ui/input_icons/`. Desktop keyboard primary input is labeled as Keyboard but currently uses the mouse icon for compact visual display.

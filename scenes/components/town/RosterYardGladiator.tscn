@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/town/RosterYardGladiator.cs" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/health.svg" id="2_health"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/items/drag_hand.svg" id="5_drag_hand"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/critical_risk.svg" id="6_critical_risk"]
 [ext_resource type="Script" path="res://scenes/components/ui/VitalProgressBar.cs" id="7_vital_bar"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="8_gold"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_interaction"]
 size = Vector2(112, 136)
@@ -38,6 +39,18 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_salary_preview"]
+bg_color = Color(0.08, 0.06, 0.03, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.74, 0.28, 1)
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+
 [node name="RosterYardGladiator" type="Node2D"]
 script = ExtResource("1_script")
 
@@ -51,6 +64,36 @@ mouse_filter = 2
 color = Color(0.08, 0.065, 0.045, 0.82)
 
 [node name="Portrait" type="Sprite2D" parent="."]
+
+[node name="SalaryPreview" type="PanelContainer" parent="."]
+visible = false
+offset_left = -38.0
+offset_top = -28.0
+offset_right = 38.0
+offset_bottom = 12.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_salary_preview")
+
+[node name="Row" type="HBoxContainer" parent="SalaryPreview"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="GoldIcon" type="TextureRect" parent="SalaryPreview/Row"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("8_gold")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="SalaryLabel" type="Label" parent="SalaryPreview/Row"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 20
+text = "0"
+vertical_alignment = 1
 
 [node name="InteractionArea" type="Area2D" parent="."]
 input_pickable = true

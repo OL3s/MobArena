@@ -23,6 +23,7 @@ public partial class ArenaContractsOverlay : Control
     private Button _configureControlsButton;
     private Button _startButton;
     private Button _closeButton;
+    private TownPhaseState _phaseState;
     private CompanyRunData _runData;
     private int _selectedContractIndex = -1;
     private bool _refreshingUi;
@@ -35,7 +36,9 @@ public partial class ArenaContractsOverlay : Control
         _configureControlsButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/ConfigureControlsButton");
         _startButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/StartButton");
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
-        _runData = SaveNode.Get()?.CompanyRunData;
+        var saveNode = SaveNode.Get();
+        _runData = saveNode?.CompanyRunData;
+        _phaseState = saveNode?.TownPhaseState;
 
         _configureControlsButton.Pressed += OpenControlConfigOverlay;
         _startButton.Pressed += OnStartPressed;
@@ -138,12 +141,19 @@ public partial class ArenaContractsOverlay : Control
         var hasContract = _selectedContractIndex >= 0;
         var ready = _runData?.AreArenaGladiatorsReadyForLaunch(controllerSetups) == true;
         var missingControls = assignedCount > 0 && !ready;
+        var canPayReturnUpkeep = _runData?.CanPayArenaReturnUpkeep(_phaseState) != false;
 
         _configureControlsButton.Disabled = assignedCount <= 0;
         _configureControlsButton.Text = "Controller Config";
-        _startButton.Disabled = !hasContract || !ready;
+        _startButton.Disabled = !canPayReturnUpkeep || !hasContract || !ready;
 
-        if (missingControls)
+        if (!canPayReturnUpkeep)
+        {
+            var cost = _runData?.GetArenaReturnUpkeepGoldCost(_phaseState) ?? 0;
+            _startButton.Text = "Upkeep Short";
+            _startButton.TooltipText = $"Need {cost} gold for upkeep when the arena day ends.";
+        }
+        else if (missingControls)
         {
             _startButton.Text = "Missing Controls";
             _startButton.TooltipText = "Assign one unique control setup to each Arena gladiator before starting.";
@@ -179,7 +189,9 @@ public partial class ArenaContractsOverlay : Control
     private void OnStartPressed()
     {
         var controllerSetups = LocalInputConfig.Get()?.ControllerSetups ?? new Godot.Collections.Array<LocalInputControllerConfig>();
-        if (_selectedContractIndex < 0 || _runData?.AreArenaGladiatorsReadyForLaunch(controllerSetups) != true)
+        if (_runData?.CanPayArenaReturnUpkeep(_phaseState) == false
+            || _selectedContractIndex < 0
+            || _runData?.AreArenaGladiatorsReadyForLaunch(controllerSetups) != true)
             return;
 
         GlobalOverlay.Get()?.ShowGoCancelPopup(

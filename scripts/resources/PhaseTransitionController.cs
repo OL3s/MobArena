@@ -18,7 +18,11 @@ public static class PhaseTransitionController
         if (phaseState == null || !phaseState.CanAdvanceToNextDay)
             return false;
 
+        if (companyRunData?.CanPayCurrentPhaseGoldCost(phaseState) == false)
+            return false;
+
         ExecuteBuildingWork(companyRunData);
+        companyRunData?.PayNightSalary();
         companyRunData?.Market?.ExecuteNewDay();
         phaseState.MoveToNextDay();
         companyRunData?.NotifyRunChanged();

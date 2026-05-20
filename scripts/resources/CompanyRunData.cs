@@ -1,18 +1,39 @@
 using Godot;
 using Godot.Collections;
+using System.Collections.Generic;
 using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scripts.Resources;
 
 public partial class CompanyRunData : Resource
 {
+    public const int DefaultGladiatorCapacity = 6;
+
+    public enum TreatmentFocus
+    {
+        Health,
+        Exhaustion
+    }
+
+    public enum TrainingFocus
+    {
+        Overall,
+        Strength,
+        Agility,
+        Vitality,
+        Endurance
+    }
+
     private const float ConditionWarningThreshold = 5f;
-    private const int HealerPhaseHealAmount = 8;
-    private const int HealerGoldCostPerGladiator = 3;
+    private const float PhaseRestHealthRecoveryRatio = 0.1f;
+    private const float TreatmentHealthRecoveryRatio = 0.4f;
+    private const float TreatmentExhaustionRecovery = 3f;
+    private const int TreatmentGoldCostPerGladiator = 3;
     private const int TrainingGoldCostPerGladiator = 2;
     private const int TrainingStaminaCost = 2;
     private const float TrainingExhaustionCost = 1f;
-    private const float PhaseRestExhaustionRecovery = 0.75f;
+    private const float TrainingAttributeExp = 40f;
+    private const float PhaseRestExhaustionRecovery = 2f;
 
     [Signal]
     public delegate void RunChangedEventHandler();
@@ -47,12 +68,45 @@ public partial class CompanyRunData : Resource
     public int AliveGladiators => Gladiators.Count;
 
     [Export]
+    public int GladiatorCapacity { get; private set; } = DefaultGladiatorCapacity;
+
+    [Export]
     public int MobsKilled { get; private set; }
+
+    [Export]
+    public TreatmentFocus CurrentTreatmentFocus { get; private set; } = TreatmentFocus.Health;
+
+    [Export]
+    public TrainingFocus CurrentTrainingFocus { get; private set; } = TrainingFocus.Overall;
+
+    public void SetTreatmentFocus(TreatmentFocus treatmentFocus)
+    {
+        if (CurrentTreatmentFocus == treatmentFocus)
+            return;
+
+        CurrentTreatmentFocus = treatmentFocus;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void SetTrainingFocus(TrainingFocus trainingFocus)
+    {
+        if (CurrentTrainingFocus == trainingFocus)
+            return;
+
+        CurrentTrainingFocus = trainingFocus;
+        EmitSignal(SignalName.RunChanged);
+    }
 
     public void AddGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)
     {
         if (gladiatorData == null)
             return;
+
+        if (!CanAddGladiator())
+        {
+            GD.PushError($"Add gladiator failed: active roster is full ({AliveGladiators}/{GladiatorCapacity}).");
+            return;
+        }
 
         Gladiators.Add(gladiatorData);
         EnsureResources();
@@ -71,6 +125,12 @@ public partial class CompanyRunData : Resource
         {
             AddGladiator(GladiatorData.CreateDefault(), careerData);
         }
+    }
+
+    public bool CanAddGladiator()
+    {
+        EnsureResources();
+        return AliveGladiators < GladiatorCapacity;
     }
 
     public void AddGold(int amount, CompanyCareerData careerData)
@@ -316,7 +376,7 @@ public partial class CompanyRunData : Resource
 
     public bool TryBuyGladiator(GladiatorData gladiatorData, CompanyCareerData careerData, int price)
     {
-        if (gladiatorData == null || !TrySpendGold(price))
+        if (gladiatorData == null || !CanAddGladiator() || !TrySpendGold(price))
             return false;
 
         AddGladiator(gladiatorData, careerData);
@@ -639,6 +699,84 @@ public partial class CompanyRunData : Resource
         return GetRiskStatusCount(GladiatorRiskStatus.Critical, warningRatio);
     }
 
+    public int GetIdleAssignedGladiatorCount()
+    {
+        var count = 0;
+        count += GetIdleAssignedGladiatorCount(TownAssignments.HealerGladiators, TownAssignmentData.AssignmentLocation.Healer);
+        count += GetIdleAssignedGladiatorCount(TownAssignments.TrainingHallGladiators, TownAssignmentData.AssignmentLocation.TrainingHall);
+        return count;
+    }
+
+    private int GetIdleAssignedGladiatorCount(IEnumerable<GladiatorData> gladiators, TownAssignmentData.AssignmentLocation assignmentLocation)
+    {
+        var count = 0;
+        foreach (var gladiator in gladiators)
+        {
+            if (IsGladiatorIdleInTownLocation(gladiator, assignmentLocation))
+                count++;
+        }
+
+        return count;
+    }
+
+    public bool IsGladiatorIdleInTownLocation(GladiatorData gladiator, TownAssignmentData.AssignmentLocation assignmentLocation)
+    {
+        if (gladiator == null || !HasGladiator(gladiator))
+            return false;
+
+        return assignmentLocation switch
+        {
+            TownAssignmentData.AssignmentLocation.Healer => !CanExecuteTreatmentPhaseWork(gladiator),
+            TownAssignmentData.AssignmentLocation.TrainingHall => !CanExecuteTrainingPhaseWork(gladiator),
+            _ => false
+        };
+    }
+
+    private bool CanExecuteTreatmentPhaseWork(GladiatorData gladiator)
+    {
+        if (gladiator == null || !HasGladiator(gladiator))
+            return false;
+
+        return CurrentTreatmentFocus switch
+        {
+            TreatmentFocus.Exhaustion => gladiator.Exhaustion < GladiatorData.MaxConditionValue,
+            _ => gladiator.Health < gladiator.RecoverableMaxHealth && GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio) > 0
+        };
+    }
+
+    private bool CanExecuteTrainingPhaseWork(GladiatorData gladiator)
+    {
+        return gladiator != null
+            && HasGladiator(gladiator)
+            && gladiator.Stamina >= TrainingStaminaCost
+            && gladiator.Exhaustion > TrainingExhaustionCost;
+    }
+
+    public int GetTreatmentHealthRecoveryPreview(GladiatorData gladiator)
+    {
+        if (gladiator == null || !HasGladiator(gladiator))
+            return 0;
+
+        var recoveryAmount = GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio);
+        return Mathf.Max(0, Mathf.Min(gladiator.RecoverableMaxHealth, gladiator.Health + recoveryAmount) - gladiator.Health);
+    }
+
+    public float GetTreatmentExhaustionRecoveryPreview(GladiatorData gladiator)
+    {
+        if (gladiator == null || !HasGladiator(gladiator))
+            return 0f;
+
+        return Mathf.Max(0f, Mathf.Min(GladiatorData.MaxConditionValue, gladiator.Exhaustion + TreatmentExhaustionRecovery) - gladiator.Exhaustion);
+    }
+
+    public float GetTrainingAttributeExpPreview(TrainingFocus trainingFocus, GladiatorLevelData.AttributeKind attributeKind)
+    {
+        if (trainingFocus == TrainingFocus.Overall)
+            return TrainingAttributeExp / 4f;
+
+        return GetFocusedTrainingAttribute(trainingFocus) == attributeKind ? TrainingAttributeExp : 0f;
+    }
+
     public int GetRiskStatusCount(GladiatorRiskStatus riskStatus, float lowHealthWarningRatio)
     {
         var count = 0;
@@ -651,11 +789,120 @@ public partial class CompanyRunData : Resource
         return count;
     }
 
+    public int GetPhaseBuildingGoldCost(TownAssignmentData.AssignmentLocation assignmentLocation)
+    {
+        EnsureResources();
+        return assignmentLocation switch
+        {
+            TownAssignmentData.AssignmentLocation.Healer => GetTreatmentPhaseGoldCost(),
+            TownAssignmentData.AssignmentLocation.TrainingHall => GetTrainingPhaseGoldCost(),
+            _ => 0
+        };
+    }
+
+    public int GetTownLocationPhaseGoldPreviewCost(TownAssignmentData.AssignmentLocation assignmentLocation, TownPhaseState phaseState)
+    {
+        return GetPhaseBuildingGoldCost(assignmentLocation) + GetTownLocationSalaryGoldCost(assignmentLocation, phaseState);
+    }
+
+    public int GetTownLocationSalaryGoldCost(TownAssignmentData.AssignmentLocation assignmentLocation, TownPhaseState phaseState)
+    {
+        if (phaseState?.IsNight() != true)
+            return 0;
+
+        EnsureResources();
+        return GetAssignedGladiatorsSalaryGoldCost(TownAssignments.GetGladiators(assignmentLocation), phaseState);
+    }
+
+    public int GetAssignedGladiatorsSalaryGoldCost(IEnumerable<GladiatorData> gladiators, TownPhaseState phaseState)
+    {
+        if (phaseState?.IsNight() != true)
+            return 0;
+
+        var total = 0;
+        foreach (var gladiator in gladiators)
+        {
+            if (HasGladiator(gladiator))
+                total += GetGladiatorSalaryGoldCost(gladiator);
+        }
+
+        return total;
+    }
+
+    public int GetCurrentPhaseBuildingGoldCost()
+    {
+        return GetPhaseBuildingGoldCostLines().SumCostsForPhase(null, includeAll: true);
+    }
+
+    public int GetCurrentPhaseSalaryGoldCost(TownPhaseState phaseState)
+    {
+        return phaseState?.IsNight() == true ? GetNightSalaryGoldCost() : 0;
+    }
+
+    public int GetCurrentPhaseGoldCost(TownPhaseState phaseState)
+    {
+        return GetCurrentPhaseGoldCostLines().SumCostsForPhase(phaseState);
+    }
+
+    public bool CanPayCurrentPhaseGoldCost(TownPhaseState phaseState)
+    {
+        return Gold >= GetCurrentPhaseGoldCost(phaseState);
+    }
+
+    public int GetArenaReturnUpkeepGoldCost(TownPhaseState phaseState)
+    {
+        return GetCurrentPhaseGoldCost(phaseState);
+    }
+
+    public bool CanPayArenaReturnUpkeep(TownPhaseState phaseState)
+    {
+        return Gold >= GetArenaReturnUpkeepGoldCost(phaseState);
+    }
+
+    public IEnumerable<PhaseGoldCostLine> GetCurrentPhaseGoldCostLines()
+    {
+        foreach (var gladiator in Gladiators)
+        {
+            if (gladiator != null)
+                yield return new PhaseGoldCostLine(gladiator.GladiatorName, GetGladiatorSalaryGoldCost(gladiator), PhaseGoldCostTiming.NightToDay);
+        }
+
+        foreach (var line in GetPhaseBuildingGoldCostLines())
+            yield return line;
+    }
+
+    public IEnumerable<PhaseGoldCostLine> GetPhaseBuildingGoldCostLines()
+    {
+        yield return new PhaseGoldCostLine("Thermae", GetTreatmentPhaseGoldCost(), PhaseGoldCostTiming.Both);
+        yield return new PhaseGoldCostLine("Training Hall", GetTrainingPhaseGoldCost(), PhaseGoldCostTiming.Both);
+    }
+
+    public int GetNightSalaryGoldCost()
+    {
+        var total = 0;
+        foreach (var gladiator in Gladiators)
+        {
+            total += GetGladiatorSalaryGoldCost(gladiator);
+        }
+
+        return total;
+    }
+
+    public static int GetGladiatorSalaryGoldCost(GladiatorData gladiator)
+    {
+        return gladiator == null ? 0 : Mathf.FloorToInt(gladiator.InitialCost / 10f);
+    }
+
+    public bool PayNightSalary()
+    {
+        return TrySpendGold(GetNightSalaryGoldCost());
+    }
+
     public void ExecutePhaseBuildingWork()
     {
         EnsureResources();
         RecoverCourtyardAndArenaGladiators();
-        ExecuteHealerPhaseWork();
+        ExecuteTreatmentPhaseWork();
         ExecuteTrainingPhaseWork();
         EmitSignal(SignalName.RunChanged);
     }
@@ -669,32 +916,72 @@ public partial class CompanyRunData : Resource
 
             var location = TownAssignments.GetLocation(gladiator);
             if (location is TownAssignmentData.AssignmentLocation.Courtyard or TownAssignmentData.AssignmentLocation.Arena)
+            {
                 gladiator.SetExhaustion(gladiator.Exhaustion + PhaseRestExhaustionRecovery);
+                gladiator.RestoreHealth(GetHealthRecoveryAmount(gladiator, PhaseRestHealthRecoveryRatio));
+            }
         }
     }
 
-    private void ExecuteHealerPhaseWork()
+    private void ExecuteTreatmentPhaseWork()
     {
         foreach (var gladiator in TownAssignments.HealerGladiators)
         {
-            if (gladiator == null || !HasGladiator(gladiator) || gladiator.Health >= gladiator.RecoverableMaxHealth)
+            if (!CanExecuteTreatmentPhaseWork(gladiator))
                 continue;
 
-            if (!TrySpendGold(HealerGoldCostPerGladiator))
+            if (!TrySpendGold(TreatmentGoldCostPerGladiator))
                 break;
 
-            gladiator.RestoreHealth(HealerPhaseHealAmount);
+            ExecuteTreatmentPhaseWorkForGladiator(gladiator);
         }
+    }
+
+    private void ExecuteTreatmentPhaseWorkForGladiator(GladiatorData gladiator)
+    {
+        if (gladiator == null)
+            return;
+
+        if (CurrentTreatmentFocus == TreatmentFocus.Exhaustion)
+        {
+            gladiator.SetExhaustion(gladiator.Exhaustion + TreatmentExhaustionRecovery);
+            return;
+        }
+
+        gladiator.RestoreHealth(GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio));
+    }
+
+    private int GetTreatmentPhaseGoldCost()
+    {
+        return GetTreatmentPhaseGoldCost(TownAssignments.HealerGladiators);
+    }
+
+    private int GetTreatmentPhaseGoldCost(IEnumerable<GladiatorData> gladiators)
+    {
+        var total = 0;
+        foreach (var gladiator in gladiators)
+        {
+            if (!CanExecuteTreatmentPhaseWork(gladiator))
+                continue;
+
+            total += TreatmentGoldCostPerGladiator;
+        }
+
+        return total;
+    }
+
+    private static int GetHealthRecoveryAmount(GladiatorData gladiator, float maxHealthRatio)
+    {
+        return gladiator?.MaxHealth > 0
+            ? Mathf.Max(1, Mathf.RoundToInt(gladiator.MaxHealth * maxHealthRatio))
+            : 0;
     }
 
     private void ExecuteTrainingPhaseWork()
     {
         foreach (var gladiator in TownAssignments.TrainingHallGladiators)
         {
-            if (gladiator == null || !HasGladiator(gladiator))
-                continue;
-
-            if (gladiator.Stamina < TrainingStaminaCost || gladiator.Exhaustion <= TrainingExhaustionCost)
+            if (!CanExecuteTrainingPhaseWork(gladiator))
                 continue;
 
             if (!TrySpendGold(TrainingGoldCostPerGladiator))
@@ -702,7 +989,56 @@ public partial class CompanyRunData : Resource
 
             gladiator.SpendStamina(TrainingStaminaCost);
             gladiator.SetExhaustion(gladiator.Exhaustion - TrainingExhaustionCost);
+            ApplyTrainingFocus(gladiator);
         }
+    }
+
+    private void ApplyTrainingFocus(GladiatorData gladiator)
+    {
+        if (gladiator?.Level == null)
+            return;
+
+        if (CurrentTrainingFocus == TrainingFocus.Overall)
+        {
+            var splitExp = TrainingAttributeExp / 4f;
+            gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Strength, splitExp);
+            gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Agility, splitExp);
+            gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Vitality, splitExp);
+            gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Endurance, splitExp);
+            return;
+        }
+
+        gladiator.Level.AddAttributeExp(GetFocusedTrainingAttribute(CurrentTrainingFocus), TrainingAttributeExp);
+    }
+
+    private static GladiatorLevelData.AttributeKind GetFocusedTrainingAttribute(TrainingFocus trainingFocus)
+    {
+        return trainingFocus switch
+        {
+            TrainingFocus.Agility => GladiatorLevelData.AttributeKind.Agility,
+            TrainingFocus.Vitality => GladiatorLevelData.AttributeKind.Vitality,
+            TrainingFocus.Endurance => GladiatorLevelData.AttributeKind.Endurance,
+            _ => GladiatorLevelData.AttributeKind.Strength
+        };
+    }
+
+    private int GetTrainingPhaseGoldCost()
+    {
+        return GetTrainingPhaseGoldCost(TownAssignments.TrainingHallGladiators);
+    }
+
+    private int GetTrainingPhaseGoldCost(IEnumerable<GladiatorData> gladiators)
+    {
+        var total = 0;
+        foreach (var gladiator in gladiators)
+        {
+            if (!CanExecuteTrainingPhaseWork(gladiator))
+                continue;
+
+            total += TrainingGoldCostPerGladiator;
+        }
+
+        return total;
     }
 
     public void KillGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)
