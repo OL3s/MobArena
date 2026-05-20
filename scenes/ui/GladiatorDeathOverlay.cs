@@ -30,7 +30,7 @@ public partial class GladiatorDeathOverlay : Control
 
     private void RefreshUi()
     {
-        _messageLabel.Text = $"{_gladiatorData.GladiatorName} has died after running out of provisions.";
+        _messageLabel.Text = $"{_gladiatorData.GladiatorName} has died in service to the company.";
         _gladiatorCard.Configure(_gladiatorData);
     }
 }

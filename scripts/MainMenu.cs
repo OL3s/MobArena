@@ -42,7 +42,6 @@ public partial class MainMenu : Control
 		if (_saveNode is not { HasCompany: true })
 			return;
 
-		_saveNode.TownTimeState.ResetToPause();
 		GetTree().ChangeSceneToFile(TownScene);
 	}
 

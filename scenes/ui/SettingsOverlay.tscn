@@ -146,6 +146,30 @@ layout_mode = 2
 text = "Temporary project-wide debug flag for development-only behavior."
 autowrap_mode = 3
 
+[node name="LowHealthRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LowHealthLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow"]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+text = "Low health warning"
+vertical_alignment = 1
+
+[node name="LowHealthSpinBox" type="SpinBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow"]
+custom_minimum_size = Vector2(110, 44)
+layout_mode = 2
+min_value = 10.0
+max_value = 100.0
+step = 5.0
+value = 60.0
+suffix = "%"
+
+[node name="LowHealthValueLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow"]
+layout_mode = 2
+text = "60%"
+vertical_alignment = 1
+
 [node name="SaveDataSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
 visible = false
 layout_mode = 2

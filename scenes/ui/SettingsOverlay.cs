@@ -27,6 +27,8 @@ public partial class SettingsOverlay : Control
 	private Control _gameplaySettings;
 	private Control _saveDataSettings;
 	private CheckBox _debugCheckBox;
+	private Label _lowHealthValueLabel;
+	private SpinBox _lowHealthSpinBox;
 	private Label _placeholderLabel;
 	private bool _refreshingUi;
 
@@ -46,6 +48,8 @@ public partial class SettingsOverlay : Control
 		_defaultInputLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/DefaultInputRow/DefaultInputLabel");
 		_defaultInputOption = GetNode<OptionButton>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/DefaultInputRow/DefaultInputOption");
 		_debugCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/DebugCheckBox");
+		_lowHealthValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthValueLabel");
+		_lowHealthSpinBox = GetNode<SpinBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthSpinBox");
 
 		_defaultInputOption.AddItem("None", (int)SettingsConfig.PrimaryInputMode.None);
 		_defaultInputOption.AddItem("Keyboard", (int)SettingsConfig.PrimaryInputMode.Keyboard);
@@ -60,6 +64,7 @@ public partial class SettingsOverlay : Control
 		_autoDetectCheckBox.Toggled += OnAutoDetectToggled;
 		_defaultInputOption.ItemSelected += OnDefaultInputSelected;
 		_debugCheckBox.Toggled += OnDebugToggled;
+		_lowHealthSpinBox.ValueChanged += OnLowHealthWarningChanged;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteRunButton").Pressed += OnDeleteRunDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteCompanyButton").Pressed += OnDeleteCompanyDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteSettingsButton").Pressed += OnDeleteSettingsDataPressed;
@@ -110,6 +115,8 @@ public partial class SettingsOverlay : Control
 		_defaultInputLabel.Modulate = _defaultInputOption.Disabled ? new Color(1, 1, 1, 0.45f) : Colors.White;
 		_defaultInputOption.Select(_defaultInputOption.GetItemIndex((int)settingsConfig.DefaultPrimaryInput));
 		_debugCheckBox.ButtonPressed = settingsConfig.DebugEnabled;
+		_lowHealthSpinBox.Value = Mathf.RoundToInt(settingsConfig.LowHealthWarningRatio * 100f);
+		_lowHealthValueLabel.Text = $"{_lowHealthSpinBox.Value:0}%";
 		_refreshingUi = false;
 	}
 
@@ -149,6 +156,19 @@ public partial class SettingsOverlay : Control
 			return;
 
 		settingsConfig.DebugEnabled = enabled;
+		RefreshSettingsUi();
+	}
+
+	private void OnLowHealthWarningChanged(double value)
+	{
+		if (_refreshingUi)
+			return;
+
+		var settingsConfig = SaveNode.Get().SettingsConfig;
+		if (settingsConfig == null)
+			return;
+
+		settingsConfig.LowHealthWarningRatio = Mathf.Clamp((float)value / 100f, 0.1f, 1f);
 		RefreshSettingsUi();
 	}
 

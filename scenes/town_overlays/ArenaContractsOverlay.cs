@@ -137,16 +137,32 @@ public partial class ArenaContractsOverlay : Control
         var assignedCount = _runData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
         var hasContract = _selectedContractIndex >= 0;
         var ready = _runData?.AreArenaGladiatorsReadyForLaunch(controllerSetups) == true;
+        var missingControls = assignedCount > 0 && !ready;
 
         _configureControlsButton.Disabled = assignedCount <= 0;
-        _configureControlsButton.Text = ready ? "Rearrange Controls" : "Choose Control Config";
+        _configureControlsButton.Text = "Controller Config";
         _startButton.Disabled = !hasContract || !ready;
-        _startButton.Text = ready ? "Start" : "Start";
-        _startButton.TooltipText = !hasContract
-            ? "Choose a contract first."
-            : !ready
-                ? "Choose control config before starting."
-                : "Start the selected mock contract.";
+
+        if (missingControls)
+        {
+            _startButton.Text = "Missing Controls";
+            _startButton.TooltipText = "Assign one unique control setup to each Arena gladiator before starting.";
+        }
+        else if (assignedCount <= 0)
+        {
+            _startButton.Text = "Missing Gladiator";
+            _startButton.TooltipText = "Assign at least one gladiator to the Arena building before starting.";
+        }
+        else if (!hasContract)
+        {
+            _startButton.Text = "Choose Contract";
+            _startButton.TooltipText = "Choose a contract first.";
+        }
+        else
+        {
+            _startButton.Text = "Start";
+            _startButton.TooltipText = "Start the selected mock contract.";
+        }
     }
 
     private void OpenControlConfigOverlay()

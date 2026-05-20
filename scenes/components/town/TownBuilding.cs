@@ -1,11 +1,12 @@
 using Godot;
+using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 
 namespace MobArena.Scenes.Components.Town;
 
 [Tool]
-public partial class TownBuilding : Node2D, ITownDragDropTarget
+public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoProvider
 {
     public enum GladiatorCapacityMode
     {
@@ -15,6 +16,10 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
 
     private static readonly Rect2 InteractionBounds = new(new Vector2(-75.0f, -75.0f), new Vector2(150.0f, 150.0f));
     private const ulong InputActivationDebounceMsec = 250;
+    private const float ExhaustionWarningThreshold = 5f;
+    private const string ExhaustionIconPath = "res://assets/ui/gladiator_icons/exhaustion.svg";
+    private const string HealthIconPath = "res://assets/ui/gladiator_icons/health.svg";
+    private const string CriticalRiskIconPath = "res://assets/ui/gladiator_icons/critical_risk.svg";
 
     private string _buildingName = "Town Building";
     private Texture2D _buildingTexture;
@@ -56,6 +61,9 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
 
     [Export]
     public PackedScene SceneToOpen { get; set; }
+
+    [Export(PropertyHint.MultilineText)]
+    public string HoverDescription { get; set; }
 
     [Export]
     public PackedScene OverlayToOpen { get; set; }
@@ -119,8 +127,10 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
     private Label _sellPreviewValueLabel;
     private PanelContainer _occupancyBadge;
     private Label _occupancyCountLabel;
+    private HBoxContainer _statusWarnings;
     private CompanyRunData _runData;
     private ulong _lastInputActivationMsec;
+    private bool _showCapacityDuringGladiatorDrag;
 
     public string DropTargetName => string.IsNullOrWhiteSpace(BuildingName) ? "Town Building" : BuildingName;
 
@@ -137,6 +147,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
         _sellPreviewValueLabel = GetNode<Label>("Visuals/SellPreview/Row/ValueLabel");
         _occupancyBadge = GetNode<PanelContainer>("Visuals/OccupancyBadge");
         _occupancyCountLabel = GetNode<Label>("Visuals/OccupancyBadge/Row/CountLabel");
+        _statusWarnings = GetNode<HBoxContainer>("Visuals/StatusWarnings");
 
         RefreshVisuals();
 
@@ -347,6 +358,20 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
         return gladiatorData != null && AssignedGladiators?.Contains(gladiatorData) == true;
     }
 
+    public void SetGladiatorDragCapacityPreview(bool showCapacityDuringGladiatorDrag)
+    {
+        if (_showCapacityDuringGladiatorDrag == showCapacityDuringGladiatorDrag)
+            return;
+
+        _showCapacityDuringGladiatorDrag = showCapacityDuringGladiatorDrag;
+        RefreshOccupancyBadge();
+    }
+
+    public void ShowTownHoverInfo(TownHud hud)
+    {
+        hud?.ShowBuildingHoverInfo(this, IconTexture, DropTargetName, GetHoverDescription());
+    }
+
     public void SetTownDragDropPreview(TownDragPayload? payload, Vector2 viewportPosition)
     {
         if (_sellPreview == null || _sellPreviewValueLabel == null)
@@ -402,7 +427,6 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
         {
             TownDragPayloadKind.Item => runData.TrySellItem(payload.Item, saveNode.CompanyCareerData),
             TownDragPayloadKind.Gladiator => runData.TrySellGladiator(payload.Gladiator, saveNode.CompanyCareerData),
-            TownDragPayloadKind.Ration when payload.RationQuality != null => runData.TrySellRation(payload.RationQuality.Value, saveNode.CompanyCareerData),
             _ => false
         };
 
@@ -420,7 +444,6 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
         {
             TownDragPayloadKind.Item => runData.GetSaleValue(payload.Item),
             TownDragPayloadKind.Gladiator => runData.GetSaleValue(payload.Gladiator),
-            TownDragPayloadKind.Ration when payload.RationQuality != null => runData.GetSaleValue(payload.RationQuality.Value),
             _ => 0
         };
     }
@@ -435,7 +458,6 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
         {
             TownDragPayloadKind.Item => runData.HasItem(payload.Item),
             TownDragPayloadKind.Gladiator => runData.HasGladiator(payload.Gladiator),
-            TownDragPayloadKind.Ration when payload.RationQuality != null => runData.Rations.GetCount(payload.RationQuality.Value) > 0,
             _ => false
         };
     }
@@ -483,11 +505,13 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
             return;
 
         _visuals.Scale = new Vector2(1.04f, 1.04f);
+        ShowTownHoverInfo(GetTownHud());
     }
 
     private void OnMouseExited()
     {
         _visuals.Scale = Vector2.One;
+        GetTownHud()?.HideHoverInfo(this);
     }
 
     private void OpenScene()
@@ -552,7 +576,88 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget
 
         var capacity = GetAssignedGladiatorCapacity();
         var count = AssignedGladiators.Count;
-        _occupancyBadge.Visible = AssignDroppedGladiators && capacity > 0 && count > 0 && !SellDroppedPayloads;
+        var shouldShowCapacityHint = _showCapacityDuringGladiatorDrag && count <= 0;
+        _occupancyBadge.Visible = AssignDroppedGladiators && capacity > 0 && !SellDroppedPayloads && (count > 0 || shouldShowCapacityHint);
         _occupancyCountLabel.Text = $"{count}/{capacity}";
+        RefreshStatusWarnings();
+    }
+
+    private void RefreshStatusWarnings()
+    {
+        if (_statusWarnings == null || Engine.IsEditorHint())
+            return;
+
+        foreach (var child in _statusWarnings.GetChildren())
+            child.QueueFree();
+
+        if (!AssignDroppedGladiators || SellDroppedPayloads)
+        {
+            _statusWarnings.Visible = false;
+            return;
+        }
+
+        var addedWarning = false;
+        foreach (var gladiator in AssignedGladiators)
+        {
+            if (gladiator == null)
+                continue;
+
+            var riskStatus = GetRiskStatus(gladiator);
+            if (riskStatus == GladiatorRiskStatus.None)
+                continue;
+
+            var (iconPath, tooltipText) = riskStatus switch
+            {
+                GladiatorRiskStatus.Critical => (CriticalRiskIconPath, $"{gladiator.GladiatorName} is exhausted and low health"),
+                GladiatorRiskStatus.Exhausted => (ExhaustionIconPath, $"{gladiator.GladiatorName} is exhausted"),
+                GladiatorRiskStatus.LowHealth => (HealthIconPath, $"{gladiator.GladiatorName} is low health"),
+                _ => (string.Empty, string.Empty)
+            };
+            AddStatusWarningIcon(iconPath, tooltipText);
+            addedWarning = true;
+        }
+
+        _statusWarnings.Visible = addedWarning;
+    }
+
+    private void AddStatusWarningIcon(string texturePath, string tooltipText)
+    {
+        _statusWarnings.AddChild(new TextureRect
+        {
+            CustomMinimumSize = new Vector2(20, 20),
+            Texture = ResourceLoader.Load<Texture2D>(texturePath),
+            TooltipText = tooltipText,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
+        });
+    }
+
+    private static GladiatorRiskStatus GetRiskStatus(GladiatorData gladiator)
+    {
+        if (gladiator == null)
+            return GladiatorRiskStatus.None;
+
+        var warningRatio = SaveNode.Get()?.SettingsConfig?.LowHealthWarningRatio ?? 0.6f;
+        return gladiator.GetRiskStatus(ExhaustionWarningThreshold, warningRatio);
+    }
+
+    private string GetHoverDescription()
+    {
+        if (!string.IsNullOrWhiteSpace(HoverDescription))
+            return HoverDescription;
+
+        if (SellDroppedPayloads)
+            return "Sell unwanted gladiators and equipment for gold.";
+
+        if (AssignDroppedGladiators)
+            return $"Drag gladiators here to assign them. Capacity: {AssignedGladiators.Count}/{GetAssignedGladiatorCapacity()}.";
+
+        return ConfirmationMessage;
+    }
+
+    private TownHud GetTownHud()
+    {
+        return GetTree()?.GetFirstNodeInGroup("town_hover_info") as TownHud;
     }
 }

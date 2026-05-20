@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scenes/town_overlays/ArenaContractsOverlay.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/items/drag_hand.svg" id="4_drag_hand"]
 [ext_resource type="PackedScene" path="res://scenes/components/ui/ArenaContractCard.tscn" id="5_contract_card"]
 [ext_resource type="PackedScene" path="res://scenes/town_overlays/arena_control_config_overlay.tscn" id="6_control_config"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/local_coop.svg" id="7_local_coop_icon"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_arena_blur"]
 shader = ExtResource("2_blur_shader")
@@ -123,7 +124,8 @@ theme_override_constants/separation = 6
 [node name="ConfigureControlsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(220, 54)
 layout_mode = 2
-text = "Choose Control Config"
+text = "Controller Config"
+icon = ExtResource("7_local_coop_icon")
 
 [node name="StartButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(150, 54)

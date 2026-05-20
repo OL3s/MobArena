@@ -17,9 +17,6 @@ public partial class MarketData : Resource
     };
 
     [Export]
-    public RationStoreData RationStore { get; private set; } = new();
-
-    [Export]
     public Array<ItemData> ItemStock { get; private set; } = new();
 
     [Export]
@@ -33,7 +30,6 @@ public partial class MarketData : Resource
 
     public void EnsureResources()
     {
-        RationStore ??= new RationStoreData();
         ItemStock ??= new Array<ItemData>();
         GladiatorStock ??= new Array<GladiatorData>();
         if (!HasInitializedItemStock || HasItemStockMissingIcons())
@@ -45,7 +41,6 @@ public partial class MarketData : Resource
     public void ExecuteNewDay()
     {
         EnsureResources();
-        RationStore.RefreshDailyStock();
         RefreshItemStock();
         RefreshGladiatorStock();
     }

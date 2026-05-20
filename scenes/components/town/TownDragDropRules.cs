@@ -10,8 +10,7 @@ public static class TownDragDropRules
         return new Array<TownDragPayloadKind>
         {
             TownDragPayloadKind.Gladiator,
-            TownDragPayloadKind.Item,
-            TownDragPayloadKind.Ration
+            TownDragPayloadKind.Item
         };
     }
 

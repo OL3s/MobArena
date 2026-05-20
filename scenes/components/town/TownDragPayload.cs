@@ -6,8 +6,7 @@ namespace MobArena.Scenes.Components.Town;
 public enum TownDragPayloadKind
 {
     Gladiator,
-    Item,
-    Ration
+    Item
 }
 
 public readonly struct TownDragPayload
@@ -17,7 +16,6 @@ public readonly struct TownDragPayload
         Kind = TownDragPayloadKind.Gladiator;
         Gladiator = gladiator;
         Item = null;
-        RationQuality = null;
     }
 
     public TownDragPayload(ItemData item)
@@ -25,21 +23,11 @@ public readonly struct TownDragPayload
         Kind = TownDragPayloadKind.Item;
         Gladiator = null;
         Item = item;
-        RationQuality = null;
-    }
-
-    public TownDragPayload(RationStoreData.RationQuality rationQuality)
-    {
-        Kind = TownDragPayloadKind.Ration;
-        Gladiator = null;
-        Item = null;
-        RationQuality = rationQuality;
     }
 
     public TownDragPayloadKind Kind { get; }
     public GladiatorData Gladiator { get; }
     public ItemData Item { get; }
-    public RationStoreData.RationQuality? RationQuality { get; }
 
     public string GetDebugName()
     {
@@ -47,7 +35,6 @@ public readonly struct TownDragPayload
         {
             TownDragPayloadKind.Gladiator => Gladiator?.GladiatorName ?? "Unknown Gladiator",
             TownDragPayloadKind.Item => Item?.DisplayName ?? "Unknown Item",
-            TownDragPayloadKind.Ration => $"{RationQuality?.ToString() ?? "Unknown"} Ration",
             _ => "Unknown Payload"
         };
     }

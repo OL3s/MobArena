@@ -1,4 +1,5 @@
 using Godot;
+using MobArena.Scripts.Resources;
 
 namespace MobArena.Scripts;
 
@@ -16,7 +17,9 @@ public partial class Arena : Node
 
     private void OnReturnToTownPressed()
     {
-        SaveNode.Get().TownTimeState.ResetToPause();
+        var saveNode = SaveNode.Get();
+        PhaseTransitionController.CompleteArenaDay(saveNode.TownPhaseState, saveNode.CompanyRunData);
+        saveNode.Save();
         GetTree().ChangeSceneToFile(TownScene);
     }
 }

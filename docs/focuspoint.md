@@ -10,10 +10,15 @@ The current town-management foundation is in place.
 - Roster management happens through the town-center `RosterYard`. The old separate Roster Hall scene path has been removed.
 - Modal UI should go through `GlobalOverlay`; legacy `SceneOverlay` and `ConfirmationOverlay` have been removed.
 - Company state is split between `CompanyRunData` for current mutable run state and `CompanyCareerData` for long-term totals. `SaveNode` should remain the save/load/runtime boundary.
-- Town drag/drop is a core management system. Current payloads are gladiators, equipment items, and rations. Town buildings and roaming roster-yard gladiators can receive drops through `ITownDragDropTarget`.
+- Town drag/drop is a core management system. Current payloads are gladiators and equipment items. Town buildings and roaming roster-yard gladiators can receive drops through `ITownDragDropTarget`.
 - `CompanyRunData.TownAssignments` owns assignment lists for courtyard, arena, healer, and training hall. Arena capacity follows `LocalInputConfig.ControllerSetups.Count`.
-- Arena, Healer, and Training Hall overlays show assigned gladiator rows. Arena also has control assignment setup stored in `CompanyRunData.ArenaControlAssignments`.
-- Market/rations/blacksmith foundations exist: rations can be bought/sold/fed, item resources and item stock exist, blacksmith purchasing adds items to `CompanyRunData.Inventory`, and gladiator recruitment is functional through `MarketData.GladiatorStock`.
+- Arena, Healer, and Training Hall overlays show assigned gladiator rows. Arena currently has control assignment setup stored in `CompanyRunData.ArenaControlAssignments`, but this should move toward per-contract launch configuration.
+- Market/blacksmith foundations exist: item resources and item stock exist, blacksmith purchasing adds items to `CompanyRunData.Inventory`, and gladiator recruitment is functional through `MarketData.GladiatorStock`.
+- The arena-first branch removes continuous town time, legacy supply upkeep, and the champion deadline timer. The town loop now uses `TownPhaseState` with only Day and Night.
+- Returning from arena completes Day -> Night through `PhaseTransitionController.CompleteArenaDay`. The town HUD `Next Day` button is enabled only at Night and calls `PhaseTransitionController.AdvanceToNextDay`.
+- The town HUD Day action is `Select Contract` and opens the same Arena contracts flow as clicking the Arena building. The bottom HUD scene has been cleaned so the editor layout matches runtime behavior, without hidden legacy speed/timeline controls.
+- Champion cadence is back as a lightweight seven-day cycle. The HUD shows `Champion in X days` or `Champion Day!`; contract filtering for Champion Day is still a next implementation step.
+- Healer and Training Hall phase work runs once on Day -> Night and once on Night -> Day through `CompanyRunData.ExecutePhaseBuildingWork`.
 - Equipment ownership exists, but equipping/unequipping items onto gladiators is not implemented yet.
 - Contract/combat resources are not implemented yet. Arena contract cards are still mock cards and arena combat startup is still placeholder.
 
@@ -21,17 +26,21 @@ The current town-management foundation is in place.
 
 Work the short-term backlog in this order unless the user redirects.
 
-1. `#18 Equip inventory items onto gladiators with validation`
-2. `#3 Add item combat stats and equipment requirements`
-3. `#49 Improve gladiator market recruit cards and variety`
-4. `#10 Implement Healer overlay with paid health recovery`
-5. `#13 Apply town open/closed behavior to buildings and overlays`
-6. `#11 Implement Training Hall progression actions`
-7. `#16 Implement MVP XP and level progression`
+1. Filter Arena contracts by champion cadence: on Champion Day, only champion contracts should be selectable.
+2. Move controller configuration into contract start: configure local controllers dynamically each time a contract is launched, not from main menu/global setup.
+3. `#18 Equip inventory items onto gladiators with validation`
+4. `#3 Add item combat stats and equipment requirements`
+5. `#49 Improve gladiator market recruit cards and variety`
+6. `#10 Improve Healer overlay around phase-based paid health recovery`
+7. `#11 Implement Training Hall progression actions on phase transitions`
+8. `#16 Implement MVP XP and level progression`
 
 ## Immediate Direction
 
-- Start with equipment assignment: let players equip/unequip items from `CompanyRunData.Inventory` onto a gladiator's `GladiatorEquipmentData`.
+- Start with controller configuration at contract launch: when the player starts an Arena contract, open/require the controller config flow there, dynamically assign the current local controller setup for that contract, then launch only when assigned Arena gladiators have valid controls.
+- Do not make the main menu the place where contract control setup is finalized. Main menu controls can remain a general display/settings entry point, but contract participant/controller mapping should be resolved immediately before starting a contract.
+- Keep launch validation in run/resource APIs where practical so stale controller setup or assignment state cannot start a contract accidentally.
+- After contract-launch controller config, continue with equipment assignment: let players equip/unequip items from `CompanyRunData.Inventory` onto a gladiator's `GladiatorEquipmentData`.
 - Preserve slot rules: armor/main-hand/off-hand type validation, two-handed main-hand clearing or blocking off-hand, and replaced equipment returning to inventory.
 - Prefer using the existing town drag/drop system. Dragging equipment onto roaming roster-yard gladiators should be the primary physical interaction, with an overlay/button path only if needed for clarity.
 - Keep item movement centralized through `CompanyRunData` helpers and emit `RunChanged` after mutations.
@@ -42,9 +51,8 @@ Work the short-term backlog in this order unless the user redirects.
 ## Short-Term Direction
 
 - Improve gladiator market cards and recruit variety after the equip path is usable. Hiring must stay centralized through `CompanyRunData.TryBuyGladiator`/`AddGladiator` so purchase value and `CompanyCareerData.TotalGladiatorsInCareer` stay correct.
-- Make Healer actions spend current gold and restore health for assigned living gladiators. Do not restore stamina there.
-- Wire town open/closed rules through `TownTimeState.IsTownOpen()` and `AreStoresOpen()` rather than duplicating time logic in overlays.
-- Build Training Hall actions around the XP/progression system once `#16` defines the MVP rules.
+- Make Healer UI explain the phase-based paid health recovery that now runs on both phase transitions. Do not restore stamina there.
+- Build Training Hall actions around the XP/progression system once `#16` defines the MVP rules. Keep exhaustion as the limiter for repeated use and overtraining.
 - Keep gladiator death centralized through `CompanyRunData.KillGladiator`; dead gladiators move from active `Gladiators` to `Cemetery`, not an active-roster dead flag.
 
 ## Later, Not Now

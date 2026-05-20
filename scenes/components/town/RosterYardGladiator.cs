@@ -1,11 +1,12 @@
 using Godot;
+using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scenes.Components.Town;
 
-public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
+public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHoverInfoProvider
 {
     private const float DisplayHeight = 72f;
     private const float RiskWarningThreshold = 5f;
@@ -15,7 +16,8 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
 
     private bool _displayDetail;
     private bool _isHovered;
-    private bool _isSelected;
+    private bool _showCompactEquipment;
+    private bool _showCompactHealthBar;
 
 	private GladiatorData _gladiatorData;
 	private ColorRect _background;
@@ -23,15 +25,19 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
     private Area2D _interactionArea;
     private Label _nameLabel;
     private HBoxContainer _riskWarnings;
-    private TextureRect _provisionsWarningIcon;
     private TextureRect _exhaustionWarningIcon;
     private VBoxContainer _detailRows;
-    private TextureRect _mainItemIcon;
-    private TextureRect _armorIcon;
-    private TextureRect _offItemIcon;
-    private ProgressBar _healthBar;
-    private ProgressBar _provisionsBar;
-    private ProgressBar _exhaustionBar;
+    private VBoxContainer _compactStatus;
+    private TextureRect _compactMainItemIcon;
+    private TextureRect _compactArmorIcon;
+    private TextureRect _compactOffItemIcon;
+    private TextureRect _compactExhaustionIcon;
+    private TextureRect _compactLowHealthIcon;
+    private TextureRect _compactCriticalRiskIcon;
+    private HBoxContainer _compactHealthRow;
+    private VitalProgressBar _compactHealthBar;
+    private HBoxContainer _compactExhaustionRow;
+    private VitalProgressBar _compactExhaustionBar;
 
     [Signal]
     public delegate void PressedEventHandler(RosterYardGladiator gladiator);
@@ -61,8 +67,6 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
         private set => SetDisplayDetail(value);
     }
 
-    public bool IsSelected => _isSelected;
-
     public string DropTargetName => _gladiatorData?.GladiatorName ?? "Town Gladiator";
 
     public int TownDragDropPriority => 10;
@@ -72,20 +76,28 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
 	public override void _Ready()
 	{
 		AddToGroup(RosterYard.DragDropTargetGroup);
+		AddToGroup("town_roster_gladiators");
 		_background = GetNode<ColorRect>("Background");
 		_portrait = GetNode<Sprite2D>("Portrait");
         _interactionArea = GetNode<Area2D>("InteractionArea");
         _nameLabel = GetNode<Label>("Name");
         _riskWarnings = GetNode<HBoxContainer>("RiskWarnings");
-        _provisionsWarningIcon = GetNode<TextureRect>("RiskWarnings/ProvisionsIcon");
         _exhaustionWarningIcon = GetNode<TextureRect>("RiskWarnings/ExhaustionIcon");
         _detailRows = GetNode<VBoxContainer>("Details");
-        _mainItemIcon = GetNode<TextureRect>("Details/EquipmentRow/MainItemIcon");
-        _armorIcon = GetNode<TextureRect>("Details/EquipmentRow/ArmorIcon");
-        _offItemIcon = GetNode<TextureRect>("Details/EquipmentRow/OffItemIcon");
-		_healthBar = GetNode<ProgressBar>("Details/HealthRow/Bar");
-		_provisionsBar = GetNode<ProgressBar>("Details/ProvisionsRow/Bar");
-		_exhaustionBar = GetNode<ProgressBar>("Details/ExhaustionRow/Bar");
+        _compactStatus = GetNode<VBoxContainer>("CompactStatus");
+        _compactMainItemIcon = GetNode<TextureRect>("CompactStatus/StatusRow/MainItemIcon");
+        _compactArmorIcon = GetNode<TextureRect>("CompactStatus/StatusRow/ArmorIcon");
+        _compactOffItemIcon = GetNode<TextureRect>("CompactStatus/StatusRow/OffItemIcon");
+        _compactExhaustionIcon = GetNode<TextureRect>("CompactStatus/StatusRow/ExhaustionIcon");
+        _compactLowHealthIcon = GetNode<TextureRect>("CompactStatus/StatusRow/LowHealthIcon");
+        _compactCriticalRiskIcon = GetNode<TextureRect>("CompactStatus/StatusRow/CriticalRiskIcon");
+        _compactHealthRow = GetNode<HBoxContainer>("CompactStatus/CompactHealthRow");
+        _compactHealthBar = GetNode<VitalProgressBar>("CompactStatus/CompactHealthRow/Bar");
+        _compactExhaustionRow = GetNode<HBoxContainer>("CompactStatus/CompactExhaustionRow");
+        _compactExhaustionBar = GetNode<VitalProgressBar>("CompactStatus/CompactExhaustionRow/Bar");
+        GetNodeOrNull<Control>("Details/EquipmentRow")?.Hide();
+        GetNodeOrNull<Control>("Details/HealthRow")?.Hide();
+        GetNodeOrNull<Control>("Details/ExhaustionRow")?.Hide();
 
         _interactionArea.MouseEntered += OnMouseEntered;
         _interactionArea.MouseExited += OnMouseExited;
@@ -129,19 +141,8 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
 
         _nameLabel.Text = _gladiatorData.GladiatorName;
         RefreshRiskWarnings();
-        ConfigureBar(_healthBar, _gladiatorData.Health, _gladiatorData.MaxHealth);
-        ConfigureBar(_provisionsBar, _gladiatorData.Provisions, 10f);
-        ConfigureBar(_exhaustionBar, _gladiatorData.Exhaustion, 10f);
-        RefreshEquipmentIcons();
         RefreshDetails();
-    }
-
-    private void RefreshEquipmentIcons()
-    {
-        var equipment = _gladiatorData?.Equipment;
-        SetEquipmentIcon(_mainItemIcon, equipment?.MainHand);
-        SetEquipmentIcon(_armorIcon, equipment?.Armor);
-        SetEquipmentIcon(_offItemIcon, equipment?.OffHand);
+        RefreshCompactStatus();
     }
 
     private void RefreshRiskWarnings()
@@ -149,26 +150,27 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
         if (_riskWarnings == null || _gladiatorData == null)
             return;
 
-        _provisionsWarningIcon.Visible = _gladiatorData.Provisions < RiskWarningThreshold;
         _exhaustionWarningIcon.Visible = _gladiatorData.Exhaustion < RiskWarningThreshold;
-        _riskWarnings.Visible = _provisionsWarningIcon.Visible || _exhaustionWarningIcon.Visible;
+        _riskWarnings.Visible = false;
     }
 
     private void RefreshDetails()
     {
-        DisplayDetail = _isHovered || _isSelected;
+        DisplayDetail = _isHovered;
     }
 
     private void OnMouseEntered()
     {
         _isHovered = true;
         RefreshDetails();
+        ShowTownHoverInfo(GetTownHud());
     }
 
     private void OnMouseExited()
     {
         _isHovered = false;
         RefreshDetails();
+        GetTownHud()?.HideHoverInfo(this);
     }
 
     private void OnInputEvent(Node viewport, InputEvent inputEvent, long shapeIdx)
@@ -186,15 +188,24 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
         EmitSignal(SignalName.Pressed, this);
     }
 
-    public void SetSelected(bool selected)
-    {
-        _isSelected = selected;
-        RefreshDetails();
-    }
-
     public void SetDragHidden(bool dragHidden)
     {
         Visible = !dragHidden;
+    }
+
+    public void SetCompactStatusContext(bool showEquipment, bool showHealthBar)
+    {
+        if (_showCompactEquipment == showEquipment && _showCompactHealthBar == showHealthBar)
+            return;
+
+        _showCompactEquipment = showEquipment;
+        _showCompactHealthBar = showHealthBar;
+        RefreshCompactStatus();
+    }
+
+    public void ShowTownHoverInfo(TownHud hud)
+    {
+        hud?.ShowGladiatorHoverInfo(this, _gladiatorData);
     }
 
     public bool CanReceiveTownDragDrop(TownDragPayload payload, Vector2 viewportPosition)
@@ -215,14 +226,11 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
 
     public void ReceiveTownDragDrop(TownDragPayload payload, Vector2 viewportPosition)
     {
-        if (payload.Kind == TownDragPayloadKind.Ration)
+        if (payload.Kind == TownDragPayloadKind.Item)
         {
-            TryFeedRation(payload);
+            TryEquipDroppedItem(payload);
             return;
         }
-
-        if (payload.Kind == TownDragPayloadKind.Item)
-            ValidateDroppedItemExists(payload);
 
         GD.Print(TownDragDropRules.FormatDropMessage(payload, "gladiator", DropTargetName));
     }
@@ -242,47 +250,52 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
 			_detailRows.Visible = _displayDetail;
 
 		if (_background != null)
-			_background.Visible = _displayDetail;
+			_background.Visible = false;
 	}
 
-    private static void ConfigureBar(ProgressBar bar, float value, float maxValue)
+    private void RefreshCompactStatus()
     {
-        if (bar == null)
+        if (!IsNodeReady() || _compactStatus == null || _gladiatorData == null)
             return;
 
-        bar.MaxValue = Mathf.Max(1f, maxValue);
-        bar.Value = Mathf.Clamp(value, 0f, maxValue);
+        var equipment = _gladiatorData.Equipment;
+        SetEquipmentIcon(_compactMainItemIcon, equipment?.MainHand, _showCompactEquipment);
+        SetEquipmentIcon(_compactArmorIcon, equipment?.Armor, _showCompactEquipment);
+        SetEquipmentIcon(_compactOffItemIcon, equipment?.OffHand, _showCompactEquipment);
+
+        var riskStatus = GetRiskStatus(_gladiatorData);
+        _compactExhaustionIcon.Visible = riskStatus == GladiatorRiskStatus.Exhausted;
+        _compactLowHealthIcon.Visible = riskStatus == GladiatorRiskStatus.LowHealth;
+        _compactCriticalRiskIcon.Visible = riskStatus == GladiatorRiskStatus.Critical;
+
+        _compactHealthRow.Visible = _showCompactHealthBar;
+        _compactHealthBar.ShowHealth(_gladiatorData);
+        _compactExhaustionRow.Visible = _showCompactHealthBar;
+        _compactExhaustionBar.ShowExhaustion(_gladiatorData.Exhaustion);
+        _compactStatus.Visible = _showCompactEquipment || _showCompactHealthBar || riskStatus != GladiatorRiskStatus.None;
     }
 
-    private static void SetEquipmentIcon(TextureRect icon, ItemData item)
+    private static void SetEquipmentIcon(TextureRect icon, ItemData item, bool showEquipment)
     {
         if (icon == null)
             return;
 
         icon.Texture = item?.Icon;
-        icon.TooltipText = item?.DisplayName ?? string.Empty;
+        icon.TooltipText = item?.DisplayName ?? "Empty equipment slot";
+        icon.Visible = showEquipment;
+        icon.Modulate = item == null ? new Color(1f, 1f, 1f, 0.28f) : Colors.White;
     }
 
-    private void TryFeedRation(TownDragPayload payload)
+    private static GladiatorRiskStatus GetRiskStatus(GladiatorData gladiatorData)
     {
-        if (payload.RationQuality == null)
-        {
-            GD.PushError($"Drop feed failed: ration payload dropped on gladiator '{DropTargetName}' without a ration quality.");
-            return;
-        }
+        if (gladiatorData == null)
+            return GladiatorRiskStatus.None;
 
-        var runData = SaveNode.Get()?.CompanyRunData;
-        if (runData == null)
-        {
-            GD.PushError($"Drop feed failed: company run data missing while feeding gladiator '{DropTargetName}'.");
-            return;
-        }
-
-        if (runData.TryFeedGladiatorRation(_gladiatorData, payload.RationQuality.Value))
-            GD.Print($"Drop feed: fed {payload.RationQuality.Value} ration to gladiator '{DropTargetName}'.");
+        var warningRatio = SaveNode.Get()?.SettingsConfig?.LowHealthWarningRatio ?? 0.6f;
+        return gladiatorData.GetRiskStatus(RiskWarningThreshold, warningRatio);
     }
 
-    private static void ValidateDroppedItemExists(TownDragPayload payload)
+    private void TryEquipDroppedItem(TownDragPayload payload)
     {
         var runData = SaveNode.Get()?.CompanyRunData;
         if (runData == null)
@@ -291,7 +304,12 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget
             return;
         }
 
-        if (!runData.HasItem(payload.Item))
-            GD.PushError($"Drop item failed: item '{payload.Item?.DisplayName ?? "null"}' is not in company inventory.");
+        if (runData.TryEquipItemOnGladiator(_gladiatorData, payload.Item))
+            GD.Print($"Drop equip: equipped item '{payload.Item?.DisplayName ?? "null"}' on gladiator '{DropTargetName}'.");
+    }
+
+    private TownHud GetTownHud()
+    {
+        return GetTree()?.GetFirstNodeInGroup("town_hover_info") as TownHud;
     }
 }

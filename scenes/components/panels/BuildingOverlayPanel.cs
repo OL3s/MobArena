@@ -10,6 +10,10 @@ public partial class BuildingOverlayPanel : Control
     private const float PanelWidthRatio = 0.68f;
     private const int PanelMinWidth = 420;
     private const int PanelMaxWidth = 820;
+    private const float ExhaustionWarningThreshold = 5f;
+    private const string ExhaustionIconPath = "res://assets/ui/gladiator_icons/exhaustion.svg";
+    private const string HealthIconPath = "res://assets/ui/gladiator_icons/health.svg";
+    private const string CriticalRiskIconPath = "res://assets/ui/gladiator_icons/critical_risk.svg";
 
     [Export]
     public string Title { get; set; } = "Building";
@@ -101,18 +105,56 @@ public partial class BuildingOverlayPanel : Control
         }
     }
 
-    private Button CreateAssignedGladiatorButton(GladiatorData gladiator)
+    private Control CreateAssignedGladiatorButton(GladiatorData gladiator)
     {
-        var button = new Button
+        var container = new Control
         {
             CustomMinimumSize = new Vector2(48, 48),
+            TooltipText = $"Drag {gladiator.GladiatorName}"
+        };
+
+        var button = new Button
+        {
+            AnchorsPreset = (int)LayoutPreset.FullRect,
             Icon = gladiator.GetPortraitTexture(),
             TooltipText = $"Drag {gladiator.GladiatorName}",
             ExpandIcon = true
         };
+        button.SetAnchorsPreset(LayoutPreset.FullRect);
+        container.AddChild(button);
+
+        var riskIconPath = GetRiskIconPath(gladiator);
+        if (!string.IsNullOrEmpty(riskIconPath))
+        {
+            var riskIcon = new TextureRect
+            {
+                Texture = ResourceLoader.Load<Texture2D>(riskIconPath),
+                MouseFilter = MouseFilterEnum.Ignore,
+                Modulate = new Color(1f, 1f, 1f, 0.8f),
+                ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
+            };
+            riskIcon.SetAnchorsPreset(LayoutPreset.FullRect);
+            container.AddChild(riskIcon);
+        }
 
         button.ButtonDown += () => OnAssignedGladiatorDragRequested(gladiator);
-        return button;
+        return container;
+    }
+
+    private static string GetRiskIconPath(GladiatorData gladiator)
+    {
+        if (gladiator == null)
+            return string.Empty;
+
+        var warningRatio = SaveNode.Get()?.SettingsConfig?.LowHealthWarningRatio ?? 0.6f;
+        return gladiator.GetRiskStatus(ExhaustionWarningThreshold, warningRatio) switch
+        {
+            GladiatorRiskStatus.Critical => CriticalRiskIconPath,
+            GladiatorRiskStatus.Exhausted => ExhaustionIconPath,
+            GladiatorRiskStatus.LowHealth => HealthIconPath,
+            _ => string.Empty
+        };
     }
 
     private void OnAssignedGladiatorDragRequested(GladiatorData gladiator)

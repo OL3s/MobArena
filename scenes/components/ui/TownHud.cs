@@ -10,43 +10,37 @@ public partial class TownHud : CanvasLayer
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
 	private const string GladiatorDeathOverlayScenePath = "res://scenes/ui/GladiatorDeathOverlay.tscn";
-	private readonly Texture2D _speedX0Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/pause.svg");
-	private readonly Texture2D _speedSlowedIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_slowed.svg");
-	private readonly Texture2D _speedX1Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x1.svg");
-	private readonly Texture2D _speedX10Icon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/speed_x10.svg");
+	private const string TownHoverInfoPanelScenePath = "res://scenes/components/ui/TownHoverInfoPanel.tscn";
 
 	[Signal]
 	public delegate void BackPressedEventHandler();
 
+	[Signal]
+	public delegate void SelectContractPressedEventHandler();
+
 	private SaveNode _saveNode;
-	private TownTimeState _timeState;
+	private TownPhaseState _phaseState;
 	private CompanyLogo _companyLogo;
 	private Label _companyNameLabel;
 	private Label _gladiatorCountLabel;
 	private Label _championsWonCountLabel;
 	private Label _goldLabel;
 	private Label _fameLabel;
-	private Label _poorRationsSupplyLabel;
-	private Label _commonRationsSupplyLabel;
-	private Label _fineRationsSupplyLabel;
-	private Label _totalRationsSupplyLabel;
-	private Label _starvingLabel;
+	private Label _criticalRiskLabel;
 	private Label _exhaustedLabel;
-	private Button _speedToggleButton;
+	private Label _lowHealthLabel;
+	private Button _nextDayButton;
 	private Label _dayLabel;
-	private TimelineLine _dayProgress;
-	private Label _dayPhaseLabel;
-	private TimelineLine _championProgress;
-	private Label _championProgressValue;
-	private Timer _timeTickTimer;
-	private bool _championContractDuePopupShown;
-	private bool _resumeAfterPopupPause;
-	private int _starvingWarningPopupShownDay;
+	private Label _championDueLabel;
+	private TextureRect _sunIcon;
+	private TextureRect _moonIcon;
+	private TownHoverInfoPanel _hoverInfoPanel;
+	private object _hoverSource;
 
 	public override void _Ready()
 	{
 		_saveNode = SaveNode.Get();
-		_timeState = _saveNode?.TownTimeState ?? new TownTimeState();
+		_phaseState = _saveNode?.TownPhaseState ?? new TownPhaseState();
 
 		_companyLogo = GetNode<CompanyLogo>("TopPanel/Row/CompanyStatus/Shield");
 		_companyNameLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/CompanyName");
@@ -54,19 +48,18 @@ public partial class TownHud : CanvasLayer
 		_championsWonCountLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/StatsRow/ChampionsWonCount");
 		_goldLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/GoldRow/GoldLabel");
 		_fameLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/FameRow/FameLabel");
-		_poorRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/PoorRow/Label");
-		_commonRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/CommonRow/Label");
-		_fineRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/FineRow/Label");
-		_totalRationsSupplyLabel = GetNode<Label>("TopPanel/Row/SupplyPanel/SupplyColumn/RationGrid/TotalRow/Label");
-		_starvingLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/StarvingRow/StarvingLabel");
-		_exhaustedLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/ExhaustionRow/ExhaustedLabel");
+		_criticalRiskLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/CriticalRiskRow/CriticalRiskLabel");
+		_exhaustedLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/ExhaustionRow/ExhaustedLabel");
+		_lowHealthLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/LowHealthRow/LowHealthLabel");
 		var companyStatus = GetNode<Control>("TopPanel/Row/CompanyStatus");
-		_speedToggleButton = GetNode<Button>("BottomPanel/TimeRow/PauseButton");
-		_dayLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarRow/DayLabel");
-		_dayProgress = GetNode<TimelineLine>("BottomPanel/TimeRow/CalendarPanel/CalendarRow/DayProgress");
-		_dayPhaseLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarRow/DayPhaseLabel");
-		_championProgress = GetNode<TimelineLine>("BottomPanel/TimeRow/TimelinePanel/TimelineRow/ChampionProgress");
-		_championProgressValue = GetNode<Label>("BottomPanel/TimeRow/TimelinePanel/TimelineRow/ChampionProgressValue");
+		_nextDayButton = GetNode<Button>("BottomPanel/TimeRow/PhaseActionButton");
+		_dayLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/DayLabel");
+		_championDueLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/ChampionRow/ChampionDueLabel");
+		_sunIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/SunIcon");
+		_moonIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/MoonIcon");
+		GetNodeOrNull<Control>("TopPanel/Row/SupplyPanel")?.Hide();
+		CreateHoverInfoPanel(GetNode<HBoxContainer>("BottomPanel/TimeRow"));
+		AddToGroup("town_hover_info");
 
 		_companyLogo.SetLogoData(_saveNode?.CompanyLogoData ?? CompanyLogoData.CreateDefault());
 		_companyLogo.Pressed += OpenCompanyOverview;
@@ -74,19 +67,8 @@ public partial class TownHud : CanvasLayer
 		_companyLogo.MouseExited += OnCompanyLogoMouseExited;
 		companyStatus.GuiInput += OnCompanyStatusGuiInput;
 		GetNode<Button>("TopPanel/Row/BackButton").Pressed += OnBackPressed;
-		GetNode<Button>("BottomPanel/TimeRow/SpeedDownButton").Pressed += OnSpeedDownPressed;
-		_speedToggleButton.Pressed += OnPausePressed;
-		GetNode<Button>("BottomPanel/TimeRow/SpeedUpButton").Pressed += OnSpeedUpPressed;
-
-		_timeTickTimer = GetNode<Timer>("TimeTickTimer");
-		_timeTickTimer.Timeout += OnTimeTickTimerTimeout;
-		_timeState.TimeChanged += RefreshTimeUi;
-		var globalOverlay = GlobalOverlay.Get();
-		if (globalOverlay != null)
-		{
-			globalOverlay.PopupGamePauseRequested += OnPopupGamePauseRequested;
-			globalOverlay.PopupGameResumeRequested += OnPopupGameResumeRequested;
-		}
+		_nextDayButton.Pressed += OnNextDayPressed;
+		_phaseState.PhaseChanged += RefreshPhaseUi;
 
 		if (_saveNode?.CompanyRunData != null)
 		{
@@ -99,21 +81,13 @@ public partial class TownHud : CanvasLayer
 
 		RefreshCompanyUi();
 		RefreshRunUi();
-		ConfigureTimelineLines();
-		RefreshTimeUi();
+		RefreshPhaseUi();
 	}
 
 	public override void _ExitTree()
 	{
-		if (_timeState != null)
-			_timeState.TimeChanged -= RefreshTimeUi;
-
-		var globalOverlay = GlobalOverlay.Get();
-		if (globalOverlay != null)
-		{
-			globalOverlay.PopupGamePauseRequested -= OnPopupGamePauseRequested;
-			globalOverlay.PopupGameResumeRequested -= OnPopupGameResumeRequested;
-		}
+		if (_phaseState != null)
+			_phaseState.PhaseChanged -= RefreshPhaseUi;
 
 		if (_companyLogo != null)
 		{
@@ -137,49 +111,19 @@ public partial class TownHud : CanvasLayer
 		EmitSignal(SignalName.BackPressed);
 	}
 
-	private void OnSpeedDownPressed()
+	private void OnNextDayPressed()
 	{
-		_timeState.DecreaseSpeed();
-		RefreshSpeedToggleButton();
-	}
+		if (!_phaseState.CanAdvanceToNextDay)
+		{
+			EmitSignal(SignalName.SelectContractPressed);
+			return;
+		}
 
-	private void OnPausePressed()
-	{
-		_timeState.TogglePaused();
-		RefreshSpeedToggleButton();
-	}
-
-	private void OnSpeedUpPressed()
-	{
-		_timeState.IncreaseSpeed();
-		RefreshSpeedToggleButton();
-	}
-
-	private void OnPopupGamePauseRequested()
-	{
-		_resumeAfterPopupPause = _timeState.CurrentSpeed != TownTimeState.TimeSpeed.X0;
-		_timeState.ResetToPause();
-	}
-
-	private void OnPopupGameResumeRequested()
-	{
-		if (!_resumeAfterPopupPause)
+		if (!PhaseTransitionController.AdvanceToNextDay(_phaseState, _saveNode.CompanyRunData))
 			return;
 
-		_resumeAfterPopupPause = false;
-		_timeState.ResumeLastRunningSpeed();
-	}
-
-	private void OnTimeTickTimerTimeout()
-	{
-		var currentDay = _timeState.CurrentDay;
-		GameTimeController.TickOneSecond(_timeState, _saveNode.CompanyRunData, _saveNode.CompanyCareerData);
-
-		if (_timeState.CurrentDay > currentDay)
-		{
-			GD.Print($"SaveNode: Autosaving at new day {_timeState.CurrentDay}.");
-			_saveNode.Save();
-		}
+		GD.Print($"SaveNode: Autosaving at day {_phaseState.CurrentDay}.");
+		_saveNode.Save();
 	}
 
 	private void OnCompanyStatusGuiInput(InputEvent inputEvent)
@@ -204,8 +148,6 @@ public partial class TownHud : CanvasLayer
 
 	private void OnGladiatorDied(GladiatorData gladiatorData)
 	{
-		_timeState.ResetToPause();
-
 		var deathOverlayScene = ResourceLoader.Load<PackedScene>(GladiatorDeathOverlayScenePath);
 		if (deathOverlayScene == null)
 			return;
@@ -281,84 +223,62 @@ public partial class TownHud : CanvasLayer
 		_championsWonCountLabel.Text = $"Champions slayed: {careerData.ChampionsDefeated}";
 		_goldLabel.Text = runData.Gold.ToString();
 		_fameLabel.Text = runData.Fame.ToString();
-		_poorRationsSupplyLabel.Text = (runData.Rations?.PoorRations ?? 0).ToString();
-		_commonRationsSupplyLabel.Text = (runData.Rations?.CommonRations ?? 0).ToString();
-		_fineRationsSupplyLabel.Text = (runData.Rations?.FineRations ?? 0).ToString();
-		_totalRationsSupplyLabel.Text = (runData.Rations?.GetTotal() ?? 0).ToString();
-		_starvingLabel.Text = runData.GetStarvingGladiatorCount().ToString();
+		var lowHealthWarningRatio = _saveNode?.SettingsConfig?.LowHealthWarningRatio ?? 0.6f;
+		_criticalRiskLabel.Text = runData.GetCriticalRiskGladiatorCount(lowHealthWarningRatio).ToString();
 		_exhaustedLabel.Text = runData.GetExhaustedGladiatorCount().ToString();
+		_lowHealthLabel.Text = runData.GetLowHealthGladiatorCount(lowHealthWarningRatio).ToString();
 	}
 
-	private void RefreshTimeUi()
+	private void RefreshPhaseUi()
 	{
-		_dayLabel.Text = _timeState.GetDayLabel();
-		_dayProgress.SetValue(_timeState.GetDayProgressValue(), _timeState.GetDayProgressMax());
-		_dayPhaseLabel.Text = _timeState.GetDayPhaseLabel();
-		_championProgress.SetValue(_timeState.GetChampionProgressValue(), _timeState.GetChampionProgressMax());
-		_championProgressValue.Text = _timeState.GetChampionDeadlineLabel();
-		RefreshSpeedToggleButton();
-		ShowNewDayWarningPopupIfNeeded();
+		_dayLabel.Text = _phaseState.GetDayLabel();
+		_championDueLabel.Text = _phaseState.GetChampionLabel();
+		_sunIcon.Visible = _phaseState.IsDay();
+		_moonIcon.Visible = _phaseState.IsNight();
+		RefreshNextDayButton();
 	}
 
-	private void ShowNewDayWarningPopupIfNeeded()
+	private void RefreshNextDayButton()
 	{
-		var shouldShowChampionWarning = _timeState.ChampionContractDue && !_championContractDuePopupShown;
-		var shouldShowStarvingWarning = _timeState.IsStarvingWarningDueToday()
-			&& _starvingWarningPopupShownDay != _timeState.CurrentDay;
+		_nextDayButton.Text = _phaseState.CanAdvanceToNextDay ? "Next Day" : "Select Contract";
+		_nextDayButton.Icon = null;
+		_nextDayButton.Disabled = false;
+	}
 
-		if (!shouldShowChampionWarning && !shouldShowStarvingWarning)
+	public void ShowGladiatorHoverInfo(object source, GladiatorData gladiatorData)
+	{
+		if (gladiatorData == null)
 			return;
 
-		var globalOverlay = GlobalOverlay.Get();
-
-		if (shouldShowChampionWarning)
-		{
-			_championContractDuePopupShown = true;
-			globalOverlay?.ShowBlurredPopup(
-				"Champion Contract Due",
-				"A champion contract is now due. Complete it before the end of the day to proceed.",
-				pauseGameUntilClosed: true);
-		}
-
-		if (shouldShowStarvingWarning)
-		{
-			_starvingWarningPopupShownDay = _timeState.CurrentDay;
-			var starvingGladiatorCount = _timeState.StarvingWarningCount;
-			var starvingGladiatorLabel = starvingGladiatorCount == 1 ? "1 gladiator is" : $"{starvingGladiatorCount} gladiators are";
-			globalOverlay?.ShowBlurredPopup(
-				"Gladiators Starving",
-				$"{starvingGladiatorLabel} starving. Buy or assign rations before their provisions run out.",
-				pauseGameUntilClosed: true);
-		}
+		_hoverSource = source;
+		_hoverInfoPanel.ShowGladiator(gladiatorData);
 	}
 
-	private void ConfigureTimelineLines()
+	public void ShowBuildingHoverInfo(object source, Texture2D icon, string title, string description)
 	{
-		_dayProgress.ClearSegments();
-		_dayProgress.AddSegment(0, _timeState.GetTownOpenMinute(), new Color(0.72f, 0.28f, 0.22f, 0.22f));
-		_dayProgress.AddSegment(_timeState.GetTownOpenMinute(), _timeState.GetTownCloseMinute(), new Color(0.28f, 0.68f, 0.34f, 0.32f));
-		_dayProgress.AddSegment(_timeState.GetTownCloseMinute(), _timeState.GetDayProgressMax(), new Color(0.85f, 0.64f, 0.24f, 0.24f));
-
-		_championProgress.ClearSegments();
-		_championProgress.AddSegment(_timeState.GetChampionFinalDayStart(), _timeState.GetChampionProgressMax(), new Color(0.75f, 0.16f, 0.12f, 0.32f));
+		_hoverSource = source;
+		_hoverInfoPanel.ShowBuilding(icon, title, description);
 	}
 
-	private void RefreshSpeedToggleButton()
+	public void HideHoverInfo(object source)
 	{
-		_speedToggleButton.Text = _timeState.CurrentSpeed switch
-		{
-			TownTimeState.TimeSpeed.X100 => "Fast",
-			TownTimeState.TimeSpeed.X10 => "Normal",
-			TownTimeState.TimeSpeed.X0 => "Paused",
-			_ => "Slowed"
-		};
+		if (_hoverSource != source)
+			return;
 
-		_speedToggleButton.Icon = _timeState.CurrentSpeed switch
+		_hoverSource = null;
+		_hoverInfoPanel.Clear();
+	}
+
+	private void CreateHoverInfoPanel(HBoxContainer timeRow)
+	{
+		var hoverInfoPanelScene = ResourceLoader.Load<PackedScene>(TownHoverInfoPanelScenePath);
+		if (hoverInfoPanelScene == null)
 		{
-			TownTimeState.TimeSpeed.X100 => _speedX10Icon,
-			TownTimeState.TimeSpeed.X10 => _speedX1Icon,
-			TownTimeState.TimeSpeed.X0 => _speedX0Icon,
-			_ => _speedSlowedIcon
-		};
+			GD.PushError($"Town HUD failed to load hover info panel scene: {TownHoverInfoPanelScenePath}");
+			return;
+		}
+
+		_hoverInfoPanel = hoverInfoPanelScene.Instantiate<TownHoverInfoPanel>();
+		timeRow.AddChild(_hoverInfoPanel);
 	}
 }
