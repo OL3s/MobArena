@@ -29,6 +29,11 @@ Run these from the project root after changing assets, scenes, or C# code:
 - `dotnet build`: compile the Godot C# project.
 - `godot --headless --quit`: load the project headlessly as a quick Godot project sanity check.
 
+## Save Data CLI
+
+- `godot --headless -- --delete-savedata`: delete all project save data under `user://save` and exit without writing a fresh save.
+- Aliases: `--delete`, `--del-storage`, `--delete-user-data`.
+
 ## Repository Layout
 
 - `project.godot`: Godot project configuration.

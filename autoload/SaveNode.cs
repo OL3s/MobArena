@@ -7,6 +7,10 @@ namespace MobArena.Scripts;
 public partial class SaveNode : Node
 {
 	private const int SaveVersion = 1;
+	private const string DeleteFlag = "--delete";
+	private const string DeleteSaveDataFlag = "--delete-savedata";
+	private const string DeleteStorageFlag = "--del-storage";
+	private const string DeleteUserDataFlag = "--delete-user-data";
 	private const string SaveDirectory = "user://save";
 	private const string ManifestPath = SaveDirectory + "/save.cfg";
 	private const string CompanyLogoPath = SaveDirectory + "/company_logo.tres";
@@ -14,6 +18,8 @@ public partial class SaveNode : Node
 	private const string CompanyRunPath = SaveDirectory + "/company_run.tres";
 	private const string TownPhasePath = SaveDirectory + "/town_phase.tres";
 	private const string SettingsPath = SaveDirectory + "/settings.tres";
+
+	private bool _skipExitSave;
 
     [Export]
     public bool HasCompany { get; set; }
@@ -70,12 +76,50 @@ public partial class SaveNode : Node
 
 	public override void _Ready()
 	{
+		if (TryHandleCommandLineSaveOperation())
+			return;
+
 		Load();
 	}
 
 	public override void _ExitTree()
 	{
+		if (_skipExitSave)
+			return;
+
 		Save();
+	}
+
+	private bool TryHandleCommandLineSaveOperation()
+	{
+		if (!HasCommandLineFlag(DeleteFlag, DeleteSaveDataFlag, DeleteStorageFlag, DeleteUserDataFlag))
+			return false;
+
+		_skipExitSave = true;
+		var error = DeleteSave();
+		var exitCode = error == Error.Ok ? 0 : 1;
+		GD.Print($"SaveNode: Command-line save data delete completed with exit code {exitCode}.");
+		GetTree().Quit(exitCode);
+		return true;
+	}
+
+	private static bool HasCommandLineFlag(params string[] acceptedFlags)
+	{
+		return ContainsAnyFlag(OS.GetCmdlineUserArgs(), acceptedFlags) || ContainsAnyFlag(OS.GetCmdlineArgs(), acceptedFlags);
+	}
+
+	private static bool ContainsAnyFlag(string[] args, string[] acceptedFlags)
+	{
+		foreach (var arg in args)
+		{
+			foreach (var acceptedFlag in acceptedFlags)
+			{
+				if (string.Equals(arg, acceptedFlag, StringComparison.OrdinalIgnoreCase))
+					return true;
+			}
+		}
+
+		return false;
 	}
 
     public bool HasSave()
