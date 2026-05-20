@@ -75,6 +75,9 @@ public partial class CompanyRunData : Resource
     public int MobsKilled { get; private set; }
 
     [Export]
+    public bool HasShownFirstTownEntryPopup { get; private set; }
+
+    [Export]
     public TreatmentFocus CurrentTreatmentFocus { get; private set; } = TreatmentFocus.Health;
 
     [Export]
@@ -86,6 +89,15 @@ public partial class CompanyRunData : Resource
             return;
 
         CurrentTreatmentFocus = treatmentFocus;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void MarkFirstTownEntryPopupShown()
+    {
+        if (HasShownFirstTownEntryPopup)
+            return;
+
+        HasShownFirstTownEntryPopup = true;
         EmitSignal(SignalName.RunChanged);
     }
 

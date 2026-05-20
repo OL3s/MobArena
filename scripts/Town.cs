@@ -11,6 +11,8 @@ public partial class Town : Node
     private const string MainMenuScene = "res://scenes/main_menu.tscn";
     private const string GladiatorsOverlayScene = "res://scenes/ui/GladiatorsOverlay.tscn";
     private const string EquipmentInventoryOverlayScene = "res://scenes/ui/EquipmentInventoryOverlay.tscn";
+    private const string FirstTownEntryPopupTitle = "Tutorial";
+    private const string FirstTownEntryPopupText = "Todo, add tutorial with tscn animation popups here";
 
     private TownBuilding _contractBoard;
     private EnvironmentVisualOverlay _environmentOverlay;
@@ -30,6 +32,7 @@ public partial class Town : Node
         GetNode<Button>("World/RosterYard/GladiatorsButton").Pressed += OnGladiatorsPressed;
         GetNode<Button>("World/RosterYard/EquipmentButton").Pressed += OnEquipmentPressed;
         RefreshEnvironmentVisuals();
+        CallDeferred(MethodName.ShowFirstTownEntryPopupIfNeeded);
     }
 
     public override void _ExitTree()
@@ -76,6 +79,18 @@ public partial class Town : Node
             return;
 
         globalOverlay.AddOverlay(overlayScene);
+    }
+
+    private static void ShowFirstTownEntryPopupIfNeeded()
+    {
+        var saveNode = SaveNode.Get();
+        var runData = saveNode.CompanyRunData;
+        if (runData == null || runData.HasShownFirstTownEntryPopup)
+            return;
+
+        runData.MarkFirstTownEntryPopupShown();
+        saveNode.Save();
+        GlobalOverlay.Get()?.ShowBlurredPopup(FirstTownEntryPopupTitle, FirstTownEntryPopupText);
     }
 
     private void RefreshEnvironmentVisuals()

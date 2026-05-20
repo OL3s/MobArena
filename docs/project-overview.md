@@ -49,6 +49,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - `scenes/components/ui/CompanyLogo.tscn` renders the logo as two layers: shield and inner logo.
 - `scenes/ui/CompanyLogoEditorOverlay.tscn` edits company identity through `GlobalOverlay`, including dice-button randomization for the name or full logo setup.
 - Completed company history lives in `scripts/resources/CompletedCompanyHistory.cs` as a Godot `Resource` containing capped, fame-sorted `CompletedCompanyRecord` entries with company identity, career totals, and final fame only. It is persisted by `SaveNode` under `user://save/completed_company_history.tres` and can be viewed from `scenes/ui/CompletedCompaniesOverlay.tscn` through the main menu top-right `Records` button.
+- First town entry per run is tracked by `CompanyRunData.HasShownFirstTownEntryPopup`; `Town.cs` currently shows a placeholder tutorial popup once through `GlobalOverlay` and saves the flag.
 - Main menu disables `Enter Town` until company name/logo data is applied through the editor.
 - Main menu top-right UI has the reusable `SettingsButton.tscn`, which opens the Settings overlay.
 - Town buildings are represented by reusable `TownBuilding.tscn` `Node2D` instances positioned in the `World` layer.
