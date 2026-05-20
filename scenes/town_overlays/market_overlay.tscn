@@ -1,10 +1,9 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/town_overlays/MarketOverlay.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
 [ext_resource type="Texture2D" path="res://assets/town/icons/market_icon.svg" id="3_market_icon"]
 [ext_resource type="Texture2D" path="res://assets/town/icons/roster_icon.svg" id="4_roster_icon"]
-[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/provisions.svg" id="5_rations_icon"]
 [ext_resource type="Texture2D" path="res://assets/town/icons/blacksmith_icon.svg" id="6_blacksmith_icon"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
@@ -81,7 +80,7 @@ vertical_alignment = 1
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 bbcode_enabled = true
-text = "Choose what the company needs. Later this becomes the shared market for recruitment, supplies, and equipment."
+text = "Choose what the company needs. Recruitment and equipment support the arena loop."
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
@@ -95,12 +94,6 @@ custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 text = "Gladiators"
 icon = ExtResource("4_roster_icon")
-
-[node name="RationsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
-text = "Rations"
-icon = ExtResource("5_rations_icon")
 
 [node name="BlacksmithButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(0, 56)

@@ -1,13 +1,40 @@
 using Godot;
 using Godot.Collections;
+using System.Collections.Generic;
 using MobArena.Scripts.Resources.Items;
-using System.Linq;
 
 namespace MobArena.Scripts.Resources;
 
 public partial class CompanyRunData : Resource
 {
+    public const int DefaultGladiatorCapacity = 6;
+
+    public enum TreatmentFocus
+    {
+        Health,
+        Exhaustion
+    }
+
+    public enum TrainingFocus
+    {
+        Overall,
+        Strength,
+        Agility,
+        Vitality,
+        Endurance
+    }
+
     private const float ConditionWarningThreshold = 5f;
+    private const float PhaseRestHealthRecoveryRatio = 0.1f;
+    private const float TreatmentHealthRecoveryRatio = 0.4f;
+    private const float TreatmentExhaustionRecovery = 3f;
+    private const int TreatmentGoldCostPerGladiator = 3;
+    private const int TrainingGoldCostPerGladiator = 2;
+    private const int TrainingStaminaCost = 2;
+    private const float TrainingExhaustionCost = 1f;
+    private const float TrainingAttributeExp = 40f;
+    private const float PhaseRestExhaustionRecovery = 2f;
+    private const float ArenaFightExhaustionCost = 3f;
 
     [Signal]
     public delegate void RunChangedEventHandler();
@@ -28,16 +55,10 @@ public partial class CompanyRunData : Resource
     public Array<GladiatorData> Cemetery { get; private set; } = new();
 
     [Export]
-    public RationInventory Rations { get; private set; } = new();
-
-    [Export]
     public Array<ItemData> Inventory { get; private set; } = new();
 
     [Export]
     public MarketData Market { get; private set; } = new();
-
-    [Export]
-    public RationFeedingPolicyData RationFeedingPolicy { get; private set; } = new();
 
     [Export]
     public TownAssignmentData TownAssignments { get; private set; } = new();
@@ -48,12 +69,45 @@ public partial class CompanyRunData : Resource
     public int AliveGladiators => Gladiators.Count;
 
     [Export]
+    public int GladiatorCapacity { get; private set; } = DefaultGladiatorCapacity;
+
+    [Export]
     public int MobsKilled { get; private set; }
+
+    [Export]
+    public TreatmentFocus CurrentTreatmentFocus { get; private set; } = TreatmentFocus.Health;
+
+    [Export]
+    public TrainingFocus CurrentTrainingFocus { get; private set; } = TrainingFocus.Overall;
+
+    public void SetTreatmentFocus(TreatmentFocus treatmentFocus)
+    {
+        if (CurrentTreatmentFocus == treatmentFocus)
+            return;
+
+        CurrentTreatmentFocus = treatmentFocus;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void SetTrainingFocus(TrainingFocus trainingFocus)
+    {
+        if (CurrentTrainingFocus == trainingFocus)
+            return;
+
+        CurrentTrainingFocus = trainingFocus;
+        EmitSignal(SignalName.RunChanged);
+    }
 
     public void AddGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)
     {
         if (gladiatorData == null)
             return;
+
+        if (!CanAddGladiator())
+        {
+            GD.PushError($"Add gladiator failed: active roster is full ({AliveGladiators}/{GladiatorCapacity}).");
+            return;
+        }
 
         Gladiators.Add(gladiatorData);
         EnsureResources();
@@ -74,12 +128,10 @@ public partial class CompanyRunData : Resource
         }
     }
 
-    public void AddStartingRations()
+    public bool CanAddGladiator()
     {
         EnsureResources();
-        Rations.AddPoorRations(2);
-        Rations.AddCommonRations(1);
-        EmitSignal(SignalName.RunChanged);
+        return AliveGladiators < GladiatorCapacity;
     }
 
     public void AddGold(int amount, CompanyCareerData careerData)
@@ -168,6 +220,37 @@ public partial class CompanyRunData : Resource
         return gladiatorData != null && Gladiators?.Contains(gladiatorData) == true;
     }
 
+    public bool TryEquipItemOnGladiator(GladiatorData gladiatorData, ItemData item)
+    {
+        EnsureResources();
+        if (!HasGladiator(gladiatorData))
+        {
+            GD.PushError($"Equip failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not in the active roster.");
+            return false;
+        }
+
+        if (!HasItem(item))
+        {
+            GD.PushError($"Equip failed: item '{item?.DisplayName ?? "null"}' is not in company inventory.");
+            return false;
+        }
+
+        var equipment = gladiatorData.Equipment;
+        if (equipment == null)
+        {
+            GD.PushError($"Equip failed: gladiator '{gladiatorData.GladiatorName}' has no equipment data.");
+            return false;
+        }
+
+        return item switch
+        {
+            ArmorItemData armor => EquipArmor(gladiatorData, equipment, armor),
+            MainHandItemData mainHand => EquipMainHand(gladiatorData, equipment, mainHand),
+            OffHandItemData offHand => EquipOffHand(gladiatorData, equipment, offHand),
+            _ => PushUnsupportedEquipItem(item)
+        };
+    }
+
     public bool RemoveGladiator(GladiatorData gladiatorData)
     {
         if (gladiatorData == null || Gladiators == null)
@@ -225,13 +308,63 @@ public partial class CompanyRunData : Resource
         return 1;
     }
 
+    private bool EquipArmor(GladiatorData gladiatorData, GladiatorEquipmentData equipment, ArmorItemData armor)
+    {
+        Inventory.Remove(armor);
+        ReturnEquippedItemToInventory(equipment.Armor, gladiatorData, "armor");
+        equipment.EquipArmor(armor);
+        GD.Print($"Equip: '{gladiatorData.GladiatorName}' equipped armor '{armor.DisplayName}'.");
+        EmitSignal(SignalName.RunChanged);
+        return true;
+    }
+
+    private bool EquipMainHand(GladiatorData gladiatorData, GladiatorEquipmentData equipment, MainHandItemData mainHand)
+    {
+        Inventory.Remove(mainHand);
+        ReturnEquippedItemToInventory(equipment.MainHand, gladiatorData, "main hand");
+        if (mainHand.IsTwoHanded)
+            ReturnEquippedItemToInventory(equipment.OffHand, gladiatorData, "off hand");
+
+        equipment.EquipMainHand(mainHand);
+        GD.Print($"Equip: '{gladiatorData.GladiatorName}' equipped main hand '{mainHand.DisplayName}'.");
+        EmitSignal(SignalName.RunChanged);
+        return true;
+    }
+
+    private bool EquipOffHand(GladiatorData gladiatorData, GladiatorEquipmentData equipment, OffHandItemData offHand)
+    {
+        if (!equipment.CanEquipOffHand())
+        {
+            GD.PushError($"Equip failed: gladiator '{gladiatorData.GladiatorName}' cannot equip off-hand '{offHand.DisplayName}' while using two-handed main hand '{equipment.MainHand?.DisplayName ?? "null"}'.");
+            return false;
+        }
+
+        Inventory.Remove(offHand);
+        ReturnEquippedItemToInventory(equipment.OffHand, gladiatorData, "off hand");
+        if (!equipment.TryEquipOffHand(offHand))
+        {
+            Inventory.Add(offHand);
+            GD.PushError($"Equip failed: gladiator '{gladiatorData.GladiatorName}' rejected off-hand '{offHand.DisplayName}'.");
+            return false;
+        }
+
+        GD.Print($"Equip: '{gladiatorData.GladiatorName}' equipped off hand '{offHand.DisplayName}'.");
+        EmitSignal(SignalName.RunChanged);
+        return true;
+    }
+
+    private static bool PushUnsupportedEquipItem(ItemData item)
+    {
+        GD.PushError($"Equip failed: item '{item?.DisplayName ?? "null"}' is not an armor, main-hand, or off-hand item.");
+        return false;
+    }
+
     public bool TryBuyItem(ItemData item, int price)
     {
         if (item == null || !TrySpendGold(price))
             return false;
 
         EnsureResources();
-        item.ApplyPurchasedValue();
         Inventory.Add(item);
         EmitSignal(SignalName.RunChanged);
         return true;
@@ -244,32 +377,28 @@ public partial class CompanyRunData : Resource
 
     public bool TryBuyGladiator(GladiatorData gladiatorData, CompanyCareerData careerData, int price)
     {
-        if (gladiatorData == null || !TrySpendGold(price))
+        if (gladiatorData == null || !CanAddGladiator() || !TrySpendGold(price))
             return false;
 
-        gladiatorData.ApplyPurchasedValue();
         AddGladiator(gladiatorData, careerData);
         return true;
     }
 
     public bool TryBuyGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)
     {
-        return TryBuyGladiator(gladiatorData, careerData, gladiatorData?.InitialCost ?? 0);
+        return TryBuyGladiator(gladiatorData, careerData, gladiatorData?.GetMarketValue() ?? 0);
     }
 
     public int GetSaleValue(ItemData item)
     {
-        return Mathf.Max(0, item?.Cost ?? 0);
+        return item == null
+            ? 0
+            : Mathf.Max(1, item.Cost / 2);
     }
 
     public int GetSaleValue(GladiatorData gladiatorData)
     {
         return gladiatorData?.GetMarketSaleValue() ?? 0;
-    }
-
-    public int GetSaleValue(RationStoreData.RationQuality quality)
-    {
-        return RationInventory.GetMarketSaleValue(quality);
     }
 
     public bool TrySellItem(ItemData item, CompanyCareerData careerData)
@@ -315,62 +444,6 @@ public partial class CompanyRunData : Resource
             return false;
 
         AddGold(saleValue, careerData);
-        return true;
-    }
-
-    public bool TrySellRation(RationStoreData.RationQuality quality, CompanyCareerData careerData)
-    {
-        EnsureResources();
-        var saleValue = GetSaleValue(quality);
-        if (saleValue <= 0)
-        {
-            GD.PushError($"Drop sell failed: {quality} ration has no sale value.");
-            return false;
-        }
-
-        if (Rations.GetCount(quality) <= 0)
-        {
-            GD.PushError($"Drop sell failed: company inventory has no {quality} rations.");
-            return false;
-        }
-
-        if (!Rations.TryRemoveRation(quality))
-            return false;
-
-        AddGold(saleValue, careerData);
-        return true;
-    }
-
-    public bool TryFeedGladiatorRation(GladiatorData gladiatorData, RationStoreData.RationQuality quality)
-    {
-        EnsureResources();
-        if (!HasGladiator(gladiatorData))
-        {
-            GD.PushError($"Drop feed failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not in the active roster.");
-            return false;
-        }
-
-        var provisionValue = RationStoreData.GetProvisionValue(quality);
-        if (gladiatorData.Provisions >= provisionValue)
-        {
-            GD.Print($"Drop feed skipped: gladiator '{gladiatorData.GladiatorName}' already has {gladiatorData.Provisions:0.0}/{provisionValue:0.0} provisions for {quality} ration.");
-            return false;
-        }
-
-        if (Rations.GetCount(quality) <= 0)
-        {
-            GD.PushError($"Drop feed failed: company inventory has no {quality} rations.");
-            return false;
-        }
-
-        if (!Rations.TryConsumeRation(quality, out _))
-        {
-            GD.PushError($"Drop feed failed: could not consume {quality} ration despite positive inventory count.");
-            return false;
-        }
-
-        gladiatorData.SetProvisions(provisionValue);
-        EmitSignal(SignalName.RunChanged);
         return true;
     }
 
@@ -498,6 +571,36 @@ public partial class CompanyRunData : Resource
         return removed;
     }
 
+    public void ClearArenaControlAssignments()
+    {
+        EnsureResources();
+        if (ArenaControlAssignments.Count <= 0)
+            return;
+
+        ArenaControlAssignments.Clear();
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void CompleteArenaContractAssignments()
+    {
+        EnsureResources();
+        if (TownAssignments.ArenaGladiators.Count <= 0)
+            return;
+
+        var foughtGladiators = new Array<GladiatorData>(TownAssignments.ArenaGladiators);
+        foreach (var gladiator in foughtGladiators)
+        {
+            if (!HasGladiator(gladiator))
+                continue;
+
+            gladiator.SetExhaustion(gladiator.Exhaustion - ArenaFightExhaustionCost);
+            TownAssignments.MoveToCourtyard(gladiator);
+        }
+
+        ArenaControlAssignments.Clear();
+        EmitSignal(SignalName.RunChanged);
+    }
+
     public bool SyncArenaControlAssignments(Array<LocalInputControllerConfig> controllerSetups)
     {
         EnsureResources();
@@ -547,68 +650,11 @@ public partial class CompanyRunData : Resource
         return true;
     }
 
-    public void SetAutoFeedThreshold(RationStoreData.RationQuality quality, float threshold)
-    {
-        EnsureResources();
-        RationFeedingPolicy.SetFeedBelow(quality, threshold);
-        EmitSignal(SignalName.RunChanged);
-    }
-
-    public void SetAutoFeedEnabled(bool enabled)
-    {
-        EnsureResources();
-        RationFeedingPolicy.SetEnabled(enabled);
-        EmitSignal(SignalName.RunChanged);
-    }
-
-    public void SetAutoFeedPriority(RationFeedingPolicyData.FeedPriority priority)
-    {
-        EnsureResources();
-        RationFeedingPolicy.SetPriority(priority);
-        EmitSignal(SignalName.RunChanged);
-    }
-
-    public int AutoFeedGladiatorsBelowThreshold()
-    {
-        EnsureResources();
-        if (!RationFeedingPolicy.Enabled)
-            return 0;
-
-        var fedCount = 0;
-
-        while (Rations.GetTotal() > 0)
-        {
-            var gladiator = Gladiators
-                .Where(current => current != null && GetAutoFeedRationQuality(current) != null)
-                .OrderBy(current => current.Provisions)
-                .FirstOrDefault();
-
-            var rationQuality = gladiator == null ? null : GetAutoFeedRationQuality(gladiator);
-            if (rationQuality == null)
-                break;
-
-            var provisionValue = RationStoreData.GetProvisionValue(rationQuality.Value);
-            if (gladiator.Provisions >= provisionValue || !Rations.TryConsumeRation(rationQuality.Value, out _))
-                break;
-
-            gladiator.SetProvisions(provisionValue);
-            fedCount++;
-        }
-
-        if (fedCount > 0)
-            EmitSignal(SignalName.RunChanged);
-
-        return fedCount;
-    }
-
     public void EnsureResources()
     {
-        Rations ??= new RationInventory();
         Inventory ??= new Array<ItemData>();
         Market ??= new MarketData();
         Market.EnsureResources();
-        RationFeedingPolicy ??= new RationFeedingPolicyData();
-        RationFeedingPolicy.ClampValues();
         Cemetery ??= new Array<GladiatorData>();
         TownAssignments ??= new TownAssignmentData();
         TownAssignments.SyncWithActiveRoster(Gladiators);
@@ -669,74 +715,361 @@ public partial class CompanyRunData : Resource
         return false;
     }
 
-    private RationStoreData.RationQuality? GetAutoFeedRationQuality(GladiatorData gladiator)
+    public int GetExhaustedGladiatorCount()
     {
-        if (gladiator == null || Rations.GetTotal() <= 0)
-            return null;
+        return GetRiskStatusCount(GladiatorRiskStatus.Exhausted, 0f);
+    }
 
-        var eligibleQualities = new System.Collections.Generic.List<RationStoreData.RationQuality>();
-        AddEligibleRationQuality(eligibleQualities, gladiator, RationStoreData.RationQuality.Poor);
-        AddEligibleRationQuality(eligibleQualities, gladiator, RationStoreData.RationQuality.Common);
-        AddEligibleRationQuality(eligibleQualities, gladiator, RationStoreData.RationQuality.Fine);
+    public int GetLowHealthGladiatorCount(float warningRatio)
+    {
+        return GetRiskStatusCount(GladiatorRiskStatus.LowHealth, warningRatio);
+    }
 
-        if (eligibleQualities.Count <= 0)
-            return null;
+    public int GetCriticalRiskGladiatorCount(float warningRatio)
+    {
+        return GetRiskStatusCount(GladiatorRiskStatus.Critical, warningRatio);
+    }
 
-        return RationFeedingPolicy.Priority switch
+    public int GetIdleAssignedGladiatorCount()
+    {
+        var count = 0;
+        count += GetIdleAssignedGladiatorCount(TownAssignments.HealerGladiators, TownAssignmentData.AssignmentLocation.Healer);
+        count += GetIdleAssignedGladiatorCount(TownAssignments.TrainingHallGladiators, TownAssignmentData.AssignmentLocation.TrainingHall);
+        return count;
+    }
+
+    private int GetIdleAssignedGladiatorCount(IEnumerable<GladiatorData> gladiators, TownAssignmentData.AssignmentLocation assignmentLocation)
+    {
+        var count = 0;
+        foreach (var gladiator in gladiators)
         {
-            RationFeedingPolicyData.FeedPriority.CheapestFirst => eligibleQualities
-                .OrderBy(GetRationSortValue)
-                .First(),
-            RationFeedingPolicyData.FeedPriority.BestFirst => eligibleQualities
-                .OrderByDescending(GetRationSortValue)
-                .First(),
-            _ => eligibleQualities
-                .OrderBy(quality => Mathf.Abs(RationFeedingPolicy.GetFeedBelow(quality) - gladiator.Provisions))
-                .ThenBy(GetRationSortValue)
-                .First()
+            if (IsGladiatorIdleInTownLocation(gladiator, assignmentLocation))
+                count++;
+        }
+
+        return count;
+    }
+
+    public bool IsGladiatorIdleInTownLocation(GladiatorData gladiator, TownAssignmentData.AssignmentLocation assignmentLocation)
+    {
+        if (gladiator == null || !HasGladiator(gladiator))
+            return false;
+
+        return assignmentLocation switch
+        {
+            TownAssignmentData.AssignmentLocation.Healer => !CanExecuteTreatmentPhaseWork(gladiator),
+            TownAssignmentData.AssignmentLocation.TrainingHall => !CanExecuteTrainingPhaseWork(gladiator),
+            _ => false
         };
     }
 
-    private void AddEligibleRationQuality(System.Collections.Generic.List<RationStoreData.RationQuality> eligibleQualities, GladiatorData gladiator, RationStoreData.RationQuality quality)
+    private bool CanExecuteTreatmentPhaseWork(GladiatorData gladiator)
     {
-        var provisionValue = RationStoreData.GetProvisionValue(quality);
-        if (Rations.GetCount(quality) > 0 && gladiator.Provisions < RationFeedingPolicy.GetFeedBelow(quality) && gladiator.Provisions < provisionValue)
-            eligibleQualities.Add(quality);
+        if (gladiator == null || !HasGladiator(gladiator))
+            return false;
+
+        return CurrentTreatmentFocus switch
+        {
+            TreatmentFocus.Exhaustion => gladiator.Exhaustion < GladiatorData.MaxConditionValue,
+            _ => gladiator.Health < gladiator.RecoverableMaxHealth && GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio) > 0
+        };
     }
 
-    private static int GetRationSortValue(RationStoreData.RationQuality quality)
+    private bool CanExecuteTrainingPhaseWork(GladiatorData gladiator)
     {
-        return quality switch
+        return gladiator != null
+            && HasGladiator(gladiator)
+            && gladiator.Stamina >= TrainingStaminaCost
+            && gladiator.Exhaustion > TrainingExhaustionCost;
+    }
+
+    public int GetTreatmentHealthRecoveryPreview(GladiatorData gladiator)
+    {
+        if (gladiator == null || !HasGladiator(gladiator))
+            return 0;
+
+        var recoveryAmount = GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio);
+        return Mathf.Max(0, Mathf.Min(gladiator.RecoverableMaxHealth, gladiator.Health + recoveryAmount) - gladiator.Health);
+    }
+
+    public float GetTreatmentExhaustionRecoveryPreview(GladiatorData gladiator)
+    {
+        if (gladiator == null || !HasGladiator(gladiator))
+            return 0f;
+
+        return Mathf.Max(0f, Mathf.Min(GladiatorData.MaxConditionValue, gladiator.Exhaustion + TreatmentExhaustionRecovery) - gladiator.Exhaustion);
+    }
+
+    public float GetTrainingAttributeExpPreview(TrainingFocus trainingFocus, GladiatorLevelData.AttributeKind attributeKind)
+    {
+        if (trainingFocus == TrainingFocus.Overall)
+            return TrainingAttributeExp / 4f;
+
+        return GetFocusedTrainingAttribute(trainingFocus) == attributeKind ? TrainingAttributeExp : 0f;
+    }
+
+    public int GetRiskStatusCount(GladiatorRiskStatus riskStatus, float lowHealthWarningRatio)
+    {
+        var count = 0;
+        foreach (var gladiator in Gladiators)
         {
-            RationStoreData.RationQuality.Poor => 0,
-            RationStoreData.RationQuality.Common => 1,
-            RationStoreData.RationQuality.Fine => 2,
+            if (gladiator?.GetRiskStatus(ConditionWarningThreshold, lowHealthWarningRatio) == riskStatus)
+                count++;
+        }
+
+        return count;
+    }
+
+    public int GetPhaseBuildingGoldCost(TownAssignmentData.AssignmentLocation assignmentLocation)
+    {
+        EnsureResources();
+        return assignmentLocation switch
+        {
+            TownAssignmentData.AssignmentLocation.Healer => GetTreatmentPhaseGoldCost(),
+            TownAssignmentData.AssignmentLocation.TrainingHall => GetTrainingPhaseGoldCost(),
             _ => 0
         };
     }
 
-    public int GetStarvingGladiatorCount()
+    public int GetTownLocationPhaseGoldPreviewCost(TownAssignmentData.AssignmentLocation assignmentLocation, TownPhaseState phaseState)
     {
-        var count = 0;
-        foreach (var gladiator in Gladiators)
-        {
-            if (gladiator?.Provisions < ConditionWarningThreshold)
-                count++;
-        }
-
-        return count;
+        return GetPhaseBuildingGoldCost(assignmentLocation) + GetTownLocationSalaryGoldCost(assignmentLocation, phaseState);
     }
 
-    public int GetExhaustedGladiatorCount()
+    public int GetTownLocationSalaryGoldCost(TownAssignmentData.AssignmentLocation assignmentLocation, TownPhaseState phaseState)
     {
-        var count = 0;
-        foreach (var gladiator in Gladiators)
+        if (phaseState?.IsNight() != true)
+            return 0;
+
+        EnsureResources();
+        return GetAssignedGladiatorsSalaryGoldCost(TownAssignments.GetGladiators(assignmentLocation), phaseState);
+    }
+
+    public int GetAssignedGladiatorsSalaryGoldCost(IEnumerable<GladiatorData> gladiators, TownPhaseState phaseState)
+    {
+        if (phaseState?.IsNight() != true)
+            return 0;
+
+        var total = 0;
+        foreach (var gladiator in gladiators)
         {
-            if (gladiator?.Exhaustion < ConditionWarningThreshold)
-                count++;
+            if (HasGladiator(gladiator))
+                total += GetGladiatorSalaryGoldCost(gladiator);
         }
 
-        return count;
+        return total;
+    }
+
+    public int GetCurrentPhaseBuildingGoldCost()
+    {
+        return GetPhaseBuildingGoldCostLines().SumCostsForPhase(null, includeAll: true);
+    }
+
+    public int GetCurrentPhaseSalaryGoldCost(TownPhaseState phaseState)
+    {
+        return phaseState?.IsNight() == true ? GetNightSalaryGoldCost() : 0;
+    }
+
+    public int GetCurrentPhaseGoldCost(TownPhaseState phaseState)
+    {
+        return GetCurrentPhaseGoldCostLines().SumCostsForPhase(phaseState);
+    }
+
+    public bool CanPayCurrentPhaseGoldCost(TownPhaseState phaseState)
+    {
+        return Gold >= GetCurrentPhaseGoldCost(phaseState);
+    }
+
+    public int GetArenaReturnUpkeepGoldCost(TownPhaseState phaseState)
+    {
+        return GetCurrentPhaseGoldCost(phaseState);
+    }
+
+    public bool CanPayArenaReturnUpkeep(TownPhaseState phaseState)
+    {
+        return Gold >= GetArenaReturnUpkeepGoldCost(phaseState);
+    }
+
+    public IEnumerable<PhaseGoldCostLine> GetCurrentPhaseGoldCostLines()
+    {
+        foreach (var gladiator in Gladiators)
+        {
+            if (gladiator != null)
+                yield return new PhaseGoldCostLine(gladiator.GladiatorName, GetGladiatorSalaryGoldCost(gladiator), PhaseGoldCostTiming.NightToDay);
+        }
+
+        foreach (var line in GetPhaseBuildingGoldCostLines())
+            yield return line;
+    }
+
+    public IEnumerable<PhaseGoldCostLine> GetPhaseBuildingGoldCostLines()
+    {
+        yield return new PhaseGoldCostLine("Thermae", GetTreatmentPhaseGoldCost(), PhaseGoldCostTiming.Both);
+        yield return new PhaseGoldCostLine("Training Hall", GetTrainingPhaseGoldCost(), PhaseGoldCostTiming.Both);
+    }
+
+    public int GetNightSalaryGoldCost()
+    {
+        var total = 0;
+        foreach (var gladiator in Gladiators)
+        {
+            total += GetGladiatorSalaryGoldCost(gladiator);
+        }
+
+        return total;
+    }
+
+    public static int GetGladiatorSalaryGoldCost(GladiatorData gladiator)
+    {
+        return gladiator == null ? 0 : Mathf.FloorToInt(gladiator.InitialCost / 10f);
+    }
+
+    public bool PayNightSalary()
+    {
+        return TrySpendGold(GetNightSalaryGoldCost());
+    }
+
+    public void ExecutePhaseBuildingWork()
+    {
+        EnsureResources();
+        RecoverCourtyardAndArenaGladiators();
+        ExecuteTreatmentPhaseWork();
+        ExecuteTrainingPhaseWork();
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    private void RecoverCourtyardAndArenaGladiators()
+    {
+        foreach (var gladiator in Gladiators)
+        {
+            if (gladiator == null)
+                continue;
+
+            var location = TownAssignments.GetLocation(gladiator);
+            if (location is TownAssignmentData.AssignmentLocation.Courtyard or TownAssignmentData.AssignmentLocation.Arena)
+            {
+                gladiator.SetExhaustion(gladiator.Exhaustion + PhaseRestExhaustionRecovery);
+                gladiator.RestoreHealth(GetHealthRecoveryAmount(gladiator, PhaseRestHealthRecoveryRatio));
+            }
+        }
+    }
+
+    private void ExecuteTreatmentPhaseWork()
+    {
+        foreach (var gladiator in TownAssignments.HealerGladiators)
+        {
+            if (!CanExecuteTreatmentPhaseWork(gladiator))
+                continue;
+
+            if (!TrySpendGold(TreatmentGoldCostPerGladiator))
+                break;
+
+            ExecuteTreatmentPhaseWorkForGladiator(gladiator);
+        }
+    }
+
+    private void ExecuteTreatmentPhaseWorkForGladiator(GladiatorData gladiator)
+    {
+        if (gladiator == null)
+            return;
+
+        if (CurrentTreatmentFocus == TreatmentFocus.Exhaustion)
+        {
+            gladiator.SetExhaustion(gladiator.Exhaustion + TreatmentExhaustionRecovery);
+            return;
+        }
+
+        gladiator.RestoreHealth(GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio));
+    }
+
+    private int GetTreatmentPhaseGoldCost()
+    {
+        return GetTreatmentPhaseGoldCost(TownAssignments.HealerGladiators);
+    }
+
+    private int GetTreatmentPhaseGoldCost(IEnumerable<GladiatorData> gladiators)
+    {
+        var total = 0;
+        foreach (var gladiator in gladiators)
+        {
+            if (!CanExecuteTreatmentPhaseWork(gladiator))
+                continue;
+
+            total += TreatmentGoldCostPerGladiator;
+        }
+
+        return total;
+    }
+
+    private static int GetHealthRecoveryAmount(GladiatorData gladiator, float maxHealthRatio)
+    {
+        return gladiator?.MaxHealth > 0
+            ? Mathf.Max(1, Mathf.RoundToInt(gladiator.MaxHealth * maxHealthRatio))
+            : 0;
+    }
+
+    private void ExecuteTrainingPhaseWork()
+    {
+        foreach (var gladiator in TownAssignments.TrainingHallGladiators)
+        {
+            if (!CanExecuteTrainingPhaseWork(gladiator))
+                continue;
+
+            if (!TrySpendGold(TrainingGoldCostPerGladiator))
+                break;
+
+            gladiator.SpendStamina(TrainingStaminaCost);
+            gladiator.SetExhaustion(gladiator.Exhaustion - TrainingExhaustionCost);
+            ApplyTrainingFocus(gladiator);
+        }
+    }
+
+    private void ApplyTrainingFocus(GladiatorData gladiator)
+    {
+        if (gladiator?.Level == null)
+            return;
+
+        if (CurrentTrainingFocus == TrainingFocus.Overall)
+        {
+            var splitExp = TrainingAttributeExp / 4f;
+            gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Strength, splitExp);
+            gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Agility, splitExp);
+            gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Vitality, splitExp);
+            gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Endurance, splitExp);
+            return;
+        }
+
+        gladiator.Level.AddAttributeExp(GetFocusedTrainingAttribute(CurrentTrainingFocus), TrainingAttributeExp);
+    }
+
+    private static GladiatorLevelData.AttributeKind GetFocusedTrainingAttribute(TrainingFocus trainingFocus)
+    {
+        return trainingFocus switch
+        {
+            TrainingFocus.Agility => GladiatorLevelData.AttributeKind.Agility,
+            TrainingFocus.Vitality => GladiatorLevelData.AttributeKind.Vitality,
+            TrainingFocus.Endurance => GladiatorLevelData.AttributeKind.Endurance,
+            _ => GladiatorLevelData.AttributeKind.Strength
+        };
+    }
+
+    private int GetTrainingPhaseGoldCost()
+    {
+        return GetTrainingPhaseGoldCost(TownAssignments.TrainingHallGladiators);
+    }
+
+    private int GetTrainingPhaseGoldCost(IEnumerable<GladiatorData> gladiators)
+    {
+        var total = 0;
+        foreach (var gladiator in gladiators)
+        {
+            if (!CanExecuteTrainingPhaseWork(gladiator))
+                continue;
+
+            total += TrainingGoldCostPerGladiator;
+        }
+
+        return total;
     }
 
     public void KillGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)

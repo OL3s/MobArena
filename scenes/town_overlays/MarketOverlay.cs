@@ -6,13 +6,11 @@ namespace MobArena.Scenes.TownOverlays;
 public partial class MarketOverlay : Control
 {
     private const string GladiatorMarketOverlayScene = "res://scenes/town_overlays/gladiator_market_overlay.tscn";
-    private const string RationsOverlayScene = "res://scenes/town_overlays/rations_overlay.tscn";
     private const string BlacksmithOverlayScene = "res://scenes/ui/BlacksmithStoreOverlay.tscn";
 
     public override void _Ready()
     {
         GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/GladiatorsButton").Pressed += OnGladiatorsPressed;
-        GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/RationsButton").Pressed += OnRationsPressed;
         GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/BlacksmithButton").Pressed += OnBlacksmithPressed;
         GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/CloseButton").Pressed += QueueFree;
     }
@@ -20,11 +18,6 @@ public partial class MarketOverlay : Control
     private void OnGladiatorsPressed()
     {
         OpenOverlay(GladiatorMarketOverlayScene);
-    }
-
-    private void OnRationsPressed()
-    {
-        OpenOverlay(RationsOverlayScene);
     }
 
     private void OnBlacksmithPressed()

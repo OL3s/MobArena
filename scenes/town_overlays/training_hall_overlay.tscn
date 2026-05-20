@@ -5,7 +5,7 @@
 
 [node name="TrainingHallOverlay" instance=ExtResource("1_panel")]
 Title = "Training Hall"
-Body = "Spend gold and gladiator stamina to train stats here. The training system is planned, but not implemented yet."
+Body = "Spend gold, stamina, and condition to train gladiator attributes here. Choose one focused attribute or Overall to split the same training effort evenly across all attributes."
 IconTexture = ExtResource("2_icon")
 ShowAssignedGladiators = true
 AssignmentLocation = 3

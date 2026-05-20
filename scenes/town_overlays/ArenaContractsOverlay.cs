@@ -8,6 +8,15 @@ namespace MobArena.Scenes.TownOverlays;
 
 public partial class ArenaContractsOverlay : Control
 {
+    private const string TownScenePath = "res://scenes/town.tscn";
+
+    private readonly (int Gold, int Fame)[] _mockContractRewards =
+    {
+        (35, 1),
+        (50, 2),
+        (85, 4)
+    };
+
     [Export]
     public PackedScene ArenaScene { get; set; }
 
@@ -20,9 +29,9 @@ public partial class ArenaContractsOverlay : Control
     private HBoxContainer _contractsRow;
     private HBoxContainer _assignedGladiatorsRow;
     private HBoxContainer _assignedGladiators;
-    private Button _configureControlsButton;
     private Button _startButton;
     private Button _closeButton;
+    private TownPhaseState _phaseState;
     private CompanyRunData _runData;
     private int _selectedContractIndex = -1;
     private bool _refreshingUi;
@@ -32,12 +41,12 @@ public partial class ArenaContractsOverlay : Control
         _contractsRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/ContractArea/ContractsScroll/ContractsRow");
         _assignedGladiatorsRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow");
         _assignedGladiators = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow/Gladiators");
-        _configureControlsButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/ConfigureControlsButton");
         _startButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/StartButton");
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
-        _runData = SaveNode.Get()?.CompanyRunData;
+        var saveNode = SaveNode.Get();
+        _runData = saveNode?.CompanyRunData;
+        _phaseState = saveNode?.TownPhaseState;
 
-        _configureControlsButton.Pressed += OpenControlConfigOverlay;
         _startButton.Pressed += OnStartPressed;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
@@ -92,8 +101,6 @@ public partial class ArenaContractsOverlay : Control
             return;
 
         _refreshingUi = true;
-        var controllerSetups = LocalInputConfig.Get()?.ControllerSetups ?? new Godot.Collections.Array<LocalInputControllerConfig>();
-        _runData?.SyncArenaControlAssignments(controllerSetups);
         RefreshAssignedGladiators();
         RefreshActions();
         _refreshingUi = false;
@@ -133,20 +140,33 @@ public partial class ArenaContractsOverlay : Control
 
     private void RefreshActions()
     {
-        var controllerSetups = LocalInputConfig.Get()?.ControllerSetups ?? new Godot.Collections.Array<LocalInputControllerConfig>();
         var assignedCount = _runData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
         var hasContract = _selectedContractIndex >= 0;
-        var ready = _runData?.AreArenaGladiatorsReadyForLaunch(controllerSetups) == true;
+        var canPayReturnUpkeep = _runData?.CanPayArenaReturnUpkeep(_phaseState) != false;
 
-        _configureControlsButton.Disabled = assignedCount <= 0;
-        _configureControlsButton.Text = ready ? "Rearrange Controls" : "Choose Control Config";
-        _startButton.Disabled = !hasContract || !ready;
-        _startButton.Text = ready ? "Start" : "Start";
-        _startButton.TooltipText = !hasContract
-            ? "Choose a contract first."
-            : !ready
-                ? "Choose control config before starting."
-                : "Start the selected mock contract.";
+        _startButton.Disabled = !canPayReturnUpkeep || !hasContract || assignedCount <= 0;
+
+        if (!canPayReturnUpkeep)
+        {
+            var cost = _runData?.GetArenaReturnUpkeepGoldCost(_phaseState) ?? 0;
+            _startButton.Text = "Upkeep Short";
+            _startButton.TooltipText = $"Need {cost} gold for upkeep when the arena day ends.";
+        }
+        else if (assignedCount <= 0)
+        {
+            _startButton.Text = "Missing Gladiator";
+            _startButton.TooltipText = "Assign at least one gladiator to the Arena building before starting.";
+        }
+        else if (!hasContract)
+        {
+            _startButton.Text = "Choose Contract";
+            _startButton.TooltipText = "Choose a contract first.";
+        }
+        else
+        {
+            _startButton.Text = "Start";
+            _startButton.TooltipText = "Set arena controls for this contract.";
+        }
     }
 
     private void OpenControlConfigOverlay()
@@ -157,21 +177,19 @@ public partial class ArenaContractsOverlay : Control
             return;
         }
 
-        GlobalOverlay.Get()?.AddOverlay(ControlConfigOverlayScene);
+        var overlay = ControlConfigOverlayScene.Instantiate<ArenaControlConfigOverlay>();
+        overlay.Configure(StartArenaScene, MockCompleteContract);
+        GlobalOverlay.Get()?.AddOverlay(overlay);
     }
 
     private void OnStartPressed()
     {
-        var controllerSetups = LocalInputConfig.Get()?.ControllerSetups ?? new Godot.Collections.Array<LocalInputControllerConfig>();
-        if (_selectedContractIndex < 0 || _runData?.AreArenaGladiatorsReadyForLaunch(controllerSetups) != true)
+        if (_runData?.CanPayArenaReturnUpkeep(_phaseState) == false
+            || _selectedContractIndex < 0
+            || (_runData?.TownAssignments?.ArenaGladiators?.Count ?? 0) <= 0)
             return;
 
-        GlobalOverlay.Get()?.ShowGoCancelPopup(
-            "Start Arena?",
-            "This will use the selected mock contract and the current gladiator control assignments.",
-            StartArenaScene,
-            "Start",
-            "Cancel");
+        OpenControlConfigOverlay();
     }
 
     private void StartArenaScene()
@@ -185,6 +203,30 @@ public partial class ArenaContractsOverlay : Control
 
         GetTree().ChangeSceneToPacked(scene);
         GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
+    }
+
+    private void MockCompleteContract()
+    {
+        var saveNode = SaveNode.Get();
+        if (saveNode == null || _runData == null || _phaseState == null || _selectedContractIndex < 0)
+            return;
+
+        var reward = _selectedContractIndex < _mockContractRewards.Length
+            ? _mockContractRewards[_selectedContractIndex]
+            : (0, 0);
+        _runData.AddGold(reward.Item1, saveNode.CompanyCareerData);
+        _runData.AddFame(reward.Item2);
+        saveNode.CompanyCareerData?.AddContractCompleted();
+        foreach (var gladiator in _runData.TownAssignments.ArenaGladiators)
+        {
+            gladiator?.GladiatorCareer?.AddContractCompleted();
+            gladiator?.GladiatorCareer?.AddWin();
+        }
+
+        PhaseTransitionController.CompleteArenaContract(_phaseState, _runData);
+        saveNode.Save();
+        GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
+        GetTree().ChangeSceneToFile(TownScenePath);
     }
 
     private void StartGladiatorDrag(GladiatorData gladiator)

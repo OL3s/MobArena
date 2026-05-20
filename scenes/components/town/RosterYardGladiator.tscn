@@ -1,10 +1,12 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/town/RosterYardGladiator.cs" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/health.svg" id="2_health"]
-[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/provisions.svg" id="3_provisions"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/exhaustion.svg" id="4_exhaustion"]
 [ext_resource type="Texture2D" path="res://assets/ui/items/drag_hand.svg" id="5_drag_hand"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/critical_risk.svg" id="6_critical_risk"]
+[ext_resource type="Script" path="res://scenes/components/ui/VitalProgressBar.cs" id="7_vital_bar"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="8_gold"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_interaction"]
 size = Vector2(112, 136)
@@ -37,6 +39,18 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_salary_preview"]
+bg_color = Color(0.08, 0.06, 0.03, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.74, 0.28, 1)
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+
 [node name="RosterYardGladiator" type="Node2D"]
 script = ExtResource("1_script")
 
@@ -50,6 +64,36 @@ mouse_filter = 2
 color = Color(0.08, 0.065, 0.045, 0.82)
 
 [node name="Portrait" type="Sprite2D" parent="."]
+
+[node name="SalaryPreview" type="PanelContainer" parent="."]
+visible = false
+offset_left = -38.0
+offset_top = -28.0
+offset_right = 38.0
+offset_bottom = 12.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_salary_preview")
+
+[node name="Row" type="HBoxContainer" parent="SalaryPreview"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="GoldIcon" type="TextureRect" parent="SalaryPreview/Row"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("8_gold")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="SalaryLabel" type="Label" parent="SalaryPreview/Row"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 20
+text = "0"
+vertical_alignment = 1
 
 [node name="InteractionArea" type="Area2D" parent="."]
 input_pickable = true
@@ -66,6 +110,147 @@ mouse_filter = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="CompactStatus" type="VBoxContainer" parent="."]
+visible = false
+offset_left = -54.0
+offset_top = 36.0
+offset_right = 54.0
+offset_bottom = 82.0
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="StatusRow" type="HBoxContainer" parent="CompactStatus"]
+custom_minimum_size = Vector2(108, 18)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+alignment = 1
+
+[node name="MainItemIcon" type="TextureRect" parent="CompactStatus/StatusRow"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="ArmorIcon" type="TextureRect" parent="CompactStatus/StatusRow"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="OffItemIcon" type="TextureRect" parent="CompactStatus/StatusRow"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="ExhaustionIcon" type="TextureRect" parent="CompactStatus/StatusRow"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_exhaustion")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="LowHealthIcon" type="TextureRect" parent="CompactStatus/StatusRow"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_health")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="CriticalRiskIcon" type="TextureRect" parent="CompactStatus/StatusRow"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("6_critical_risk")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="CompactHealthRow" type="HBoxContainer" parent="CompactStatus"]
+visible = false
+custom_minimum_size = Vector2(108, 10)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="Icon" type="TextureRect" parent="CompactStatus/CompactHealthRow"]
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_health")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="Bar" type="ProgressBar" parent="CompactStatus/CompactHealthRow"]
+custom_minimum_size = Vector2(90, 6)
+layout_mode = 2
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_health_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_health_fill")
+show_percentage = false
+script = ExtResource("7_vital_bar")
+
+[node name="Range" type="ColorRect" parent="CompactStatus/CompactHealthRow/Bar"]
+layout_mode = 1
+anchor_left = 0.8
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.58, 0.22, 0.04, 0.72)
+
+[node name="ThresholdMarker" type="ColorRect" parent="CompactStatus/CompactHealthRow/Bar"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1.0
+offset_right = 1.0
+mouse_filter = 2
+color = Color(0.93, 0.78, 0.42, 0.95)
+
+[node name="CompactExhaustionRow" type="HBoxContainer" parent="CompactStatus"]
+visible = false
+custom_minimum_size = Vector2(108, 10)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="Icon" type="TextureRect" parent="CompactStatus/CompactExhaustionRow"]
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_exhaustion")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="Bar" type="ProgressBar" parent="CompactStatus/CompactExhaustionRow"]
+custom_minimum_size = Vector2(90, 6)
+layout_mode = 2
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_condition_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_condition_fill")
+show_percentage = false
+script = ExtResource("7_vital_bar")
+
+[node name="PenaltyThreshold" type="ColorRect" parent="CompactStatus/CompactExhaustionRow/Bar"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -1.0
+offset_right = 1.0
+mouse_filter = 2
+color = Color(0.93, 0.78, 0.42, 0.95)
+
 [node name="RiskWarnings" type="HBoxContainer" parent="."]
 visible = false
 offset_left = -18.0
@@ -75,14 +260,6 @@ offset_bottom = 50.0
 mouse_filter = 2
 theme_override_constants/separation = 4
 alignment = 1
-
-[node name="ProvisionsIcon" type="TextureRect" parent="RiskWarnings"]
-custom_minimum_size = Vector2(16, 16)
-layout_mode = 2
-mouse_filter = 2
-texture = ExtResource("3_provisions")
-expand_mode = 2
-stretch_mode = 5
 
 [node name="ExhaustionIcon" type="TextureRect" parent="RiskWarnings"]
 custom_minimum_size = Vector2(16, 16)
@@ -94,21 +271,21 @@ stretch_mode = 5
 
 [node name="Details" type="VBoxContainer" parent="."]
 visible = false
-offset_left = 42.0
-offset_top = -42.0
-offset_right = 126.0
-offset_bottom = 48.0
+offset_left = 20.0
+offset_top = -58.0
+offset_right = 70.0
+offset_bottom = -8.0
 mouse_filter = 2
 theme_override_constants/separation = 1
 
 [node name="DragHintRow" type="HBoxContainer" parent="Details"]
-custom_minimum_size = Vector2(84, 16)
+custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 3
 
 [node name="Icon" type="TextureRect" parent="Details/DragHintRow"]
-custom_minimum_size = Vector2(14, 14)
+custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("5_drag_hand")
@@ -116,6 +293,7 @@ expand_mode = 2
 stretch_mode = 5
 
 [node name="Label" type="Label" parent="Details/DragHintRow"]
+visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_override_font_sizes/font_size = 10
@@ -173,40 +351,6 @@ size_flags_vertical = 4
 theme_override_styles/background = SubResource("StyleBoxFlat_health_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_health_fill")
 show_percentage = false
-
-[node name="ProvisionsRow" type="HBoxContainer" parent="Details"]
-custom_minimum_size = Vector2(84, 12)
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 3
-
-[node name="Icon" type="TextureRect" parent="Details/ProvisionsRow"]
-custom_minimum_size = Vector2(12, 12)
-layout_mode = 2
-mouse_filter = 2
-texture = ExtResource("3_provisions")
-expand_mode = 2
-stretch_mode = 5
-
-[node name="Bar" type="ProgressBar" parent="Details/ProvisionsRow"]
-custom_minimum_size = Vector2(66, 6)
-layout_mode = 2
-mouse_filter = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_condition_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_condition_fill")
-show_percentage = false
-
-[node name="PenaltyThreshold" type="ColorRect" parent="Details/ProvisionsRow/Bar"]
-layout_mode = 1
-anchor_left = 0.5
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -1.0
-offset_right = 1.0
-mouse_filter = 2
-color = Color(0.93, 0.78, 0.42, 0.95)
 
 [node name="ExhaustionRow" type="HBoxContainer" parent="Details"]
 custom_minimum_size = Vector2(84, 12)
