@@ -20,7 +20,6 @@ public partial class ArenaContractsOverlay : Control
     private HBoxContainer _contractsRow;
     private HBoxContainer _assignedGladiatorsRow;
     private HBoxContainer _assignedGladiators;
-    private Button _configureControlsButton;
     private Button _startButton;
     private Button _closeButton;
     private TownPhaseState _phaseState;
@@ -33,14 +32,12 @@ public partial class ArenaContractsOverlay : Control
         _contractsRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/ContractArea/ContractsScroll/ContractsRow");
         _assignedGladiatorsRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow");
         _assignedGladiators = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow/Gladiators");
-        _configureControlsButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/ConfigureControlsButton");
         _startButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/StartButton");
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
         var saveNode = SaveNode.Get();
         _runData = saveNode?.CompanyRunData;
         _phaseState = saveNode?.TownPhaseState;
 
-        _configureControlsButton.Pressed += OpenControlConfigOverlay;
         _startButton.Pressed += OnStartPressed;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
@@ -95,8 +92,6 @@ public partial class ArenaContractsOverlay : Control
             return;
 
         _refreshingUi = true;
-        var controllerSetups = LocalInputConfig.Get()?.ControllerSetups ?? new Godot.Collections.Array<LocalInputControllerConfig>();
-        _runData?.SyncArenaControlAssignments(controllerSetups);
         RefreshAssignedGladiators();
         RefreshActions();
         _refreshingUi = false;
@@ -136,27 +131,17 @@ public partial class ArenaContractsOverlay : Control
 
     private void RefreshActions()
     {
-        var controllerSetups = LocalInputConfig.Get()?.ControllerSetups ?? new Godot.Collections.Array<LocalInputControllerConfig>();
         var assignedCount = _runData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
         var hasContract = _selectedContractIndex >= 0;
-        var ready = _runData?.AreArenaGladiatorsReadyForLaunch(controllerSetups) == true;
-        var missingControls = assignedCount > 0 && !ready;
         var canPayReturnUpkeep = _runData?.CanPayArenaReturnUpkeep(_phaseState) != false;
 
-        _configureControlsButton.Disabled = assignedCount <= 0;
-        _configureControlsButton.Text = "Controller Config";
-        _startButton.Disabled = !canPayReturnUpkeep || !hasContract || !ready;
+        _startButton.Disabled = !canPayReturnUpkeep || !hasContract || assignedCount <= 0;
 
         if (!canPayReturnUpkeep)
         {
             var cost = _runData?.GetArenaReturnUpkeepGoldCost(_phaseState) ?? 0;
             _startButton.Text = "Upkeep Short";
             _startButton.TooltipText = $"Need {cost} gold for upkeep when the arena day ends.";
-        }
-        else if (missingControls)
-        {
-            _startButton.Text = "Missing Controls";
-            _startButton.TooltipText = "Assign one unique control setup to each Arena gladiator before starting.";
         }
         else if (assignedCount <= 0)
         {
@@ -171,7 +156,7 @@ public partial class ArenaContractsOverlay : Control
         else
         {
             _startButton.Text = "Start";
-            _startButton.TooltipText = "Start the selected mock contract.";
+            _startButton.TooltipText = "Set arena controls for this contract.";
         }
     }
 
@@ -183,23 +168,19 @@ public partial class ArenaContractsOverlay : Control
             return;
         }
 
-        GlobalOverlay.Get()?.AddOverlay(ControlConfigOverlayScene);
+        var overlay = ControlConfigOverlayScene.Instantiate<ArenaControlConfigOverlay>();
+        overlay.Configure(StartArenaScene);
+        GlobalOverlay.Get()?.AddOverlay(overlay);
     }
 
     private void OnStartPressed()
     {
-        var controllerSetups = LocalInputConfig.Get()?.ControllerSetups ?? new Godot.Collections.Array<LocalInputControllerConfig>();
         if (_runData?.CanPayArenaReturnUpkeep(_phaseState) == false
             || _selectedContractIndex < 0
-            || _runData?.AreArenaGladiatorsReadyForLaunch(controllerSetups) != true)
+            || (_runData?.TownAssignments?.ArenaGladiators?.Count ?? 0) <= 0)
             return;
 
-        GlobalOverlay.Get()?.ShowGoCancelPopup(
-            "Start Arena?",
-            "This will use the selected mock contract and the current gladiator control assignments.",
-            StartArenaScene,
-            "Start",
-            "Cancel");
+        OpenControlConfigOverlay();
     }
 
     private void StartArenaScene()

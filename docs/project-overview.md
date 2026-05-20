@@ -15,7 +15,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - `scenes/components/panels/GoCancelPopupPanel.tscn` provides a blurred Go/Cancel popup.
 - `scenes/components/town/TownBuilding.tscn` is the reusable town building template with an exported `PackedScene` target to open.
 - `scenes/main_menu.tscn` is the configured main scene.
-- `scenes/ui/ControlsOverlay.tscn` is the current controls/input configuration overlay opened from the main menu.
+- `scenes/ui/ControlsOverlay.tscn` is the current general controls/input overlay opened from the main menu. Contract participant controls are assigned from the Arena launch flow instead of being finalized globally there.
 - `scenes/town.tscn` is the between-fights management scene. It uses a neutral root with a `Node2D` world plus a `CanvasLayer` controller UI.
 - `scenes/arena.tscn` is the arena contract placeholder. It uses a neutral root with a `Node2D` world plus a `CanvasLayer` controller UI.
 - `scripts/MainMenu.cs`, `scripts/Town.cs`, and `scripts/Arena.cs` contain the C# scripts for the initial navigation flow.
@@ -79,7 +79,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - `SettingsConfig.LowHealthWarningRatio` stores the low-health warning threshold used by town Risk counts and town-world warning icons. Risk classification is centralized through `GladiatorData.GetRiskStatus(...)`, including the critical combined low-health-and-exhausted state so displays do not duplicate warning icons for one gladiator.
 - Idle assigned gladiators are counted separately through `CompanyRunData.GetIdleAssignedGladiatorCount`. The clock icon is `assets/ui/gladiator_icons/idle.svg` and means assigned but no work will run this phase; `assets/ui/gladiator_icons/exhaustion.svg` is now the exhausted warning icon.
 - Auto-detect currently maps console-like platforms to Gamepad, mobile to Gamepad when a gamepad is connected or Touch otherwise, and desktop to Keyboard.
-- The controls overlay displays currently configured inputs from `LocalInputConfig.ControllerSetups`; it does not yet implement real join/leave backend behavior.
+- The controls overlay displays currently configured inputs from `LocalInputConfig.ControllerSetups`. Arena launch clears and rebuilds those setups per contract through `ArenaControlConfigOverlay` by assigning controls to Arena gladiators left-to-right.
 - Gamepad prompts use imported icons under `assets/ui/input_icons/`. Desktop keyboard primary input is labeled as Keyboard but currently uses the mouse icon for compact visual display.
 - Local co-op is planned for up to four local players. Keep future join/leave mutation in `LocalInputConfig` so gameplay scenes can query the same source of truth.
 

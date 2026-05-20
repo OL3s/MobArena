@@ -59,11 +59,11 @@ BuildingName = "Arena"
 BuildingTexture = ExtResource("5_arena_building")
 IconTexture = ExtResource("6_arena_icon")
 SceneToOpen = ExtResource("3_arena")
-HoverDescription = "Assign gladiators here, choose contract setup, then enter the arena. Returning from the arena ends the day and starts Night."
+HoverDescription = "Assign gladiators here, choose a contract, then set controls before entering the arena. Returning from the arena ends the day and starts Night."
 OverlayToOpen = ExtResource("18_arena_overlay")
 ConfirmationTitle = "Start Contract?"
 ConfirmationMessage = "Travel to the arena for the starter contract? Current prototype goal: defeat slimes and return to town."
-AssignmentCapacityMode = 1
+MaxAssignedGladiators = 4
 AssignmentLocation = 1
 
 [node name="Market" parent="World" unique_id=580056267 instance=ExtResource("2_townbuilding")]

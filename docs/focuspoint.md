@@ -11,8 +11,8 @@ The current town-management foundation is in place.
 - Modal UI should go through `GlobalOverlay`; legacy `SceneOverlay` and `ConfirmationOverlay` have been removed.
 - Company state is split between `CompanyRunData` for current mutable run state and `CompanyCareerData` for long-term totals. `SaveNode` should remain the save/load/runtime boundary.
 - Town drag/drop is a core management system. Current payloads are gladiators and equipment items. Town buildings and roaming roster-yard gladiators can receive drops through `ITownDragDropTarget`.
-- `CompanyRunData.TownAssignments` owns assignment lists for courtyard, arena, Thermae, and training hall. Arena capacity follows `LocalInputConfig.ControllerSetups.Count`.
-- Arena, Thermae, and Training Hall overlays show assigned gladiator rows. Thermae and Training Hall also expose focus selectors. Arena currently has control assignment setup stored in `CompanyRunData.ArenaControlAssignments`, but this should move toward per-contract launch configuration.
+- `CompanyRunData.TownAssignments` owns assignment lists for courtyard, arena, Thermae, and training hall. Arena currently supports up to four assigned gladiators.
+- Arena, Thermae, and Training Hall overlays show assigned gladiator rows. Thermae and Training Hall also expose focus selectors. Arena control assignment is now configured per contract launch from the Arena overlay.
 - Market/blacksmith foundations exist: item resources and item stock exist, blacksmith purchasing adds items to `CompanyRunData.Inventory`, and gladiator recruitment is functional through `MarketData.GladiatorStock`.
 - The arena-first branch removes continuous town time, legacy supply upkeep, and the champion deadline timer. The town loop now uses `TownPhaseState` with only Day and Night.
 - Returning from arena completes Day -> Night through `PhaseTransitionController.CompleteArenaDay`. The town HUD `Next Day` button is enabled only at Night and calls `PhaseTransitionController.AdvanceToNextDay`.
@@ -41,8 +41,8 @@ Work the short-term backlog in this order unless the user redirects.
 
 ## Immediate Direction
 
-- Start with controller configuration at contract launch: when the player starts an Arena contract, open/require the controller config flow there, dynamically assign the current local controller setup for that contract, then launch only when assigned Arena gladiators have valid controls.
-- Do not make the main menu the place where contract control setup is finalized. Main menu controls can remain a general display/settings entry point, but contract participant/controller mapping should be resolved immediately before starting a contract.
+- Continue polishing controller configuration at contract launch. The current flow opens arena control setup from Start, assigns controls left-to-right with Enter/touch/gamepad A, then prompts to launch or reset.
+- Do not make the main menu the place where contract control setup is finalized. Main menu controls can remain a general display/settings entry point, but contract participant/controller mapping should stay resolved immediately before starting a contract.
 - Keep launch validation in run/resource APIs where practical so stale controller setup or assignment state cannot start a contract accidentally.
 - After contract-launch controller config, continue with equipment assignment: let players equip/unequip items from `CompanyRunData.Inventory` onto a gladiator's `GladiatorEquipmentData`.
 - Preserve slot rules: armor/main-hand/off-hand type validation, two-handed main-hand clearing or blocking off-hand, and replaced equipment returning to inventory.

@@ -121,12 +121,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="ConfigureControlsButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
-custom_minimum_size = Vector2(220, 54)
-layout_mode = 2
-text = "Controller Config"
-icon = ExtResource("7_local_coop_icon")
-
 [node name="StartButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(150, 54)
 layout_mode = 2

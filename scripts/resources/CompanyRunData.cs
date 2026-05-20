@@ -570,6 +570,16 @@ public partial class CompanyRunData : Resource
         return removed;
     }
 
+    public void ClearArenaControlAssignments()
+    {
+        EnsureResources();
+        if (ArenaControlAssignments.Count <= 0)
+            return;
+
+        ArenaControlAssignments.Clear();
+        EmitSignal(SignalName.RunChanged);
+    }
+
     public bool SyncArenaControlAssignments(Array<LocalInputControllerConfig> controllerSetups)
     {
         EnsureResources();
