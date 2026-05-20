@@ -1,0 +1,130 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/town_overlays/ArenaDonationOverlay.cs" id="1_script"]
+[ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_donation_blur"]
+shader = ExtResource("2_blur_shader")
+
+[node name="ArenaDonationOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="BlurBackdrop" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_donation_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(460, 380)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Layout" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Arena Donations"
+horizontal_alignment = 1
+
+[node name="Description" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+text = "Sponsor the arena to gain fame faster. Each fame point costs more as your company becomes better known."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="StatusGrid" type="GridContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/h_separation = 36
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="GoldLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/StatusGrid"]
+layout_mode = 2
+text = "Gold"
+
+[node name="GoldValue" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/StatusGrid"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="FameLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/StatusGrid"]
+layout_mode = 2
+text = "Fame"
+
+[node name="FameValue" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/StatusGrid"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="DonateOneRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CostLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/DonateOneRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cost: 20 gold"
+vertical_alignment = 1
+
+[node name="DonateButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/DonateOneRow"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+text = "+1 Fame"
+
+[node name="DonateFiveRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CostLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/DonateFiveRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cost: 150 gold"
+vertical_alignment = 1
+
+[node name="DonateButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/DonateFiveRow"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+text = "+5 Fame"
+
+[node name="Actions" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+alignment = 1
+
+[node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+text = "Close"

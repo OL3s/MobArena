@@ -114,6 +114,18 @@ color = Color(0.2, 0.15, 0.1, 0.86)
 
 [node name="Gladiators" type="Node2D" parent="World/RosterYard" unique_id=310366897]
 
+[node name="EmptyCourtyardLabel" type="Label" parent="World/RosterYard"]
+offset_left = -160.0
+offset_top = -34.0
+offset_right = 160.0
+offset_bottom = 34.0
+theme_override_font_sizes/font_size = 22
+text = "No gladiators found
+Go to Market to buy gladiators"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
 [node name="GladiatorsButton" type="Button" parent="World/RosterYard" unique_id=1405934177]
 offset_left = -100.0
 offset_top = 92.0

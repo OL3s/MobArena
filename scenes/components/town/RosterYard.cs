@@ -28,6 +28,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
     private Button _gladiatorsButton;
     private Button _equipmentButton;
     private Button _goldButton;
+    private Label _emptyCourtyardLabel;
     private PanelContainer _goldTotalPreview;
     private Label _goldTotalPreviewLabel;
     private PackedScene _rosterYardGladiatorScene;
@@ -57,6 +58,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
         _gladiatorsButton = GetNodeOrNull<Button>("GladiatorsButton");
         _equipmentButton = GetNodeOrNull<Button>("EquipmentButton");
         _goldButton = GetNodeOrNull<Button>("GoldButton");
+        _emptyCourtyardLabel = GetNodeOrNull<Label>("EmptyCourtyardLabel");
         _goldTotalPreview = GetNodeOrNull<PanelContainer>("GoldTotalPreview");
         _goldTotalPreviewLabel = GetNodeOrNull<Label>("GoldTotalPreview/Row/TotalLabel");
         _rosterYardGladiatorScene = ResourceLoader.Load<PackedScene>(RosterYardGladiatorScenePath);
@@ -197,6 +199,9 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
         {
             positions.Add(yardGladiator.Position);
         }
+
+        if (_emptyCourtyardLabel != null)
+            _emptyCourtyardLabel.Visible = runData.TownAssignments.CourtyardGladiators.Count <= 0;
 
         foreach (var gladiator in runData.TownAssignments.CourtyardGladiators)
         {

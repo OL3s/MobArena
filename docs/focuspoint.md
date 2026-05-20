@@ -31,6 +31,7 @@ The current town-management foundation is in place.
 - A project CLI save-data delete path exists: `godot --headless -- --delete-savedata`, with aliases `--delete`, `--del-storage`, and `--delete-user-data`. It calls `SaveNode.DeleteSave()` and suppresses exit autosave.
 - Completed company history now has a saved resource foundation: `CompletedCompanyHistory` stores capped, fame-sorted `CompletedCompanyRecord` entries with identity, career totals, and final fame only. `SaveNode.TryAddCurrentCompanyToCompletedHistory()` snapshots the active company if it qualifies. The main menu top-right `Records` button opens `CompletedCompaniesOverlay`, which shows `[list][details]` for saved completed companies and can delete entries. Details stay hidden until a company is pressed.
 - First town entry now shows a one-time placeholder tutorial popup: `Todo, add tutorial with tscn animation popups here`. The per-run flag is `CompanyRunData.HasShownFirstTownEntryPopup`.
+- Arena now has a `Donate` overlay for buying +1 or +5 fame with gold. Costs scale with current fame and are centralized in `CompanyRunData`.
 
 ## Next Focus
 

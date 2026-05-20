@@ -126,6 +126,11 @@ custom_minimum_size = Vector2(150, 54)
 layout_mode = 2
 text = "Start"
 
+[node name="DonateButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+custom_minimum_size = Vector2(150, 54)
+layout_mode = 2
+text = "Donate"
+
 [node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(150, 54)
 layout_mode = 2

@@ -9,6 +9,7 @@ namespace MobArena.Scenes.TownOverlays;
 public partial class ArenaContractsOverlay : Control
 {
     private const string TownScenePath = "res://scenes/town.tscn";
+    private const string ArenaDonationOverlayScenePath = "res://scenes/town_overlays/arena_donation_overlay.tscn";
 
     private readonly (int Gold, int Fame)[] _mockContractRewards =
     {
@@ -48,6 +49,7 @@ public partial class ArenaContractsOverlay : Control
         _phaseState = saveNode?.TownPhaseState;
 
         _startButton.Pressed += OnStartPressed;
+        GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/DonateButton").Pressed += OnDonatePressed;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
             _runData.RunChanged += RefreshUi;
@@ -190,6 +192,18 @@ public partial class ArenaContractsOverlay : Control
             return;
 
         OpenControlConfigOverlay();
+    }
+
+    private static void OnDonatePressed()
+    {
+        var overlayScene = ResourceLoader.Load<PackedScene>(ArenaDonationOverlayScenePath);
+        if (overlayScene == null)
+        {
+            GD.PushError("Arena donation overlay scene is missing.");
+            return;
+        }
+
+        GlobalOverlay.Get()?.AddOverlay(overlayScene.Instantiate<ArenaDonationOverlay>());
     }
 
     private void StartArenaScene()

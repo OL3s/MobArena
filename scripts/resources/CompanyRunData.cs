@@ -35,6 +35,8 @@ public partial class CompanyRunData : Resource
     private const float TrainingAttributeExp = 40f;
     private const float PhaseRestExhaustionRecovery = 2f;
     private const float ArenaFightExhaustionCost = 3f;
+    private const int FameDonationBaseGoldCost = 20;
+    private const int FameDonationCostGrowthPerFame = 5;
 
     [Signal]
     public delegate void RunChangedEventHandler();
@@ -184,6 +186,33 @@ public partial class CompanyRunData : Resource
 
         Fame -= amount;
         EmitSignal(SignalName.RunChanged);
+        return true;
+    }
+
+    public int GetFameDonationGoldCost(int fameAmount)
+    {
+        if (fameAmount <= 0)
+            return 0;
+
+        var cost = 0;
+        for (var index = 0; index < fameAmount; index++)
+            cost += FameDonationBaseGoldCost + ((Fame + index) * FameDonationCostGrowthPerFame);
+
+        return cost;
+    }
+
+    public bool CanDonateForFame(int fameAmount)
+    {
+        return fameAmount > 0 && Gold >= GetFameDonationGoldCost(fameAmount);
+    }
+
+    public bool TryDonateForFame(int fameAmount)
+    {
+        var cost = GetFameDonationGoldCost(fameAmount);
+        if (fameAmount <= 0 || cost <= 0 || !TrySpendGold(cost))
+            return false;
+
+        AddFame(fameAmount);
         return true;
     }
 
