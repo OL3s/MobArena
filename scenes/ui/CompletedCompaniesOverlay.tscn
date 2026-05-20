@@ -1,0 +1,204 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/CompletedCompaniesOverlay.cs" id="1_completed"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_companylogo"]
+[ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="3_blur_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
+shader = ExtResource("3_blur_shader")
+
+[node name="CompletedCompaniesOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_completed")
+
+[node name="BlurBackdrop" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_popup_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PopupPanel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(860, 560)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
+
+[node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Completed Companies"
+horizontal_alignment = 1
+
+[node name="NoRecordsLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+visible = false
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 20
+text = "No completed companies recorded yet."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Body" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="ListPanel" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/ListPanel"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="RecordList" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/ListPanel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="DetailsPanel" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Details" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="EmptyLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Choose a company to view details."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="CompanyName" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Company"
+horizontal_alignment = 1
+
+[node name="Logo" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details" instance=ExtResource("2_companylogo")]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Stats" type="GridContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details"]
+layout_mode = 2
+theme_override_constants/h_separation = 32
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="FameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "Final fame"
+
+[node name="FameValue" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="GladiatorsLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "Total gladiators"
+
+[node name="GladiatorsValue" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="DeathsLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "Deaths"
+
+[node name="DeathsValue" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="EarnedGoldLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "Gold earned"
+
+[node name="EarnedGoldValue" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="ContractsLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "Contracts completed"
+
+[node name="ContractsValue" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="MobsLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "Mobs killed"
+
+[node name="MobsValue" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="ChampionsLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "Champions defeated"
+
+[node name="ChampionsValue" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="Actions" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="DeleteButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+focus_mode = 2
+text = "Delete"
+
+[node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+focus_mode = 2
+text = "Close"

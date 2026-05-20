@@ -9,6 +9,7 @@ public partial class MainMenu : Control
 	private const string TownScene = "res://scenes/town.tscn";
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
+	private const string CompletedCompaniesOverlayScenePath = "res://scenes/ui/CompletedCompaniesOverlay.tscn";
 
 	private CompanyLogo _companyLogo;
 	private Button _createCompanyButton;
@@ -29,6 +30,7 @@ public partial class MainMenu : Control
 		_enterTownButton.Pressed += OnEnterTownPressed;
 		_buildCompanyButton.Pressed += OnCreateCompanyPressed;
 
+		GetNode<Button>("TopRightActions/CompletedCompaniesButton").Pressed += OnCompletedCompaniesPressed;
 		GetNode<Button>("MenuRow/Content/QuitButton").Pressed += OnQuitPressed;
 
 		RefreshCompanyUi();
@@ -78,6 +80,16 @@ public partial class MainMenu : Control
 		var editor = companyLogoEditorScene.Instantiate<CompanyLogoEditorOverlay>();
 		editor.Configure(_saveNode.CompanyLogoData.CreateCopy(), _saveNode.HasCompany, OnCompanyApplied);
 		globalOverlay.AddOverlay(editor);
+	}
+
+	private void OnCompletedCompaniesPressed()
+	{
+		var globalOverlay = GlobalOverlay.Get();
+		var completedCompaniesScene = ResourceLoader.Load<PackedScene>(CompletedCompaniesOverlayScenePath);
+		if (globalOverlay == null || completedCompaniesScene == null)
+			return;
+
+		globalOverlay.AddOverlay(completedCompaniesScene.Instantiate<CompletedCompaniesOverlay>());
 	}
 
 	private void OnCompanyApplied(MobArena.Scripts.Resources.CompanyLogoData logoData)

@@ -15,6 +15,7 @@ public partial class SaveNode : Node
 	private const string ManifestPath = SaveDirectory + "/save.cfg";
 	private const string CompanyLogoPath = SaveDirectory + "/company_logo.tres";
 	private const string CompanyCareerPath = SaveDirectory + "/company_career.tres";
+	private const string CompletedCompanyHistoryPath = SaveDirectory + "/completed_company_history.tres";
 	private const string CompanyRunPath = SaveDirectory + "/company_run.tres";
 	private const string TownPhasePath = SaveDirectory + "/town_phase.tres";
 	private const string SettingsPath = SaveDirectory + "/settings.tres";
@@ -29,6 +30,9 @@ public partial class SaveNode : Node
 
     [Export]
     public CompanyCareerData CompanyCareerData { get; private set; } = new();
+
+    [Export]
+    public CompletedCompanyHistory CompletedCompanyHistory { get; private set; } = new();
 
     [Export]
     public CompanyRunData CompanyRunData { get; private set; } = new();
@@ -151,6 +155,13 @@ public partial class SaveNode : Node
 			return error;
 		}
 
+		error = SaveResource(CompletedCompanyHistory, CompletedCompanyHistoryPath);
+		if (error != Error.Ok)
+		{
+			GD.Print($"SaveNode: Save failed for completed company history. Error: {error}.");
+			return error;
+		}
+
 		error = SaveResource(CompanyRunData, CompanyRunPath);
 		if (error != Error.Ok)
 		{
@@ -212,6 +223,13 @@ public partial class SaveNode : Node
 			return error;
 		}
 
+		error = LoadResource(GetResourcePath(manifest, "completed_company_history", CompletedCompanyHistoryPath), CompletedCompanyHistory, out var completedCompanyHistory);
+		if (error != Error.Ok)
+		{
+			GD.Print($"SaveNode: Load failed for completed company history. Error: {error}.");
+			return error;
+		}
+
 		error = LoadResource(GetResourcePath(manifest, "company_run", CompanyRunPath), CompanyRunData, out var companyRunData);
 		if (error != Error.Ok)
 		{
@@ -235,6 +253,7 @@ public partial class SaveNode : Node
 
 		CompanyLogoData = companyLogoData;
 		CompanyCareerData = companyCareerData;
+		CompletedCompanyHistory = completedCompanyHistory;
 		CompanyRunData = companyRunData;
 		CompanyRunData.ApplyGladiatorRecoverableCaps();
 		TownPhaseState = townPhaseState;
@@ -254,6 +273,10 @@ public partial class SaveNode : Node
 			return error;
 
 		error = DeleteFileIfExists(CompanyCareerPath);
+		if (error != Error.Ok)
+			return error;
+
+		error = DeleteFileIfExists(CompletedCompanyHistoryPath);
 		if (error != Error.Ok)
 			return error;
 
@@ -303,6 +326,16 @@ public partial class SaveNode : Node
 		return error;
 	}
 
+	public bool TryAddCurrentCompanyToCompletedHistory()
+	{
+		CompletedCompanyHistory ??= new CompletedCompanyHistory();
+		var added = CompletedCompanyHistory.TryAddCompletedRun(CompanyLogoData, CompanyCareerData, CompanyRunData?.Fame ?? 0);
+		if (added)
+			Save();
+
+		return added;
+	}
+
 	public Error DeleteRunData()
 	{
 		GD.Print("SaveNode: Deleting run data.");
@@ -339,6 +372,7 @@ public partial class SaveNode : Node
 		HasCompany = false;
 		CompanyLogoData = CompanyLogoData.CreateDefault();
 		CompanyCareerData = new CompanyCareerData();
+		CompletedCompanyHistory = new CompletedCompanyHistory();
 		CompanyRunData = new CompanyRunData();
 		TownPhaseState = new TownPhaseState();
 		SettingsConfig = new SettingsConfig();
@@ -387,6 +421,7 @@ public partial class SaveNode : Node
 		manifest.SetValue("company", "has_company", HasCompany);
 		manifest.SetValue("resources", "company_logo", CompanyLogoPath);
 		manifest.SetValue("resources", "company_career", CompanyCareerPath);
+		manifest.SetValue("resources", "completed_company_history", CompletedCompanyHistoryPath);
 		manifest.SetValue("resources", "company_run", CompanyRunPath);
 		manifest.SetValue("resources", "town_phase", TownPhasePath);
 		manifest.SetValue("resources", "settings", SettingsPath);

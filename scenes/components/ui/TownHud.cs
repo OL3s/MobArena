@@ -31,6 +31,7 @@ public partial class TownHud : CanvasLayer
 	private Label _idleLabel;
 	private Label _exhaustedLabel;
 	private Label _lowHealthLabel;
+	private Control _conditionPanel;
 	private Button _nextDayButton;
 	private Label _dayLabel;
 	private Label _championDueLabel;
@@ -51,6 +52,7 @@ public partial class TownHud : CanvasLayer
 		_championsWonCountLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/StatsRow/ChampionsWonCount");
 		_goldLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/GoldRow/GoldLabel");
 		_fameLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/FameRow/FameLabel");
+		_conditionPanel = GetNode<Control>("TopPanel/Row/ConditionPanel");
 		_criticalRiskLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/CriticalRiskRow/CriticalRiskLabel");
 		_idleLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/IdleRow/IdleLabel");
 		_exhaustedLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/ExhaustionRow/ExhaustedLabel");
@@ -257,10 +259,15 @@ public partial class TownHud : CanvasLayer
 		_goldLabel.Text = runData.Gold.ToString();
 		_fameLabel.Text = runData.Fame.ToString();
 		var lowHealthWarningRatio = _saveNode?.SettingsConfig?.LowHealthWarningRatio ?? 0.6f;
-		_criticalRiskLabel.Text = runData.GetCriticalRiskGladiatorCount(lowHealthWarningRatio).ToString();
-		_idleLabel.Text = runData.GetIdleAssignedGladiatorCount().ToString();
-		_exhaustedLabel.Text = runData.GetExhaustedGladiatorCount().ToString();
-		_lowHealthLabel.Text = runData.GetLowHealthGladiatorCount(lowHealthWarningRatio).ToString();
+		var criticalRiskCount = runData.GetCriticalRiskGladiatorCount(lowHealthWarningRatio);
+		var idleCount = runData.GetIdleAssignedGladiatorCount();
+		var exhaustedCount = runData.GetExhaustedGladiatorCount();
+		var lowHealthCount = runData.GetLowHealthGladiatorCount(lowHealthWarningRatio);
+		_conditionPanel.Visible = criticalRiskCount + idleCount + exhaustedCount + lowHealthCount > 0;
+		_criticalRiskLabel.Text = criticalRiskCount.ToString();
+		_idleLabel.Text = idleCount.ToString();
+		_exhaustedLabel.Text = exhaustedCount.ToString();
+		_lowHealthLabel.Text = lowHealthCount.ToString();
 	}
 
 	private void RefreshPhaseUi()

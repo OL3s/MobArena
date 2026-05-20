@@ -27,6 +27,9 @@ The current town-management foundation is in place.
 - New companies start with no gladiators. Market recruitment is the first step, and recruit health varies from 20-100% max health with buy/sell value based on current readiness.
 - Equipment ownership exists, but equipping/unequipping items onto gladiators is not implemented yet.
 - Contract/combat resources are not implemented yet. Arena contract cards are still mock cards and arena combat startup is still placeholder.
+- Company customization was expanded on `feature/company-customization`: the editor now supports shield shape, muted shield color, logo icon, logo size, random company names, and full randomization. New company creation opens with a randomized identity. Name generation lives in `CompanyNameGenerator`, while logo state/rendering stays in `CompanyLogoData`/`CompanyLogo`.
+- A project CLI save-data delete path exists: `godot --headless -- --delete-savedata`, with aliases `--delete`, `--del-storage`, and `--delete-user-data`. It calls `SaveNode.DeleteSave()` and suppresses exit autosave.
+- Completed company history now has a saved resource foundation: `CompletedCompanyHistory` stores capped, fame-sorted `CompletedCompanyRecord` entries with identity, career totals, and final fame only. `SaveNode.TryAddCurrentCompanyToCompletedHistory()` snapshots the active company if it qualifies. The main menu top-right `Records` button opens `CompletedCompaniesOverlay`, which shows `[list][details]` for saved completed companies and can delete entries. Details stay hidden until a company is pressed.
 
 ## Next Focus
 
