@@ -20,6 +20,7 @@
 [ext_resource type="Texture2D" uid="uid://bkdarnvhxk5k" path="res://assets/ui/icons/equipment.svg" id="25_equipment_icon"]
 [ext_resource type="Script" uid="uid://0msvps6wghd2" path="res://scenes/components/town/RosterYard.cs" id="26_roster_yard"]
 [ext_resource type="Texture2D" uid="uid://budosbjkhbjtt" path="res://assets/ui/icons/gold.svg" id="27_gold_icon"]
+[ext_resource type="PackedScene" path="res://scenes/components/environment/EnvironmentVisualOverlay.tscn" id="28_environment_overlay"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gold_total_preview"]
 bg_color = Color(0.08, 0.06, 0.03, 0.92)
@@ -47,6 +48,8 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.12, 0.09, 0.06, 1)
+
+[node name="EnvironmentOverlay" parent="." instance=ExtResource("28_environment_overlay")]
 
 [node name="World" type="Node2D" parent="." unique_id=14334605]
 

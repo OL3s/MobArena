@@ -39,7 +39,6 @@ public partial class SaveNode : Node
 	{
 		CompanyCareerData = new CompanyCareerData();
 		CompanyRunData = new CompanyRunData();
-		CompanyRunData.AddDefaultGladiators(CompanyCareerData, 2);
 		ApplyDebugStartingCondition();
 		TownPhaseState = new TownPhaseState();
 	}

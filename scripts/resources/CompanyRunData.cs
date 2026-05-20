@@ -34,6 +34,7 @@ public partial class CompanyRunData : Resource
     private const float TrainingExhaustionCost = 1f;
     private const float TrainingAttributeExp = 40f;
     private const float PhaseRestExhaustionRecovery = 2f;
+    private const float ArenaFightExhaustionCost = 3f;
 
     [Signal]
     public delegate void RunChangedEventHandler();
@@ -385,7 +386,7 @@ public partial class CompanyRunData : Resource
 
     public bool TryBuyGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)
     {
-        return TryBuyGladiator(gladiatorData, careerData, gladiatorData?.InitialCost ?? 0);
+        return TryBuyGladiator(gladiatorData, careerData, gladiatorData?.GetMarketValue() ?? 0);
     }
 
     public int GetSaleValue(ItemData item)
@@ -575,6 +576,26 @@ public partial class CompanyRunData : Resource
         EnsureResources();
         if (ArenaControlAssignments.Count <= 0)
             return;
+
+        ArenaControlAssignments.Clear();
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void CompleteArenaContractAssignments()
+    {
+        EnsureResources();
+        if (TownAssignments.ArenaGladiators.Count <= 0)
+            return;
+
+        var foughtGladiators = new Array<GladiatorData>(TownAssignments.ArenaGladiators);
+        foreach (var gladiator in foughtGladiators)
+        {
+            if (!HasGladiator(gladiator))
+                continue;
+
+            gladiator.SetExhaustion(gladiator.Exhaustion - ArenaFightExhaustionCost);
+            TownAssignments.MoveToCourtyard(gladiator);
+        }
 
         ArenaControlAssignments.Clear();
         EmitSignal(SignalName.RunChanged);

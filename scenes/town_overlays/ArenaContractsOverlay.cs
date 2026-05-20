@@ -8,6 +8,15 @@ namespace MobArena.Scenes.TownOverlays;
 
 public partial class ArenaContractsOverlay : Control
 {
+    private const string TownScenePath = "res://scenes/town.tscn";
+
+    private readonly (int Gold, int Fame)[] _mockContractRewards =
+    {
+        (35, 1),
+        (50, 2),
+        (85, 4)
+    };
+
     [Export]
     public PackedScene ArenaScene { get; set; }
 
@@ -169,7 +178,7 @@ public partial class ArenaContractsOverlay : Control
         }
 
         var overlay = ControlConfigOverlayScene.Instantiate<ArenaControlConfigOverlay>();
-        overlay.Configure(StartArenaScene);
+        overlay.Configure(StartArenaScene, MockCompleteContract);
         GlobalOverlay.Get()?.AddOverlay(overlay);
     }
 
@@ -194,6 +203,30 @@ public partial class ArenaContractsOverlay : Control
 
         GetTree().ChangeSceneToPacked(scene);
         GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
+    }
+
+    private void MockCompleteContract()
+    {
+        var saveNode = SaveNode.Get();
+        if (saveNode == null || _runData == null || _phaseState == null || _selectedContractIndex < 0)
+            return;
+
+        var reward = _selectedContractIndex < _mockContractRewards.Length
+            ? _mockContractRewards[_selectedContractIndex]
+            : (0, 0);
+        _runData.AddGold(reward.Item1, saveNode.CompanyCareerData);
+        _runData.AddFame(reward.Item2);
+        saveNode.CompanyCareerData?.AddContractCompleted();
+        foreach (var gladiator in _runData.TownAssignments.ArenaGladiators)
+        {
+            gladiator?.GladiatorCareer?.AddContractCompleted();
+            gladiator?.GladiatorCareer?.AddWin();
+        }
+
+        PhaseTransitionController.CompleteArenaContract(_phaseState, _runData);
+        saveNode.Save();
+        GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
+        GetTree().ChangeSceneToFile(TownScenePath);
     }
 
     private void StartGladiatorDrag(GladiatorData gladiator)

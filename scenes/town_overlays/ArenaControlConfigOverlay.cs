@@ -12,39 +12,48 @@ public partial class ArenaControlConfigOverlay : Control
     private const double WaitingAnimationIntervalSeconds = 0.35;
 
     private Label _statusLabel;
+    private HBoxContainer _promptRow;
     private HBoxContainer _assignmentRow;
+    private Button _mockCompleteButton;
     private Button _resetButton;
     private Button _closeButton;
     private CompanyRunData _runData;
     private LocalInputConfig _localInputConfig;
     private Action _launchAction;
+    private Action _mockCompleteAction;
     private int _nextGladiatorIndex;
     private int _waitingDotCount = 1;
     private double _waitingAnimationElapsed;
     private bool _readyPromptOpen;
 
-    public void Configure(Action launchAction)
+    public void Configure(Action launchAction, Action mockCompleteAction = null)
     {
         _launchAction = launchAction;
+        _mockCompleteAction = mockCompleteAction;
     }
 
     public override void _Ready()
     {
         _statusLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/StatusLabel");
+        _promptRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/PromptRow");
         _assignmentRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/AssignmentRow");
+        _mockCompleteButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/MockCompleteButton");
         _resetButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/ResetButton");
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
         _runData = SaveNode.Get()?.CompanyRunData;
         _localInputConfig = LocalInputConfig.Get();
 
+        _mockCompleteButton.FocusMode = FocusModeEnum.None;
         _resetButton.FocusMode = FocusModeEnum.None;
         _closeButton.FocusMode = FocusModeEnum.None;
+        _mockCompleteButton.Pressed += OnMockCompletePressed;
         _resetButton.Pressed += ResetAssignments;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
             _runData.RunChanged += RefreshUi;
 
         ResetAssignments();
+        BuildPromptRow();
     }
 
     public override void _ExitTree()
@@ -156,6 +165,11 @@ public partial class ArenaControlConfigOverlay : Control
             ShowReadyPrompt();
     }
 
+    private void OnMockCompletePressed()
+    {
+        _mockCompleteAction?.Invoke();
+    }
+
     private GladiatorData GetNextUnassignedGladiator()
     {
         var arenaGladiators = _runData?.TownAssignments?.ArenaGladiators;
@@ -200,13 +214,16 @@ public partial class ArenaControlConfigOverlay : Control
         if (arenaGladiators == null || arenaGladiators.Count <= 0)
         {
             _statusLabel.Text = "Assign gladiators to the Arena building first.";
+            _mockCompleteButton.Visible = false;
             _resetButton.Disabled = true;
             return;
         }
 
+        _mockCompleteButton.Visible = SaveNode.Get()?.SettingsConfig?.DebugEnabled == true;
+        _mockCompleteButton.Disabled = _mockCompleteAction == null;
         _resetButton.Disabled = false;
         _statusLabel.Text = HasNextGladiator()
-            ? "Press Enter, touch the screen, or press A on a gamepad to assign controls from left to right."
+            ? "Join controls from left to right."
             : "All arena gladiators have controls assigned.";
 
         for (var index = 0; index < arenaGladiators.Count; index++)
@@ -262,6 +279,38 @@ public partial class ArenaControlConfigOverlay : Control
         });
 
         return panel;
+    }
+
+    private void BuildPromptRow()
+    {
+        foreach (var child in _promptRow.GetChildren())
+            child.QueueFree();
+
+        AddPrompt(_localInputConfig?.EnterIcon, "Enter");
+        AddPrompt(_localInputConfig?.PhoneIcon, "Touch");
+        AddPrompt(_localInputConfig?.XboxAIcon, "A");
+    }
+
+    private void AddPrompt(Texture2D icon, string label)
+    {
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", 6);
+        _promptRow.AddChild(row);
+
+        row.AddChild(new TextureRect
+        {
+            CustomMinimumSize = new Vector2(30f, 30f),
+            Texture = icon,
+            ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            MouseFilter = MouseFilterEnum.Ignore
+        });
+
+        row.AddChild(new Label
+        {
+            Text = label,
+            VerticalAlignment = VerticalAlignment.Center
+        });
     }
 
     private void ShowReadyPrompt()

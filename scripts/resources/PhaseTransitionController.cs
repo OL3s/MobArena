@@ -13,6 +13,18 @@ public static class PhaseTransitionController
         return true;
     }
 
+    public static bool CompleteArenaContract(TownPhaseState phaseState, CompanyRunData companyRunData)
+    {
+        if (phaseState == null || !phaseState.IsDay())
+            return false;
+
+        ExecuteBuildingWork(companyRunData);
+        companyRunData?.CompleteArenaContractAssignments();
+        phaseState.MoveToNight();
+        companyRunData?.NotifyRunChanged();
+        return true;
+    }
+
     public static bool AdvanceToNextDay(TownPhaseState phaseState, CompanyRunData companyRunData)
     {
         if (phaseState == null || !phaseState.CanAdvanceToNextDay)

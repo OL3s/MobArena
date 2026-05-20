@@ -18,7 +18,7 @@ public partial class Arena : Node
     private void OnReturnToTownPressed()
     {
         var saveNode = SaveNode.Get();
-        PhaseTransitionController.CompleteArenaDay(saveNode.TownPhaseState, saveNode.CompanyRunData);
+        PhaseTransitionController.CompleteArenaContract(saveNode.TownPhaseState, saveNode.CompanyRunData);
         saveNode.Save();
         GetTree().ChangeSceneToFile(TownScene);
     }

@@ -73,13 +73,16 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     [Export]
     public bool Disabled
     {
-        get => _disabled;
+        get => _disabled || IsDisabledByEmptyRoster();
         set
         {
             _disabled = value;
             RefreshVisuals();
         }
     }
+
+    [Export]
+    public bool DisableWhenRosterEmpty { get; set; } = true;
 
     [Export]
     public string ConfirmationTitle { get; set; } = "Open Building?";
@@ -588,6 +591,9 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         if (_iconSprite != null && IconTexture != null)
             _iconSprite.Texture = IconTexture;
 
+        if (Disabled)
+            GetTownHud()?.HideHoverInfo(this);
+
         Modulate = Disabled ? new Color(0.55f, 0.55f, 0.55f, 1.0f) : Colors.White;
         RefreshOccupancyBadge();
     }
@@ -607,8 +613,18 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
     private void RefreshBadges()
     {
+        RefreshVisuals();
         RefreshGoldPreview();
         RefreshOccupancyBadge();
+    }
+
+    private bool IsDisabledByEmptyRoster()
+    {
+        if (!DisableWhenRosterEmpty || SellDroppedPayloads || Engine.IsEditorHint())
+            return false;
+
+        var runData = _runData ?? SaveNode.Get()?.CompanyRunData;
+        return runData?.Gladiators == null || runData.Gladiators.Count <= 0;
     }
 
     private void RefreshGoldPreview()

@@ -58,6 +58,7 @@ public partial class GladiatorMarketOverlay : Control
 
     private Control CreateRecruitCard(GladiatorData gladiator)
     {
+        var price = gladiator.GetMarketValue();
         var container = new VBoxContainer
         {
             CustomMinimumSize = new Vector2(210, 420)
@@ -70,7 +71,7 @@ public partial class GladiatorMarketOverlay : Control
 
         var priceLabel = new Label
         {
-            Text = $"Hire cost: {gladiator.InitialCost} gold",
+            Text = $"Hire cost: {price} gold",
             HorizontalAlignment = HorizontalAlignment.Center
         };
         container.AddChild(priceLabel);
@@ -80,7 +81,7 @@ public partial class GladiatorMarketOverlay : Control
             Text = "Hire",
             CustomMinimumSize = new Vector2(160, 48),
             SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
-            Disabled = _runData.Gold < gladiator.InitialCost || !_runData.CanAddGladiator()
+            Disabled = _runData.Gold < price || !_runData.CanAddGladiator()
         };
         hireButton.Pressed += () => OnHirePressed(gladiator);
         container.AddChild(hireButton);
@@ -93,7 +94,7 @@ public partial class GladiatorMarketOverlay : Control
         if (gladiator == null)
             return;
 
-        var price = gladiator.InitialCost;
+        var price = gladiator.GetMarketValue();
         if (_runData.Gold < price)
         {
             _feedbackLabel.Text = $"Need {price} gold to hire {gladiator.GladiatorName}.";
