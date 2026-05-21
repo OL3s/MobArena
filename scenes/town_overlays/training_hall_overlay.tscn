@@ -9,3 +9,4 @@ Body = "Spend gold, stamina, and condition to train gladiator attributes here. C
 IconTexture = ExtResource("2_icon")
 ShowAssignedGladiators = true
 AssignmentLocation = 3
+IsUpgradeableBuilding = true

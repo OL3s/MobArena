@@ -1,10 +1,13 @@
 using Godot;
+using System.Collections.Generic;
 
 namespace MobArena.Scripts.Resources.Items;
 
 [GlobalClass]
 public abstract partial class ItemData : Resource
 {
+    private static readonly Dictionary<string, ItemData> RuntimeCopyTemplates = new();
+
     [Export]
     public string DisplayName { get; private set; } = "Item";
 
@@ -27,7 +30,22 @@ public abstract partial class ItemData : Resource
 
     public static T LoadRuntimeCopy<T>(string resourcePath) where T : ItemData
     {
-        var template = ResourceLoader.Load<T>(resourcePath);
+        var template = GetRuntimeCopyTemplate(resourcePath) as T;
         return template?.CreateRuntimeCopy<T>();
+    }
+
+    private static ItemData GetRuntimeCopyTemplate(string resourcePath)
+    {
+        if (string.IsNullOrWhiteSpace(resourcePath))
+            return null;
+
+        if (RuntimeCopyTemplates.TryGetValue(resourcePath, out var cachedTemplate) && cachedTemplate != null)
+            return cachedTemplate;
+
+        var template = ResourceLoader.Load(resourcePath) as ItemData;
+        if (template != null)
+            RuntimeCopyTemplates[resourcePath] = template;
+
+        return template;
     }
 }

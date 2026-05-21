@@ -7,13 +7,21 @@ namespace MobArena.Scripts;
 public partial class SaveNode : Node
 {
 	private const int SaveVersion = 1;
+	private const string DeleteFlag = "--delete";
+	private const string DeleteSaveDataFlag = "--delete-savedata";
+	private const string DeleteStorageFlag = "--del-storage";
+	private const string DeleteUserDataFlag = "--delete-user-data";
 	private const string SaveDirectory = "user://save";
 	private const string ManifestPath = SaveDirectory + "/save.cfg";
 	private const string CompanyLogoPath = SaveDirectory + "/company_logo.tres";
 	private const string CompanyCareerPath = SaveDirectory + "/company_career.tres";
+	private const string CompletedCompanyHistoryPath = SaveDirectory + "/completed_company_history.tres";
 	private const string CompanyRunPath = SaveDirectory + "/company_run.tres";
 	private const string TownPhasePath = SaveDirectory + "/town_phase.tres";
+	private const string WeatherPath = SaveDirectory + "/weather.tres";
 	private const string SettingsPath = SaveDirectory + "/settings.tres";
+
+	private bool _skipExitSave;
 
     [Export]
     public bool HasCompany { get; set; }
@@ -25,10 +33,16 @@ public partial class SaveNode : Node
     public CompanyCareerData CompanyCareerData { get; private set; } = new();
 
     [Export]
+    public CompletedCompanyHistory CompletedCompanyHistory { get; private set; } = new();
+
+    [Export]
     public CompanyRunData CompanyRunData { get; private set; } = new();
 
 	[Export]
 	public TownPhaseState TownPhaseState { get; private set; } = new();
+
+	[Export]
+	public WeatherState WeatherState { get; private set; } = new();
 
 	[Export]
 	public SettingsConfig SettingsConfig { get; private set; } = new();
@@ -41,6 +55,7 @@ public partial class SaveNode : Node
 		CompanyRunData = new CompanyRunData();
 		ApplyDebugStartingCondition();
 		TownPhaseState = new TownPhaseState();
+		WeatherState = new WeatherState();
 	}
 
 	private void ApplyDebugStartingCondition()
@@ -70,12 +85,50 @@ public partial class SaveNode : Node
 
 	public override void _Ready()
 	{
+		if (TryHandleCommandLineSaveOperation())
+			return;
+
 		Load();
 	}
 
 	public override void _ExitTree()
 	{
+		if (_skipExitSave)
+			return;
+
 		Save();
+	}
+
+	private bool TryHandleCommandLineSaveOperation()
+	{
+		if (!HasCommandLineFlag(DeleteFlag, DeleteSaveDataFlag, DeleteStorageFlag, DeleteUserDataFlag))
+			return false;
+
+		_skipExitSave = true;
+		var error = DeleteSave();
+		var exitCode = error == Error.Ok ? 0 : 1;
+		GD.Print($"SaveNode: Command-line save data delete completed with exit code {exitCode}.");
+		GetTree().Quit(exitCode);
+		return true;
+	}
+
+	private static bool HasCommandLineFlag(params string[] acceptedFlags)
+	{
+		return ContainsAnyFlag(OS.GetCmdlineUserArgs(), acceptedFlags) || ContainsAnyFlag(OS.GetCmdlineArgs(), acceptedFlags);
+	}
+
+	private static bool ContainsAnyFlag(string[] args, string[] acceptedFlags)
+	{
+		foreach (var arg in args)
+		{
+			foreach (var acceptedFlag in acceptedFlags)
+			{
+				if (string.Equals(arg, acceptedFlag, StringComparison.OrdinalIgnoreCase))
+					return true;
+			}
+		}
+
+		return false;
 	}
 
     public bool HasSave()
@@ -107,6 +160,13 @@ public partial class SaveNode : Node
 			return error;
 		}
 
+		error = SaveResource(CompletedCompanyHistory, CompletedCompanyHistoryPath);
+		if (error != Error.Ok)
+		{
+			GD.Print($"SaveNode: Save failed for completed company history. Error: {error}.");
+			return error;
+		}
+
 		error = SaveResource(CompanyRunData, CompanyRunPath);
 		if (error != Error.Ok)
 		{
@@ -118,6 +178,13 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 		{
 			GD.Print($"SaveNode: Save failed for town phase. Error: {error}.");
+			return error;
+		}
+
+		error = SaveResource(WeatherState, WeatherPath);
+		if (error != Error.Ok)
+		{
+			GD.Print($"SaveNode: Save failed for weather. Error: {error}.");
 			return error;
 		}
 
@@ -168,6 +235,13 @@ public partial class SaveNode : Node
 			return error;
 		}
 
+		error = LoadResource(GetResourcePath(manifest, "completed_company_history", CompletedCompanyHistoryPath), CompletedCompanyHistory, out var completedCompanyHistory);
+		if (error != Error.Ok)
+		{
+			GD.Print($"SaveNode: Load failed for completed company history. Error: {error}.");
+			return error;
+		}
+
 		error = LoadResource(GetResourcePath(manifest, "company_run", CompanyRunPath), CompanyRunData, out var companyRunData);
 		if (error != Error.Ok)
 		{
@@ -182,6 +256,13 @@ public partial class SaveNode : Node
 			return error;
 		}
 
+		error = LoadResource(GetResourcePath(manifest, "weather", WeatherPath), WeatherState, out var weatherState);
+		if (error != Error.Ok)
+		{
+			GD.Print($"SaveNode: Load failed for weather. Error: {error}.");
+			return error;
+		}
+
 		error = LoadResource(GetResourcePath(manifest, "settings", SettingsPath), SettingsConfig, out var settingsConfig);
 		if (error != Error.Ok)
 		{
@@ -191,9 +272,11 @@ public partial class SaveNode : Node
 
 		CompanyLogoData = companyLogoData;
 		CompanyCareerData = companyCareerData;
+		CompletedCompanyHistory = completedCompanyHistory;
 		CompanyRunData = companyRunData;
 		CompanyRunData.ApplyGladiatorRecoverableCaps();
 		TownPhaseState = townPhaseState;
+		WeatherState = weatherState;
 		SettingsConfig = settingsConfig;
 		return Error.Ok;
     }
@@ -213,11 +296,19 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 			return error;
 
+		error = DeleteFileIfExists(CompletedCompanyHistoryPath);
+		if (error != Error.Ok)
+			return error;
+
 		error = DeleteFileIfExists(CompanyRunPath);
 		if (error != Error.Ok)
 			return error;
 
 		error = DeleteFileIfExists(TownPhasePath);
+		if (error != Error.Ok)
+			return error;
+
+		error = DeleteFileIfExists(WeatherPath);
 		if (error != Error.Ok)
 			return error;
 
@@ -249,14 +340,29 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 			return error;
 
+		error = DeleteFileIfExists(WeatherPath);
+		if (error != Error.Ok)
+			return error;
+
 		HasCompany = false;
 		CompanyLogoData = CompanyLogoData.CreateDefault();
 		CompanyCareerData = new CompanyCareerData();
 		CompanyRunData = new CompanyRunData();
 		TownPhaseState = new TownPhaseState();
+		WeatherState = new WeatherState();
 		error = SaveCurrentManifest();
 		GD.Print(error == Error.Ok ? "SaveNode: Company data deleted." : $"SaveNode: Company data delete failed while saving manifest. Error: {error}.");
 		return error;
+	}
+
+	public bool TryAddCurrentCompanyToCompletedHistory()
+	{
+		CompletedCompanyHistory ??= new CompletedCompanyHistory();
+		var added = CompletedCompanyHistory.TryAddCompletedRun(CompanyLogoData, CompanyCareerData, CompanyRunData?.Fame ?? 0);
+		if (added)
+			Save();
+
+		return added;
 	}
 
 	public Error DeleteRunData()
@@ -270,8 +376,13 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 			return error;
 
+		error = DeleteFileIfExists(WeatherPath);
+		if (error != Error.Ok)
+			return error;
+
 		CompanyRunData = new CompanyRunData();
 		TownPhaseState = new TownPhaseState();
+		WeatherState = new WeatherState();
 		error = SaveCurrentManifest();
 		GD.Print(error == Error.Ok ? "SaveNode: Run data deleted." : $"SaveNode: Run data delete failed while saving manifest. Error: {error}.");
 		return error;
@@ -295,8 +406,10 @@ public partial class SaveNode : Node
 		HasCompany = false;
 		CompanyLogoData = CompanyLogoData.CreateDefault();
 		CompanyCareerData = new CompanyCareerData();
+		CompletedCompanyHistory = new CompletedCompanyHistory();
 		CompanyRunData = new CompanyRunData();
 		TownPhaseState = new TownPhaseState();
+		WeatherState = new WeatherState();
 		SettingsConfig = new SettingsConfig();
 	}
 
@@ -343,8 +456,10 @@ public partial class SaveNode : Node
 		manifest.SetValue("company", "has_company", HasCompany);
 		manifest.SetValue("resources", "company_logo", CompanyLogoPath);
 		manifest.SetValue("resources", "company_career", CompanyCareerPath);
+		manifest.SetValue("resources", "completed_company_history", CompletedCompanyHistoryPath);
 		manifest.SetValue("resources", "company_run", CompanyRunPath);
 		manifest.SetValue("resources", "town_phase", TownPhasePath);
+		manifest.SetValue("resources", "weather", WeatherPath);
 		manifest.SetValue("resources", "settings", SettingsPath);
 		return manifest;
 	}

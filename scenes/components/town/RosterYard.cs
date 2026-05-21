@@ -28,6 +28,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
     private Button _gladiatorsButton;
     private Button _equipmentButton;
     private Button _goldButton;
+    private RichTextLabel _emptyCourtyardLabel;
     private PanelContainer _goldTotalPreview;
     private Label _goldTotalPreviewLabel;
     private PackedScene _rosterYardGladiatorScene;
@@ -54,11 +55,12 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
         AddToGroup(PhaseGoldCostSourceGroup);
         _saveNode = SaveNode.Get();
         _gladiators = GetNode<Node2D>("Gladiators");
-        _gladiatorsButton = GetNodeOrNull<Button>("GladiatorsButton");
-        _equipmentButton = GetNodeOrNull<Button>("EquipmentButton");
-        _goldButton = GetNodeOrNull<Button>("GoldButton");
-        _goldTotalPreview = GetNodeOrNull<PanelContainer>("GoldTotalPreview");
-        _goldTotalPreviewLabel = GetNodeOrNull<Label>("GoldTotalPreview/Row/TotalLabel");
+        _gladiatorsButton = GetNodeOrNull<Button>("ButtonRow/GladiatorsButton");
+        _equipmentButton = GetNodeOrNull<Button>("ButtonRow/EquipmentButton");
+        _goldButton = GetNodeOrNull<Button>("ButtonRow/GoldButton");
+        _emptyCourtyardLabel = GetNodeOrNull<RichTextLabel>("EmptyCourtyardLabel");
+        _goldTotalPreview = GetNodeOrNull<PanelContainer>("ButtonRow/GoldButton/GoldTotalPreview");
+        _goldTotalPreviewLabel = GetNodeOrNull<Label>("ButtonRow/GoldButton/GoldTotalPreview/Row/TotalLabel");
         _rosterYardGladiatorScene = ResourceLoader.Load<PackedScene>(RosterYardGladiatorScenePath);
         _random.Randomize();
 
@@ -198,6 +200,11 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
             positions.Add(yardGladiator.Position);
         }
 
+        if (_emptyCourtyardLabel != null)
+            _emptyCourtyardLabel.Visible = runData.Gladiators.Count <= 0;
+
+        RefreshShowcaseButtons(runData);
+
         foreach (var gladiator in runData.TownAssignments.CourtyardGladiators)
         {
             if (gladiator == null)
@@ -218,6 +225,37 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
             positions.Add(yardGladiator.Position);
             _gladiators.AddChild(yardGladiator);
         }
+    }
+
+    private void RefreshShowcaseButtons(CompanyRunData runData)
+    {
+        if (runData == null)
+            return;
+
+        if (_gladiatorsButton != null)
+            _gladiatorsButton.Visible = runData.Gladiators.Count > 0;
+
+        if (_equipmentButton != null)
+            _equipmentButton.Visible = runData.Inventory.Count > 0;
+
+        RefreshGoldButtonVisibility(runData);
+    }
+
+    private void RefreshGoldButtonVisibility(CompanyRunData runData = null)
+    {
+        if (_goldButton == null)
+            return;
+
+        var phaseState = _saveNode?.TownPhaseState;
+        var phaseGoldCost = (runData ?? _saveNode?.CompanyRunData)?.GetCurrentPhaseGoldCost(phaseState) ?? 0;
+        _goldButton.Visible = phaseGoldCost > 0;
+
+        if (_goldButton.Visible)
+            return;
+
+        _goldButtonHovered = false;
+        if (_goldTotalPreview != null)
+            _goldTotalPreview.Visible = false;
     }
 
     private void OnGladiatorsButtonMouseEntered()
@@ -481,8 +519,10 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
     private void RefreshGoldCostPreview()
     {
+        RefreshGoldButtonVisibility();
+
         if (_goldTotalPreview != null)
-            _goldTotalPreview.Visible = _goldButtonHovered;
+            _goldTotalPreview.Visible = _goldButton?.Visible == true && _goldButtonHovered;
 
         if (_goldTotalPreviewLabel != null)
             _goldTotalPreviewLabel.Text = (_saveNode?.CompanyRunData?.GetCurrentPhaseGoldCost(_saveNode.TownPhaseState) ?? 0).ToString();

@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/CompanyLogoEditorOverlay.cs" id="1_editor"]
 [ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_companylogo"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="3_blur_shader"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/dice.svg" id="4_dice"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
 shader = ExtResource("3_blur_shader")
@@ -37,7 +38,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="PopupPanel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(460, 430)
+custom_minimum_size = Vector2(520, 440)
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel"]
@@ -66,24 +67,83 @@ size_flags_horizontal = 4
 layout_mode = 2
 text = "Company name"
 
-[node name="CompanyNameEdit" type="LineEdit" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="CompanyNameRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2
+
+[node name="CompanyNameEdit" type="LineEdit" parent="CenterContainer/PopupPanel/MarginContainer/Content/CompanyNameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
 focus_mode = 2
 text = "The Bronze Lions"
 
-[node name="ShieldLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="RandomNameButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/CompanyNameRow"]
+custom_minimum_size = Vector2(48, 40)
 layout_mode = 2
-text = "Shield"
+focus_mode = 2
+theme_override_constants/icon_max_width = 24
+icon = ExtResource("4_dice")
 
-[node name="ShieldOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="ShieldRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+
+[node name="ShieldLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/ShieldRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Shield"
+vertical_alignment = 1
+
+[node name="ShieldOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/ShieldRow"]
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 focus_mode = 2
 
-[node name="LogoLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="ShieldColorRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2
-text = "Logo"
 
-[node name="LogoOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="ShieldColorLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/ShieldColorRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Shield color"
+vertical_alignment = 1
+
+[node name="ShieldColorOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/ShieldColorRow"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+focus_mode = 2
+
+[node name="LogoRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+
+[node name="LogoLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/LogoRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Logo"
+vertical_alignment = 1
+
+[node name="LogoOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/LogoRow"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+focus_mode = 2
+
+[node name="LogoSizeRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+
+[node name="LogoSizeLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/LogoSizeRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Logo size"
+vertical_alignment = 1
+
+[node name="LogoSizeOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/LogoSizeRow"]
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 focus_mode = 2
 
@@ -97,6 +157,14 @@ custom_minimum_size = Vector2(150, 50)
 layout_mode = 2
 focus_mode = 2
 text = "Cancel"
+
+[node name="RandomizeButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+focus_mode = 2
+theme_override_constants/icon_max_width = 24
+text = "Randomize"
+icon = ExtResource("4_dice")
 
 [node name="ApplyButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
 custom_minimum_size = Vector2(150, 50)

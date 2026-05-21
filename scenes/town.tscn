@@ -21,6 +21,11 @@
 [ext_resource type="Script" uid="uid://0msvps6wghd2" path="res://scenes/components/town/RosterYard.cs" id="26_roster_yard"]
 [ext_resource type="Texture2D" uid="uid://budosbjkhbjtt" path="res://assets/ui/icons/gold.svg" id="27_gold_icon"]
 [ext_resource type="PackedScene" path="res://scenes/components/environment/EnvironmentVisualOverlay.tscn" id="28_environment_overlay"]
+[ext_resource type="FontFile" uid="uid://b7g60ea6lihk2" path="res://assets/fonts/MedievalSharp-Regular.ttf" id="29_regular_font"]
+
+[sub_resource type="FontVariation" id="FontVariation_market_bold"]
+base_font = ExtResource("29_regular_font")
+variation_embolden = 1.2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gold_total_preview"]
 bg_color = Color(0.08, 0.06, 0.03, 0.92)
@@ -114,49 +119,68 @@ color = Color(0.2, 0.15, 0.1, 0.86)
 
 [node name="Gladiators" type="Node2D" parent="World/RosterYard" unique_id=310366897]
 
-[node name="GladiatorsButton" type="Button" parent="World/RosterYard" unique_id=1405934177]
+[node name="EmptyCourtyardLabel" type="RichTextLabel" parent="World/RosterYard"]
+offset_left = -160.0
+offset_top = -34.0
+offset_right = 160.0
+offset_bottom = 34.0
+theme_override_fonts/bold_font = SubResource("FontVariation_market_bold")
+theme_override_font_sizes/normal_font_size = 22
+theme_override_font_sizes/bold_font_size = 22
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = "No gladiators found
+Go to [b]Market[/b] to buy gladiators"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ButtonRow" type="HBoxContainer" parent="World/RosterYard"]
 offset_left = -100.0
 offset_top = 92.0
-offset_right = -44.0
+offset_right = 100.0
 offset_bottom = 136.0
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="GladiatorsButton" type="Button" parent="World/RosterYard/ButtonRow" unique_id=1405934177]
+custom_minimum_size = Vector2(56, 44)
+layout_mode = 2
 tooltip_text = "Open gladiators overview."
 icon = ExtResource("14_roster_icon")
 expand_icon = true
 
-[node name="EquipmentButton" type="Button" parent="World/RosterYard" unique_id=771559795]
-offset_left = -28.0
-offset_top = 92.0
-offset_right = 28.0
-offset_bottom = 136.0
+[node name="EquipmentButton" type="Button" parent="World/RosterYard/ButtonRow" unique_id=771559795]
+custom_minimum_size = Vector2(56, 44)
+layout_mode = 2
 tooltip_text = "Open equipment inventory."
 icon = ExtResource("25_equipment_icon")
 expand_icon = true
 
-[node name="GoldButton" type="Button" parent="World/RosterYard"]
-offset_left = 44.0
-offset_top = 92.0
-offset_right = 100.0
-offset_bottom = 136.0
+[node name="GoldButton" type="Button" parent="World/RosterYard/ButtonRow"]
+custom_minimum_size = Vector2(56, 44)
+layout_mode = 2
 tooltip_text = "Show phase costs and next salary payment."
 icon = ExtResource("27_gold_icon")
 expand_icon = true
 
-[node name="GoldTotalPreview" type="PanelContainer" parent="World/RosterYard"]
+[node name="GoldTotalPreview" type="PanelContainer" parent="World/RosterYard/ButtonRow/GoldButton"]
 visible = false
-offset_left = 34.0
-offset_top = 44.0
-offset_right = 110.0
-offset_bottom = 84.0
+offset_left = -10.0
+offset_top = -48.0
+offset_right = 66.0
+offset_bottom = -8.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_gold_total_preview")
 
-[node name="Row" type="HBoxContainer" parent="World/RosterYard/GoldTotalPreview"]
+[node name="Row" type="HBoxContainer" parent="World/RosterYard/ButtonRow/GoldButton/GoldTotalPreview"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 alignment = 1
 
-[node name="GoldIcon" type="TextureRect" parent="World/RosterYard/GoldTotalPreview/Row"]
+[node name="GoldIcon" type="TextureRect" parent="World/RosterYard/ButtonRow/GoldButton/GoldTotalPreview/Row"]
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
 mouse_filter = 2
@@ -164,7 +188,7 @@ texture = ExtResource("27_gold_icon")
 expand_mode = 2
 stretch_mode = 5
 
-[node name="TotalLabel" type="Label" parent="World/RosterYard/GoldTotalPreview/Row"]
+[node name="TotalLabel" type="Label" parent="World/RosterYard/ButtonRow/GoldButton/GoldTotalPreview/Row"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_font_sizes/font_size = 22

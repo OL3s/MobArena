@@ -92,6 +92,8 @@ Design requirements:
 
 Start with simple enemies and add complexity gradually.
 
+Enemy definitions should be authored as Godot `.tres` resources so contracts, codex UI, and future combat spawning reference the same source of truth. Each enemy resource should hold display data such as name/icon, basic stats such as max health, and a packed-scene reference for the runtime combat actor when one exists.
+
 Possible progression:
 
 - Slimes as slow starter enemies.
@@ -115,6 +117,8 @@ Keep the first playable version narrow:
 - Simple contract selection.
 - Money reward after winning.
 - Gladiator death and replacement.
+
+Arena contracts should be authored as resources containing their enemy mob entries and rewards so the selection UI and future combat startup share the same contract definition. Fame gain should scale against current company fame: the mob list provides the base fame value, then an expected-fame cost reduces the net reward so easy contracts are useful early but stop being efficient for famous companies.
 
 Do not build the full roster, shop, fame, upkeep, or gear systems before the basic arena fight and contract loop works.
 

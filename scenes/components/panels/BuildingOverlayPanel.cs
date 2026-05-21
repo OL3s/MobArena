@@ -6,7 +6,7 @@ using MobArena.Scripts.Resources;
 
 namespace MobArena.Scenes.Components.Panels;
 
-public partial class BuildingOverlayPanel : Control
+public partial class BuildingOverlayPanel : Control, IUpgradeable
 {
     private const float PanelWidthRatio = 0.68f;
     private const int PanelMinWidth = 420;
@@ -35,9 +35,18 @@ public partial class BuildingOverlayPanel : Control
     [Export]
     public TownAssignmentData.AssignmentLocation AssignmentLocation { get; set; } = TownAssignmentData.AssignmentLocation.Courtyard;
 
+    [Export]
+    public bool IsUpgradeableBuilding { get; set; }
+
+    [Export]
+    public int MaxUpgradeLevel { get; set; } = 3;
+
+    public int UpgradeLevel => _runData?.GetBuildingUpgradeLevel(AssignmentLocation) ?? 0;
+
     private PanelContainer _panel;
     private TextureRect _icon;
     private Label _title;
+    private Button _upgradeButton;
     private RichTextLabel _body;
     private HBoxContainer _workRow;
     private VBoxContainer _gladiatorDetails;
@@ -53,6 +62,7 @@ public partial class BuildingOverlayPanel : Control
         _panel = GetNode<PanelContainer>("CenterContainer/Panel");
         _icon = GetNode<TextureRect>("CenterContainer/Panel/MarginContainer/Layout/Header/Icon");
         _title = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/Header/Title");
+        _upgradeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Header/UpgradeButton");
         _body = GetNode<RichTextLabel>("CenterContainer/Panel/MarginContainer/Layout/Body");
         _workRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/WorkRow");
         _gladiatorDetails = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/WorkRow/GladiatorDetails");
@@ -66,12 +76,14 @@ public partial class BuildingOverlayPanel : Control
         _body.Text = Body;
         _icon.Texture = IconTexture;
         _icon.Visible = IconTexture != null;
+        _upgradeButton.Pressed += OnUpgradePressed;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
             _runData.RunChanged += RefreshOverlayState;
 
         UpdatePanelWidth();
         RefreshWorkControls();
+        RefreshUpgradeButton();
         RefreshAssignedGladiators();
     }
 
@@ -79,6 +91,9 @@ public partial class BuildingOverlayPanel : Control
     {
         if (_runData != null)
             _runData.RunChanged -= RefreshOverlayState;
+
+        if (_upgradeButton != null)
+            _upgradeButton.Pressed -= OnUpgradePressed;
     }
 
     public override void _Notification(int what)
@@ -100,7 +115,52 @@ public partial class BuildingOverlayPanel : Control
     private void RefreshOverlayState()
     {
         RefreshWorkControls();
+        RefreshUpgradeButton();
         RefreshAssignedGladiators();
+    }
+
+    public int GetUpgradeGoldCost()
+    {
+        return _runData?.GetBuildingUpgradeGoldCost(AssignmentLocation) ?? 0;
+    }
+
+    public bool CanUpgrade()
+    {
+        return IsUpgradeableBuilding && _runData?.CanUpgradeBuilding(AssignmentLocation, MaxUpgradeLevel) == true;
+    }
+
+    public bool TryUpgrade()
+    {
+        return IsUpgradeableBuilding && _runData?.TryUpgradeBuilding(AssignmentLocation, MaxUpgradeLevel) == true;
+    }
+
+    private void RefreshUpgradeButton()
+    {
+        if (_upgradeButton == null)
+            return;
+
+        _upgradeButton.Visible = IsUpgradeableBuilding;
+        if (!IsUpgradeableBuilding)
+            return;
+
+        var isMaxed = UpgradeLevel >= MaxUpgradeLevel;
+        _upgradeButton.Text = isMaxed ? "Max" : "Upgrade";
+        _upgradeButton.Disabled = isMaxed || !CanUpgrade();
+        _upgradeButton.TooltipText = isMaxed
+            ? $"{Title} is fully upgraded."
+            : $"Upgrade {Title} to level {UpgradeLevel + 1}/{MaxUpgradeLevel} for {GetUpgradeGoldCost()} gold.";
+    }
+
+    private void OnUpgradePressed()
+    {
+        if (TryUpgrade())
+        {
+            SaveNode.Get()?.Save();
+            RefreshUpgradeButton();
+            return;
+        }
+
+        GlobalOverlay.Get()?.ShowBlurredPopup("Upgrade", $"Not enough gold to upgrade {Title}. Need {GetUpgradeGoldCost()} gold.");
     }
 
     private void RefreshWorkControls()

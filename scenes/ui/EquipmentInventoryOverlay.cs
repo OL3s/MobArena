@@ -44,19 +44,6 @@ public partial class EquipmentInventoryOverlay : Control
         foreach (var child in _itemGrid.GetChildren())
             child.QueueFree();
 
-        if (_runData.Inventory.Count <= 0)
-        {
-            _itemGrid.AddChild(new Label
-            {
-                Text = "No unequipped company items yet. Buy equipment at the market blacksmith.",
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-                CustomMinimumSize = new Vector2(680, 0),
-                SizeFlagsHorizontal = SizeFlags.ExpandFill,
-                HorizontalAlignment = HorizontalAlignment.Center
-            });
-            return;
-        }
-
         foreach (var item in _runData.Inventory)
         {
             if (item != null)

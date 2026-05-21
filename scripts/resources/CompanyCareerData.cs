@@ -79,4 +79,17 @@ public partial class CompanyCareerData : Resource
         ChampionsDefeated++;
         EmitSignal(SignalName.CareerChanged);
     }
+
+    public CompanyCareerData CreateCopy()
+    {
+        return new CompanyCareerData
+        {
+            TotalGladiatorsInCareer = TotalGladiatorsInCareer,
+            GladiatorsDead = GladiatorsDead,
+            TotalGoldEarned = TotalGoldEarned,
+            ContractsCompleted = ContractsCompleted,
+            MobsKilled = MobsKilled,
+            ChampionsDefeated = ChampionsDefeated
+        };
+    }
 }

@@ -8,16 +8,28 @@ namespace MobArena.Scenes.Components.UI;
 public partial class TownHud : CanvasLayer
 {
 	private const int DevActionCompleteArenaDay = 1;
+	private const int DevActionWeatherCloudy = 101;
+	private const int DevActionWeatherSun = 102;
+	private const int DevActionWeatherRain = 103;
+	private const string DevWeatherSubmenuName = "WeatherSubmenu";
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
 	private const string GladiatorDeathOverlayScenePath = "res://scenes/ui/GladiatorDeathOverlay.tscn";
 	private const string TownHoverInfoPanelScenePath = "res://scenes/components/ui/TownHoverInfoPanel.tscn";
+	private const string CloudyWeatherIconPath = "res://assets/ui/icons/clear.svg";
+	private const string RainWeatherIconPath = "res://assets/ui/icons/rain.svg";
+	private const string SunWeatherIconPath = "res://assets/ui/icons/sun.svg";
+	private const string CalendarInfoPopupTitle = "Weather & Champion";
+	private const string CalendarInfoPopupText = "todo: implement weather condition effects and champion explanation here";
 
 	[Signal]
 	public delegate void BackPressedEventHandler();
 
 	[Signal]
 	public delegate void SelectContractPressedEventHandler();
+
+	[Signal]
+	public delegate void BuyGladiatorPressedEventHandler();
 
 	private SaveNode _saveNode;
 	private TownPhaseState _phaseState;
@@ -31,12 +43,18 @@ public partial class TownHud : CanvasLayer
 	private Label _idleLabel;
 	private Label _exhaustedLabel;
 	private Label _lowHealthLabel;
+	private Control _conditionPanel;
+	private Control _calendarPanel;
 	private Button _nextDayButton;
 	private Label _dayLabel;
 	private Label _championDueLabel;
-	private TextureRect _sunIcon;
+	private TextureRect _weatherIcon;
 	private TextureRect _moonIcon;
+	private Texture2D _cloudyWeatherIcon;
+	private Texture2D _rainWeatherIcon;
+	private Texture2D _sunWeatherIcon;
 	private MenuButton _devButton;
+	private PopupMenu _devWeatherSubmenu;
 	private TownHoverInfoPanel _hoverInfoPanel;
 	private object _hoverSource;
 
@@ -51,16 +69,21 @@ public partial class TownHud : CanvasLayer
 		_championsWonCountLabel = GetNode<Label>("TopPanel/Row/CompanyStatus/CompanyText/StatsRow/ChampionsWonCount");
 		_goldLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/GoldRow/GoldLabel");
 		_fameLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/FameRow/FameLabel");
+		_conditionPanel = GetNode<Control>("TopPanel/Row/ConditionPanel");
 		_criticalRiskLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/CriticalRiskRow/CriticalRiskLabel");
 		_idleLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/IdleRow/IdleLabel");
 		_exhaustedLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/ExhaustionRow/ExhaustedLabel");
 		_lowHealthLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/LowHealthRow/LowHealthLabel");
 		var companyStatus = GetNode<Control>("TopPanel/Row/CompanyStatus");
 		_nextDayButton = GetNode<Button>("BottomPanel/TimeRow/PhaseActionButton");
+		_calendarPanel = GetNode<Control>("BottomPanel/TimeRow/CalendarPanel");
 		_dayLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/DayLabel");
 		_championDueLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/ChampionRow/ChampionDueLabel");
-		_sunIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/SunIcon");
-		_moonIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/MoonIcon");
+		_weatherIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/IconRow/WeatherIcon");
+		_moonIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/IconRow/MoonIcon");
+		_cloudyWeatherIcon = ResourceLoader.Load<Texture2D>(CloudyWeatherIconPath);
+		_rainWeatherIcon = ResourceLoader.Load<Texture2D>(RainWeatherIconPath);
+		_sunWeatherIcon = ResourceLoader.Load<Texture2D>(SunWeatherIconPath);
 		_devButton = GetNode<MenuButton>("TopPanel/Row/DevButton");
 		GetNodeOrNull<Control>("TopPanel/Row/SupplyPanel")?.Hide();
 		CreateHoverInfoPanel(GetNode<HBoxContainer>("BottomPanel/TimeRow"));
@@ -71,6 +94,7 @@ public partial class TownHud : CanvasLayer
 		_companyLogo.MouseEntered += OnCompanyLogoMouseEntered;
 		_companyLogo.MouseExited += OnCompanyLogoMouseExited;
 		companyStatus.GuiInput += OnCompanyStatusGuiInput;
+		_calendarPanel.GuiInput += OnCalendarPanelGuiInput;
 		GetNode<Button>("TopPanel/Row/BackButton").Pressed += OnBackPressed;
 		_nextDayButton.Pressed += OnNextDayPressed;
 		SetupDevMenu();
@@ -89,6 +113,7 @@ public partial class TownHud : CanvasLayer
 		RefreshRunUi();
 		RefreshDevMenu();
 		RefreshPhaseUi();
+		SetWeatherVisual(WeatherState.WeatherVisual.Cloudy);
 	}
 
 	public override void _ExitTree()
@@ -102,6 +127,9 @@ public partial class TownHud : CanvasLayer
 			_companyLogo.MouseEntered -= OnCompanyLogoMouseEntered;
 			_companyLogo.MouseExited -= OnCompanyLogoMouseExited;
 		}
+
+		if (_calendarPanel != null)
+			_calendarPanel.GuiInput -= OnCalendarPanelGuiInput;
 
 		if (_saveNode?.CompanyRunData != null)
 		{
@@ -122,6 +150,12 @@ public partial class TownHud : CanvasLayer
 	{
 		if (!_phaseState.CanAdvanceToNextDay)
 		{
+			if (_saveNode?.CompanyRunData?.Gladiators.Count <= 0)
+			{
+				EmitSignal(SignalName.BuyGladiatorPressed);
+				return;
+			}
+
 			if (_saveNode?.CompanyRunData?.CanPayArenaReturnUpkeep(_phaseState) == false)
 				return;
 
@@ -129,7 +163,7 @@ public partial class TownHud : CanvasLayer
 			return;
 		}
 
-		if (!PhaseTransitionController.AdvanceToNextDay(_phaseState, _saveNode.CompanyRunData))
+		if (!PhaseTransitionController.AdvanceToNextDay(_phaseState, _saveNode.CompanyRunData, _saveNode.WeatherState))
 			return;
 
 		GD.Print($"SaveNode: Autosaving at day {_phaseState.CurrentDay}.");
@@ -142,7 +176,25 @@ public partial class TownHud : CanvasLayer
 		var popup = _devButton.GetPopup();
 		popup.Clear();
 		popup.AddItem("Day -> Night", DevActionCompleteArenaDay);
+		SetupDevWeatherMenu(popup);
 		popup.IdPressed += OnDevMenuIdPressed;
+	}
+
+	private void SetupDevWeatherMenu(PopupMenu popup)
+	{
+		_devWeatherSubmenu ??= popup.GetNodeOrNull<PopupMenu>(DevWeatherSubmenuName);
+		if (_devWeatherSubmenu == null)
+		{
+			_devWeatherSubmenu = new PopupMenu { Name = DevWeatherSubmenuName };
+			popup.AddChild(_devWeatherSubmenu);
+			_devWeatherSubmenu.IdPressed += OnDevWeatherMenuIdPressed;
+		}
+
+		_devWeatherSubmenu.Clear();
+		_devWeatherSubmenu.AddItem("Cloudy", DevActionWeatherCloudy);
+		_devWeatherSubmenu.AddItem("Sun", DevActionWeatherSun);
+		_devWeatherSubmenu.AddItem("Rain", DevActionWeatherRain);
+		popup.AddSubmenuNodeItem("Change weather to", _devWeatherSubmenu);
 	}
 
 	private void OnDevMenuIdPressed(long id)
@@ -153,9 +205,27 @@ public partial class TownHud : CanvasLayer
 		if (id != DevActionCompleteArenaDay)
 			return;
 
-		if (!PhaseTransitionController.CompleteArenaDay(_phaseState, _saveNode.CompanyRunData))
+		if (!PhaseTransitionController.CompleteArenaDay(_phaseState, _saveNode.CompanyRunData, _saveNode.WeatherState))
 			return;
 
+		_saveNode.Save();
+	}
+
+	private void OnDevWeatherMenuIdPressed(long id)
+	{
+		if (_saveNode?.DebugEnabled != true || _saveNode.WeatherState == null)
+			return;
+
+		var weather = id switch
+		{
+			DevActionWeatherCloudy => WeatherState.WeatherVisual.Cloudy,
+			DevActionWeatherSun => WeatherState.WeatherVisual.Sun,
+			DevActionWeatherRain => WeatherState.WeatherVisual.Rain,
+			_ => _saveNode.WeatherState.CurrentWeather
+		};
+
+		_saveNode.WeatherState.SetWeather(weather);
+		SetWeatherVisual(weather);
 		_saveNode.Save();
 	}
 
@@ -167,6 +237,16 @@ public partial class TownHud : CanvasLayer
 
 		GetViewport()?.SetInputAsHandled();
 		OpenCompanyOverview();
+	}
+
+	private void OnCalendarPanelGuiInput(InputEvent inputEvent)
+	{
+		if (inputEvent is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left }
+			&& inputEvent is not InputEventScreenTouch { Pressed: true })
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+		GlobalOverlay.Get()?.ShowBlurredPopup(CalendarInfoPopupTitle, CalendarInfoPopupText);
 	}
 
 	private void OnCompanyLogoMouseEntered()
@@ -257,20 +337,38 @@ public partial class TownHud : CanvasLayer
 		_goldLabel.Text = runData.Gold.ToString();
 		_fameLabel.Text = runData.Fame.ToString();
 		var lowHealthWarningRatio = _saveNode?.SettingsConfig?.LowHealthWarningRatio ?? 0.6f;
-		_criticalRiskLabel.Text = runData.GetCriticalRiskGladiatorCount(lowHealthWarningRatio).ToString();
-		_idleLabel.Text = runData.GetIdleAssignedGladiatorCount().ToString();
-		_exhaustedLabel.Text = runData.GetExhaustedGladiatorCount().ToString();
-		_lowHealthLabel.Text = runData.GetLowHealthGladiatorCount(lowHealthWarningRatio).ToString();
+		var criticalRiskCount = runData.GetCriticalRiskGladiatorCount(lowHealthWarningRatio);
+		var idleCount = runData.GetIdleAssignedGladiatorCount();
+		var exhaustedCount = runData.GetExhaustedGladiatorCount();
+		var lowHealthCount = runData.GetLowHealthGladiatorCount(lowHealthWarningRatio);
+		_conditionPanel.Visible = criticalRiskCount + idleCount + exhaustedCount + lowHealthCount > 0;
+		_criticalRiskLabel.Text = criticalRiskCount.ToString();
+		_idleLabel.Text = idleCount.ToString();
+		_exhaustedLabel.Text = exhaustedCount.ToString();
+		_lowHealthLabel.Text = lowHealthCount.ToString();
+		RefreshNextDayButton();
 	}
 
 	private void RefreshPhaseUi()
 	{
 		_dayLabel.Text = _phaseState.GetDayLabel();
 		_championDueLabel.Text = _phaseState.GetChampionLabel();
-		_sunIcon.Visible = _phaseState.IsDay();
 		_moonIcon.Visible = _phaseState.IsNight();
 		RefreshDevMenu();
 		RefreshNextDayButton();
+	}
+
+	public void SetWeatherVisual(WeatherState.WeatherVisual weather)
+	{
+		if (_weatherIcon == null)
+			return;
+
+		_weatherIcon.Texture = weather switch
+		{
+			WeatherState.WeatherVisual.Rain => _rainWeatherIcon,
+			WeatherState.WeatherVisual.Sun => _sunWeatherIcon,
+			_ => _cloudyWeatherIcon ?? _sunWeatherIcon
+		};
 	}
 
 	private void RefreshDevMenu()
@@ -284,12 +382,13 @@ public partial class TownHud : CanvasLayer
 
 	private void RefreshNextDayButton()
 	{
-		_nextDayButton.Text = _phaseState.CanAdvanceToNextDay ? "Next Day" : "Select Contract";
 		_nextDayButton.Icon = null;
 		var runData = _saveNode?.CompanyRunData;
+		var hasNoGladiators = runData?.Gladiators.Count <= 0;
+		_nextDayButton.Text = _phaseState.CanAdvanceToNextDay ? "Next Day" : hasNoGladiators ? "Buy Gladiator" : "Select Contract";
 		var canPayPhaseCosts = runData?.CanPayCurrentPhaseGoldCost(_phaseState) != false;
 		var canPayArenaReturnUpkeep = runData?.CanPayArenaReturnUpkeep(_phaseState) != false;
-		_nextDayButton.Disabled = _phaseState.CanAdvanceToNextDay ? !canPayPhaseCosts : !canPayArenaReturnUpkeep;
+		_nextDayButton.Disabled = _phaseState.CanAdvanceToNextDay ? !canPayPhaseCosts : !hasNoGladiators && !canPayArenaReturnUpkeep;
 		_nextDayButton.TooltipText = GetPhaseActionTooltip(runData, canPayPhaseCosts, canPayArenaReturnUpkeep);
 	}
 
@@ -299,6 +398,9 @@ public partial class TownHud : CanvasLayer
 			return canPayPhaseCosts
 				? string.Empty
 				: $"Need {runData.GetCurrentPhaseGoldCost(_phaseState)} gold to pay current phase costs.";
+
+		if (runData?.Gladiators.Count <= 0)
+			return "Open the gladiator market.";
 
 		return canPayArenaReturnUpkeep
 			? "Open arena contracts."

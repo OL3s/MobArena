@@ -180,6 +180,6 @@ public partial class SettingsOverlay : Control
 			return;
 		}
 
-		GetTree().ChangeSceneToFile(MainMenuScene);
+		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScene);
 	}
 }
