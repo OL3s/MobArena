@@ -43,6 +43,6 @@ public partial class Arena : Node
 
     private void RefreshWeatherVisuals()
     {
-        _environmentOverlay?.SetWeather(_weatherState?.CurrentWeather ?? WeatherState.WeatherVisual.Clear);
+        _environmentOverlay?.SetWeather(_weatherState?.CurrentWeather ?? WeatherState.WeatherVisual.Cloudy);
     }
 }

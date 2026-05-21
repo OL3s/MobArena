@@ -8,13 +8,19 @@ namespace MobArena.Scenes.Components.UI;
 public partial class TownHud : CanvasLayer
 {
 	private const int DevActionCompleteArenaDay = 1;
+	private const int DevActionWeatherCloudy = 101;
+	private const int DevActionWeatherSun = 102;
+	private const int DevActionWeatherRain = 103;
+	private const string DevWeatherSubmenuName = "WeatherSubmenu";
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
 	private const string GladiatorDeathOverlayScenePath = "res://scenes/ui/GladiatorDeathOverlay.tscn";
 	private const string TownHoverInfoPanelScenePath = "res://scenes/components/ui/TownHoverInfoPanel.tscn";
-	private const string ClearWeatherIconPath = "res://assets/ui/icons/clear.svg";
+	private const string CloudyWeatherIconPath = "res://assets/ui/icons/clear.svg";
 	private const string RainWeatherIconPath = "res://assets/ui/icons/rain.svg";
 	private const string SunWeatherIconPath = "res://assets/ui/icons/sun.svg";
+	private const string CalendarInfoPopupTitle = "Weather & Champion";
+	private const string CalendarInfoPopupText = "todo: implement weather condition effects and champion explanation here";
 
 	[Signal]
 	public delegate void BackPressedEventHandler();
@@ -38,15 +44,17 @@ public partial class TownHud : CanvasLayer
 	private Label _exhaustedLabel;
 	private Label _lowHealthLabel;
 	private Control _conditionPanel;
+	private Control _calendarPanel;
 	private Button _nextDayButton;
 	private Label _dayLabel;
 	private Label _championDueLabel;
 	private TextureRect _weatherIcon;
 	private TextureRect _moonIcon;
-	private Texture2D _clearWeatherIcon;
+	private Texture2D _cloudyWeatherIcon;
 	private Texture2D _rainWeatherIcon;
 	private Texture2D _sunWeatherIcon;
 	private MenuButton _devButton;
+	private PopupMenu _devWeatherSubmenu;
 	private TownHoverInfoPanel _hoverInfoPanel;
 	private object _hoverSource;
 
@@ -68,11 +76,12 @@ public partial class TownHud : CanvasLayer
 		_lowHealthLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/LowHealthRow/LowHealthLabel");
 		var companyStatus = GetNode<Control>("TopPanel/Row/CompanyStatus");
 		_nextDayButton = GetNode<Button>("BottomPanel/TimeRow/PhaseActionButton");
+		_calendarPanel = GetNode<Control>("BottomPanel/TimeRow/CalendarPanel");
 		_dayLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/DayLabel");
 		_championDueLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/ChampionRow/ChampionDueLabel");
 		_weatherIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/IconRow/WeatherIcon");
 		_moonIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/IconRow/MoonIcon");
-		_clearWeatherIcon = ResourceLoader.Load<Texture2D>(ClearWeatherIconPath);
+		_cloudyWeatherIcon = ResourceLoader.Load<Texture2D>(CloudyWeatherIconPath);
 		_rainWeatherIcon = ResourceLoader.Load<Texture2D>(RainWeatherIconPath);
 		_sunWeatherIcon = ResourceLoader.Load<Texture2D>(SunWeatherIconPath);
 		_devButton = GetNode<MenuButton>("TopPanel/Row/DevButton");
@@ -85,6 +94,7 @@ public partial class TownHud : CanvasLayer
 		_companyLogo.MouseEntered += OnCompanyLogoMouseEntered;
 		_companyLogo.MouseExited += OnCompanyLogoMouseExited;
 		companyStatus.GuiInput += OnCompanyStatusGuiInput;
+		_calendarPanel.GuiInput += OnCalendarPanelGuiInput;
 		GetNode<Button>("TopPanel/Row/BackButton").Pressed += OnBackPressed;
 		_nextDayButton.Pressed += OnNextDayPressed;
 		SetupDevMenu();
@@ -103,7 +113,7 @@ public partial class TownHud : CanvasLayer
 		RefreshRunUi();
 		RefreshDevMenu();
 		RefreshPhaseUi();
-		SetWeatherVisual(WeatherState.WeatherVisual.Clear);
+		SetWeatherVisual(WeatherState.WeatherVisual.Cloudy);
 	}
 
 	public override void _ExitTree()
@@ -117,6 +127,9 @@ public partial class TownHud : CanvasLayer
 			_companyLogo.MouseEntered -= OnCompanyLogoMouseEntered;
 			_companyLogo.MouseExited -= OnCompanyLogoMouseExited;
 		}
+
+		if (_calendarPanel != null)
+			_calendarPanel.GuiInput -= OnCalendarPanelGuiInput;
 
 		if (_saveNode?.CompanyRunData != null)
 		{
@@ -163,7 +176,25 @@ public partial class TownHud : CanvasLayer
 		var popup = _devButton.GetPopup();
 		popup.Clear();
 		popup.AddItem("Day -> Night", DevActionCompleteArenaDay);
+		SetupDevWeatherMenu(popup);
 		popup.IdPressed += OnDevMenuIdPressed;
+	}
+
+	private void SetupDevWeatherMenu(PopupMenu popup)
+	{
+		_devWeatherSubmenu ??= popup.GetNodeOrNull<PopupMenu>(DevWeatherSubmenuName);
+		if (_devWeatherSubmenu == null)
+		{
+			_devWeatherSubmenu = new PopupMenu { Name = DevWeatherSubmenuName };
+			popup.AddChild(_devWeatherSubmenu);
+			_devWeatherSubmenu.IdPressed += OnDevWeatherMenuIdPressed;
+		}
+
+		_devWeatherSubmenu.Clear();
+		_devWeatherSubmenu.AddItem("Cloudy", DevActionWeatherCloudy);
+		_devWeatherSubmenu.AddItem("Sun", DevActionWeatherSun);
+		_devWeatherSubmenu.AddItem("Rain", DevActionWeatherRain);
+		popup.AddSubmenuNodeItem("Change weather to", _devWeatherSubmenu);
 	}
 
 	private void OnDevMenuIdPressed(long id)
@@ -180,6 +211,24 @@ public partial class TownHud : CanvasLayer
 		_saveNode.Save();
 	}
 
+	private void OnDevWeatherMenuIdPressed(long id)
+	{
+		if (_saveNode?.DebugEnabled != true || _saveNode.WeatherState == null)
+			return;
+
+		var weather = id switch
+		{
+			DevActionWeatherCloudy => WeatherState.WeatherVisual.Cloudy,
+			DevActionWeatherSun => WeatherState.WeatherVisual.Sun,
+			DevActionWeatherRain => WeatherState.WeatherVisual.Rain,
+			_ => _saveNode.WeatherState.CurrentWeather
+		};
+
+		_saveNode.WeatherState.SetWeather(weather);
+		SetWeatherVisual(weather);
+		_saveNode.Save();
+	}
+
 	private void OnCompanyStatusGuiInput(InputEvent inputEvent)
 	{
 		if (inputEvent is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left }
@@ -188,6 +237,16 @@ public partial class TownHud : CanvasLayer
 
 		GetViewport()?.SetInputAsHandled();
 		OpenCompanyOverview();
+	}
+
+	private void OnCalendarPanelGuiInput(InputEvent inputEvent)
+	{
+		if (inputEvent is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left }
+			&& inputEvent is not InputEventScreenTouch { Pressed: true })
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+		GlobalOverlay.Get()?.ShowBlurredPopup(CalendarInfoPopupTitle, CalendarInfoPopupText);
 	}
 
 	private void OnCompanyLogoMouseEntered()
@@ -308,7 +367,7 @@ public partial class TownHud : CanvasLayer
 		{
 			WeatherState.WeatherVisual.Rain => _rainWeatherIcon,
 			WeatherState.WeatherVisual.Sun => _sunWeatherIcon,
-			_ => _clearWeatherIcon ?? _sunWeatherIcon
+			_ => _cloudyWeatherIcon ?? _sunWeatherIcon
 		};
 	}
 

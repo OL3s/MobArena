@@ -242,6 +242,7 @@ text = "Select Contract"
 [node name="CalendarPanel" type="PanelContainer" parent="BottomPanel/TimeRow" unique_id=157375266]
 custom_minimum_size = Vector2(190, 0)
 layout_mode = 2
+tooltip_text = "Show weather and champion details."
 
 [node name="CalendarColumn" type="VBoxContainer" parent="BottomPanel/TimeRow/CalendarPanel" unique_id=1301790417]
 layout_mode = 2

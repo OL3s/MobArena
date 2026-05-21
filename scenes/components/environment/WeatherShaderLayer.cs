@@ -23,7 +23,7 @@ public partial class WeatherShaderLayer : Control
     public ShaderMaterial SunMaterial { get; set; }
 
     [Export]
-    public float ClearIntensity { get; set; } = 0.22f;
+    public float ClearIntensity { get; set; } = 1f;
 
     [Export]
     public float RainIntensity { get; set; } = 0.6f;
@@ -40,7 +40,7 @@ public partial class WeatherShaderLayer : Control
         _backgroundLayer = GetNode<ColorRect>("BackgroundLayer");
         _weatherLayer = GetNode<ColorRect>("WeatherLayer");
         _splashLayer = GetNode<ColorRect>("SplashLayer");
-        ApplyWeather(WeatherState.WeatherVisual.Clear);
+        ApplyWeather(WeatherState.WeatherVisual.Cloudy);
     }
 
     public void ApplyWeather(WeatherState.WeatherVisual weather)

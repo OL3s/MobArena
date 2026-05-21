@@ -10,7 +10,7 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_clear_weather"]
 shader = ExtResource("2_clear_shader")
-shader_parameter/intensity = 0.22
+shader_parameter/intensity = 1.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_rain_weather"]
 shader = ExtResource("4_rain_shader")

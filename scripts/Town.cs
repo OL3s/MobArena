@@ -124,7 +124,7 @@ public partial class Town : Node
 
     private void RefreshWeatherVisuals()
     {
-        var weather = _weatherState?.CurrentWeather ?? WeatherState.WeatherVisual.Clear;
+        var weather = _weatherState?.CurrentWeather ?? WeatherState.WeatherVisual.Cloudy;
         _environmentOverlay?.SetWeather(weather);
         _townHud?.SetWeatherVisual(weather);
     }

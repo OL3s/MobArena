@@ -6,7 +6,7 @@ public partial class WeatherState : Resource
 {
     public enum WeatherVisual
     {
-        Clear,
+        Cloudy,
         Sun,
         Rain
     }
@@ -15,7 +15,7 @@ public partial class WeatherState : Resource
     public delegate void WeatherChangedEventHandler();
 
     [Export]
-    public WeatherVisual CurrentWeather { get; private set; } = WeatherVisual.Clear;
+    public WeatherVisual CurrentWeather { get; private set; } = WeatherVisual.Cloudy;
 
     private readonly RandomNumberGenerator _random = new();
 
@@ -43,13 +43,13 @@ public partial class WeatherState : Resource
         var roll = _random.Randf();
         if (phaseState?.IsNight() == true)
         {
-            SetWeather(roll < 0.85f ? WeatherVisual.Clear : WeatherVisual.Rain);
+            SetWeather(roll < 0.85f ? WeatherVisual.Cloudy : WeatherVisual.Rain);
             return;
         }
 
         SetWeather(roll switch
         {
-            < 0.5f => WeatherVisual.Clear,
+            < 0.5f => WeatherVisual.Cloudy,
             < 0.85f => WeatherVisual.Sun,
             _ => WeatherVisual.Rain
         });

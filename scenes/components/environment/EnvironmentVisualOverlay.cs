@@ -21,7 +21,7 @@ public partial class EnvironmentVisualOverlay : CanvasLayer
     public TimeOfDayVisual TimeOfDay { get; private set; } = TimeOfDayVisual.Day;
 
     [Export]
-    public WeatherState.WeatherVisual Weather { get; private set; } = WeatherState.WeatherVisual.Clear;
+    public WeatherState.WeatherVisual Weather { get; private set; } = WeatherState.WeatherVisual.Cloudy;
 
     private ColorRect _timeTint;
     private ColorRect _weatherTint;

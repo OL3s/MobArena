@@ -237,6 +237,25 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
         if (_equipmentButton != null)
             _equipmentButton.Visible = runData.Inventory.Count > 0;
+
+        RefreshGoldButtonVisibility(runData);
+    }
+
+    private void RefreshGoldButtonVisibility(CompanyRunData runData = null)
+    {
+        if (_goldButton == null)
+            return;
+
+        var phaseState = _saveNode?.TownPhaseState;
+        var phaseGoldCost = (runData ?? _saveNode?.CompanyRunData)?.GetCurrentPhaseGoldCost(phaseState) ?? 0;
+        _goldButton.Visible = phaseGoldCost > 0;
+
+        if (_goldButton.Visible)
+            return;
+
+        _goldButtonHovered = false;
+        if (_goldTotalPreview != null)
+            _goldTotalPreview.Visible = false;
     }
 
     private void OnGladiatorsButtonMouseEntered()
@@ -500,8 +519,10 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
     private void RefreshGoldCostPreview()
     {
+        RefreshGoldButtonVisibility();
+
         if (_goldTotalPreview != null)
-            _goldTotalPreview.Visible = _goldButtonHovered;
+            _goldTotalPreview.Visible = _goldButton?.Visible == true && _goldButtonHovered;
 
         if (_goldTotalPreviewLabel != null)
             _goldTotalPreviewLabel.Text = (_saveNode?.CompanyRunData?.GetCurrentPhaseGoldCost(_saveNode.TownPhaseState) ?? 0).ToString();
