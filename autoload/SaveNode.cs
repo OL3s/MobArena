@@ -41,6 +41,9 @@ public partial class SaveNode : Node
 	public TownPhaseState TownPhaseState { get; private set; } = new();
 
 	[Export]
+	public WeatherState WeatherState { get; private set; } = new();
+
+	[Export]
 	public SettingsConfig SettingsConfig { get; private set; } = new();
 
 	public bool DebugEnabled => SettingsConfig?.DebugEnabled == true;
@@ -51,6 +54,7 @@ public partial class SaveNode : Node
 		CompanyRunData = new CompanyRunData();
 		ApplyDebugStartingCondition();
 		TownPhaseState = new TownPhaseState();
+		WeatherState = new WeatherState();
 	}
 
 	private void ApplyDebugStartingCondition()
@@ -257,6 +261,7 @@ public partial class SaveNode : Node
 		CompanyRunData = companyRunData;
 		CompanyRunData.ApplyGladiatorRecoverableCaps();
 		TownPhaseState = townPhaseState;
+		WeatherState ??= new WeatherState();
 		SettingsConfig = settingsConfig;
 		return Error.Ok;
     }
@@ -321,6 +326,7 @@ public partial class SaveNode : Node
 		CompanyCareerData = new CompanyCareerData();
 		CompanyRunData = new CompanyRunData();
 		TownPhaseState = new TownPhaseState();
+		WeatherState = new WeatherState();
 		error = SaveCurrentManifest();
 		GD.Print(error == Error.Ok ? "SaveNode: Company data deleted." : $"SaveNode: Company data delete failed while saving manifest. Error: {error}.");
 		return error;
@@ -349,6 +355,7 @@ public partial class SaveNode : Node
 
 		CompanyRunData = new CompanyRunData();
 		TownPhaseState = new TownPhaseState();
+		WeatherState = new WeatherState();
 		error = SaveCurrentManifest();
 		GD.Print(error == Error.Ok ? "SaveNode: Run data deleted." : $"SaveNode: Run data delete failed while saving manifest. Error: {error}.");
 		return error;
@@ -375,6 +382,7 @@ public partial class SaveNode : Node
 		CompletedCompanyHistory = new CompletedCompanyHistory();
 		CompanyRunData = new CompanyRunData();
 		TownPhaseState = new TownPhaseState();
+		WeatherState = new WeatherState();
 		SettingsConfig = new SettingsConfig();
 	}
 

@@ -250,7 +250,7 @@ public partial class ArenaContractsOverlay : Control
             gladiator?.GladiatorCareer?.AddWin();
         }
 
-        PhaseTransitionController.CompleteArenaContract(_phaseState, _runData);
+        PhaseTransitionController.CompleteArenaContract(_phaseState, _runData, SaveNode.Get()?.WeatherState);
         saveNode.Save();
         GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
         GetTree().ChangeSceneToFile(TownScenePath);

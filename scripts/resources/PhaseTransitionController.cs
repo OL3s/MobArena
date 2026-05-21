@@ -2,18 +2,19 @@ namespace MobArena.Scripts.Resources;
 
 public static class PhaseTransitionController
 {
-    public static bool CompleteArenaDay(TownPhaseState phaseState, CompanyRunData companyRunData)
+    public static bool CompleteArenaDay(TownPhaseState phaseState, CompanyRunData companyRunData, WeatherState weatherState = null)
     {
         if (phaseState == null || !phaseState.IsDay())
             return false;
 
         ExecuteBuildingWork(companyRunData);
         phaseState.MoveToNight();
+        weatherState?.ChooseRandomWeather();
         companyRunData?.NotifyRunChanged();
         return true;
     }
 
-    public static bool CompleteArenaContract(TownPhaseState phaseState, CompanyRunData companyRunData)
+    public static bool CompleteArenaContract(TownPhaseState phaseState, CompanyRunData companyRunData, WeatherState weatherState = null)
     {
         if (phaseState == null || !phaseState.IsDay())
             return false;
@@ -21,11 +22,12 @@ public static class PhaseTransitionController
         ExecuteBuildingWork(companyRunData);
         companyRunData?.CompleteArenaContractAssignments();
         phaseState.MoveToNight();
+        weatherState?.ChooseRandomWeather();
         companyRunData?.NotifyRunChanged();
         return true;
     }
 
-    public static bool AdvanceToNextDay(TownPhaseState phaseState, CompanyRunData companyRunData)
+    public static bool AdvanceToNextDay(TownPhaseState phaseState, CompanyRunData companyRunData, WeatherState weatherState = null)
     {
         if (phaseState == null || !phaseState.CanAdvanceToNextDay)
             return false;
@@ -37,6 +39,7 @@ public static class PhaseTransitionController
         companyRunData?.PayNightSalary();
         companyRunData?.Market?.ExecuteNewDay();
         phaseState.MoveToNextDay();
+        weatherState?.ChooseRandomWeather();
         companyRunData?.NotifyRunChanged();
         return true;
     }

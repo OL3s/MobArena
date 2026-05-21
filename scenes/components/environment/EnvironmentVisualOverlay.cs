@@ -11,13 +11,6 @@ public partial class EnvironmentVisualOverlay : CanvasLayer
         Night
     }
 
-    public enum WeatherVisual
-    {
-        Clear,
-        Sun,
-        Rain
-    }
-
     [Export]
     public float NightOpacity { get; set; } = 0.42f;
 
@@ -28,15 +21,17 @@ public partial class EnvironmentVisualOverlay : CanvasLayer
     public TimeOfDayVisual TimeOfDay { get; private set; } = TimeOfDayVisual.Day;
 
     [Export]
-    public WeatherVisual Weather { get; private set; } = WeatherVisual.Clear;
+    public WeatherState.WeatherVisual Weather { get; private set; } = WeatherState.WeatherVisual.Clear;
 
     private ColorRect _timeTint;
     private ColorRect _weatherTint;
+    private WeatherShaderLayer _weatherShaderLayer;
 
     public override void _Ready()
     {
         _timeTint = GetNode<ColorRect>("TimeTint");
         _weatherTint = GetNode<ColorRect>("WeatherTint");
+        _weatherShaderLayer = GetNodeOrNull<WeatherShaderLayer>("WeatherShaderLayer");
         RefreshVisuals();
     }
 
@@ -54,7 +49,7 @@ public partial class EnvironmentVisualOverlay : CanvasLayer
         RefreshVisuals();
     }
 
-    public void SetWeather(WeatherVisual weather)
+    public void SetWeather(WeatherState.WeatherVisual weather)
     {
         if (Weather == weather)
             return;
@@ -75,10 +70,11 @@ public partial class EnvironmentVisualOverlay : CanvasLayer
 
         _weatherTint.Color = Weather switch
         {
-            WeatherVisual.Rain => new Color(0.15f, 0.22f, 0.32f, Mathf.Clamp(WeatherOpacity, 0f, 1f)),
-            WeatherVisual.Sun => new Color(1f, 0.74f, 0.25f, Mathf.Clamp(WeatherOpacity * 0.7f, 0f, 1f)),
+            WeatherState.WeatherVisual.Rain => new Color(0.15f, 0.22f, 0.32f, Mathf.Clamp(WeatherOpacity, 0f, 1f)),
+            WeatherState.WeatherVisual.Sun => new Color(1f, 0.74f, 0.25f, Mathf.Clamp(WeatherOpacity * 0.7f, 0f, 1f)),
             _ => Colors.Transparent
         };
         _weatherTint.Visible = _weatherTint.Color.A > 0f;
+        _weatherShaderLayer?.ApplyWeather(Weather);
     }
 }

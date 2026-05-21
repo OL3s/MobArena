@@ -1,5 +1,4 @@
 using Godot;
-using MobArena.Scenes.Components.Environment;
 using MobArena.Scenes.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
@@ -104,7 +103,7 @@ public partial class TownHud : CanvasLayer
 		RefreshRunUi();
 		RefreshDevMenu();
 		RefreshPhaseUi();
-		SetWeatherVisual(EnvironmentVisualOverlay.WeatherVisual.Clear);
+		SetWeatherVisual(WeatherState.WeatherVisual.Clear);
 	}
 
 	public override void _ExitTree()
@@ -151,7 +150,7 @@ public partial class TownHud : CanvasLayer
 			return;
 		}
 
-		if (!PhaseTransitionController.AdvanceToNextDay(_phaseState, _saveNode.CompanyRunData))
+		if (!PhaseTransitionController.AdvanceToNextDay(_phaseState, _saveNode.CompanyRunData, _saveNode.WeatherState))
 			return;
 
 		GD.Print($"SaveNode: Autosaving at day {_phaseState.CurrentDay}.");
@@ -175,7 +174,7 @@ public partial class TownHud : CanvasLayer
 		if (id != DevActionCompleteArenaDay)
 			return;
 
-		if (!PhaseTransitionController.CompleteArenaDay(_phaseState, _saveNode.CompanyRunData))
+		if (!PhaseTransitionController.CompleteArenaDay(_phaseState, _saveNode.CompanyRunData, _saveNode.WeatherState))
 			return;
 
 		_saveNode.Save();
@@ -300,15 +299,15 @@ public partial class TownHud : CanvasLayer
 		RefreshNextDayButton();
 	}
 
-	public void SetWeatherVisual(EnvironmentVisualOverlay.WeatherVisual weather)
+	public void SetWeatherVisual(WeatherState.WeatherVisual weather)
 	{
 		if (_weatherIcon == null)
 			return;
 
 		_weatherIcon.Texture = weather switch
 		{
-			EnvironmentVisualOverlay.WeatherVisual.Rain => _rainWeatherIcon,
-			EnvironmentVisualOverlay.WeatherVisual.Sun => _sunWeatherIcon,
+			WeatherState.WeatherVisual.Rain => _rainWeatherIcon,
+			WeatherState.WeatherVisual.Sun => _sunWeatherIcon,
 			_ => _clearWeatherIcon ?? _sunWeatherIcon
 		};
 	}

@@ -15,22 +15,24 @@ public partial class Town : Node
     private const string FirstTownEntryPopupTitle = "Tutorial";
     private const string FirstTownEntryPopupText = "Todo, add tutorial with tscn animation popups here";
 
-    private readonly RandomNumberGenerator _random = new();
-
     private TownBuilding _contractBoard;
     private EnvironmentVisualOverlay _environmentOverlay;
     private TownHud _townHud;
     private TownPhaseState _phaseState;
+    private WeatherState _weatherState;
 
     public override void _Ready()
     {
         _contractBoard = GetNode<TownBuilding>("World/ContractBoard");
         _environmentOverlay = GetNode<EnvironmentVisualOverlay>("EnvironmentOverlay");
-        _phaseState = SaveNode.Get()?.TownPhaseState;
+        var saveNode = SaveNode.Get();
+        _phaseState = saveNode?.TownPhaseState;
+        _weatherState = saveNode?.WeatherState;
         if (_phaseState != null)
             _phaseState.PhaseChanged += OnPhaseChanged;
 
-        _random.Randomize();
+        if (_weatherState != null)
+            _weatherState.WeatherChanged += RefreshWeatherVisuals;
 
         _townHud = GetNode<TownHud>("TownHud");
         _townHud.BackPressed += OnMainMenuPressed;
@@ -47,6 +49,9 @@ public partial class Town : Node
     {
         if (_phaseState != null)
             _phaseState.PhaseChanged -= OnPhaseChanged;
+
+        if (_weatherState != null)
+            _weatherState.WeatherChanged -= RefreshWeatherVisuals;
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
@@ -114,22 +119,13 @@ public partial class Town : Node
     private void OnPhaseChanged()
     {
         RefreshEnvironmentVisuals();
-        ChooseRandomWeather();
-    }
-
-    private void ChooseRandomWeather()
-    {
-        if (_environmentOverlay == null)
-            return;
-
-        var weatherValues = System.Enum.GetValues<EnvironmentVisualOverlay.WeatherVisual>();
-        var weather = weatherValues[_random.RandiRange(0, weatherValues.Length - 1)];
-        _environmentOverlay.SetWeather(weather);
         RefreshWeatherVisuals();
     }
 
     private void RefreshWeatherVisuals()
     {
-        _townHud?.SetWeatherVisual(_environmentOverlay?.Weather ?? EnvironmentVisualOverlay.WeatherVisual.Clear);
+        var weather = _weatherState?.CurrentWeather ?? WeatherState.WeatherVisual.Clear;
+        _environmentOverlay?.SetWeather(weather);
+        _townHud?.SetWeatherVisual(weather);
     }
 }

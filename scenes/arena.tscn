@@ -1,6 +1,7 @@
-[gd_scene format=3 uid="uid://de7dkvw2b566m"]
+[gd_scene load_steps=3 format=3 uid="uid://de7dkvw2b566m"]
 
 [ext_resource type="Script" uid="uid://d27fggtn36djs" path="res://scripts/Arena.cs" id="1_arena"]
+[ext_resource type="PackedScene" path="res://scenes/components/environment/EnvironmentVisualOverlay.tscn" id="2_environment_overlay"]
 
 [node name="Arena" type="Node" unique_id=1214353618]
 script = ExtResource("1_arena")
@@ -15,6 +16,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.18, 0.13, 0.09, 1)
+
+[node name="EnvironmentOverlay" parent="." instance=ExtResource("2_environment_overlay")]
 
 [node name="World" type="Node2D" parent="." unique_id=2082888250]
 
