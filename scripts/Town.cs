@@ -11,11 +11,15 @@ public partial class Town : Node
     private const string MainMenuScene = "res://scenes/main_menu.tscn";
     private const string GladiatorsOverlayScene = "res://scenes/ui/GladiatorsOverlay.tscn";
     private const string EquipmentInventoryOverlayScene = "res://scenes/ui/EquipmentInventoryOverlay.tscn";
+    private const string GladiatorMarketOverlayScene = "res://scenes/town_overlays/gladiator_market_overlay.tscn";
     private const string FirstTownEntryPopupTitle = "Tutorial";
     private const string FirstTownEntryPopupText = "Todo, add tutorial with tscn animation popups here";
 
+    private readonly RandomNumberGenerator _random = new();
+
     private TownBuilding _contractBoard;
     private EnvironmentVisualOverlay _environmentOverlay;
+    private TownHud _townHud;
     private TownPhaseState _phaseState;
 
     public override void _Ready()
@@ -24,21 +28,25 @@ public partial class Town : Node
         _environmentOverlay = GetNode<EnvironmentVisualOverlay>("EnvironmentOverlay");
         _phaseState = SaveNode.Get()?.TownPhaseState;
         if (_phaseState != null)
-            _phaseState.PhaseChanged += RefreshEnvironmentVisuals;
+            _phaseState.PhaseChanged += OnPhaseChanged;
 
-        var townHud = GetNode<TownHud>("TownHud");
-        townHud.BackPressed += OnMainMenuPressed;
-        townHud.SelectContractPressed += OnSelectContractPressed;
-        GetNode<Button>("World/RosterYard/GladiatorsButton").Pressed += OnGladiatorsPressed;
-        GetNode<Button>("World/RosterYard/EquipmentButton").Pressed += OnEquipmentPressed;
+        _random.Randomize();
+
+        _townHud = GetNode<TownHud>("TownHud");
+        _townHud.BackPressed += OnMainMenuPressed;
+        _townHud.SelectContractPressed += OnSelectContractPressed;
+        _townHud.BuyGladiatorPressed += OnBuyGladiatorPressed;
+        GetNode<Button>("World/RosterYard/ButtonRow/GladiatorsButton").Pressed += OnGladiatorsPressed;
+        GetNode<Button>("World/RosterYard/ButtonRow/EquipmentButton").Pressed += OnEquipmentPressed;
         RefreshEnvironmentVisuals();
+        RefreshWeatherVisuals();
         CallDeferred(MethodName.ShowFirstTownEntryPopupIfNeeded);
     }
 
     public override void _ExitTree()
     {
         if (_phaseState != null)
-            _phaseState.PhaseChanged -= RefreshEnvironmentVisuals;
+            _phaseState.PhaseChanged -= OnPhaseChanged;
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
@@ -59,6 +67,11 @@ public partial class Town : Node
     private void OnSelectContractPressed()
     {
         _contractBoard?.Activate();
+    }
+
+    private static void OnBuyGladiatorPressed()
+    {
+        OpenOverlay(GladiatorMarketOverlayScene);
     }
 
     private static void OnGladiatorsPressed()
@@ -96,5 +109,27 @@ public partial class Town : Node
     private void RefreshEnvironmentVisuals()
     {
         _environmentOverlay?.ApplyPhaseState(_phaseState);
+    }
+
+    private void OnPhaseChanged()
+    {
+        RefreshEnvironmentVisuals();
+        ChooseRandomWeather();
+    }
+
+    private void ChooseRandomWeather()
+    {
+        if (_environmentOverlay == null)
+            return;
+
+        var weatherValues = System.Enum.GetValues<EnvironmentVisualOverlay.WeatherVisual>();
+        var weather = weatherValues[_random.RandiRange(0, weatherValues.Length - 1)];
+        _environmentOverlay.SetWeather(weather);
+        RefreshWeatherVisuals();
+    }
+
+    private void RefreshWeatherVisuals()
+    {
+        _townHud?.SetWeatherVisual(_environmentOverlay?.Weather ?? EnvironmentVisualOverlay.WeatherVisual.Clear);
     }
 }

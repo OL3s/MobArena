@@ -258,7 +258,11 @@ layout_mode = 2
 text = "Day 1"
 vertical_alignment = 1
 
-[node name="SunIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow" unique_id=1520285935]
+[node name="IconRow" type="HBoxContainer" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WeatherIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/IconRow" unique_id=1520285935]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_vertical = 4
@@ -266,7 +270,7 @@ texture = ExtResource("9_sun_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="MoonIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow" unique_id=2009343144]
+[node name="MoonIcon" type="TextureRect" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/IconRow" unique_id=2009343144]
 visible = false
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
