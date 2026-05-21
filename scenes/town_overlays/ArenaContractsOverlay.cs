@@ -253,7 +253,7 @@ public partial class ArenaContractsOverlay : Control
         PhaseTransitionController.CompleteArenaContract(_phaseState, _runData, SaveNode.Get()?.WeatherState);
         saveNode.Save();
         GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
-        GetTree().ChangeSceneToFile(TownScenePath);
+        GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, TownScenePath);
     }
 
     private void StartGladiatorDrag(GladiatorData gladiator)

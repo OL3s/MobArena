@@ -18,6 +18,7 @@ public partial class SaveNode : Node
 	private const string CompletedCompanyHistoryPath = SaveDirectory + "/completed_company_history.tres";
 	private const string CompanyRunPath = SaveDirectory + "/company_run.tres";
 	private const string TownPhasePath = SaveDirectory + "/town_phase.tres";
+	private const string WeatherPath = SaveDirectory + "/weather.tres";
 	private const string SettingsPath = SaveDirectory + "/settings.tres";
 
 	private bool _skipExitSave;
@@ -180,6 +181,13 @@ public partial class SaveNode : Node
 			return error;
 		}
 
+		error = SaveResource(WeatherState, WeatherPath);
+		if (error != Error.Ok)
+		{
+			GD.Print($"SaveNode: Save failed for weather. Error: {error}.");
+			return error;
+		}
+
 		error = SaveResource(SettingsConfig, SettingsPath);
 		if (error != Error.Ok)
 		{
@@ -248,6 +256,13 @@ public partial class SaveNode : Node
 			return error;
 		}
 
+		error = LoadResource(GetResourcePath(manifest, "weather", WeatherPath), WeatherState, out var weatherState);
+		if (error != Error.Ok)
+		{
+			GD.Print($"SaveNode: Load failed for weather. Error: {error}.");
+			return error;
+		}
+
 		error = LoadResource(GetResourcePath(manifest, "settings", SettingsPath), SettingsConfig, out var settingsConfig);
 		if (error != Error.Ok)
 		{
@@ -261,7 +276,7 @@ public partial class SaveNode : Node
 		CompanyRunData = companyRunData;
 		CompanyRunData.ApplyGladiatorRecoverableCaps();
 		TownPhaseState = townPhaseState;
-		WeatherState ??= new WeatherState();
+		WeatherState = weatherState;
 		SettingsConfig = settingsConfig;
 		return Error.Ok;
     }
@@ -293,6 +308,10 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 			return error;
 
+		error = DeleteFileIfExists(WeatherPath);
+		if (error != Error.Ok)
+			return error;
+
 		error = DeleteFileIfExists(SettingsPath);
 		if (error != Error.Ok)
 			return error;
@@ -318,6 +337,10 @@ public partial class SaveNode : Node
 			return error;
 
 		error = DeleteFileIfExists(TownPhasePath);
+		if (error != Error.Ok)
+			return error;
+
+		error = DeleteFileIfExists(WeatherPath);
 		if (error != Error.Ok)
 			return error;
 
@@ -350,6 +373,10 @@ public partial class SaveNode : Node
 			return error;
 
 		error = DeleteFileIfExists(TownPhasePath);
+		if (error != Error.Ok)
+			return error;
+
+		error = DeleteFileIfExists(WeatherPath);
 		if (error != Error.Ok)
 			return error;
 
@@ -432,6 +459,7 @@ public partial class SaveNode : Node
 		manifest.SetValue("resources", "completed_company_history", CompletedCompanyHistoryPath);
 		manifest.SetValue("resources", "company_run", CompanyRunPath);
 		manifest.SetValue("resources", "town_phase", TownPhasePath);
+		manifest.SetValue("resources", "weather", WeatherPath);
 		manifest.SetValue("resources", "settings", SettingsPath);
 		return manifest;
 	}

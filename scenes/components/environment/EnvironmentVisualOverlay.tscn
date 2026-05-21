@@ -1,16 +1,27 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/environment/EnvironmentVisualOverlay.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/WeatherClear.gdshader" id="2_clear_shader"]
 [ext_resource type="Script" path="res://scenes/components/environment/WeatherShaderLayer.cs" id="3_weather_shader_layer"]
 [ext_resource type="Shader" path="res://assets/shaders/WeatherRain.gdshader" id="4_rain_shader"]
 [ext_resource type="Shader" path="res://assets/shaders/WeatherSun.gdshader" id="5_sun_shader"]
+[ext_resource type="Shader" path="res://assets/shaders/WeatherRainClouds.gdshader" id="6_rain_cloud_shader"]
+[ext_resource type="Shader" path="res://assets/shaders/WeatherRainSplash.gdshader" id="7_rain_splash_shader"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_clear_weather"]
 shader = ExtResource("2_clear_shader")
+shader_parameter/intensity = 0.22
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_rain_weather"]
 shader = ExtResource("4_rain_shader")
+shader_parameter/intensity = 0.6
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rain_cloud_weather"]
+shader = ExtResource("6_rain_cloud_shader")
+shader_parameter/intensity = 0.6
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rain_splash_weather"]
+shader = ExtResource("7_rain_splash_shader")
 shader_parameter/intensity = 0.6
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sun_weather"]
@@ -41,7 +52,22 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.15, 0.22, 0.32, 0.16)
 
-[node name="WeatherShaderLayer" type="ColorRect" parent="."]
+[node name="WeatherShaderLayer" type="Control" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_weather_shader_layer")
+ClearMaterial = SubResource("ShaderMaterial_clear_weather")
+RainCloudMaterial = SubResource("ShaderMaterial_rain_cloud_weather")
+RainMaterial = SubResource("ShaderMaterial_rain_weather")
+RainSplashMaterial = SubResource("ShaderMaterial_rain_splash_weather")
+SunMaterial = SubResource("ShaderMaterial_sun_weather")
+
+[node name="BackgroundLayer" type="ColorRect" parent="WeatherShaderLayer"]
 visible = false
 anchors_preset = 15
 anchor_right = 1.0
@@ -50,7 +76,23 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 1, 1, 1)
-script = ExtResource("3_weather_shader_layer")
-ClearMaterial = SubResource("ShaderMaterial_clear_weather")
-RainMaterial = SubResource("ShaderMaterial_rain_weather")
-SunMaterial = SubResource("ShaderMaterial_sun_weather")
+
+[node name="WeatherLayer" type="ColorRect" parent="WeatherShaderLayer"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="SplashLayer" type="ColorRect" parent="WeatherShaderLayer"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)

@@ -35,7 +35,23 @@ public partial class WeatherState : Resource
 
     public void ChooseRandomWeather()
     {
-        var weatherValues = System.Enum.GetValues<WeatherVisual>();
-        SetWeather(weatherValues[_random.RandiRange(0, weatherValues.Length - 1)]);
+        ChooseRandomWeather(null);
+    }
+
+    public void ChooseRandomWeather(TownPhaseState phaseState)
+    {
+        var roll = _random.Randf();
+        if (phaseState?.IsNight() == true)
+        {
+            SetWeather(roll < 0.85f ? WeatherVisual.Clear : WeatherVisual.Rain);
+            return;
+        }
+
+        SetWeather(roll switch
+        {
+            < 0.5f => WeatherVisual.Clear,
+            < 0.85f => WeatherVisual.Sun,
+            _ => WeatherVisual.Rain
+        });
     }
 }

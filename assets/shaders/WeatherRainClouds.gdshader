@@ -1,7 +1,7 @@
 shader_type canvas_item;
 
-uniform float intensity : hint_range(0.0, 1.0) = 0.22;
-uniform vec4 shadow_color : source_color = vec4(0.02, 0.025, 0.035, 0.28);
+uniform float intensity : hint_range(0.0, 1.0) = 0.6;
+uniform vec4 cloud_color : source_color = vec4(0.025, 0.035, 0.06, 0.48);
 
 float hash(vec2 value) {
     return fract(sin(dot(value, vec2(127.1, 311.7))) * 43758.5453123);
@@ -21,9 +21,7 @@ float noise(vec2 value) {
 }
 
 void fragment() {
-    vec2 wind = vec2(TIME * 0.025, TIME * 0.008);
-    float broad_cloud = noise(UV * vec2(1.35, 0.72) + wind);
-    float cloud_detail = noise(UV * vec2(2.1, 1.15) + wind * 1.7) * 0.35;
-    float cloud_shadow = smoothstep(0.42, 0.88, broad_cloud + cloud_detail);
-    COLOR = shadow_color * cloud_shadow * intensity;
+    float cloud = noise(UV * vec2(4.0, 2.4) + vec2(TIME * 0.035, TIME * 0.015));
+    float density = 0.72 + cloud * 0.28;
+    COLOR = cloud_color * density * intensity;
 }

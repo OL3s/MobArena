@@ -3,7 +3,7 @@ using MobArena.Scripts.Resources;
 
 namespace MobArena.Scenes.Components.Environment;
 
-public partial class WeatherShaderLayer : ColorRect
+public partial class WeatherShaderLayer : Control
 {
     private const string ShaderIntensityParameter = "intensity";
 
@@ -11,10 +11,19 @@ public partial class WeatherShaderLayer : ColorRect
     public ShaderMaterial ClearMaterial { get; set; }
 
     [Export]
+    public ShaderMaterial RainCloudMaterial { get; set; }
+
+    [Export]
     public ShaderMaterial RainMaterial { get; set; }
 
     [Export]
+    public ShaderMaterial RainSplashMaterial { get; set; }
+
+    [Export]
     public ShaderMaterial SunMaterial { get; set; }
+
+    [Export]
+    public float ClearIntensity { get; set; } = 0.22f;
 
     [Export]
     public float RainIntensity { get; set; } = 0.6f;
@@ -22,29 +31,52 @@ public partial class WeatherShaderLayer : ColorRect
     [Export]
     public float SunIntensity { get; set; } = 0.5f;
 
+    private ColorRect _backgroundLayer;
+    private ColorRect _weatherLayer;
+    private ColorRect _splashLayer;
+
     public override void _Ready()
     {
+        _backgroundLayer = GetNode<ColorRect>("BackgroundLayer");
+        _weatherLayer = GetNode<ColorRect>("WeatherLayer");
+        _splashLayer = GetNode<ColorRect>("SplashLayer");
         ApplyWeather(WeatherState.WeatherVisual.Clear);
     }
 
     public void ApplyWeather(WeatherState.WeatherVisual weather)
     {
-        var material = weather switch
+        if (weather == WeatherState.WeatherVisual.Rain)
         {
-            WeatherState.WeatherVisual.Rain => RainMaterial,
-            WeatherState.WeatherVisual.Sun => SunMaterial,
-            _ => ClearMaterial
-        };
+            ApplyLayer(_backgroundLayer, RainCloudMaterial, RainIntensity);
+            ApplyLayer(_weatherLayer, RainMaterial, RainIntensity);
+            ApplyLayer(_splashLayer, RainSplashMaterial, RainIntensity);
+            Visible = true;
+            return;
+        }
 
-        Material = material;
-        Visible = weather != WeatherState.WeatherVisual.Clear && material != null;
+        ApplyLayer(_backgroundLayer, null, 0f);
+        ApplyLayer(_splashLayer, null, 0f);
 
-        if (material == null)
+        if (weather == WeatherState.WeatherVisual.Sun)
+        {
+            ApplyLayer(_weatherLayer, SunMaterial, SunIntensity);
+            Visible = SunMaterial != null;
+            return;
+        }
+
+        ApplyLayer(_weatherLayer, ClearMaterial, ClearIntensity);
+        Visible = ClearMaterial != null && ClearIntensity > 0f;
+    }
+
+    private static void ApplyLayer(ColorRect layer, ShaderMaterial material, float intensity)
+    {
+        if (layer == null)
             return;
 
-        if (weather == WeatherState.WeatherVisual.Rain)
-            material.SetShaderParameter(ShaderIntensityParameter, RainIntensity);
-        else if (weather == WeatherState.WeatherVisual.Sun)
-            material.SetShaderParameter(ShaderIntensityParameter, SunIntensity);
+        layer.Material = material;
+        layer.Visible = material != null && intensity > 0f;
+
+        if (material != null)
+            material.SetShaderParameter(ShaderIntensityParameter, intensity);
     }
 }

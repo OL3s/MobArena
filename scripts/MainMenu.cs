@@ -44,7 +44,7 @@ public partial class MainMenu : Control
 		if (_saveNode is not { HasCompany: true })
 			return;
 
-		GetTree().ChangeSceneToFile(TownScene);
+		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, TownScene);
 	}
 
 	private void OnCreateCompanyPressed()

@@ -66,7 +66,7 @@ public partial class Town : Node
     private void OnMainMenuPressed()
     {
         SaveNode.Get()?.Save();
-        GetTree().ChangeSceneToFile(MainMenuScene);
+        GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScene);
     }
 
     private void OnSelectContractPressed()

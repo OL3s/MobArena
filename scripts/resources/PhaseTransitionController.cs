@@ -9,7 +9,7 @@ public static class PhaseTransitionController
 
         ExecuteBuildingWork(companyRunData);
         phaseState.MoveToNight();
-        weatherState?.ChooseRandomWeather();
+        weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
         return true;
     }
@@ -22,7 +22,7 @@ public static class PhaseTransitionController
         ExecuteBuildingWork(companyRunData);
         companyRunData?.CompleteArenaContractAssignments();
         phaseState.MoveToNight();
-        weatherState?.ChooseRandomWeather();
+        weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
         return true;
     }
@@ -39,7 +39,7 @@ public static class PhaseTransitionController
         companyRunData?.PayNightSalary();
         companyRunData?.Market?.ExecuteNewDay();
         phaseState.MoveToNextDay();
-        weatherState?.ChooseRandomWeather();
+        weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
         return true;
     }

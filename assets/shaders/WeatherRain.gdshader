@@ -8,10 +8,12 @@ float hash(vec2 value) {
 }
 
 void fragment() {
-    vec2 rain_uv = vec2(UV.x * 42.0 + UV.y * 10.0, UV.y * 30.0 + TIME * 1.35);
+    vec2 rain_uv = vec2(UV.x * 56.0 - UV.y * 18.0, UV.y * 16.0 - TIME * 5.8);
     vec2 cell = floor(rain_uv);
     vec2 local = fract(rain_uv);
     float random = hash(cell);
-    float streak = smoothstep(0.09, 0.0, abs(local.x - random)) * smoothstep(0.88, 0.18, local.y);
+    float streak_width = smoothstep(0.08, 0.0, abs(local.x - random));
+    float streak_length = smoothstep(0.98, 0.18, local.y);
+    float streak = streak_width * streak_length;
     COLOR = rain_color * streak * intensity;
 }

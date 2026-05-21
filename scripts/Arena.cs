@@ -38,7 +38,7 @@ public partial class Arena : Node
         var saveNode = SaveNode.Get();
         PhaseTransitionController.CompleteArenaContract(saveNode.TownPhaseState, saveNode.CompanyRunData, saveNode.WeatherState);
         saveNode.Save();
-        GetTree().ChangeSceneToFile(TownScene);
+        GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, TownScene);
     }
 
     private void RefreshWeatherVisuals()
