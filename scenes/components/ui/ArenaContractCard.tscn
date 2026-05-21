@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scenes/components/ui/ArenaContractCard.cs" id="1_script"]
 
 [node name="ArenaContractCard" type="Button"]
-custom_minimum_size = Vector2(220, 190)
+custom_minimum_size = Vector2(220, 230)
 layout_mode = 2
 size_flags_horizontal = 4
 toggle_mode = true
@@ -35,17 +35,17 @@ text = "Contract"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="EnemyPreview" type="Label" parent="MarginContainer/Layout"]
+[node name="MobsLabel" type="Label" parent="MarginContainer/Layout"]
 layout_mode = 2
-text = "Enemies unknown"
-autowrap_mode = 3
+text = "Enemies"
+horizontal_alignment = 1
 
-[node name="Reward" type="Label" parent="MarginContainer/Layout"]
+[node name="MobsRow" type="HBoxContainer" parent="MarginContainer/Layout"]
 layout_mode = 2
-text = "Reward unknown"
-autowrap_mode = 3
+theme_override_constants/separation = 8
+alignment = 1
 
-[node name="Risk" type="Label" parent="MarginContainer/Layout"]
+[node name="RewardsRow" type="HBoxContainer" parent="MarginContainer/Layout"]
 layout_mode = 2
-text = "Risk unknown"
-autowrap_mode = 3
+theme_override_constants/separation = 12
+alignment = 1

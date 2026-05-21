@@ -50,17 +50,21 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - `scenes/ui/CompanyLogoEditorOverlay.tscn` edits company identity through `GlobalOverlay`, including dice-button randomization for the name or full logo setup.
 - Completed company history lives in `scripts/resources/CompletedCompanyHistory.cs` as a Godot `Resource` containing capped, fame-sorted `CompletedCompanyRecord` entries with company identity, career totals, and final fame only. It is persisted by `SaveNode` under `user://save/completed_company_history.tres` and can be viewed from `scenes/ui/CompletedCompaniesOverlay.tscn` through the main menu top-right `Records` button.
 - First town entry per run is tracked by `CompanyRunData.HasShownFirstTownEntryPopup`; `Town.cs` currently shows a placeholder tutorial popup once through `GlobalOverlay` and saves the flag.
+- Enemy mob metadata lives under `scripts/resources/mobs/`. `MobData` is the base resource for shared mob display data, and `EnemyMobData` adds basic enemy stats such as max health. Authored enemy templates live under `resources/mobs/`; `green_slime.tres` is the first template and currently has no packed combat scene assigned.
+- `scenes/ui/CodexOverlay.tscn` opens from the main menu top-right `Codex` button. It discovers authored `.tres` files under `resources/mobs` and `resources/items`, lets the player switch between Enemies and Items, and displays shared icon/name/description/stat details.
 - Main menu disables `Enter Town` until company name/logo data is applied through the editor.
-- Main menu top-right UI has the reusable `SettingsButton.tscn`, which opens the Settings overlay.
+- Main menu top-right UI has `Codex`, `Records`, and the reusable `SettingsButton.tscn`, which opens the Settings overlay.
 - Town buildings are represented by reusable `TownBuilding.tscn` `Node2D` instances positioned in the `World` layer.
 - `TownBuilding.tscn` contains the building SVG sprite, icon SVG sprite, text label, and `Area2D` interaction hitbox in one scene file.
 - Each `TownBuilding` instance can assign unique `BuildingTexture` and `IconTexture` exports.
 - `TownBuilding.DisableWhenRosterEmpty` disables non-market buildings when the active roster is empty. Disabled buildings are grayed out and do not show hover popups or accept interaction; Market stays usable so players can recruit replacements.
 - Town buildings should use a 1:1 square footprint. The current town layout is a 3x2 grid split by an implied horizontal road gap; the road is not drawn.
 - Town currently includes Arena, Market, Thermae, Training Hall, and the central RosterYard management area with gladiator and equipment buttons.
+- Upgradeable buildings implement `IUpgradeable` through `BuildingOverlayPanel`. Thermae and Training Hall currently expose the upgrade button in the overlay header, with levels and gold costs stored on `CompanyRunData`.
 - RosterYard also has a compact gold button. Hovering it shows the current phase total near the button, building phase costs in each building's centered gold badge position, and salary on each visible roster-yard gladiator avatar; salary displays as 0 during Day and as the upcoming Night -> Day payment during Night. Building hover badges show the building's own phase cost plus salary for gladiators assigned inside that building. Pressing it opens `GoldCostOverlay`, which discovers `IPhaseGoldCostSource` nodes and lays out visible current-phase costs in side-by-side boxes for gladiators, buildings, and payment result. Building cost previews hide occupancy badges while visible.
 - The Town HUD `Select Contract` action and arena contract launch both validate `CompanyRunData.CanPayArenaReturnUpkeep`, because returning from arena completes Day -> Night and immediately charges current phase upkeep. If the company cannot afford that return upkeep, the Town HUD action is disabled and the arena start button shows `Upkeep Short`.
 - Arena contracts expose a `Donate` action that opens `scenes/town_overlays/arena_donation_overlay.tscn`. Donations buy +1 or +5 current fame for gold, with costs increasing as `CompanyRunData.Fame` rises. Cost and mutation logic live in `CompanyRunData.GetFameDonationGoldCost`, `CanDonateForFame`, and `TryDonateForFame`.
+- Arena contracts are authored as `ArenaContractData` resources under `resources/contracts/`. `starter_slime_pit.tres` contains three `green_slime.tres` enemy entries, a current-fame scaling cost, and a gold reward. Net fame reward is calculated from the mob list's total fame value minus `GetFameCost(currentCompanyFame)`, so high-fame companies can earn little or lose fame from easy contracts. `ArenaContractCard` renders one final fame medal value for the net result and groups duplicate enemy resources into one icon row with an `xN` count.
 - `TownBuilding.OverlayToOpen` opens modal packed-scene building UI over town. `TownBuilding.SceneToOpen` exists for future full-scene navigation but is not used by the current town management flow.
 - Shared modal popups should go through `GlobalOverlay` instead of being attached directly to town or arena scenes.
 - Custom overlays should be opened through `GlobalOverlay.AddOverlay`. If they need a blurred modal feel, reuse `assets/shaders/PopupBlurBackdrop.gdshader` on a fullscreen backdrop.
@@ -92,7 +96,9 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 ## Not Yet Present
 
 - Gameplay combat scripts
-- Player, mob, contract, roster, gear, upkeep, healing, stamina, training, champion deadline failure handling, or full city UI systems
+- Player, roster, gear, upkeep, healing, stamina, training, champion deadline failure handling, or full city UI systems
+- Runtime enemy mob actors; enemy `.tres` metadata exists, but mob gameplay scenes are not implemented yet
+- Runtime contract execution; arena contract `.tres` metadata exists, but actual combat spawning/result handling is still placeholder-level
 - Real local co-op join/leave input handling and per-player gameplay spawning
 - Export presets
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scenes/town_overlays/ArenaContractsOverlay.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
@@ -7,6 +7,8 @@
 [ext_resource type="PackedScene" path="res://scenes/components/ui/ArenaContractCard.tscn" id="5_contract_card"]
 [ext_resource type="PackedScene" path="res://scenes/town_overlays/arena_control_config_overlay.tscn" id="6_control_config"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/local_coop.svg" id="7_local_coop_icon"]
+[ext_resource type="Resource" path="res://resources/contracts/starter_slime_pit.tres" id="8_starter_slime"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="9_gold_icon"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_arena_blur"]
 shader = ExtResource("2_blur_shader")
@@ -23,6 +25,7 @@ script = ExtResource("1_script")
 ArenaScene = ExtResource("3_arena")
 ContractCardScene = ExtResource("5_contract_card")
 ControlConfigOverlayScene = ExtResource("6_control_config")
+Contracts = Array[Resource]([ExtResource("8_starter_slime")])
 
 [node name="BlurBackdrop" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_arena_blur")
@@ -62,11 +65,22 @@ theme_override_constants/margin_bottom = 24
 layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
+[node name="Header" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 28
 text = "Arena"
-horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DonateButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
+custom_minimum_size = Vector2(126, 44)
+layout_mode = 2
+text = "Donate"
 
 [node name="ContractArea" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
@@ -126,10 +140,13 @@ custom_minimum_size = Vector2(150, 54)
 layout_mode = 2
 text = "Start"
 
-[node name="DonateButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
+[node name="RerollButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(150, 54)
 layout_mode = 2
-text = "Donate"
+tooltip_text = "Future contract reroll action."
+text = "Reroll 0"
+icon = ExtResource("9_gold_icon")
+expand_icon = true
 
 [node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(150, 54)

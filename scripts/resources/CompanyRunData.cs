@@ -37,6 +37,8 @@ public partial class CompanyRunData : Resource
     private const float ArenaFightExhaustionCost = 3f;
     private const int FameDonationBaseGoldCost = 20;
     private const int FameDonationCostGrowthPerFame = 5;
+    private const int BuildingUpgradeBaseGoldCost = 50;
+    private const int BuildingUpgradeCostGrowth = 50;
 
     [Signal]
     public delegate void RunChangedEventHandler();
@@ -84,6 +86,60 @@ public partial class CompanyRunData : Resource
 
     [Export]
     public TrainingFocus CurrentTrainingFocus { get; private set; } = TrainingFocus.Overall;
+
+    [Export]
+    public int HealerUpgradeLevel { get; private set; }
+
+    [Export]
+    public int TrainingHallUpgradeLevel { get; private set; }
+
+    public int GetBuildingUpgradeLevel(TownAssignmentData.AssignmentLocation location)
+    {
+        return location switch
+        {
+            TownAssignmentData.AssignmentLocation.Healer => HealerUpgradeLevel,
+            TownAssignmentData.AssignmentLocation.TrainingHall => TrainingHallUpgradeLevel,
+            _ => 0
+        };
+    }
+
+    public int GetBuildingUpgradeGoldCost(TownAssignmentData.AssignmentLocation location)
+    {
+        return BuildingUpgradeBaseGoldCost + (GetBuildingUpgradeLevel(location) * BuildingUpgradeCostGrowth);
+    }
+
+    public bool CanUpgradeBuilding(TownAssignmentData.AssignmentLocation location, int maxUpgradeLevel)
+    {
+        return IsUpgradeableTownBuilding(location)
+            && GetBuildingUpgradeLevel(location) < maxUpgradeLevel
+            && Gold >= GetBuildingUpgradeGoldCost(location);
+    }
+
+    public bool TryUpgradeBuilding(TownAssignmentData.AssignmentLocation location, int maxUpgradeLevel)
+    {
+        if (!CanUpgradeBuilding(location, maxUpgradeLevel) || !TrySpendGold(GetBuildingUpgradeGoldCost(location)))
+            return false;
+
+        switch (location)
+        {
+            case TownAssignmentData.AssignmentLocation.Healer:
+                HealerUpgradeLevel++;
+                break;
+            case TownAssignmentData.AssignmentLocation.TrainingHall:
+                TrainingHallUpgradeLevel++;
+                break;
+            default:
+                return false;
+        }
+
+        EmitSignal(SignalName.RunChanged);
+        return true;
+    }
+
+    private static bool IsUpgradeableTownBuilding(TownAssignmentData.AssignmentLocation location)
+    {
+        return location is TownAssignmentData.AssignmentLocation.Healer or TownAssignmentData.AssignmentLocation.TrainingHall;
+    }
 
     public void SetTreatmentFocus(TreatmentFocus treatmentFocus)
     {

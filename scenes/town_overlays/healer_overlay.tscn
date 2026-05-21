@@ -9,3 +9,4 @@ Body = "Pay for Roman bathhouse care. Health care restores recoverable health, w
 IconTexture = ExtResource("2_icon")
 ShowAssignedGladiators = true
 AssignmentLocation = 2
+IsUpgradeableBuilding = true

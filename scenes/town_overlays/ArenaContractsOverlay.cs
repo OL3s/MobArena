@@ -1,7 +1,9 @@
 using Godot;
+using Godot.Collections;
 using MobArena.Scenes.Components.Town;
 using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
+using MobArena.Scripts.Resources.Contracts;
 using MobArena.Scripts.Resources;
 
 namespace MobArena.Scenes.TownOverlays;
@@ -11,13 +13,6 @@ public partial class ArenaContractsOverlay : Control
     private const string TownScenePath = "res://scenes/town.tscn";
     private const string ArenaDonationOverlayScenePath = "res://scenes/town_overlays/arena_donation_overlay.tscn";
 
-    private readonly (int Gold, int Fame)[] _mockContractRewards =
-    {
-        (35, 1),
-        (50, 2),
-        (85, 4)
-    };
-
     [Export]
     public PackedScene ArenaScene { get; set; }
 
@@ -26,6 +21,9 @@ public partial class ArenaContractsOverlay : Control
 
     [Export]
     public PackedScene ControlConfigOverlayScene { get; set; }
+
+    [Export]
+    public Array<ArenaContractData> Contracts { get; private set; } = new();
 
     private HBoxContainer _contractsRow;
     private HBoxContainer _assignedGladiatorsRow;
@@ -49,12 +47,12 @@ public partial class ArenaContractsOverlay : Control
         _phaseState = saveNode?.TownPhaseState;
 
         _startButton.Pressed += OnStartPressed;
-        GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/DonateButton").Pressed += OnDonatePressed;
+        GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Header/DonateButton").Pressed += OnDonatePressed;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
             _runData.RunChanged += RefreshUi;
 
-        BuildMockContracts();
+        BuildContracts();
         RefreshUi();
     }
 
@@ -64,15 +62,17 @@ public partial class ArenaContractsOverlay : Control
             _runData.RunChanged -= RefreshUi;
     }
 
-    private void BuildMockContracts()
+    private void BuildContracts()
     {
-        AddMockContract(0, "Starter Slime Pit", "3 slimes", "35 gold, 1 fame", "Low risk");
-        AddMockContract(1, "Rat Cellar Cleanup", "6 quick rats", "50 gold, 2 fame", "Medium speed");
-        AddMockContract(2, "Goblin Trial", "2 goblins", "85 gold, 4 fame", "Mock locked");
+        for (var index = 0; index < Contracts.Count; index++)
+            AddContract(index, Contracts[index]);
     }
 
-    private void AddMockContract(int contractIndex, string title, string enemies, string reward, string risk)
+    private void AddContract(int contractIndex, ArenaContractData contractData)
     {
+        if (contractData == null)
+            return;
+
         var card = ContractCardScene?.Instantiate<ArenaContractCard>();
         if (card == null)
         {
@@ -80,7 +80,7 @@ public partial class ArenaContractsOverlay : Control
             return;
         }
 
-        card.Configure(contractIndex, title, enemies, reward, risk);
+        card.Configure(contractIndex, contractData, _runData?.Fame ?? 0);
         card.ContractSelected += SelectContract;
         _contractsRow.AddChild(card);
     }
@@ -103,9 +103,19 @@ public partial class ArenaContractsOverlay : Control
             return;
 
         _refreshingUi = true;
+        RefreshContractCards();
         RefreshAssignedGladiators();
         RefreshActions();
         _refreshingUi = false;
+    }
+
+    private void RefreshContractCards()
+    {
+        foreach (var child in _contractsRow.GetChildren())
+        {
+            if (child is ArenaContractCard card)
+                card.SetCurrentCompanyFame(_runData?.Fame ?? 0);
+        }
     }
 
     private void RefreshAssignedGladiators()
@@ -143,7 +153,8 @@ public partial class ArenaContractsOverlay : Control
     private void RefreshActions()
     {
         var assignedCount = _runData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
-        var hasContract = _selectedContractIndex >= 0;
+        var selectedContract = GetSelectedContractOrNull();
+        var hasContract = selectedContract != null;
         var canPayReturnUpkeep = _runData?.CanPayArenaReturnUpkeep(_phaseState) != false;
 
         _startButton.Disabled = !canPayReturnUpkeep || !hasContract || assignedCount <= 0;
@@ -187,7 +198,7 @@ public partial class ArenaContractsOverlay : Control
     private void OnStartPressed()
     {
         if (_runData?.CanPayArenaReturnUpkeep(_phaseState) == false
-            || _selectedContractIndex < 0
+            || GetSelectedContractOrNull() == null
             || (_runData?.TownAssignments?.ArenaGladiators?.Count ?? 0) <= 0)
             return;
 
@@ -222,14 +233,16 @@ public partial class ArenaContractsOverlay : Control
     private void MockCompleteContract()
     {
         var saveNode = SaveNode.Get();
-        if (saveNode == null || _runData == null || _phaseState == null || _selectedContractIndex < 0)
+        var selectedContract = GetSelectedContractOrNull();
+        if (saveNode == null || _runData == null || _phaseState == null || selectedContract == null)
             return;
 
-        var reward = _selectedContractIndex < _mockContractRewards.Length
-            ? _mockContractRewards[_selectedContractIndex]
-            : (0, 0);
-        _runData.AddGold(reward.Item1, saveNode.CompanyCareerData);
-        _runData.AddFame(reward.Item2);
+        _runData.AddGold(selectedContract.GoldReward, saveNode.CompanyCareerData);
+        var netFameReward = selectedContract.GetNetFameReward(_runData.Fame);
+        if (netFameReward >= 0)
+            _runData.AddFame(netFameReward);
+        else
+            _runData.LoseFame(-netFameReward);
         saveNode.CompanyCareerData?.AddContractCompleted();
         foreach (var gladiator in _runData.TownAssignments.ArenaGladiators)
         {
@@ -256,5 +269,12 @@ public partial class ArenaContractsOverlay : Control
         }
 
         GD.PushError($"Arena overlay drag failed: roster yard missing for gladiator '{gladiator.GladiatorName}'.");
+    }
+
+    private ArenaContractData GetSelectedContractOrNull()
+    {
+        return _selectedContractIndex >= 0 && _selectedContractIndex < Contracts.Count
+            ? Contracts[_selectedContractIndex]
+            : null;
     }
 }

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ArenaContractData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/contracts/ArenaContractData.cs" id="1_contract"]
+[ext_resource type="Resource" path="res://resources/mobs/green_slime.tres" id="2_slime"]
+
+[resource]
+script = ExtResource("1_contract")
+DisplayName = "Starter Slime Pit"
+Description = "A safe first arena contract against slow green slimes. Good for testing a new company."
+FameCost = 0
+FameCostRatio = 2.5
+Mobs = Array[Resource]([ExtResource("2_slime"), ExtResource("2_slime"), ExtResource("2_slime")])
+GoldReward = 20

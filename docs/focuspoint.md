@@ -26,12 +26,16 @@ The current town-management foundation is in place.
 - Current roster capacity lives on `CompanyRunData.GladiatorCapacity` and defaults to 6. Gladiator add/buy paths should use `CanAddGladiator`, `AddGladiator`, and `TryBuyGladiator` so the cap is enforced before spending gold.
 - New companies start with no gladiators. Market recruitment is the first step, and recruit health varies from 20-100% max health with buy/sell value based on current readiness.
 - Equipment ownership exists, but equipping/unequipping items onto gladiators is not implemented yet.
-- Contract/combat resources are not implemented yet. Arena contract cards are still mock cards and arena combat startup is still placeholder.
+- Contract resources are now partially implemented through `ArenaContractData` and `resources/contracts/starter_slime_pit.tres`. Arena combat startup/result handling is still placeholder-level.
 - Company customization was expanded on `feature/company-customization`: the editor now supports shield shape, muted shield color, logo icon, logo size, random company names, and full randomization. New company creation opens with a randomized identity. Name generation lives in `CompanyNameGenerator`, while logo state/rendering stays in `CompanyLogoData`/`CompanyLogo`.
 - A project CLI save-data delete path exists: `godot --headless -- --delete-savedata`, with aliases `--delete`, `--del-storage`, and `--delete-user-data`. It calls `SaveNode.DeleteSave()` and suppresses exit autosave.
 - Completed company history now has a saved resource foundation: `CompletedCompanyHistory` stores capped, fame-sorted `CompletedCompanyRecord` entries with identity, career totals, and final fame only. `SaveNode.TryAddCurrentCompanyToCompletedHistory()` snapshots the active company if it qualifies. The main menu top-right `Records` button opens `CompletedCompaniesOverlay`, which shows `[list][details]` for saved completed companies and can delete entries. Details stay hidden until a company is pressed.
 - First town entry now shows a one-time placeholder tutorial popup: `Todo, add tutorial with tscn animation popups here`. The per-run flag is `CompanyRunData.HasShownFirstTownEntryPopup`.
 - Arena now has a `Donate` overlay for buying +1 or +5 fame with gold. Costs scale with current fame and are centralized in `CompanyRunData`.
+- Enemy mob metadata foundation exists: `MobData`/`EnemyMobData` resources under `scripts/resources/mobs/`, `resources/mobs/green_slime.tres`, and `assets/ui/mobs/green_slime.svg`. The Green Slime packed scene is intentionally null until a runtime combat actor scene is implemented.
+- Arena contract cards now render `ArenaContractData` resources with grouped enemy icons and gold/fame reward icons. The starter contract uses three Green Slime entries grouped as `x3` in the card. Green Slime has base fame value 10. Net fame is shown as one final medal value calculated from summed mob fame value minus a current-fame scaling cost, so trivial contracts become less rewarding or negative for high-fame companies.
+- The main menu `Codex` button opens `CodexOverlay`, which scans `resources/mobs` and `resources/items` for authored `.tres` entries and shows Enemies/Items subcategories with details.
+- Upgradeable building foundation exists through `IUpgradeable`. Thermae and Training Hall show `Upgrade` in their `BuildingOverlayPanel` header; levels/costs are stored on `CompanyRunData`.
 
 ## Next Focus
 
