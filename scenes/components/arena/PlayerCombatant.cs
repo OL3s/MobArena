@@ -7,12 +7,10 @@ namespace MobArena.Scenes.Components.Arena;
 public partial class PlayerCombatant : ArenaCombatant
 {
     private const float DisplayHeight = 96f;
-    private const float TouchDragMoveScale = 48f;
 
     private Sprite2D _body;
     private Label _nameLabel;
     private Label _controllerLabel;
-    private Vector2 _touchMoveInput = Vector2.Zero;
 
     public GladiatorData GladiatorData { get; private set; }
     public ArenaControlAssignmentData ControlAssignment { get; private set; }
@@ -20,6 +18,7 @@ public partial class PlayerCombatant : ArenaCombatant
 
     public override void _Ready()
     {
+        ConfigureTopDownMotion();
         _body = GetNode<Sprite2D>("Body");
         _nameLabel = GetNode<Label>("NameLabel");
         _controllerLabel = GetNode<Label>("ControllerLabel");
@@ -31,24 +30,11 @@ public partial class PlayerCombatant : ArenaCombatant
     public override void _PhysicsProcess(double delta)
     {
         ApplyCombatInput(ReadAssignedMoveInput(), false, false, false);
+        if (InputState.IsMoving)
+            SetLookDirectionFromInput(InputState.MoveDirection);
+
         MoveWithInputState(InputState);
-    }
-
-    public override void _UnhandledInput(InputEvent inputEvent)
-    {
-        if (ControlAssignment?.ControllerKind != LocalInputControllerConfig.ControllerKind.Touch)
-            return;
-
-        if (inputEvent is InputEventScreenDrag drag)
-        {
-            _touchMoveInput = drag.Relative / TouchDragMoveScale;
-            GetViewport()?.SetInputAsHandled();
-        }
-        else if (inputEvent is InputEventScreenTouch { Pressed: false })
-        {
-            _touchMoveInput = Vector2.Zero;
-            GetViewport()?.SetInputAsHandled();
-        }
+        ApplyBodyVisual();
     }
 
     public void ConfigureGladiator(GladiatorData gladiatorData, ArenaControlAssignmentData controlAssignment)
@@ -58,7 +44,6 @@ public partial class PlayerCombatant : ArenaCombatant
         InputState ??= new ArenaCombatInputState();
         ApplySettingsDeadzone();
         InputState.Reset();
-        _touchMoveInput = Vector2.Zero;
         Name = string.IsNullOrWhiteSpace(gladiatorData?.GladiatorName)
             ? "PlayerCombatant"
             : $"{gladiatorData.GladiatorName}PlayerCombatant";
@@ -84,7 +69,6 @@ public partial class PlayerCombatant : ArenaCombatant
         return ControlAssignment?.ControllerKind switch
         {
             LocalInputControllerConfig.ControllerKind.Keyboard => ReadKeyboardMoveInput(),
-            LocalInputControllerConfig.ControllerKind.Touch => _touchMoveInput,
             LocalInputControllerConfig.ControllerKind.Gamepad => ReadGamepadMoveInput(ControlAssignment.DeviceId),
             _ => Vector2.Zero
         };
@@ -128,11 +112,16 @@ public partial class PlayerCombatant : ArenaCombatant
         if (!IsNodeReady())
             return;
 
-        FitSpriteHeight(_body, GladiatorData?.GetBodyForwardTexture(), DisplayHeight);
+        ApplyBodyVisual();
 
         _nameLabel.Text = GladiatorData?.GladiatorName ?? "Gladiator";
         _controllerLabel.Text = ControlAssignment == null
             ? "Unassigned"
             : ControlAssignment.DisplayName;
+    }
+
+    private void ApplyBodyVisual()
+    {
+        ApplyLookVisual(_body, GladiatorData?.GetBodyForwardTexture(), GladiatorData?.GetBodyBackTexture(), DisplayHeight);
     }
 }

@@ -15,6 +15,7 @@ public partial class EnemyCombatant : ArenaCombatant
 
     public override void _Ready()
     {
+        ConfigureTopDownMotion();
         _body = GetNode<Sprite2D>("Body");
         _nameLabel = GetNode<Label>("NameLabel");
         _healthLabel = GetNode<Label>("HealthLabel");
@@ -24,6 +25,7 @@ public partial class EnemyCombatant : ArenaCombatant
     public void ConfigureEnemy(EnemyMobData mobData)
     {
         MobData = mobData;
+        ForceLookDirection(Vector2.Left);
         Name = string.IsNullOrWhiteSpace(mobData?.DisplayName)
             ? "EnemyCombatant"
             : $"{mobData.DisplayName}EnemyCombatant";
@@ -36,7 +38,7 @@ public partial class EnemyCombatant : ArenaCombatant
         if (!IsNodeReady())
             return;
 
-        FitSpriteHeight(_body, MobData?.GetBodyForwardTexture(), DisplayHeight);
+        ApplyLookVisual(_body, MobData?.GetBodyForwardTexture(), MobData?.GetBodyBackTexture(), DisplayHeight);
 
         _nameLabel.Text = MobData?.DisplayName ?? "Enemy";
         _healthLabel.Text = MobData == null ? string.Empty : $"HP {MobData.MaxHealth}";

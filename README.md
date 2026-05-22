@@ -59,7 +59,7 @@ Run these from the project root after changing assets, scenes, or C# code:
 - `scenes/main_menu.tscn`: Main menu and entry point.
 - `scenes/town.tscn`: Between-fights town/company management scene with a neutral root, separate `World` node, and separate `ControllerUi` layer.
 - `scenes/arena.tscn`: Arena combat placeholder with a neutral root, separate `World` node, and separate `ControllerUi` layer.
-- Arena launches should go through real roster, contract, and control assignment data. The town HUD dev menu has `Quickstart arena` for fast iteration with existing roster gladiators and fixed Keyboard/Touch/Gamepad assignments.
+- Arena launches should go through real roster, contract, and control assignment data. The town HUD dev menu has `Quickstart arena` for fast iteration with existing roster gladiators and fixed Keyboard/Gamepad assignments; touch arena control is temporarily disabled.
 
 The current flow is `Main Menu -> Town`, with roster management folded into the town-center `RosterYard` and modal overlays opened through `GlobalOverlay`. Town buildings currently open modal overlay packed scenes; full scene navigation from town is not used for roster management.
 

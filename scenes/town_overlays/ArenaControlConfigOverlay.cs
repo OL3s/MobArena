@@ -82,8 +82,7 @@ public partial class ArenaControlConfigOverlay : Control
     private static bool IsJoinInput(InputEvent inputEvent)
     {
         return inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Enter or Key.KpEnter }
-            || inputEvent is InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.A }
-            || inputEvent is InputEventScreenTouch { Pressed: true };
+            || inputEvent is InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.A };
     }
 
     public override void _Process(double delta)
@@ -146,15 +145,6 @@ public partial class ArenaControlConfigOverlay : Control
                 return false;
 
             controllerSetup = GetControllerSetup(LocalInputControllerConfig.ControllerKind.Gamepad, joypadButton.Device);
-            return controllerSetup != null;
-        }
-
-        if (inputEvent is InputEventScreenTouch { Pressed: true })
-        {
-            if (!_localInputConfig.TryJoinTouch())
-                return false;
-
-            controllerSetup = GetControllerSetup(LocalInputControllerConfig.ControllerKind.Touch, -1);
             return controllerSetup != null;
         }
 
@@ -310,7 +300,7 @@ public partial class ArenaControlConfigOverlay : Control
         var shouldShow = HasNextGladiator() && !_readyPromptOpen;
         var signature = _localInputConfig == null
             ? shouldShow.ToString()
-            : $"{shouldShow}:{_localInputConfig.HasKeyboardPlayer}:{_localInputConfig.HasTouchPlayer}:{_localInputConfig.CanJoin}";
+            : $"{shouldShow}:{_localInputConfig.HasKeyboardPlayer}:{_localInputConfig.CanJoin}";
         if (signature == _promptSignature)
             return;
 
@@ -324,8 +314,6 @@ public partial class ArenaControlConfigOverlay : Control
 
         if (!_localInputConfig.HasKeyboardPlayer)
             AddPrompt(_localInputConfig.EnterIcon, LocalInputControllerConfig.ControllerKind.Keyboard.ToString());
-        if (!_localInputConfig.HasTouchPlayer)
-            AddPrompt(_localInputConfig.PhoneIcon, LocalInputControllerConfig.ControllerKind.Touch.ToString());
         if (_localInputConfig.CanJoin)
             AddPrompt(_localInputConfig.XboxAIcon, LocalInputControllerConfig.ControllerKind.Gamepad.ToString());
     }

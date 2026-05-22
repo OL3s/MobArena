@@ -343,19 +343,19 @@ public partial class TownHud : CanvasLayer
 						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, null));
 					break;
 				case 1:
-					localInputConfig?.TryJoinTouch();
-					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Touch, -1)
-						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Touch, -1, null));
-					break;
-				case 2:
 					localInputConfig?.TryJoinGamepad(0);
 					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Gamepad, 0)
 						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 0, null));
 					break;
-				case 3:
+				case 2:
 					localInputConfig?.TryJoinGamepad(1);
 					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Gamepad, 1)
 						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 1, null));
+					break;
+				case 3:
+					localInputConfig?.TryJoinGamepad(2);
+					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Gamepad, 2)
+						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 2, null));
 					break;
 			}
 		}
@@ -578,9 +578,9 @@ public partial class TownHud : CanvasLayer
 	{
 		return string.Join(", ",
 			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Keyboard, -1),
-			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Touch, -1),
 			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Gamepad, 0),
-			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Gamepad, 1));
+			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Gamepad, 1),
+			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Gamepad, 2));
 	}
 
 	private void RefreshNextDayButton()
