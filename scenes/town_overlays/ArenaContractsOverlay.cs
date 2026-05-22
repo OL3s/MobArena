@@ -12,9 +12,6 @@ namespace MobArena.Scenes.TownOverlays;
 public partial class ArenaContractsOverlay : Control
 {
     private const string ArenaDonationOverlayScenePath = "res://scenes/town_overlays/arena_donation_overlay.tscn";
-    private const int MinimumRerollGoldCost = 10;
-    private const int RerollAddonGoldCost = 5;
-
     [Export]
     public PackedScene ArenaScene { get; set; }
 
@@ -51,7 +48,7 @@ public partial class ArenaContractsOverlay : Control
         _assignedGladiatorsRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow");
         _assignedGladiators = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow/Gladiators");
         _startButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/StartButton");
-        _rerollButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/RerollButton");
+        _rerollButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Header/RerollButton");
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
         var saveNode = SaveNode.Get();
         _runData = saveNode?.CompanyRunData;
@@ -240,7 +237,7 @@ public partial class ArenaContractsOverlay : Control
         }
 
         var overlay = ControlConfigOverlayScene.Instantiate<ArenaControlConfigOverlay>();
-        overlay.Configure(StartArenaScene);
+        overlay.Configure(GetSelectedContractOrNull(), StartArenaScene);
         GlobalOverlay.Get()?.AddOverlay(overlay);
     }
 
@@ -260,29 +257,22 @@ public partial class ArenaContractsOverlay : Control
         if (_runData == null || !_runData.TrySpendGold(cost))
             return;
 
-        _runData.IncrementArenaContractRerollCount();
         BuildContracts();
         RefreshUi();
     }
 
     private int GetRerollGoldCost()
     {
-        var cheapestThreat = int.MaxValue;
+        var cheapestGoldReward = int.MaxValue;
         foreach (var contract in _activeContracts)
         {
             if (contract == null)
                 continue;
 
-            cheapestThreat = Mathf.Min(cheapestThreat, contract.GetThreatFameValue());
+            cheapestGoldReward = Mathf.Min(cheapestGoldReward, contract.GoldReward);
         }
 
-        if (cheapestThreat == int.MaxValue)
-            cheapestThreat = MinimumRerollGoldCost;
-
-        var baseCost = Mathf.Max(MinimumRerollGoldCost, cheapestThreat);
-        var previousRerolls = _runData?.ArenaContractRerollCount ?? 0;
-        var nextReroll = previousRerolls + 1;
-        return (baseCost * nextReroll) + (RerollAddonGoldCost * previousRerolls);
+        return cheapestGoldReward == int.MaxValue ? 0 : cheapestGoldReward;
     }
 
     private static void OnDonatePressed()

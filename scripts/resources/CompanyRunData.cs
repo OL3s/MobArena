@@ -75,9 +75,6 @@ public partial class CompanyRunData : Resource
     public ArenaContractData ActiveArenaContract { get; private set; }
 
     [Export]
-    public int ArenaContractRerollCount { get; private set; }
-
-    [Export]
     public Array<GladiatorData> PendingGladiatorDeathNotifications { get; private set; } = new();
 
     public int AliveGladiators => Gladiators.Count;
@@ -309,21 +306,6 @@ public partial class CompanyRunData : Resource
             return;
 
         ActiveArenaContract = null;
-        EmitSignal(SignalName.RunChanged);
-    }
-
-    public void IncrementArenaContractRerollCount()
-    {
-        ArenaContractRerollCount++;
-        EmitSignal(SignalName.RunChanged);
-    }
-
-    public void ResetArenaContractRerollCount()
-    {
-        if (ArenaContractRerollCount <= 0)
-            return;
-
-        ArenaContractRerollCount = 0;
         EmitSignal(SignalName.RunChanged);
     }
 

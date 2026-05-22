@@ -83,6 +83,14 @@ custom_minimum_size = Vector2(126, 44)
 layout_mode = 2
 text = "Donate"
 
+[node name="RerollButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
+custom_minimum_size = Vector2(150, 44)
+layout_mode = 2
+tooltip_text = "Future contract reroll action."
+text = "Reroll 0"
+icon = ExtResource("9_gold_icon")
+expand_icon = true
+
 [node name="ContractArea" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -92,11 +100,6 @@ theme_override_constants/separation = 10
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Choose Contract"
-
-[node name="Description" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea"]
-layout_mode = 2
-text = "Mock contracts for now. Each card can become a richer contract preview as real contracts are added."
-autowrap_mode = 3
 
 [node name="MissingGladiatorMessage" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea"]
 visible = false
@@ -167,14 +170,6 @@ theme_override_constants/separation = 6
 custom_minimum_size = Vector2(150, 54)
 layout_mode = 2
 text = "Start"
-
-[node name="RerollButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
-custom_minimum_size = Vector2(150, 54)
-layout_mode = 2
-tooltip_text = "Future contract reroll action."
-text = "Reroll 0"
-icon = ExtResource("9_gold_icon")
-expand_icon = true
 
 [node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(150, 54)

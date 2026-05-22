@@ -12,6 +12,7 @@ public static class ArenaContractGenerator
     private const string MobResourceDirectory = "res://resources/mobs";
     private const float FameRewardRatio = 0.1f;
     private const float FameDecayRatio = 0.01f;
+    private const float GoldRewardThreatRatio = 1.0f;
     private const int MaxMobTypesPerContract = 4;
     private static readonly RandomNumberGenerator Random = new();
 
@@ -156,7 +157,7 @@ public static class ArenaContractGenerator
             champion.Family,
             difficulty,
             contractMobs,
-            GetGoldReward(contractMobs, difficulty),
+            GetGoldReward(contractMobs),
             fameRewardRatio: FameRewardRatio,
             fameDecayRatio: FameDecayRatio);
         return contract;
@@ -213,7 +214,7 @@ public static class ArenaContractGenerator
             family,
             difficulty,
             contractMobs,
-            GetGoldReward(contractMobs, difficulty),
+            GetGoldReward(contractMobs),
             fameRewardRatio: FameRewardRatio,
             fameDecayRatio: FameDecayRatio);
         return contract;
@@ -360,7 +361,7 @@ public static class ArenaContractGenerator
             .ToList();
     }
 
-    private static int GetGoldReward(Array<MobData> mobs, ArenaContractDifficulty difficulty)
+    private static int GetGoldReward(Array<MobData> mobs)
     {
         var fameValue = 0;
         foreach (var mob in mobs)
@@ -369,15 +370,7 @@ public static class ArenaContractGenerator
                 fameValue += enemyMob.FameValue;
         }
 
-        var multiplier = difficulty switch
-        {
-            ArenaContractDifficulty.Easy => 1.2f,
-            ArenaContractDifficulty.Medium => 1.55f,
-            ArenaContractDifficulty.Hard => 2.0f,
-            ArenaContractDifficulty.Champion => 2.5f,
-            _ => 1.0f
-        };
-        return Mathf.Max(10, Mathf.RoundToInt(fameValue * multiplier));
+        return Mathf.Max(10, Mathf.RoundToInt(fameValue * GoldRewardThreatRatio));
     }
 
     private static string GetFamilyLabel(MobFamily family)

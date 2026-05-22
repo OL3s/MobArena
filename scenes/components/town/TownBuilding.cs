@@ -25,6 +25,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
     private string _buildingName = "Town Building";
     private Texture2D _buildingTexture;
+    private Texture2D _disabledBuildingTexture;
     private Texture2D _iconTexture;
     private bool _disabled;
 
@@ -46,6 +47,17 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         set
         {
             _buildingTexture = value;
+            RefreshVisuals();
+        }
+    }
+
+    [Export]
+    public Texture2D DisabledBuildingTexture
+    {
+        get => _disabledBuildingTexture;
+        set
+        {
+            _disabledBuildingTexture = value;
             RefreshVisuals();
         }
     }
@@ -73,7 +85,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     [Export]
     public bool Disabled
     {
-        get => _disabled || IsDisabledByEmptyRoster();
+        get => _disabled || IsDisabledByEmptyRoster() || IsDisabledByNight();
         set
         {
             _disabled = value;
@@ -83,6 +95,9 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
     [Export]
     public bool DisableWhenRosterEmpty { get; set; } = true;
+
+    [Export]
+    public bool DisableAtNight { get; set; }
 
     [Export]
     public string ConfirmationTitle { get; set; } = "Open Building?";
@@ -134,6 +149,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     private Label _occupancyCountLabel;
     private HBoxContainer _statusWarnings;
     private CompanyRunData _runData;
+    private TownPhaseState _phaseState;
     private ulong _lastInputActivationMsec;
     private bool _showCapacityDuringGladiatorDrag;
     private bool _showGoldCostPreview;
@@ -167,9 +183,13 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
         AddToGroup(RosterYard.DragDropTargetGroup);
         AddToGroup(RosterYard.PhaseGoldCostSourceGroup);
-        _runData = SaveNode.Get()?.CompanyRunData;
+        var saveNode = SaveNode.Get();
+        _runData = saveNode?.CompanyRunData;
+        _phaseState = saveNode?.TownPhaseState;
         if (_runData != null)
             _runData.RunChanged += RefreshBadges;
+        if (_phaseState != null)
+            _phaseState.PhaseChanged += RefreshBadges;
 
         _interactionArea.InputPickable = true;
         _interactionArea.InputEvent += OnInteractionInputEvent;
@@ -182,6 +202,8 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     {
         if (_runData != null)
             _runData.RunChanged -= RefreshBadges;
+        if (_phaseState != null)
+            _phaseState.PhaseChanged -= RefreshBadges;
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
@@ -591,16 +613,20 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         if (_nameLabel != null)
             _nameLabel.Text = string.IsNullOrWhiteSpace(BuildingName) ? "Town Building" : BuildingName;
 
-        if (_buildingSprite != null && BuildingTexture != null)
-            _buildingSprite.Texture = BuildingTexture;
+        var disabled = Disabled;
+        var visibleBuildingTexture = disabled && DisabledBuildingTexture != null
+            ? DisabledBuildingTexture
+            : BuildingTexture;
+        if (_buildingSprite != null && visibleBuildingTexture != null)
+            _buildingSprite.Texture = visibleBuildingTexture;
 
         if (_iconSprite != null && IconTexture != null)
             _iconSprite.Texture = IconTexture;
 
-        if (Disabled)
+        if (disabled)
             GetTownHud()?.HideHoverInfo(this);
 
-        Modulate = Disabled ? new Color(0.55f, 0.55f, 0.55f, 1.0f) : Colors.White;
+        Modulate = disabled && DisabledBuildingTexture == null ? new Color(0.55f, 0.55f, 0.55f, 1.0f) : Colors.White;
         RefreshOccupancyBadge();
     }
 
@@ -631,6 +657,14 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
         var runData = _runData ?? SaveNode.Get()?.CompanyRunData;
         return runData?.Gladiators == null || runData.Gladiators.Count <= 0;
+    }
+
+    private bool IsDisabledByNight()
+    {
+        if (!DisableAtNight || Engine.IsEditorHint())
+            return false;
+
+        return (_phaseState ?? SaveNode.Get()?.TownPhaseState)?.IsNight() == true;
     }
 
     private void RefreshGoldPreview()

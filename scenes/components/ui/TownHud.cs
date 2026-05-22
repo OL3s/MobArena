@@ -1,4 +1,5 @@
 using Godot;
+using MobArena.Scenes.TownOverlays;
 using MobArena.Scenes.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
@@ -18,6 +19,7 @@ public partial class TownHud : CanvasLayer
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
 	private const string GladiatorDeathOverlayScenePath = "res://scenes/ui/GladiatorDeathOverlay.tscn";
+	private const string NextDaySummaryOverlayScenePath = "res://scenes/town_overlays/next_day_summary_overlay.tscn";
 	private const string TownHoverInfoPanelScenePath = "res://scenes/components/ui/TownHoverInfoPanel.tscn";
 	private const string CloudyWeatherIconPath = "res://assets/ui/icons/clear.svg";
 	private const string RainWeatherIconPath = "res://assets/ui/icons/rain.svg";
@@ -170,6 +172,26 @@ public partial class TownHud : CanvasLayer
 			return;
 		}
 
+
+		ShowNextDaySummaryOverlay();
+	}
+
+	private void ShowNextDaySummaryOverlay()
+	{
+		var overlayScene = ResourceLoader.Load<PackedScene>(NextDaySummaryOverlayScenePath);
+		var overlay = overlayScene?.Instantiate<NextDaySummaryOverlay>();
+		if (overlay == null)
+		{
+			GD.PushError("Next day summary overlay scene is missing or has the wrong root script.");
+			return;
+		}
+
+		overlay.Configure(AdvanceToNextDayConfirmed);
+		GlobalOverlay.Get()?.AddOverlay(overlay);
+	}
+
+	private void AdvanceToNextDayConfirmed()
+	{
 		if (!PhaseTransitionController.AdvanceToNextDay(_phaseState, _saveNode.CompanyRunData, _saveNode.WeatherState))
 			return;
 

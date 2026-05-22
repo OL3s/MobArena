@@ -1,8 +1,8 @@
 using Godot;
 using System;
-using System.Text;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Contracts;
 
 namespace MobArena.Scenes.TownOverlays;
 
@@ -15,6 +15,7 @@ public partial class ArenaControlConfigOverlay : Control
     private const float PromptPulseMinimumScale = 0.9f;
     private const float PromptPulseSpeed = 3.2f;
     private const float PromptPulsePhaseOffset = 0.75f;
+    private const string LaunchSummaryOverlayScenePath = "res://scenes/town_overlays/arena_launch_summary_overlay.tscn";
 
     private RichTextLabel _statusLabel;
     private HBoxContainer _promptRow;
@@ -23,6 +24,7 @@ public partial class ArenaControlConfigOverlay : Control
     private Button _closeButton;
     private CompanyRunData _runData;
     private LocalInputConfig _localInputConfig;
+    private ArenaContractData _contract;
     private Action _launchAction;
     private int _nextGladiatorIndex;
     private int _waitingDotCount = 1;
@@ -31,8 +33,9 @@ public partial class ArenaControlConfigOverlay : Control
     private string _promptSignature = string.Empty;
     private bool _readyPromptOpen;
 
-    public void Configure(Action launchAction)
+    public void Configure(ArenaContractData contract, Action launchAction)
     {
+        _contract = contract;
         _launchAction = launchAction;
     }
 
@@ -360,38 +363,21 @@ public partial class ArenaControlConfigOverlay : Control
             return;
 
         _readyPromptOpen = true;
-        GlobalOverlay.Get()?.ShowGoCancelPopup(
-            "Start Arena?",
-            BuildReadySummary(),
-            StartArena,
-            "Start",
-            "Reset",
-            cancelAction: ResetAssignments);
+        var overlayScene = ResourceLoader.Load<PackedScene>(LaunchSummaryOverlayScenePath);
+        var overlay = overlayScene?.Instantiate<ArenaLaunchSummaryOverlay>();
+        if (overlay == null)
+        {
+            GD.PushError("Arena launch summary overlay scene is missing or has the wrong root script.");
+            return;
+        }
+
+        overlay.Configure(_contract, StartArena, ResetAssignments);
+        GlobalOverlay.Get()?.AddOverlay(overlay);
     }
 
     private string GetWaitingText()
     {
         return $"Waiting{new string('.', _waitingDotCount)}";
-    }
-
-    private string BuildReadySummary()
-    {
-        var builder = new StringBuilder("Ready to enter the arena?\n\n");
-        var arenaGladiators = _runData?.TownAssignments?.ArenaGladiators;
-        if (arenaGladiators == null)
-            return builder.ToString();
-
-        for (var index = 0; index < arenaGladiators.Count; index++)
-        {
-            var gladiator = arenaGladiators[index];
-            if (gladiator == null)
-                continue;
-
-            var assignment = _runData.GetArenaControlAssignment(gladiator);
-            builder.AppendLine($"Player {index + 1}: {gladiator.GladiatorName} - {GetControllerLabel(assignment)}");
-        }
-
-        return builder.ToString();
     }
 
     private void StartArena()
