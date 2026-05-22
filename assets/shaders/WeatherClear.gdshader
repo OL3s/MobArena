@@ -2,7 +2,7 @@ shader_type canvas_item;
 
 uniform float intensity : hint_range(0.0, 1.0) = 1.0;
 uniform vec4 shadow_color : source_color = vec4(0.06, 0.075, 0.095, 0.34);
-uniform vec4 background_overlay_color : source_color = vec4(0.03, 0.035, 0.045, 0.045);
+uniform vec4 background_overlay_color : source_color = vec4(0.03, 0.035, 0.045, 0.01);
 
 float hash(vec2 value) {
     return fract(sin(dot(value, vec2(127.1, 311.7))) * 43758.5453123);

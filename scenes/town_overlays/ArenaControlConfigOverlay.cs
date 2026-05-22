@@ -10,43 +10,44 @@ public partial class ArenaControlConfigOverlay : Control
 {
     private const float CardWidth = 170f;
     private const double WaitingAnimationIntervalSeconds = 0.35;
+    private const float PromptPulseAmplitude = 0.1f;
+    private const float PromptPulseBaseScale = 1.0f;
+    private const float PromptPulseMinimumScale = 0.9f;
+    private const float PromptPulseSpeed = 3.2f;
+    private const float PromptPulsePhaseOffset = 0.75f;
 
-    private Label _statusLabel;
+    private RichTextLabel _statusLabel;
     private HBoxContainer _promptRow;
     private HBoxContainer _assignmentRow;
-    private Button _mockCompleteButton;
     private Button _resetButton;
     private Button _closeButton;
     private CompanyRunData _runData;
     private LocalInputConfig _localInputConfig;
     private Action _launchAction;
-    private Action _mockCompleteAction;
     private int _nextGladiatorIndex;
     private int _waitingDotCount = 1;
     private double _waitingAnimationElapsed;
+    private double _promptAnimationElapsed;
+    private string _promptSignature = string.Empty;
     private bool _readyPromptOpen;
 
-    public void Configure(Action launchAction, Action mockCompleteAction = null)
+    public void Configure(Action launchAction)
     {
         _launchAction = launchAction;
-        _mockCompleteAction = mockCompleteAction;
     }
 
     public override void _Ready()
     {
-        _statusLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/StatusLabel");
+        _statusLabel = GetNode<RichTextLabel>("CenterContainer/Panel/MarginContainer/Layout/StatusLabel");
         _promptRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/PromptRow");
         _assignmentRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/AssignmentRow");
-        _mockCompleteButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/MockCompleteButton");
         _resetButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/ResetButton");
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
         _runData = SaveNode.Get()?.CompanyRunData;
         _localInputConfig = LocalInputConfig.Get();
 
-        _mockCompleteButton.FocusMode = FocusModeEnum.None;
         _resetButton.FocusMode = FocusModeEnum.None;
         _closeButton.FocusMode = FocusModeEnum.None;
-        _mockCompleteButton.Pressed += OnMockCompletePressed;
         _resetButton.Pressed += ResetAssignments;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
@@ -84,6 +85,8 @@ public partial class ArenaControlConfigOverlay : Control
 
     public override void _Process(double delta)
     {
+        AnimatePromptRow(delta);
+
         if (!HasNextGladiator() || _readyPromptOpen)
             return;
 
@@ -94,6 +97,28 @@ public partial class ArenaControlConfigOverlay : Control
         _waitingAnimationElapsed = 0d;
         _waitingDotCount = _waitingDotCount >= 3 ? 1 : _waitingDotCount + 1;
         RefreshUi();
+    }
+
+    private void AnimatePromptRow(double delta)
+    {
+        if (_promptRow == null || !_promptRow.Visible)
+            return;
+
+        _promptAnimationElapsed += delta;
+        for (var index = 0; index < _promptRow.GetChildCount(); index++)
+        {
+            if (_promptRow.GetChild(index) is not Control prompt)
+                continue;
+
+            if (prompt.GetNodeOrNull<Control>("Icon") is not { } icon)
+                continue;
+
+            icon.PivotOffset = icon.Size * 0.5f;
+            var phase = (float)_promptAnimationElapsed * PromptPulseSpeed - index * PromptPulsePhaseOffset;
+            var scale = PromptPulseBaseScale + Mathf.Sin(phase) * PromptPulseAmplitude;
+            scale = Mathf.Max(PromptPulseMinimumScale, scale);
+            icon.Scale = Vector2.One * scale;
+        }
     }
 
     private bool TryHandleJoinInput(InputEvent inputEvent, out LocalInputControllerConfig controllerSetup)
@@ -165,11 +190,6 @@ public partial class ArenaControlConfigOverlay : Control
             ShowReadyPrompt();
     }
 
-    private void OnMockCompletePressed()
-    {
-        _mockCompleteAction?.Invoke();
-    }
-
     private GladiatorData GetNextUnassignedGladiator()
     {
         var arenaGladiators = _runData?.TownAssignments?.ArenaGladiators;
@@ -200,6 +220,7 @@ public partial class ArenaControlConfigOverlay : Control
         _nextGladiatorIndex = 0;
         _waitingDotCount = 1;
         _waitingAnimationElapsed = 0d;
+        _promptAnimationElapsed = 0d;
         _localInputConfig?.ClearControllerSetups();
         _runData?.ClearArenaControlAssignments();
         RefreshUi();
@@ -213,18 +234,16 @@ public partial class ArenaControlConfigOverlay : Control
         var arenaGladiators = _runData?.TownAssignments?.ArenaGladiators;
         if (arenaGladiators == null || arenaGladiators.Count <= 0)
         {
-            _statusLabel.Text = "Assign gladiators to the Arena building first.";
-            _mockCompleteButton.Visible = false;
+            _statusLabel.Text = "[center]Assign gladiators to the Arena building first.[/center]";
             _resetButton.Disabled = true;
+            BuildPromptRow();
             return;
         }
 
-        _mockCompleteButton.Visible = SaveNode.Get()?.SettingsConfig?.DebugEnabled == true;
-        _mockCompleteButton.Disabled = _mockCompleteAction == null;
         _resetButton.Disabled = false;
         _statusLabel.Text = HasNextGladiator()
-            ? "Join controls from left to right."
-            : "All arena gladiators have controls assigned.";
+            ? "[center]Press an input to claim the [b]waiting[/b] gladiator.[/center]"
+            : "[center]All arena gladiators have controls assigned.[/center]";
 
         for (var index = 0; index < arenaGladiators.Count; index++)
         {
@@ -232,6 +251,8 @@ public partial class ArenaControlConfigOverlay : Control
             if (gladiator != null)
                 _assignmentRow.AddChild(CreateGladiatorCard(gladiator, index));
         }
+
+        BuildPromptRow();
     }
 
     private Control CreateGladiatorCard(GladiatorData gladiator, int index)
@@ -283,22 +304,41 @@ public partial class ArenaControlConfigOverlay : Control
 
     private void BuildPromptRow()
     {
+        var shouldShow = HasNextGladiator() && !_readyPromptOpen;
+        var signature = _localInputConfig == null
+            ? shouldShow.ToString()
+            : $"{shouldShow}:{_localInputConfig.HasKeyboardPlayer}:{_localInputConfig.HasTouchPlayer}:{_localInputConfig.CanJoin}";
+        if (signature == _promptSignature)
+            return;
+
+        _promptSignature = signature;
         foreach (var child in _promptRow.GetChildren())
             child.QueueFree();
 
-        AddPrompt(_localInputConfig?.EnterIcon, "Enter");
-        AddPrompt(_localInputConfig?.PhoneIcon, "Touch");
-        AddPrompt(_localInputConfig?.XboxAIcon, "A");
+        _promptRow.Visible = shouldShow;
+        if (!_promptRow.Visible || _localInputConfig == null)
+            return;
+
+        if (!_localInputConfig.HasKeyboardPlayer)
+            AddPrompt(_localInputConfig.EnterIcon, "Keyboard");
+        if (!_localInputConfig.HasTouchPlayer)
+            AddPrompt(_localInputConfig.PhoneIcon, "Touch");
+        if (_localInputConfig.CanJoin)
+            AddPrompt(_localInputConfig.XboxAIcon, "Gamepad");
     }
 
     private void AddPrompt(Texture2D icon, string label)
     {
-        var row = new HBoxContainer();
+        var row = new HBoxContainer
+        {
+            MouseFilter = MouseFilterEnum.Ignore
+        };
         row.AddThemeConstantOverride("separation", 6);
         _promptRow.AddChild(row);
 
         row.AddChild(new TextureRect
         {
+            Name = "Icon",
             CustomMinimumSize = new Vector2(30f, 30f),
             Texture = icon,
             ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
@@ -309,7 +349,8 @@ public partial class ArenaControlConfigOverlay : Control
         row.AddChild(new Label
         {
             Text = label,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = MouseFilterEnum.Ignore
         });
     }
 

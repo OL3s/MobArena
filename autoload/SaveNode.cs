@@ -22,6 +22,8 @@ public partial class SaveNode : Node
 	private const string SettingsPath = SaveDirectory + "/settings.tres";
 
 	private bool _skipExitSave;
+	private string _pendingCompanyLossTitle;
+	private string _pendingCompanyLossText;
 
     [Export]
     public bool HasCompany { get; set; }
@@ -48,6 +50,23 @@ public partial class SaveNode : Node
 	public SettingsConfig SettingsConfig { get; private set; } = new();
 
 	public bool DebugEnabled => SettingsConfig?.DebugEnabled == true;
+
+	public void QueueCompanyLossNotification(string title, string text)
+	{
+		_pendingCompanyLossTitle = string.IsNullOrWhiteSpace(title) ? "Company Retired" : title;
+		_pendingCompanyLossText = string.IsNullOrWhiteSpace(text)
+			? "The company has been retired and the run has ended."
+			: text;
+	}
+
+	public bool TryConsumeCompanyLossNotification(out string title, out string text)
+	{
+		title = _pendingCompanyLossTitle;
+		text = _pendingCompanyLossText;
+		_pendingCompanyLossTitle = null;
+		_pendingCompanyLossText = null;
+		return !string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(text);
+	}
 
 	public void StartNewCompanyRun()
 	{
@@ -365,6 +384,21 @@ public partial class SaveNode : Node
 		return added;
 	}
 
+	public Error ForceRetireCurrentCompany()
+	{
+		GD.Print("SaveNode: Force-retiring current company.");
+		if (HasCompany)
+			TryAddCurrentCompanyToCompletedHistory();
+
+		HasCompany = false;
+		CompanyLogoData = CompanyLogoData.CreateDefault();
+		CompanyCareerData = new CompanyCareerData();
+		CompanyRunData = new CompanyRunData();
+		TownPhaseState = new TownPhaseState();
+		WeatherState = new WeatherState();
+		return Save();
+	}
+
 	public Error DeleteRunData()
 	{
 		GD.Print("SaveNode: Deleting run data.");
@@ -398,6 +432,19 @@ public partial class SaveNode : Node
 		SettingsConfig = new SettingsConfig();
 		error = SaveCurrentManifest();
 		GD.Print(error == Error.Ok ? "SaveNode: Settings data deleted." : $"SaveNode: Settings data delete failed while saving manifest. Error: {error}.");
+		return error;
+	}
+
+	public Error DeleteCompletedCompanyHistoryData()
+	{
+		GD.Print("SaveNode: Deleting completed company history data.");
+		var error = DeleteFileIfExists(CompletedCompanyHistoryPath);
+		if (error != Error.Ok)
+			return error;
+
+		CompletedCompanyHistory = new CompletedCompanyHistory();
+		error = SaveCurrentManifest();
+		GD.Print(error == Error.Ok ? "SaveNode: Completed company history data deleted." : $"SaveNode: Completed company history data delete failed while saving manifest. Error: {error}.");
 		return error;
 	}
 

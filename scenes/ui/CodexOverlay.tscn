@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/CodexOverlay.cs" id="1_codex"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/book.svg" id="3_book"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_codex_blur"]
 shader = ExtResource("2_blur_shader")
@@ -54,11 +55,24 @@ theme_override_constants/margin_bottom = 22
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+[node name="TitleRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="BookIcon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/TitleRow"]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3_book")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/TitleRow"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Codex"
-horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="CategoryRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2

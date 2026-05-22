@@ -48,6 +48,7 @@ public partial class SettingsOverlay : Control
 		_lowHealthSpinBox.ValueChanged += OnLowHealthWarningChanged;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteRunButton").Pressed += OnDeleteRunDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteCompanyButton").Pressed += OnDeleteCompanyDataPressed;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/ClearRecordsButton").Pressed += OnClearRecordsPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteSettingsButton").Pressed += OnDeleteSettingsDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteAllButton").Pressed += OnDeleteAllSaveDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Actions/ApplyButton").Pressed += OnApplyPressed;
@@ -150,6 +151,11 @@ public partial class SettingsOverlay : Control
 	private void OnDeleteSettingsDataPressed()
 	{
 		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSettingsData());
+	}
+
+	private void OnClearRecordsPressed()
+	{
+		ConfirmDeleteSaveData(saveNode => saveNode.DeleteCompletedCompanyHistoryData());
 	}
 
 	private void OnDeleteAllSaveDataPressed()

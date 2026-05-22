@@ -5,13 +5,15 @@ using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources.Contracts;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Mobs;
 
 namespace MobArena.Scenes.TownOverlays;
 
 public partial class ArenaContractsOverlay : Control
 {
-    private const string TownScenePath = "res://scenes/town.tscn";
     private const string ArenaDonationOverlayScenePath = "res://scenes/town_overlays/arena_donation_overlay.tscn";
+    private const int MinimumRerollGoldCost = 10;
+    private const int RerollAddonGoldCost = 5;
 
     [Export]
     public PackedScene ArenaScene { get; set; }
@@ -25,28 +27,38 @@ public partial class ArenaContractsOverlay : Control
     [Export]
     public Array<ArenaContractData> Contracts { get; private set; } = new();
 
+    private ScrollContainer _contractsScroll;
     private HBoxContainer _contractsRow;
+    private Control _missingGladiatorMessage;
     private HBoxContainer _assignedGladiatorsRow;
     private HBoxContainer _assignedGladiators;
     private Button _startButton;
+    private Button _rerollButton;
     private Button _closeButton;
     private TownPhaseState _phaseState;
     private CompanyRunData _runData;
+    private Array<ArenaContractData> _activeContracts = new();
     private int _selectedContractIndex = -1;
+    private int _generatedForFame = -1;
+    private bool _generatedForChampionDay;
     private bool _refreshingUi;
 
     public override void _Ready()
     {
+        _contractsScroll = GetNode<ScrollContainer>("CenterContainer/Panel/MarginContainer/Layout/ContractArea/ContractsScroll");
         _contractsRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/ContractArea/ContractsScroll/ContractsRow");
+        _missingGladiatorMessage = GetNode<Control>("CenterContainer/Panel/MarginContainer/Layout/ContractArea/MissingGladiatorMessage");
         _assignedGladiatorsRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow");
         _assignedGladiators = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow/Gladiators");
         _startButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/StartButton");
+        _rerollButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/RerollButton");
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
         var saveNode = SaveNode.Get();
         _runData = saveNode?.CompanyRunData;
         _phaseState = saveNode?.TownPhaseState;
 
         _startButton.Pressed += OnStartPressed;
+        _rerollButton.Pressed += OnRerollPressed;
         GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Header/DonateButton").Pressed += OnDonatePressed;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
@@ -64,8 +76,27 @@ public partial class ArenaContractsOverlay : Control
 
     private void BuildContracts()
     {
-        for (var index = 0; index < Contracts.Count; index++)
-            AddContract(index, Contracts[index]);
+        foreach (var child in _contractsRow.GetChildren())
+            child.QueueFree();
+
+        _selectedContractIndex = -1;
+        _generatedForFame = _runData?.Fame ?? 0;
+        _generatedForChampionDay = _phaseState?.IsChampionDay == true;
+        _activeContracts = ArenaContractGenerator.GenerateRandomContracts(
+            _generatedForFame,
+            _generatedForChampionDay);
+
+        if (_activeContracts.Count <= 0)
+        {
+            foreach (var contract in Contracts)
+            {
+                if (contract?.IsChampionContract() == (_phaseState?.IsChampionDay == true))
+                    _activeContracts.Add(contract);
+            }
+        }
+
+        for (var index = 0; index < _activeContracts.Count; index++)
+            AddContract(index, _activeContracts[index]);
     }
 
     private void AddContract(int contractIndex, ArenaContractData contractData)
@@ -103,10 +134,24 @@ public partial class ArenaContractsOverlay : Control
             return;
 
         _refreshingUi = true;
+        if ((_runData?.Fame ?? 0) != _generatedForFame || (_phaseState?.IsChampionDay == true) != _generatedForChampionDay)
+            BuildContracts();
+
         RefreshContractCards();
         RefreshAssignedGladiators();
+        RefreshContractVisibility();
         RefreshActions();
         _refreshingUi = false;
+    }
+
+    private void RefreshContractVisibility()
+    {
+        var hasAssignedGladiator = (_runData?.TownAssignments?.ArenaGladiators?.Count ?? 0) > 0;
+        _contractsScroll.Visible = hasAssignedGladiator;
+        _missingGladiatorMessage.Visible = !hasAssignedGladiator;
+
+        if (!hasAssignedGladiator)
+            SelectContract(-1);
     }
 
     private void RefreshContractCards()
@@ -156,8 +201,12 @@ public partial class ArenaContractsOverlay : Control
         var selectedContract = GetSelectedContractOrNull();
         var hasContract = selectedContract != null;
         var canPayReturnUpkeep = _runData?.CanPayArenaReturnUpkeep(_phaseState) != false;
+        var rerollCost = GetRerollGoldCost();
 
         _startButton.Disabled = !canPayReturnUpkeep || !hasContract || assignedCount <= 0;
+        _rerollButton.Disabled = assignedCount <= 0 || _runData == null || _runData.Gold < rerollCost;
+        _rerollButton.Text = $"Reroll {rerollCost}";
+        _rerollButton.TooltipText = $"Spend {rerollCost} gold to reroll all contracts.";
 
         if (!canPayReturnUpkeep)
         {
@@ -191,7 +240,7 @@ public partial class ArenaContractsOverlay : Control
         }
 
         var overlay = ControlConfigOverlayScene.Instantiate<ArenaControlConfigOverlay>();
-        overlay.Configure(StartArenaScene, MockCompleteContract);
+        overlay.Configure(StartArenaScene);
         GlobalOverlay.Get()?.AddOverlay(overlay);
     }
 
@@ -203,6 +252,37 @@ public partial class ArenaContractsOverlay : Control
             return;
 
         OpenControlConfigOverlay();
+    }
+
+    private void OnRerollPressed()
+    {
+        var cost = GetRerollGoldCost();
+        if (_runData == null || !_runData.TrySpendGold(cost))
+            return;
+
+        _runData.IncrementArenaContractRerollCount();
+        BuildContracts();
+        RefreshUi();
+    }
+
+    private int GetRerollGoldCost()
+    {
+        var cheapestThreat = int.MaxValue;
+        foreach (var contract in _activeContracts)
+        {
+            if (contract == null)
+                continue;
+
+            cheapestThreat = Mathf.Min(cheapestThreat, contract.GetThreatFameValue());
+        }
+
+        if (cheapestThreat == int.MaxValue)
+            cheapestThreat = MinimumRerollGoldCost;
+
+        var baseCost = Mathf.Max(MinimumRerollGoldCost, cheapestThreat);
+        var previousRerolls = _runData?.ArenaContractRerollCount ?? 0;
+        var nextReroll = previousRerolls + 1;
+        return (baseCost * nextReroll) + (RerollAddonGoldCost * previousRerolls);
     }
 
     private static void OnDonatePressed()
@@ -219,6 +299,13 @@ public partial class ArenaContractsOverlay : Control
 
     private void StartArenaScene()
     {
+        var selectedContract = GetSelectedContractOrNull();
+        if (selectedContract == null)
+        {
+            GD.PushError("Arena launch failed: no selected contract.");
+            return;
+        }
+
         var scene = ArenaScene ?? ResourceLoader.Load<PackedScene>("res://scenes/arena.tscn");
         if (scene == null)
         {
@@ -226,34 +313,9 @@ public partial class ArenaContractsOverlay : Control
             return;
         }
 
+        _runData?.SetActiveArenaContract(selectedContract);
         GetTree().ChangeSceneToPacked(scene);
         GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
-    }
-
-    private void MockCompleteContract()
-    {
-        var saveNode = SaveNode.Get();
-        var selectedContract = GetSelectedContractOrNull();
-        if (saveNode == null || _runData == null || _phaseState == null || selectedContract == null)
-            return;
-
-        _runData.AddGold(selectedContract.GoldReward, saveNode.CompanyCareerData);
-        var netFameReward = selectedContract.GetNetFameReward(_runData.Fame);
-        if (netFameReward >= 0)
-            _runData.AddFame(netFameReward);
-        else
-            _runData.LoseFame(-netFameReward);
-        saveNode.CompanyCareerData?.AddContractCompleted();
-        foreach (var gladiator in _runData.TownAssignments.ArenaGladiators)
-        {
-            gladiator?.GladiatorCareer?.AddContractCompleted();
-            gladiator?.GladiatorCareer?.AddWin();
-        }
-
-        PhaseTransitionController.CompleteArenaContract(_phaseState, _runData, SaveNode.Get()?.WeatherState);
-        saveNode.Save();
-        GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
-        GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, TownScenePath);
     }
 
     private void StartGladiatorDrag(GladiatorData gladiator)
@@ -273,8 +335,8 @@ public partial class ArenaContractsOverlay : Control
 
     private ArenaContractData GetSelectedContractOrNull()
     {
-        return _selectedContractIndex >= 0 && _selectedContractIndex < Contracts.Count
-            ? Contracts[_selectedContractIndex]
+        return _selectedContractIndex >= 0 && _selectedContractIndex < _activeContracts.Count
+            ? _activeContracts[_selectedContractIndex]
             : null;
     }
 }

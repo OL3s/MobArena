@@ -305,6 +305,12 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
     public bool TryTakeGladiator(GladiatorData gladiatorData)
     {
+        if (Disabled)
+        {
+            GD.PushError($"Building assignment failed: '{DropTargetName}' is disabled.");
+            return false;
+        }
+
         if (!AssignDroppedGladiators)
         {
             GD.PushError($"Building assignment failed: '{DropTargetName}' does not assign dropped gladiators.");

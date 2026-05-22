@@ -131,7 +131,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
         if (!IsNodeReady() || _portrait == null || _gladiatorData == null)
             return;
 
-        var texture = _gladiatorData.GetPortraitTexture();
+        var texture = _gladiatorData.GetBodyForwardTexture();
         _portrait.Texture = texture;
 
         if (texture != null && texture.GetHeight() > 0)

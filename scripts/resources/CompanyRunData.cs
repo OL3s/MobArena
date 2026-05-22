@@ -1,6 +1,7 @@
 using Godot;
 using Godot.Collections;
 using System.Collections.Generic;
+using MobArena.Scripts.Resources.Contracts;
 using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scripts.Resources;
@@ -70,7 +71,18 @@ public partial class CompanyRunData : Resource
     [Export]
     public Array<ArenaControlAssignmentData> ArenaControlAssignments { get; private set; } = new();
 
+    [Export]
+    public ArenaContractData ActiveArenaContract { get; private set; }
+
+    [Export]
+    public int ArenaContractRerollCount { get; private set; }
+
+    [Export]
+    public Array<GladiatorData> PendingGladiatorDeathNotifications { get; private set; } = new();
+
     public int AliveGladiators => Gladiators.Count;
+
+    public bool HasActiveArenaContract => ActiveArenaContract != null;
 
     [Export]
     public int GladiatorCapacity { get; private set; } = DefaultGladiatorCapacity;
@@ -283,6 +295,36 @@ public partial class CompanyRunData : Resource
         Gold -= amount;
         EmitSignal(SignalName.RunChanged);
         return true;
+    }
+
+    public void SetActiveArenaContract(ArenaContractData contractData)
+    {
+        ActiveArenaContract = contractData;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void ClearActiveArenaContract()
+    {
+        if (ActiveArenaContract == null)
+            return;
+
+        ActiveArenaContract = null;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void IncrementArenaContractRerollCount()
+    {
+        ArenaContractRerollCount++;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void ResetArenaContractRerollCount()
+    {
+        if (ArenaContractRerollCount <= 0)
+            return;
+
+        ArenaContractRerollCount = 0;
+        EmitSignal(SignalName.RunChanged);
     }
 
     public void AddItem(ItemData item)
@@ -1169,7 +1211,28 @@ public partial class CompanyRunData : Resource
         return total;
     }
 
-    public void KillGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)
+    public Array<GladiatorData> ConsumePendingGladiatorDeathNotifications()
+    {
+        PendingGladiatorDeathNotifications ??= new Array<GladiatorData>();
+        var pending = new Array<GladiatorData>();
+        foreach (var gladiator in PendingGladiatorDeathNotifications)
+        {
+            if (gladiator != null)
+                pending.Add(gladiator);
+        }
+
+        PendingGladiatorDeathNotifications.Clear();
+        if (pending.Count > 0)
+            EmitSignal(SignalName.RunChanged);
+
+        return pending;
+    }
+
+    public void KillGladiator(
+        GladiatorData gladiatorData,
+        CompanyCareerData careerData,
+        bool notifyImmediately = true,
+        bool queueDeferredNotification = true)
     {
         if (gladiatorData == null)
             return;
@@ -1189,7 +1252,16 @@ public partial class CompanyRunData : Resource
         GD.Print($"CompanyRunData: Removed gladiator '{gladiatorData.GladiatorName}' from active roster and moved to cemetery. Active gladiators: {Gladiators.Count}. Cemetery: {Cemetery.Count}.");
 
         careerData?.AddGladiatorDeath();
-        EmitSignal(SignalName.GladiatorDied, gladiatorData);
+        if (notifyImmediately)
+        {
+            EmitSignal(SignalName.GladiatorDied, gladiatorData);
+        }
+        else if (queueDeferredNotification)
+        {
+            PendingGladiatorDeathNotifications ??= new Array<GladiatorData>();
+            PendingGladiatorDeathNotifications.Add(gladiatorData);
+        }
+
         EmitSignal(SignalName.RunChanged);
     }
 

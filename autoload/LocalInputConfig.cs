@@ -61,7 +61,7 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasKeyboardPlayer)
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create("Keyboard", LocalInputControllerConfig.ControllerKind.Keyboard, -1, MouseIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create("Keyboard", LocalInputControllerConfig.ControllerKind.Keyboard, -1, EnterIcon));
 		return true;
 	}
 

@@ -2,12 +2,15 @@ using Godot;
 using MobArena.Scenes.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Contracts;
 
 namespace MobArena.Scenes.Components.UI;
 
 public partial class TownHud : CanvasLayer
 {
-	private const int DevActionCompleteArenaDay = 1;
+	private const int DevActionWinArena = 1;
+	private const int DevActionAddDefaultGladiator = 2;
+	private const int DevActionAddGold = 3;
 	private const int DevActionWeatherCloudy = 101;
 	private const int DevActionWeatherSun = 102;
 	private const int DevActionWeatherRain = 103;
@@ -19,8 +22,11 @@ public partial class TownHud : CanvasLayer
 	private const string CloudyWeatherIconPath = "res://assets/ui/icons/clear.svg";
 	private const string RainWeatherIconPath = "res://assets/ui/icons/rain.svg";
 	private const string SunWeatherIconPath = "res://assets/ui/icons/sun.svg";
+	private const string ChampionIconPath = "res://assets/ui/icons/champion.svg";
 	private const string CalendarInfoPopupTitle = "Weather & Champion";
 	private const string CalendarInfoPopupText = "todo: implement weather condition effects and champion explanation here";
+	private const string ChampionDayPopupTitle = "Champion Day";
+	private const string ChampionDayPopupText = "A champion contract is mandatory today. Win to continue the company. Lose, and the company is force-retired.";
 
 	[Signal]
 	public delegate void BackPressedEventHandler();
@@ -113,6 +119,7 @@ public partial class TownHud : CanvasLayer
 		RefreshRunUi();
 		RefreshDevMenu();
 		RefreshPhaseUi();
+		ShowPendingGladiatorDeathNotifications();
 		SetWeatherVisual(WeatherState.WeatherVisual.Cloudy);
 	}
 
@@ -168,6 +175,17 @@ public partial class TownHud : CanvasLayer
 
 		GD.Print($"SaveNode: Autosaving at day {_phaseState.CurrentDay}.");
 		_saveNode.Save();
+
+		if (_phaseState.IsChampionDay)
+			ShowChampionDayPopup();
+	}
+
+	private static void ShowChampionDayPopup()
+	{
+		GlobalOverlay.Get()?.ShowBlurredPopup(
+			ChampionDayPopupTitle,
+			ChampionDayPopupText,
+			ResourceLoader.Load<Texture2D>(ChampionIconPath));
 	}
 
 	private void SetupDevMenu()
@@ -175,7 +193,9 @@ public partial class TownHud : CanvasLayer
 		_devButton.Visible = _saveNode?.DebugEnabled == true;
 		var popup = _devButton.GetPopup();
 		popup.Clear();
-		popup.AddItem("Day -> Night", DevActionCompleteArenaDay);
+		popup.AddItem("Win arena", DevActionWinArena);
+		popup.AddItem("Add default gladiator", DevActionAddDefaultGladiator);
+		popup.AddItem("Add 1000 gold", DevActionAddGold);
 		SetupDevWeatherMenu(popup);
 		popup.IdPressed += OnDevMenuIdPressed;
 	}
@@ -202,11 +222,21 @@ public partial class TownHud : CanvasLayer
 		if (_saveNode?.DebugEnabled != true)
 			return;
 
-		if (id != DevActionCompleteArenaDay)
-			return;
-
-		if (!PhaseTransitionController.CompleteArenaDay(_phaseState, _saveNode.CompanyRunData, _saveNode.WeatherState))
-			return;
+		switch (id)
+		{
+			case DevActionWinArena:
+				if (ArenaContractResultResolver.ResolveWin(_saveNode, requireActiveContract: false) != ArenaContractResultResolver.ContractResult.Completed)
+					return;
+				break;
+			case DevActionAddDefaultGladiator:
+				_saveNode.CompanyRunData?.AddGladiator(GladiatorData.CreateDefault(), _saveNode.CompanyCareerData);
+				break;
+			case DevActionAddGold:
+				_saveNode.CompanyRunData?.AddGold(1000, _saveNode.CompanyCareerData);
+				break;
+			default:
+				return;
+		}
 
 		_saveNode.Save();
 	}
@@ -261,6 +291,24 @@ public partial class TownHud : CanvasLayer
 
 	private void OnGladiatorDied(GladiatorData gladiatorData)
 	{
+		ShowGladiatorDeathOverlay(gladiatorData);
+		_saveNode.Save();
+	}
+
+	private void ShowPendingGladiatorDeathNotifications()
+	{
+		var pending = _saveNode?.CompanyRunData?.ConsumePendingGladiatorDeathNotifications();
+		if (pending == null || pending.Count <= 0)
+			return;
+
+		foreach (var gladiator in pending)
+			ShowGladiatorDeathOverlay(gladiator);
+
+		_saveNode.Save();
+	}
+
+	private static void ShowGladiatorDeathOverlay(GladiatorData gladiatorData)
+	{
 		var deathOverlayScene = ResourceLoader.Load<PackedScene>(GladiatorDeathOverlayScenePath);
 		if (deathOverlayScene == null)
 			return;
@@ -268,7 +316,6 @@ public partial class TownHud : CanvasLayer
 		var overlay = deathOverlayScene.Instantiate<GladiatorDeathOverlay>();
 		overlay.Configure(gladiatorData);
 		GlobalOverlay.Get()?.AddOverlay(overlay);
-		_saveNode.Save();
 	}
 
 	private void OpenCompanyOverview()

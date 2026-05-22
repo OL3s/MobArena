@@ -1,12 +1,14 @@
 using Godot;
 using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
+using MobArena.Scripts.Resources.Contracts;
 
 namespace MobArena.Scenes.UI;
 
 public partial class CompanyOverviewOverlay : Control
 {
     private const string CemeteryOverlayScenePath = "res://scenes/ui/CemeteryOverlay.tscn";
+    private const string MainMenuScenePath = "res://scenes/main_menu.tscn";
 
     [Signal]
     public delegate void EditCompanyRequestedEventHandler();
@@ -37,6 +39,7 @@ public partial class CompanyOverviewOverlay : Control
 
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/EditCompanyButton").Pressed += OnEditCompanyPressed;
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/CemeteryButton").Pressed += OnCemeteryPressed;
+        GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/RetireButton").Pressed += OnRetirePressed;
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/CloseButton").Pressed += QueueFree;
 
         RefreshUi();
@@ -73,5 +76,25 @@ public partial class CompanyOverviewOverlay : Control
             return;
 
         GlobalOverlay.Get()?.AddOverlay(cemeteryOverlayScene.Instantiate<CemeteryOverlay>());
+    }
+
+    private void OnRetirePressed()
+    {
+        GlobalOverlay.Get()?.ShowGoCancelPopup(
+            "Retire Company?",
+            "Are you sure you want to retire this company? This ends the current run and returns to the main menu.",
+            ForceRetireCompany,
+            "Retire",
+            "Cancel");
+    }
+
+    private void ForceRetireCompany()
+    {
+        ArenaContractResultResolver.ResolveCompanyLoss(
+            _saveNode,
+            "Company Retired",
+            "You chose to retire the company. The run has ended, and any qualifying result was recorded.");
+        GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
+        GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScenePath);
     }
 }

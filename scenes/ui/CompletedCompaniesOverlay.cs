@@ -22,7 +22,6 @@ public partial class CompletedCompaniesOverlay : Control
     private Label _contractsValue;
     private Label _mobsValue;
     private Label _championsValue;
-    private Button _deleteButton;
     private int _selectedIndex = -1;
 
     public override void _Ready()
@@ -42,9 +41,6 @@ public partial class CompletedCompaniesOverlay : Control
         _contractsValue = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats/ContractsValue");
         _mobsValue = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats/MobsValue");
         _championsValue = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats/ChampionsValue");
-        _deleteButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/DeleteButton");
-
-        _deleteButton.Pressed += OnDeletePressed;
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/CloseButton").Pressed += QueueFree;
 
         RefreshList();
@@ -88,8 +84,6 @@ public partial class CompletedCompaniesOverlay : Control
         _titleLabel.Visible = hasRecord;
         _companyLogo.Visible = hasRecord;
         _stats.Visible = hasRecord;
-        _deleteButton.Disabled = !hasRecord;
-
         if (!hasRecord)
         {
             _titleLabel.Text = string.Empty;
@@ -108,13 +102,4 @@ public partial class CompletedCompaniesOverlay : Control
         _championsValue.Text = career.ChampionsDefeated.ToString();
     }
 
-    private void OnDeletePressed()
-    {
-        if (!_saveNode.CompletedCompanyHistory.TryDeleteRecord(_selectedIndex))
-            return;
-
-        _saveNode.Save();
-        RefreshList();
-        SelectRecord(-1);
-    }
 }

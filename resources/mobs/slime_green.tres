@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyMobData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mobs/EnemyMobData.cs" id="1_enemy"]
+[ext_resource type="Texture2D" path="res://assets/ui/mobs/slime_green.svg" id="2_icon"]
+[ext_resource type="Resource" path="res://resources/mob_appearances/slime_green.tres" id="3_appearance"]
+
+[resource]
+script = ExtResource("1_enemy")
+DisplayName = "Green Slime"
+Description = "A weak arena starter mob. Slow, simple, and useful for first combat prototypes."
+Icon = ExtResource("2_icon")
+Appearance = ExtResource("3_appearance")
+Scene = null
+Family = 0
+MaxHealth = 12
+FameValue = 5

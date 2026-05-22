@@ -8,6 +8,8 @@ public static class PhaseTransitionController
             return false;
 
         ExecuteBuildingWork(companyRunData);
+        companyRunData?.CompleteArenaContractAssignments();
+        companyRunData?.ResetArenaContractRerollCount();
         phaseState.MoveToNight();
         weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
@@ -21,6 +23,7 @@ public static class PhaseTransitionController
 
         ExecuteBuildingWork(companyRunData);
         companyRunData?.CompleteArenaContractAssignments();
+        companyRunData?.ResetArenaContractRerollCount();
         phaseState.MoveToNight();
         weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();

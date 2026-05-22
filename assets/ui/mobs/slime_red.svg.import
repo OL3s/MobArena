@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqt8h0c73w6rg"
-path="res://.godot/imported/green_slime.svg-8ffc650f60a7cb8193edd7257d145c2f.ctex"
+uid="uid://bourxxjlodcbr"
+path="res://.godot/imported/slime_red.svg-8e9a5f552ab34bdc13077a1a2506e413.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/mobs/green_slime.svg"
-dest_files=["res://.godot/imported/green_slime.svg-8ffc650f60a7cb8193edd7257d145c2f.ctex"]
+source_file="res://assets/ui/mobs/slime_red.svg"
+dest_files=["res://.godot/imported/slime_red.svg-8e9a5f552ab34bdc13077a1a2506e413.ctex"]
 
 [params]
 

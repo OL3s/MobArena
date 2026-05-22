@@ -350,7 +350,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
         _pendingGladiator = null;
         _draggedGladiator.SetDragHidden(true);
 
-        var texture = _draggedGladiator.GladiatorData?.GetPortraitTexture();
+        var texture = _draggedGladiator.GladiatorData?.GetBodyForwardTexture();
         StartDragToken(texture, viewportPosition);
         SetGladiatorDragCapacityHintsVisible(true);
     }
@@ -362,7 +362,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
         CancelDrag();
         _draggedGladiatorData = gladiatorData;
-        StartDragToken(gladiatorData.GetPortraitTexture(), viewportPosition);
+        StartDragToken(gladiatorData.GetBodyForwardTexture(), viewportPosition);
         SetGladiatorDragCapacityHintsVisible(true);
     }
 

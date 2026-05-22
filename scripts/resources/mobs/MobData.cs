@@ -15,5 +15,23 @@ public abstract partial class MobData : Resource
     public Texture2D Icon { get; private set; }
 
     [Export]
+    public MobAppearanceData Appearance { get; private set; }
+
+    [Export]
     public PackedScene Scene { get; private set; }
+
+    public Texture2D GetIconTexture()
+    {
+        return Appearance?.FaceIcon ?? Icon;
+    }
+
+    public Texture2D GetBodyForwardTexture()
+    {
+        return Appearance?.BodyForward ?? GetIconTexture();
+    }
+
+    public Texture2D GetBodyBackTexture()
+    {
+        return Appearance?.BodyBack ?? GetBodyForwardTexture();
+    }
 }

@@ -37,6 +37,15 @@ public partial class MainMenu : Control
 
 		RefreshCompanyUi();
 		CallDeferred(MethodName.GrabDefaultFocus);
+		CallDeferred(MethodName.ShowPendingCompanyLossNotification);
+	}
+
+	private void ShowPendingCompanyLossNotification()
+	{
+		if (_saveNode?.TryConsumeCompanyLossNotification(out var title, out var text) != true)
+			return;
+
+		GlobalOverlay.Get()?.ShowBlurredPopup(title, text);
 	}
 
 	private void OnEnterTownPressed()

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ChampionMobData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mobs/ChampionMobData.cs" id="1_champion"]
+[ext_resource type="Texture2D" path="res://assets/ui/mobs/champion_undead_death_knight.svg" id="2_icon"]
+[ext_resource type="Resource" path="res://resources/mob_appearances/champion_undead_death_knight.tres" id="3_appearance"]
+
+[resource]
+script = ExtResource("1_champion")
+DisplayName = "Death Knight"
+Description = "An undead champion that anchors high-pressure Champion Day contracts."
+Icon = ExtResource("2_icon")
+Appearance = ExtResource("3_appearance")
+Scene = null
+Family = 2
+MaxHealth = 108
+FameValue = 100

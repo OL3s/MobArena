@@ -65,4 +65,16 @@ autowrap_mode = 3
 [node name="ReturnButton" type="Button" parent="ControllerUi/StatusPanel/Row" unique_id=1109299179]
 custom_minimum_size = Vector2(180, 52)
 layout_mode = 2
-text = "Return To Town"
+text = "Forfeit"
+
+[node name="DebugWinButton" type="Button" parent="ControllerUi/StatusPanel/Row"]
+visible = false
+custom_minimum_size = Vector2(150, 52)
+layout_mode = 2
+text = "Debug Win"
+
+[node name="DebugLoseButton" type="Button" parent="ControllerUi/StatusPanel/Row"]
+visible = false
+custom_minimum_size = Vector2(150, 52)
+layout_mode = 2
+text = "Debug Forfeit"

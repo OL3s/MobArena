@@ -7,7 +7,11 @@ namespace MobArena.Scripts.Resources.Contracts;
 [GlobalClass]
 public partial class ArenaContractData : Resource
 {
-    private const float DefaultFameCostRatio = 2.5f;
+    private const float DefaultFameRewardRatio = 0.1f;
+    private const float DefaultFameDecayRatio = 0.01f;
+    private const int MinimumThreatStarFame = 30;
+    private const float ThreatStarGrowthBase = 1.7f;
+    private const int MaxThreatStars = 10;
 
     [Export]
     public string DisplayName { get; private set; } = "Arena Contract";
@@ -16,10 +20,19 @@ public partial class ArenaContractData : Resource
     public string Description { get; private set; } = string.Empty;
 
     [Export]
+    public MobFamily Family { get; private set; } = MobFamily.Slimes;
+
+    [Export]
+    public ArenaContractDifficulty Difficulty { get; private set; } = ArenaContractDifficulty.Easy;
+
+    [Export]
     public int FameCost { get; private set; }
 
     [Export(PropertyHint.Range, "0,1,0.01")]
-    public float FameCostRatio { get; private set; } = DefaultFameCostRatio;
+    public float FameRewardRatio { get; private set; } = DefaultFameRewardRatio;
+
+    [Export(PropertyHint.Range, "0,1,0.01")]
+    public float FameCostRatio { get; private set; } = DefaultFameDecayRatio;
 
     [Export]
     public Array<MobData> Mobs { get; private set; } = new();
@@ -27,16 +40,73 @@ public partial class ArenaContractData : Resource
     [Export]
     public int GoldReward { get; private set; }
 
-    public int GetBaseFameReward()
+    public void ConfigureGenerated(
+        string displayName,
+        string description,
+        MobFamily family,
+        ArenaContractDifficulty difficulty,
+        Array<MobData> mobs,
+        int goldReward,
+        int minimumFameCost = 0,
+        float fameRewardRatio = DefaultFameRewardRatio,
+        float fameDecayRatio = DefaultFameDecayRatio)
     {
-        var reward = 0;
+        DisplayName = displayName;
+        Description = description;
+        Family = family;
+        Difficulty = difficulty;
+        Mobs = mobs ?? new Array<MobData>();
+        GoldReward = goldReward;
+        FameCost = minimumFameCost;
+        FameRewardRatio = fameRewardRatio;
+        FameCostRatio = fameDecayRatio;
+    }
+
+    public int GetThreatFameValue()
+    {
+        var value = 0;
         foreach (var mob in Mobs)
         {
             if (mob is EnemyMobData enemyMob)
-                reward += enemyMob.FameValue;
+                value += enemyMob.FameValue;
         }
 
-        return reward;
+        return value;
+    }
+
+    public int GetGrossFameReward()
+    {
+        return Mathf.RoundToInt(GetThreatFameValue() * FameRewardRatio);
+    }
+
+    public int GetThreatStarCount()
+    {
+        var fame = Mathf.Max(MinimumThreatStarFame, GetThreatFameValue());
+        var scaled = Mathf.Log(fame / (float)MinimumThreatStarFame) / Mathf.Log(ThreatStarGrowthBase);
+        return Mathf.Clamp(1 + Mathf.FloorToInt(scaled), 1, MaxThreatStars);
+    }
+
+    public static int GetMobFameBudget(int currentCompanyFame, ArenaContractDifficulty difficulty)
+    {
+        return difficulty switch
+        {
+            ArenaContractDifficulty.Easy => Mathf.RoundToInt(30f + 3f * Mathf.Sqrt(currentCompanyFame)),
+            ArenaContractDifficulty.Medium => Mathf.RoundToInt(45f + 0.45f * currentCompanyFame),
+            ArenaContractDifficulty.Hard => Mathf.RoundToInt(70f + 0.75f * currentCompanyFame + 0.02f * Mathf.Pow(currentCompanyFame, 1.35f)),
+            ArenaContractDifficulty.Champion => Mathf.RoundToInt(90f + 0.6f * currentCompanyFame + 0.015f * Mathf.Pow(currentCompanyFame, 1.25f)),
+            _ => Mathf.RoundToInt(80f + 0.5f * currentCompanyFame)
+        };
+    }
+
+    public bool IsChampionContract()
+    {
+        foreach (var mob in Mobs)
+        {
+            if (mob is ChampionMobData)
+                return true;
+        }
+
+        return false;
     }
 
     public int GetFameCost(int currentCompanyFame)
@@ -46,6 +116,6 @@ public partial class ArenaContractData : Resource
 
     public int GetNetFameReward(int currentCompanyFame)
     {
-        return GetBaseFameReward() - GetFameCost(currentCompanyFame);
+        return GetGrossFameReward() - GetFameCost(currentCompanyFame);
     }
 }

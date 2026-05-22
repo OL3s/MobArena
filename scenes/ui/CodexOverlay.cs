@@ -87,7 +87,7 @@ public partial class CodexOverlay : Control
         {
             _emptyListLabel.Visible = _enemies.Count <= 0;
             foreach (var enemy in _enemies)
-                _entryList.AddChild(CreateEntryButton(enemy.DisplayName, enemy.Icon, () => ShowEnemy(enemy)));
+                _entryList.AddChild(CreateEntryButton(enemy.DisplayName, enemy.GetIconTexture(), () => ShowEnemy(enemy)));
             return;
         }
 
@@ -115,13 +115,14 @@ public partial class CodexOverlay : Control
     private void ShowEnemy(MobData enemy)
     {
         SetDetailsVisible(true);
-        _icon.Texture = enemy.Icon;
+        _icon.Texture = enemy.GetIconTexture();
         _titleLabel.Text = enemy.DisplayName;
         _descriptionLabel.Text = enemy.Description;
         ClearStats();
 
         if (enemy is EnemyMobData enemyMob)
         {
+            AddStat("Family", enemyMob.Family.ToString());
             AddStat("Health", enemyMob.MaxHealth.ToString());
             AddStat("Fame value", enemyMob.FameValue.ToString());
             AddStat("Scene", enemy.Scene == null ? "Not assigned" : enemy.Scene.ResourcePath);

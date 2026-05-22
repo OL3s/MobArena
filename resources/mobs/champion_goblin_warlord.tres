@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ChampionMobData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mobs/ChampionMobData.cs" id="1_champion"]
+[ext_resource type="Texture2D" path="res://assets/ui/mobs/champion_goblin_warlord.svg" id="2_icon"]
+[ext_resource type="Resource" path="res://resources/mob_appearances/champion_goblin_warlord.tres" id="3_appearance"]
+
+[resource]
+script = ExtResource("1_champion")
+DisplayName = "Goblin Warlord"
+Description = "A goblin champion meant to lead same-family support mobs."
+Icon = ExtResource("2_icon")
+Appearance = ExtResource("3_appearance")
+Scene = null
+Family = 1
+MaxHealth = 78
+FameValue = 72

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyMobData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mobs/EnemyMobData.cs" id="1_enemy"]
+[ext_resource type="Texture2D" path="res://assets/ui/mobs/undead_skeleton.svg" id="2_icon"]
+[ext_resource type="Resource" path="res://resources/mob_appearances/undead_skeleton.tres" id="3_appearance"]
+
+[resource]
+script = ExtResource("1_enemy")
+DisplayName = "Skeleton"
+Description = "A basic undead arena mob with more threat than starter families."
+Icon = ExtResource("2_icon")
+Appearance = ExtResource("3_appearance")
+Scene = null
+Family = 2
+MaxHealth = 22
+FameValue = 40

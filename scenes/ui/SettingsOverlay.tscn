@@ -157,6 +157,11 @@ custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "Delete Company Data"
 
+[node name="ClearRecordsButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Clear Records"
+
 [node name="DeleteSettingsButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2

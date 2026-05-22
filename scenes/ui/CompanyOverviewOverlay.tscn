@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/CompanyOverviewOverlay.cs" id="1_overview"]
 [ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_companylogo"]
@@ -6,6 +6,13 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
 shader = ExtResource("3_blur_shader")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_retire_button"]
+bg_color = Color(0.55, 0.08, 0.07, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [node name="CompanyOverviewOverlay" type="Control"]
 layout_mode = 3
@@ -157,6 +164,16 @@ custom_minimum_size = Vector2(150, 50)
 layout_mode = 2
 focus_mode = 2
 text = "Cemetery"
+
+[node name="RetireButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
+custom_minimum_size = Vector2(120, 50)
+layout_mode = 2
+focus_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.9, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_retire_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_retire_button")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_retire_button")
+text = "Retire"
 
 [node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
 custom_minimum_size = Vector2(150, 50)
