@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("1_champion")
-DisplayName = "Champion Green Slime"
+DisplayName = "Slime King"
 Description = "A larger arena slime marked as a champion contract target. Placeholder metadata until champion combat actors exist."
 Icon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")

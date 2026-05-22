@@ -7,7 +7,7 @@
 
 [resource]
 script = ExtResource("1_script")
-DisplayName = "Champion Green Slime Appearance"
+DisplayName = "Slime King Appearance"
 FaceIcon = ExtResource("2_face")
 BodyForward = ExtResource("3_forward")
 BodyBack = ExtResource("4_back")
