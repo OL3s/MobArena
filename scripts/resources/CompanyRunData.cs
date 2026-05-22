@@ -728,7 +728,7 @@ public partial class CompanyRunData : Resource
         controllerSetups ??= new Array<LocalInputControllerConfig>();
 
         var changed = PruneArenaControlAssignments(controllerSetups);
-        var usedControllerKeys = new System.Collections.Generic.HashSet<string>();
+        var usedControllerKeys = new System.Collections.Generic.HashSet<ArenaControlAssignmentData.ControllerIdentity>();
         foreach (var assignment in ArenaControlAssignments)
         {
             if (assignment != null)
@@ -786,7 +786,7 @@ public partial class CompanyRunData : Resource
     private bool PruneArenaControlAssignments(Array<LocalInputControllerConfig> controllerSetups)
     {
         var changed = false;
-        var usedControllerKeys = new System.Collections.Generic.HashSet<string>();
+        var usedControllerKeys = new System.Collections.Generic.HashSet<ArenaControlAssignmentData.ControllerIdentity>();
         for (var index = ArenaControlAssignments.Count - 1; index >= 0; index--)
         {
             var assignment = ArenaControlAssignments[index];
@@ -808,7 +808,7 @@ public partial class CompanyRunData : Resource
         return changed;
     }
 
-    private static LocalInputControllerConfig GetFirstUnusedControllerSetup(Array<LocalInputControllerConfig> controllerSetups, System.Collections.Generic.HashSet<string> usedControllerKeys)
+    private static LocalInputControllerConfig GetFirstUnusedControllerSetup(Array<LocalInputControllerConfig> controllerSetups, System.Collections.Generic.HashSet<ArenaControlAssignmentData.ControllerIdentity> usedControllerKeys)
     {
         foreach (var controllerSetup in controllerSetups)
         {
@@ -822,9 +822,9 @@ public partial class CompanyRunData : Resource
         return null;
     }
 
-    private static bool ControllerSetupExists(Array<LocalInputControllerConfig> controllerSetups, string controllerKey)
+    private static bool ControllerSetupExists(Array<LocalInputControllerConfig> controllerSetups, ArenaControlAssignmentData.ControllerIdentity controllerKey)
     {
-        if (controllerSetups == null || string.IsNullOrEmpty(controllerKey))
+        if (controllerSetups == null)
             return false;
 
         foreach (var controllerSetup in controllerSetups)

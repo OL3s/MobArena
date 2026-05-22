@@ -137,6 +137,29 @@ layout_mode = 2
 text = "60%"
 vertical_alignment = 1
 
+[node name="ArenaMoveDeadzoneRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ArenaMoveDeadzoneLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/ArenaMoveDeadzoneRow"]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+text = "Arena move deadzone"
+vertical_alignment = 1
+
+[node name="ArenaMoveDeadzoneSpinBox" type="SpinBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/ArenaMoveDeadzoneRow"]
+custom_minimum_size = Vector2(110, 44)
+layout_mode = 2
+max_value = 95.0
+step = 1.0
+value = 30.0
+suffix = "%"
+
+[node name="ArenaMoveDeadzoneValueLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/ArenaMoveDeadzoneRow"]
+layout_mode = 2
+text = "30%"
+vertical_alignment = 1
+
 [node name="SaveDataSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
 visible = false
 layout_mode = 2

@@ -48,11 +48,7 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasGamepadPlayer(deviceId))
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create(
-			$"Gamepad {ControllerSetups.Count + 1}",
-			LocalInputControllerConfig.ControllerKind.Gamepad,
-			deviceId,
-			XboxAIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, deviceId, XboxAIcon));
 		return true;
 	}
 
@@ -61,7 +57,7 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasKeyboardPlayer)
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create("Keyboard", LocalInputControllerConfig.ControllerKind.Keyboard, -1, EnterIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, EnterIcon));
 		return true;
 	}
 
@@ -70,7 +66,7 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasTouchPlayer)
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create("Touch", LocalInputControllerConfig.ControllerKind.Touch, -1, PhoneIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Touch, -1, PhoneIcon));
 		return true;
 	}
 

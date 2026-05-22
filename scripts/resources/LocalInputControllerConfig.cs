@@ -12,9 +12,6 @@ public partial class LocalInputControllerConfig : Resource
 	}
 
 	[Export]
-	public string ControllerName { get; set; } = "Keyboard";
-
-	[Export]
 	public ControllerKind Kind { get; set; } = ControllerKind.Keyboard;
 
 	[Export]
@@ -26,15 +23,23 @@ public partial class LocalInputControllerConfig : Resource
 	[Export]
 	public bool IsJoined { get; set; } = true;
 
-	public static LocalInputControllerConfig Create(string controllerName, ControllerKind kind, int deviceId, Texture2D icon, bool isJoined = true)
+	public string DisplayName => GetDisplayName(Kind, DeviceId);
+
+	public static LocalInputControllerConfig Create(ControllerKind kind, int deviceId, Texture2D icon, bool isJoined = true)
 	{
 		return new LocalInputControllerConfig
 		{
-			ControllerName = controllerName,
 			Kind = kind,
 			DeviceId = deviceId,
 			Icon = icon,
 			IsJoined = isJoined
 		};
+	}
+
+	public static string GetDisplayName(ControllerKind kind, int deviceId)
+	{
+		return kind == ControllerKind.Gamepad
+			? $"{kind} {deviceId}"
+			: kind.ToString();
 	}
 }

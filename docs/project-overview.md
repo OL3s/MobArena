@@ -18,6 +18,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - Contract participant controls are assigned from the Arena launch flow instead of being finalized globally from the main menu.
 - `scenes/town.tscn` is the between-fights management scene. It uses a neutral root with a `Node2D` world plus a `CanvasLayer` controller UI.
 - `scenes/arena.tscn` is the arena contract placeholder. It uses a neutral root with a `Node2D` world plus a `CanvasLayer` controller UI.
+- Arena launches should go through real roster, contract, and control assignment data. The town HUD dev menu has `Quickstart arena` for fast iteration with existing roster gladiators and fixed Keyboard/Touch/Gamepad assignments.
 - `scripts/MainMenu.cs`, `scripts/Town.cs`, and `scripts/Arena.cs` contain the C# scripts for the initial navigation flow.
 - `assets/ui/company_shield_highres.svg` provides the current project/app icon.
 - `.gitignore` excludes Godot editor state and Android export output.
@@ -31,6 +32,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 3. Town-center `RosterYard` represents the active roster-management surface.
 4. Current town buildings open modal overlay packed scenes over town through `GlobalOverlay`.
 5. `scenes/arena.tscn` is still present as an arena combat placeholder.
+6. Arena startup should be reached through the town contract flow and its control setup overlay.
 
 ## Scene Structure
 

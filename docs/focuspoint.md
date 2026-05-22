@@ -29,7 +29,8 @@ The current town-management foundation is in place.
 - Character visuals are split through shared `CharacterAppearanceData` resources. `GladiatorAppearanceData` lives under `resources/gladiator_appearances/`, while `MobAppearanceData` lives under `resources/mob_appearances/`. These resources hold `FaceIcon` for menus/cards/HUD UI plus `BodyForward` and `BodyBack` for town/arena world presentation. The town roster yard renders gladiator `BodyForward`; UI overlays continue using `GetPortraitTexture()`. Mob resources still expose legacy `Icon` as a fallback, but authored mobs now also reference appearance resources and should use `GetIconTexture()`, `GetBodyForwardTexture()`, or `GetBodyBackTexture()` in new code.
 - New companies start with no gladiators. Market recruitment is the first step, and recruit health varies from 20-100% max health with buy/sell value based on current readiness.
 - Equipment ownership exists, but equipping/unequipping items onto gladiators is not implemented yet.
-- Contract resources are now partially implemented through `ArenaContractData` and `resources/contracts/starter_slime_pit.tres`. Arena combat startup/result handling is still placeholder-level.
+- Contract resources are now partially implemented through `ArenaContractData` and `resources/contracts/starter_slime_pit.tres`. Arena startup now has first-pass spawn nodes: `ArenaPlayerSpawner` spawns assigned arena gladiators from `CompanyRunData.TownAssignments.ArenaGladiators`, and `ArenaEnemySpawner` spawns enemies from `CompanyRunData.ActiveArenaContract.Mobs`, using packed mob scenes when present and fallback metadata visuals otherwise. Arena combat/result handling is still placeholder-level.
+- The town HUD dev menu has `Quickstart arena`, which uses existing roster gladiators instead of fake test data: first four gladiators are assigned to enum-derived Keyboard, Touch, Gamepad 0, and Gamepad 1 identities, then the first generated contract launches through the arena scene.
 - Company customization was expanded on `feature/company-customization`: the editor now supports shield shape, muted shield color, logo icon, logo size, random company names, and full randomization. New company creation opens with a randomized identity. Name generation lives in `CompanyNameGenerator`, while logo state/rendering stays in `CompanyLogoData`/`CompanyLogo`.
 - A project CLI save-data delete path exists: `godot --headless -- --delete-savedata`, with aliases `--delete`, `--del-storage`, and `--delete-user-data`. It calls `SaveNode.DeleteSave()` and suppresses exit autosave.
 - Completed company history now has a saved resource foundation: `CompletedCompanyHistory` stores capped, fame-sorted `CompletedCompanyRecord` entries with identity, career totals, and final fame only. `SaveNode.TryAddCurrentCompanyToCompletedHistory()` snapshots the active company if it qualifies. The main menu top-right `Records` button opens `CompletedCompaniesOverlay`, which shows `[list][details]` for saved completed companies and can delete entries. Details stay hidden until a company is pressed.
@@ -48,7 +49,7 @@ The current town-management foundation is in place.
 
 Work the short-term backlog in this order unless the user redirects.
 
-1. Move controller configuration into contract start: configure local controllers dynamically each time a contract is launched, not from main menu/global setup.
+1. Continue arena combat startup: replace placeholder spawned views with runtime player/enemy actor behavior, movement, health, and basic attack handling.
 2. `#18 Equip inventory items onto gladiators with validation`
 3. `#3 Add item combat stats and equipment requirements`
 4. `#49 Improve gladiator market recruit cards and variety`
@@ -58,10 +59,11 @@ Work the short-term backlog in this order unless the user redirects.
 
 ## Immediate Direction
 
-- Continue polishing controller configuration at contract launch. The current flow opens arena control setup from Start, assigns controls left-to-right with Enter/touch/gamepad A, then prompts to launch or reset.
+- Arena players now sample their stored control assignment for simple movement: keyboard uses WASD/arrows, touch uses screen drag, and gamepads use left stick/D-pad by device id. Continue from this into attacks, animation facing, and touch-control polish.
 - Do not make the main menu the place where contract control setup is finalized. Main menu controls can remain a general display/settings entry point, but contract participant/controller mapping should stay resolved immediately before starting a contract.
 - Keep launch validation in run/resource APIs where practical so stale controller setup or assignment state cannot start a contract accidentally.
-- After contract-launch controller config, continue with equipment assignment: let players equip/unequip items from `CompanyRunData.Inventory` onto a gladiator's `GladiatorEquipmentData`.
+- Continue from the arena spawn foundation by adding real player and enemy actor behavior while preserving the spawner API boundary: player actors come from assigned gladiators/control assignments, enemies come from the active contract mob resources.
+- After the first arena actor behavior is usable, continue with equipment assignment: let players equip/unequip items from `CompanyRunData.Inventory` onto a gladiator's `GladiatorEquipmentData`.
 - Future-facing equipment work should make equipped inventory/gear visible on gladiator body art in the town roster and arena, not only in menus. UI can keep using face icons, but world/body presentation should eventually layer or swap visible armor/weapons based on `GladiatorEquipmentData`.
 - Preserve slot rules: armor/main-hand/off-hand type validation, two-handed main-hand clearing or blocking off-hand, and replaced equipment returning to inventory.
 - Prefer using the existing town drag/drop system. Dragging equipment onto roaming roster-yard gladiators should be the primary physical interaction, with an overlay/button path only if needed for clarity.

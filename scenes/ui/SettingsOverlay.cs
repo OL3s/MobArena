@@ -23,6 +23,8 @@ public partial class SettingsOverlay : Control
 	private CheckBox _debugCheckBox;
 	private Label _lowHealthValueLabel;
 	private SpinBox _lowHealthSpinBox;
+	private Label _arenaMoveDeadzoneValueLabel;
+	private SpinBox _arenaMoveDeadzoneSpinBox;
 	private Label _placeholderLabel;
 	private bool _refreshingUi;
 
@@ -39,6 +41,8 @@ public partial class SettingsOverlay : Control
 		_debugCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/DebugCheckBox");
 		_lowHealthValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthValueLabel");
 		_lowHealthSpinBox = GetNode<SpinBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthSpinBox");
+		_arenaMoveDeadzoneValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/ArenaMoveDeadzoneRow/ArenaMoveDeadzoneValueLabel");
+		_arenaMoveDeadzoneSpinBox = GetNode<SpinBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/ArenaMoveDeadzoneRow/ArenaMoveDeadzoneSpinBox");
 
 		_videoButton.Pressed += () => ShowCategory(VideoCategory);
 		_soundButton.Pressed += () => ShowCategory(SoundCategory);
@@ -46,6 +50,7 @@ public partial class SettingsOverlay : Control
 		_saveDataButton.Pressed += () => ShowCategory(SaveDataCategory);
 		_debugCheckBox.Toggled += OnDebugToggled;
 		_lowHealthSpinBox.ValueChanged += OnLowHealthWarningChanged;
+		_arenaMoveDeadzoneSpinBox.ValueChanged += OnArenaMoveDeadzoneChanged;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteRunButton").Pressed += OnDeleteRunDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteCompanyButton").Pressed += OnDeleteCompanyDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/ClearRecordsButton").Pressed += OnClearRecordsPressed;
@@ -93,6 +98,8 @@ public partial class SettingsOverlay : Control
 		_debugCheckBox.ButtonPressed = settingsConfig.DebugEnabled;
 		_lowHealthSpinBox.Value = Mathf.RoundToInt(settingsConfig.LowHealthWarningRatio * 100f);
 		_lowHealthValueLabel.Text = $"{_lowHealthSpinBox.Value:0}%";
+		_arenaMoveDeadzoneSpinBox.Value = Mathf.RoundToInt(settingsConfig.ArenaMoveDeadzone * 100f);
+		_arenaMoveDeadzoneValueLabel.Text = $"{_arenaMoveDeadzoneSpinBox.Value:0}%";
 		_refreshingUi = false;
 	}
 
@@ -119,6 +126,19 @@ public partial class SettingsOverlay : Control
 			return;
 
 		settingsConfig.LowHealthWarningRatio = Mathf.Clamp((float)value / 100f, 0.1f, 1f);
+		RefreshSettingsUi();
+	}
+
+	private void OnArenaMoveDeadzoneChanged(double value)
+	{
+		if (_refreshingUi)
+			return;
+
+		var settingsConfig = SaveNode.Get().SettingsConfig;
+		if (settingsConfig == null)
+			return;
+
+		settingsConfig.ArenaMoveDeadzone = Mathf.Clamp((float)value / 100f, 0f, 0.95f);
 		RefreshSettingsUi();
 	}
 

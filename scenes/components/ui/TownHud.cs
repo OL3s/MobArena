@@ -12,6 +12,7 @@ public partial class TownHud : CanvasLayer
 	private const int DevActionWinArena = 1;
 	private const int DevActionAddDefaultGladiator = 2;
 	private const int DevActionAddGold = 3;
+	private const int DevActionQuickstartArena = 4;
 	private const int DevActionWeatherCloudy = 101;
 	private const int DevActionWeatherSun = 102;
 	private const int DevActionWeatherRain = 103;
@@ -19,6 +20,8 @@ public partial class TownHud : CanvasLayer
 	private const string CompanyLogoEditorScenePath = "res://scenes/ui/CompanyLogoEditorOverlay.tscn";
 	private const string CompanyOverviewScenePath = "res://scenes/ui/CompanyOverviewOverlay.tscn";
 	private const string GladiatorDeathOverlayScenePath = "res://scenes/ui/GladiatorDeathOverlay.tscn";
+	private const string ArenaScenePath = "res://scenes/arena.tscn";
+	private const string StarterSlimePitContractPath = "res://resources/contracts/starter_slime_pit.tres";
 	private const string NextDaySummaryOverlayScenePath = "res://scenes/town_overlays/next_day_summary_overlay.tscn";
 	private const string TownHoverInfoPanelScenePath = "res://scenes/components/ui/TownHoverInfoPanel.tscn";
 	private const string CloudyWeatherIconPath = "res://assets/ui/icons/clear.svg";
@@ -218,6 +221,8 @@ public partial class TownHud : CanvasLayer
 		popup.AddItem("Win arena", DevActionWinArena);
 		popup.AddItem("Add default gladiator", DevActionAddDefaultGladiator);
 		popup.AddItem("Add 1000 gold", DevActionAddGold);
+		popup.AddSeparator();
+		popup.AddItem("Quickstart arena", DevActionQuickstartArena);
 		SetupDevWeatherMenu(popup);
 		popup.IdPressed += OnDevMenuIdPressed;
 	}
@@ -256,11 +261,120 @@ public partial class TownHud : CanvasLayer
 			case DevActionAddGold:
 				_saveNode.CompanyRunData?.AddGold(1000, _saveNode.CompanyCareerData);
 				break;
+			case DevActionQuickstartArena:
+				QuickstartArena();
+				return;
 			default:
 				return;
 		}
 
 		_saveNode.Save();
+	}
+
+	private void QuickstartArena()
+	{
+		var runData = _saveNode?.CompanyRunData;
+		if (runData == null)
+		{
+			GD.PushError("Quickstart arena failed: company run data is missing.");
+			return;
+		}
+
+		runData.EnsureResources();
+		if (runData.Gladiators.Count <= 0)
+			return;
+
+		var contract = GetQuickstartContract(runData.Fame, _phaseState?.IsChampionDay == true);
+		if (contract == null)
+		{
+			GD.PushError("Quickstart arena failed: no contract is available.");
+			return;
+		}
+
+		var localInputConfig = LocalInputConfig.Get();
+		localInputConfig?.ClearControllerSetups();
+		runData.ClearArenaControlAssignments();
+		var previousArenaGladiators = new Godot.Collections.Array<GladiatorData>(runData.TownAssignments.ArenaGladiators);
+		foreach (var gladiator in previousArenaGladiators)
+		{
+			if (gladiator != null)
+				runData.TryMoveGladiatorToCourtyard(gladiator);
+		}
+
+		var controllerSetups = CreateQuickstartControllerSetups(localInputConfig, Mathf.Min(runData.Gladiators.Count, LocalInputConfig.MaxLocalPlayers));
+		for (var index = 0; index < controllerSetups.Count; index++)
+		{
+			var gladiator = runData.Gladiators[index];
+			if (gladiator == null)
+				continue;
+
+			if (!runData.TryAssignGladiatorToTownLocation(gladiator, TownAssignmentData.AssignmentLocation.Arena, LocalInputConfig.MaxLocalPlayers))
+				continue;
+
+			runData.TrySetArenaControlAssignment(gladiator, controllerSetups[index]);
+		}
+
+		runData.SetActiveArenaContract(contract);
+		runData.NotifyRunChanged();
+		_saveNode.Save();
+		GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
+		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, ArenaScenePath);
+	}
+
+	private static ArenaContractData GetQuickstartContract(int companyFame, bool isChampionDay)
+	{
+		var generatedContracts = ArenaContractGenerator.GenerateRandomContracts(companyFame, isChampionDay);
+		if (generatedContracts.Count > 0)
+			return generatedContracts[0];
+
+		return ResourceLoader.Load<ArenaContractData>(StarterSlimePitContractPath);
+	}
+
+	private static Godot.Collections.Array<LocalInputControllerConfig> CreateQuickstartControllerSetups(LocalInputConfig localInputConfig, int controllerCount)
+	{
+		var controllerSetups = new Godot.Collections.Array<LocalInputControllerConfig>();
+		for (var index = 0; index < controllerCount; index++)
+		{
+			switch (index)
+			{
+				case 0:
+					localInputConfig?.TryJoinKeyboard();
+					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Keyboard, -1)
+						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, null));
+					break;
+				case 1:
+					localInputConfig?.TryJoinTouch();
+					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Touch, -1)
+						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Touch, -1, null));
+					break;
+				case 2:
+					localInputConfig?.TryJoinGamepad(0);
+					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Gamepad, 0)
+						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 0, null));
+					break;
+				case 3:
+					localInputConfig?.TryJoinGamepad(1);
+					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Gamepad, 1)
+						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 1, null));
+					break;
+			}
+		}
+
+		return controllerSetups;
+	}
+
+	private static LocalInputControllerConfig GetControllerSetup(LocalInputConfig localInputConfig, LocalInputControllerConfig.ControllerKind kind, int deviceId)
+	{
+		if (localInputConfig == null)
+			return null;
+
+		foreach (var controllerSetup in localInputConfig.ControllerSetups)
+		{
+			if (controllerSetup?.Kind == kind && controllerSetup.DeviceId == deviceId)
+				return controllerSetup;
+		}
+
+		return null;
 	}
 
 	private void OnDevWeatherMenuIdPressed(long id)
@@ -446,7 +560,27 @@ public partial class TownHud : CanvasLayer
 			return;
 
 		_devButton.Visible = _saveNode?.DebugEnabled == true;
-		_devButton.GetPopup().SetItemDisabled(0, !_phaseState.IsDay());
+		var popup = _devButton.GetPopup();
+		popup.SetItemDisabled(0, !_phaseState.IsDay());
+
+		var quickstartIndex = popup.GetItemIndex(DevActionQuickstartArena);
+		if (quickstartIndex < 0)
+			return;
+
+		var gladiatorCount = _saveNode?.CompanyRunData?.Gladiators?.Count ?? 0;
+		popup.SetItemDisabled(quickstartIndex, gladiatorCount <= 0);
+		popup.SetItemTooltip(quickstartIndex, gladiatorCount <= 0
+			? "Buy at least one gladiator before quickstarting the arena."
+			: $"Assign the first up to four gladiators to {GetQuickstartControllerOrderLabel()} and launch the first contract.");
+	}
+
+	private static string GetQuickstartControllerOrderLabel()
+	{
+		return string.Join(", ",
+			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Keyboard, -1),
+			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Touch, -1),
+			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Gamepad, 0),
+			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Gamepad, 1));
 	}
 
 	private void RefreshNextDayButton()

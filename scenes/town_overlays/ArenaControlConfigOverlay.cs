@@ -323,11 +323,11 @@ public partial class ArenaControlConfigOverlay : Control
             return;
 
         if (!_localInputConfig.HasKeyboardPlayer)
-            AddPrompt(_localInputConfig.EnterIcon, "Keyboard");
+            AddPrompt(_localInputConfig.EnterIcon, LocalInputControllerConfig.ControllerKind.Keyboard.ToString());
         if (!_localInputConfig.HasTouchPlayer)
-            AddPrompt(_localInputConfig.PhoneIcon, "Touch");
+            AddPrompt(_localInputConfig.PhoneIcon, LocalInputControllerConfig.ControllerKind.Touch.ToString());
         if (_localInputConfig.CanJoin)
-            AddPrompt(_localInputConfig.XboxAIcon, "Gamepad");
+            AddPrompt(_localInputConfig.XboxAIcon, LocalInputControllerConfig.ControllerKind.Gamepad.ToString());
     }
 
     private void AddPrompt(Texture2D icon, string label)
@@ -391,9 +391,6 @@ public partial class ArenaControlConfigOverlay : Control
         if (assignment == null)
             return "Unassigned";
 
-        var deviceLabel = assignment.ControllerKind == LocalInputControllerConfig.ControllerKind.Gamepad
-            ? $" device {assignment.DeviceId}"
-            : string.Empty;
-        return $"{assignment.ControllerName} ({assignment.ControllerKind}{deviceLabel})";
+        return assignment.DisplayName;
     }
 }

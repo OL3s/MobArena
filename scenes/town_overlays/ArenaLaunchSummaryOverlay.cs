@@ -254,9 +254,6 @@ public partial class ArenaLaunchSummaryOverlay : Control
         if (assignment == null)
             return "Unassigned";
 
-        var deviceLabel = assignment.ControllerKind == LocalInputControllerConfig.ControllerKind.Gamepad
-            ? $" device {assignment.DeviceId}"
-            : string.Empty;
-        return $"{assignment.ControllerName} ({assignment.ControllerKind}{deviceLabel})";
+        return assignment.DisplayName;
     }
 }
