@@ -181,16 +181,16 @@ public partial class ArenaLaunchSummaryOverlay : Control
         var contractGold = _contract?.GoldReward ?? 0;
         var lossDelta = -cityCost;
         var winDelta = contractGold - cityCost;
-        var lossGold = currentGold + lossDelta;
-        var winGold = currentGold + winDelta;
-        _costLineLabel.Text = "Gold change after arena";
-        _startButton.Disabled = _runData == null || lossGold < 0;
-        _startButton.TooltipText = lossGold < 0 ? "Not enough gold to cover city costs after the arena." : "Start the arena contract.";
+		var lossGold = currentGold + lossDelta;
+		var winGold = currentGold + winDelta;
+		_costLineLabel.Text = "Gold change after arena";
+		_startButton.Disabled = _runData == null;
+		_startButton.TooltipText = lossGold < 0 ? "Start the arena contract and go into debt if needed." : "Start the arena contract.";
 
-        if (cityCost > 0)
-        {
-            AddCostDetail("City cost", FormatSignedGold(lossDelta), lossGold < 0);
-        }
+		if (cityCost > 0)
+		{
+			AddCostDetail("On loss", FormatSignedGold(lossDelta), lossGold < 0);
+		}
 
         AddCostDetail("On win", FormatSignedGold(winDelta), winGold < 0);
     }

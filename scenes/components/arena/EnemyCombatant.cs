@@ -22,6 +22,11 @@ public partial class EnemyCombatant : ArenaCombatant
         Refresh();
     }
 
+    public override void _PhysicsProcess(double delta)
+    {
+        MoveWithSoftCollisionOnly();
+    }
+
     public void ConfigureEnemy(EnemyMobData mobData)
     {
         MobData = mobData;

@@ -35,7 +35,7 @@ public partial class Arena : Node
 		if (_weatherState != null)
 			_weatherState.WeatherChanged += RefreshWeatherVisuals;
 
-		_statusLabel = GetNode<Label>("ControllerUi/StatusPanel/Row/Status");
+		_statusLabel = GetNodeOrNull<Label>("ControllerUi/StatusPanel/Row/Status");
 		_debugWinButton = GetNode<Button>("ControllerUi/StatusPanel/Row/DebugWinButton");
 		_debugLoseButton = GetNode<Button>("ControllerUi/StatusPanel/Row/DebugLoseButton");
 		_debugWinButton.Pressed += ResolveContractWin;
@@ -105,6 +105,9 @@ public partial class Arena : Node
 
 	private void RefreshStatus()
 	{
+		if (_statusLabel == null)
+			return;
+
 		var contract = _runData?.ActiveArenaContract;
 		if (contract == null)
 		{

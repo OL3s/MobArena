@@ -1,6 +1,7 @@
 shader_type canvas_item;
 
 uniform float intensity : hint_range(0.0, 1.0) = 0.6;
+uniform vec2 uv_scale = vec2(1.0, 1.0);
 uniform vec4 cloud_color : source_color = vec4(0.025, 0.035, 0.06, 0.48);
 
 float hash(vec2 value) {
@@ -21,7 +22,8 @@ float noise(vec2 value) {
 }
 
 void fragment() {
-    float cloud = noise(UV * vec2(4.0, 2.4) + vec2(TIME * 0.035, TIME * 0.015));
-    float density = 0.72 + cloud * 0.28;
+    vec2 uv = UV * uv_scale;
+    float cloud = noise(uv * vec2(4.3, 2.7) + vec2(TIME * 0.035, TIME * 0.015));
+    float density = 0.4 + cloud * 0.22;
     COLOR = cloud_color * density * intensity;
 }

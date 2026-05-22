@@ -52,11 +52,11 @@ public partial class NextDaySummaryOverlay : Control
             child.QueueFree();
 
         var currentGold = _runData?.Gold ?? 0;
-        var cityCost = _runData?.GetCurrentPhaseGoldCost(_phaseState) ?? 0;
-        var nextGold = currentGold - cityCost;
-        _costLineLabel.Text = "City & Salary cost";
-        _nextDayButton.Disabled = _runData == null || nextGold < 0;
-        _nextDayButton.TooltipText = nextGold < 0 ? "Not enough gold to advance to the next day." : "Apply these changes and advance to the next day.";
+		var cityCost = _runData?.GetCurrentPhaseGoldCost(_phaseState) ?? 0;
+		var nextGold = currentGold - cityCost;
+		_costLineLabel.Text = "City & Salary cost";
+		_nextDayButton.Disabled = _runData == null;
+		_nextDayButton.TooltipText = nextGold < 0 ? "Apply these changes and go into debt." : "Apply these changes and advance to the next day.";
 
         if (cityCost > 0)
             AddCostDetail("Total", FormatSignedGold(-cityCost), nextGold < 0);

@@ -294,6 +294,15 @@ public partial class CompanyRunData : Resource
         return true;
     }
 
+    public void SpendGoldAllowDebt(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        Gold -= amount;
+        EmitSignal(SignalName.RunChanged);
+    }
+
     public void SetActiveArenaContract(ArenaContractData contractData)
     {
         ActiveArenaContract = contractData;
@@ -1047,7 +1056,8 @@ public partial class CompanyRunData : Resource
 
     public bool PayNightSalary()
     {
-        return TrySpendGold(GetNightSalaryGoldCost());
+        SpendGoldAllowDebt(GetNightSalaryGoldCost());
+        return true;
     }
 
     public void ExecutePhaseBuildingWork()
@@ -1082,9 +1092,7 @@ public partial class CompanyRunData : Resource
             if (!CanExecuteTreatmentPhaseWork(gladiator))
                 continue;
 
-            if (!TrySpendGold(TreatmentGoldCostPerGladiator))
-                break;
-
+            SpendGoldAllowDebt(TreatmentGoldCostPerGladiator);
             ExecuteTreatmentPhaseWorkForGladiator(gladiator);
         }
     }
@@ -1136,9 +1144,7 @@ public partial class CompanyRunData : Resource
             if (!CanExecuteTrainingPhaseWork(gladiator))
                 continue;
 
-            if (!TrySpendGold(TrainingGoldCostPerGladiator))
-                break;
-
+            SpendGoldAllowDebt(TrainingGoldCostPerGladiator);
             gladiator.SpendStamina(TrainingStaminaCost);
             gladiator.SetExhaustion(gladiator.Exhaustion - TrainingExhaustionCost);
             ApplyTrainingFocus(gladiator);

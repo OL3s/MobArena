@@ -1,9 +1,16 @@
-[gd_scene format=3 uid="uid://de7dkvw2b566m"]
+[gd_scene load_steps=8 format=3 uid="uid://de7dkvw2b566m"]
 
 [ext_resource type="Script" uid="uid://d27fggtn36djs" path="res://scripts/Arena.cs" id="1_arena"]
 [ext_resource type="PackedScene" path="res://scenes/components/environment/EnvironmentVisualOverlay.tscn" id="2_environment_overlay"]
 [ext_resource type="PackedScene" path="res://scenes/components/arena/ArenaPlayerSpawner.tscn" id="3_player_spawner"]
 [ext_resource type="PackedScene" path="res://scenes/components/arena/ArenaEnemySpawner.tscn" id="4_enemy_spawner"]
+[ext_resource type="Script" path="res://scenes/components/arena/ArenaPlayerCamera.cs" id="5_player_camera"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_horizontal_wall"]
+size = Vector2(1084, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_vertical_wall"]
+size = Vector2(32, 634)
 
 [node name="Arena" type="Node" unique_id=1214353618]
 script = ExtResource("1_arena")
@@ -20,41 +27,77 @@ grow_vertical = 2
 color = Color(0.18, 0.13, 0.09, 1)
 
 [node name="EnvironmentOverlay" parent="." unique_id=2029519349 instance=ExtResource("2_environment_overlay")]
+follow_viewport_enabled = true
 
 [node name="World" type="Node2D" parent="." unique_id=2082888250]
 
 [node name="WorldCamera" type="Camera2D" parent="World" unique_id=1577092550]
 position = Vector2(576, 324)
+script = ExtResource("5_player_camera")
 
 [node name="CombatRing" type="ColorRect" parent="World" unique_id=210809203]
-offset_left = 236.0
-offset_top = 134.0
-offset_right = 916.0
-offset_bottom = 514.0
+offset_left = 66.0
+offset_top = 39.0
+offset_right = 1086.0
+offset_bottom = 609.0
 color = Color(0.32, 0.22, 0.14, 1)
 
 [node name="CenterMarker" type="Label" parent="World" unique_id=1115223421]
-offset_left = 236.0
-offset_top = 134.0
-offset_right = 916.0
-offset_bottom = 514.0
+offset_left = 66.0
+offset_top = 39.0
+offset_right = 1086.0
+offset_bottom = 609.0
 theme_override_font_sizes/font_size = 36
 text = "Arena Prototype"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="ArenaWalls" type="Node2D" parent="World"]
+
+[node name="TopWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(576, 23)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/TopWall"]
+shape = SubResource("RectangleShape2D_arena_horizontal_wall")
+
+[node name="BottomWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(576, 625)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/BottomWall"]
+shape = SubResource("RectangleShape2D_arena_horizontal_wall")
+
+[node name="LeftWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(50, 324)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/LeftWall"]
+shape = SubResource("RectangleShape2D_arena_vertical_wall")
+
+[node name="RightWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(1102, 324)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/RightWall"]
+shape = SubResource("RectangleShape2D_arena_vertical_wall")
+
 [node name="PlayerSpawner" parent="World" unique_id=2028688804 instance=ExtResource("3_player_spawner")]
-position = Vector2(336, 324)
+position = Vector2(206, 324)
 
 [node name="EnemySpawner" parent="World" unique_id=380484858 instance=ExtResource("4_enemy_spawner")]
-position = Vector2(744, 324)
+position = Vector2(946, 324)
 
 [node name="ControllerUi" type="CanvasLayer" parent="." unique_id=913489465]
 
 [node name="StatusPanel" type="PanelContainer" parent="ControllerUi" unique_id=1841787377]
 anchors_preset = 10
 anchor_right = 1.0
-offset_left = 16.0
+offset_left = 820.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = 72.0
@@ -63,12 +106,6 @@ grow_horizontal = 2
 [node name="Row" type="HBoxContainer" parent="ControllerUi/StatusPanel" unique_id=1791650149]
 layout_mode = 2
 theme_override_constants/separation = 12
-
-[node name="Status" type="Label" parent="ControllerUi/StatusPanel/Row" unique_id=584641140]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Starter Contract: defeat slimes. Combat systems coming next."
-autowrap_mode = 3
 
 [node name="DebugWinButton" type="Button" parent="ControllerUi/StatusPanel/Row" unique_id=116829263]
 visible = false

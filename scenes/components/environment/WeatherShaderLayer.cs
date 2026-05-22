@@ -6,6 +6,7 @@ namespace MobArena.Scenes.Components.Environment;
 public partial class WeatherShaderLayer : Control
 {
     private const string ShaderIntensityParameter = "intensity";
+    private const string ShaderUvScaleParameter = "uv_scale";
 
     [Export]
     public ShaderMaterial ClearMaterial { get; set; }
@@ -68,7 +69,7 @@ public partial class WeatherShaderLayer : Control
         Visible = ClearMaterial != null && ClearIntensity > 0f;
     }
 
-    private static void ApplyLayer(ColorRect layer, ShaderMaterial material, float intensity)
+    private void ApplyLayer(ColorRect layer, ShaderMaterial material, float intensity)
     {
         if (layer == null)
             return;
@@ -77,6 +78,20 @@ public partial class WeatherShaderLayer : Control
         layer.Visible = material != null && intensity > 0f;
 
         if (material != null)
+        {
             material.SetShaderParameter(ShaderIntensityParameter, intensity);
+            material.SetShaderParameter(ShaderUvScaleParameter, GetLayerUvScale(layer));
+        }
+    }
+
+    private Vector2 GetLayerUvScale(Control layer)
+    {
+        var viewportSize = GetViewportRect().Size;
+        if (viewportSize.X <= 0f || viewportSize.Y <= 0f || layer == null)
+            return Vector2.One;
+
+        return new Vector2(
+            Mathf.Max(layer.Size.X / viewportSize.X, 1f),
+            Mathf.Max(layer.Size.Y / viewportSize.Y, 1f));
     }
 }

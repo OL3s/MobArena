@@ -1,4 +1,6 @@
 using Godot;
+using MobArena.Scripts.Resources.Combat;
+using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scripts.Resources;
 
@@ -105,6 +107,26 @@ public partial class GladiatorData : Resource
             return GladiatorRiskStatus.Exhausted;
 
         return isLowHealth ? GladiatorRiskStatus.LowHealth : GladiatorRiskStatus.None;
+    }
+
+    public int GetArmorValue(ArmorDamageType damageType)
+    {
+        return Equipment?.Armor?.GetArmorValue(damageType) ?? 0;
+    }
+
+    public int ApplyArmorToDamage(int damage, ArmorDamageType damageType)
+    {
+        return ArmorItemData.ApplyArmorToDamage(damage, GetArmorValue(damageType));
+    }
+
+    public int ApplyArmorToDamage(CombatDamageData damageData)
+    {
+        return damageData?.GetMitigatedTotalDamage(this) ?? 0;
+    }
+
+    public int GetArmorSpecialtyValue(ArmorSpecialType specialType)
+    {
+        return Equipment?.Armor?.GetSpecialtyValue(specialType) ?? 0;
     }
 
     public static GladiatorData CreateDefault()

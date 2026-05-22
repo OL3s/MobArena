@@ -5,8 +5,21 @@ namespace MobArena.Scenes.Components.Arena;
 
 public abstract partial class ArenaCombatant : CharacterBody2D
 {
+    private const string ArenaCombatantGroup = "arena_combatants";
+    private const uint WallCollisionMask = 1u;
+    private const uint CombatantCollisionLayer = 2u;
+
     [Export]
     public float MoveSpeed { get; protected set; } = 160f;
+
+    [Export]
+    public float SoftCollisionRadius { get; protected set; } = 28f;
+
+    [Export]
+    public float SoftCollisionStrength { get; protected set; } = 180f;
+
+    [Export]
+    public float MaxSoftCollisionSpeed { get; protected set; } = 160f;
 
     [Export]
     public Vector2 LookDirection { get; private set; } = Vector2.Zero;
@@ -14,26 +27,65 @@ public abstract partial class ArenaCombatant : CharacterBody2D
     protected void ConfigureTopDownMotion()
     {
         MotionMode = MotionModeEnum.Floating;
+        CollisionLayer = CombatantCollisionLayer;
+        CollisionMask = WallCollisionMask;
+        AddToGroup(ArenaCombatantGroup);
     }
 
     protected void MoveWithDirection(Vector2 direction)
     {
-        Velocity = direction.Normalized() * MoveSpeed;
+        Velocity = direction.Normalized() * MoveSpeed + GetSoftCollisionVelocity();
         SetLookDirectionFromInput(direction);
         MoveAndSlide();
     }
 
     protected void MoveWithInputState(ArenaCombatInputState inputState)
     {
-        if (inputState?.IsMoving != true)
+        var desiredVelocity = inputState?.IsMoving == true
+            ? inputState.MoveDirection * inputState.MoveStrength * MoveSpeed
+            : Vector2.Zero;
+
+        Velocity = desiredVelocity + GetSoftCollisionVelocity();
+        MoveAndSlide();
+    }
+
+    protected void MoveWithSoftCollisionOnly()
+    {
+        Velocity = GetSoftCollisionVelocity();
+        MoveAndSlide();
+    }
+
+    private Vector2 GetSoftCollisionVelocity()
+    {
+        if (SoftCollisionRadius <= 0f || SoftCollisionStrength <= 0f)
+            return Vector2.Zero;
+
+        var push = Vector2.Zero;
+        foreach (var node in GetTree().GetNodesInGroup(ArenaCombatantGroup))
         {
-            Velocity = Vector2.Zero;
-            MoveAndSlide();
-            return;
+            if (node is not ArenaCombatant other || other == this || !IsInstanceValid(other))
+                continue;
+
+            var combinedRadius = SoftCollisionRadius + other.SoftCollisionRadius;
+            if (combinedRadius <= 0f)
+                continue;
+
+            var away = GlobalPosition - other.GlobalPosition;
+            var distanceSquared = away.LengthSquared();
+            if (distanceSquared >= combinedRadius * combinedRadius)
+                continue;
+
+            if (distanceSquared <= 0.001f)
+                away = GetInstanceId() > other.GetInstanceId() ? Vector2.Right : Vector2.Left;
+
+            var distance = Mathf.Max(away.Length(), 0.001f);
+            var overlapRatio = (combinedRadius - distance) / combinedRadius;
+            push += away / distance * overlapRatio * SoftCollisionStrength;
         }
 
-        Velocity = inputState.MoveDirection * inputState.MoveStrength * MoveSpeed;
-        MoveAndSlide();
+        return push.Length() > MaxSoftCollisionSpeed
+            ? push.Normalized() * MaxSoftCollisionSpeed
+            : push;
     }
 
     public void SetLookDirection(Vector2 lookDirection)

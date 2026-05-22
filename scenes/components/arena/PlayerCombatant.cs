@@ -6,6 +6,7 @@ namespace MobArena.Scenes.Components.Arena;
 
 public partial class PlayerCombatant : ArenaCombatant
 {
+    private const string ArenaPlayersGroup = "arena_players";
     private const float DisplayHeight = 96f;
 
     private Sprite2D _body;
@@ -19,6 +20,7 @@ public partial class PlayerCombatant : ArenaCombatant
     public override void _Ready()
     {
         ConfigureTopDownMotion();
+        AddToGroup(ArenaPlayersGroup);
         _body = GetNode<Sprite2D>("Body");
         _nameLabel = GetNode<Label>("NameLabel");
         _controllerLabel = GetNode<Label>("ControllerLabel");

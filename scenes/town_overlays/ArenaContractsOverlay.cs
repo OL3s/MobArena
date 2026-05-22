@@ -194,27 +194,20 @@ public partial class ArenaContractsOverlay : Control
 
     private void RefreshActions()
     {
-        var assignedCount = _runData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
-        var selectedContract = GetSelectedContractOrNull();
-        var hasContract = selectedContract != null;
-        var canPayReturnUpkeep = _runData?.CanPayArenaReturnUpkeep(_phaseState) != false;
-        var rerollCost = GetRerollGoldCost();
+		var assignedCount = _runData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
+		var selectedContract = GetSelectedContractOrNull();
+		var hasContract = selectedContract != null;
+		var rerollCost = GetRerollGoldCost();
 
-        _startButton.Disabled = !canPayReturnUpkeep || !hasContract || assignedCount <= 0;
-        _rerollButton.Disabled = assignedCount <= 0 || _runData == null || _runData.Gold < rerollCost;
-        _rerollButton.Text = $"Reroll {rerollCost}";
-        _rerollButton.TooltipText = $"Spend {rerollCost} gold to reroll all contracts.";
+		_startButton.Disabled = !hasContract || assignedCount <= 0;
+		_rerollButton.Disabled = assignedCount <= 0 || _runData == null || _runData.Gold < rerollCost;
+		_rerollButton.Text = $"Reroll {rerollCost}";
+		_rerollButton.TooltipText = $"Spend {rerollCost} gold to reroll all contracts.";
 
-        if (!canPayReturnUpkeep)
-        {
-            var cost = _runData?.GetArenaReturnUpkeepGoldCost(_phaseState) ?? 0;
-            _startButton.Text = "Upkeep Short";
-            _startButton.TooltipText = $"Need {cost} gold for upkeep when the arena day ends.";
-        }
-        else if (assignedCount <= 0)
-        {
-            _startButton.Text = "Missing Gladiator";
-            _startButton.TooltipText = "Assign at least one gladiator to the Arena building before starting.";
+		if (assignedCount <= 0)
+		{
+			_startButton.Text = "Missing Gladiator";
+			_startButton.TooltipText = "Assign at least one gladiator to the Arena building before starting.";
         }
         else if (!hasContract)
         {
@@ -241,12 +234,11 @@ public partial class ArenaContractsOverlay : Control
         GlobalOverlay.Get()?.AddOverlay(overlay);
     }
 
-    private void OnStartPressed()
-    {
-        if (_runData?.CanPayArenaReturnUpkeep(_phaseState) == false
-            || GetSelectedContractOrNull() == null
-            || (_runData?.TownAssignments?.ArenaGladiators?.Count ?? 0) <= 0)
-            return;
+	private void OnStartPressed()
+	{
+		if (GetSelectedContractOrNull() == null
+			|| (_runData?.TownAssignments?.ArenaGladiators?.Count ?? 0) <= 0)
+			return;
 
         OpenControlConfigOverlay();
     }

@@ -168,9 +168,6 @@ public partial class TownHud : CanvasLayer
 				return;
 			}
 
-			if (_saveNode?.CompanyRunData?.CanPayArenaReturnUpkeep(_phaseState) == false)
-				return;
-
 			EmitSignal(SignalName.SelectContractPressed);
 			return;
 		}
@@ -591,7 +588,7 @@ public partial class TownHud : CanvasLayer
 		_nextDayButton.Text = _phaseState.CanAdvanceToNextDay ? "Next Day" : hasNoGladiators ? "Buy Gladiator" : "Select Contract";
 		var canPayPhaseCosts = runData?.CanPayCurrentPhaseGoldCost(_phaseState) != false;
 		var canPayArenaReturnUpkeep = runData?.CanPayArenaReturnUpkeep(_phaseState) != false;
-		_nextDayButton.Disabled = _phaseState.CanAdvanceToNextDay ? !canPayPhaseCosts : !hasNoGladiators && !canPayArenaReturnUpkeep;
+		_nextDayButton.Disabled = false;
 		_nextDayButton.TooltipText = GetPhaseActionTooltip(runData, canPayPhaseCosts, canPayArenaReturnUpkeep);
 	}
 
@@ -600,14 +597,14 @@ public partial class TownHud : CanvasLayer
 		if (_phaseState.CanAdvanceToNextDay)
 			return canPayPhaseCosts
 				? string.Empty
-				: $"Need {runData.GetCurrentPhaseGoldCost(_phaseState)} gold to pay current phase costs.";
+				: "Advance to the next day and go into debt.";
 
 		if (runData?.Gladiators.Count <= 0)
 			return "Open the gladiator market.";
 
 		return canPayArenaReturnUpkeep
 			? "Open arena contracts."
-			: $"Need {runData.GetArenaReturnUpkeepGoldCost(_phaseState)} gold for upkeep when the arena day ends.";
+			: "Open arena contracts and go into debt if upkeep is due.";
 	}
 
 	public void ShowGladiatorHoverInfo(object source, GladiatorData gladiatorData)
