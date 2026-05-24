@@ -1,6 +1,7 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/ui/TownHoverInfoPanel.cs" id="1_script"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="7_body_font"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/health.svg" id="2_health"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/exhaustion.svg" id="3_exhaustion"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/stamina.svg" id="4_stamina"]
@@ -243,7 +244,10 @@ theme_override_constants/separation = 2
 [node name="Description" type="RichTextLabel" parent="MarginContainer/Row/Details"]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("7_body_font")
+theme_override_fonts/bold_font = ExtResource("7_body_font")
 theme_override_font_sizes/normal_font_size = 14
+theme_override_font_sizes/bold_font_size = 14
 bbcode_enabled = true
 fit_content = true
 scroll_active = false

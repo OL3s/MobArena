@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/GladiatorDeathOverlay.cs" id="1_death_overlay"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
 [ext_resource type="PackedScene" path="res://scenes/components/ui/GladiatorCard.tscn" id="3_gladiator_card"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="4_body_font"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_death_blur"]
 shader = ExtResource("2_blur_shader")
@@ -59,6 +60,8 @@ horizontal_alignment = 1
 
 [node name="MessageLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("4_body_font")
+theme_override_font_sizes/font_size = 20
 text = "A gladiator has died."
 horizontal_alignment = 1
 autowrap_mode = 3

@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/BlacksmithStoreOverlay.cs" id="1_overlay"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/equipment.svg" id="3_icon"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="4_gold"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="5_body_font"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
 shader = ExtResource("2_blur_shader")
@@ -89,6 +90,8 @@ vertical_alignment = 1
 
 [node name="DescriptionLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 20
 text = "Buy equipment for the company inventory. Each item here is a runtime copy of an authored item template."
 autowrap_mode = 3
 

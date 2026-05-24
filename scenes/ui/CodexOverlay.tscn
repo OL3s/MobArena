@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/CodexOverlay.cs" id="1_codex"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/book.svg" id="3_book"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="4_body_font"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_codex_blur"]
 shader = ExtResource("2_blur_shader")
@@ -128,6 +129,8 @@ theme_override_constants/separation = 12
 [node name="EmptyDetailsLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("4_body_font")
+theme_override_font_sizes/font_size = 20
 text = "Choose an entry to view details."
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -148,6 +151,8 @@ horizontal_alignment = 1
 
 [node name="Description" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("4_body_font")
+theme_override_font_sizes/font_size = 20
 text = "Description"
 horizontal_alignment = 1
 autowrap_mode = 3

@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/SettingsOverlay.cs" id="1_settings_overlay"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="3_body_font"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_settings_blur"]
 shader = ExtResource("2_blur_shader")
@@ -115,6 +116,8 @@ text = "Enable debug mode"
 
 [node name="DebugHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_body_font")
+theme_override_font_sizes/font_size = 20
 text = "Temporary project-wide debug flag for development-only behavior."
 autowrap_mode = 3
 
@@ -154,6 +157,8 @@ theme_override_constants/separation = 14
 
 [node name="ControlsHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_body_font")
+theme_override_font_sizes/font_size = 20
 text = "Input and control tuning."
 autowrap_mode = 3
 
@@ -182,6 +187,8 @@ vertical_alignment = 1
 
 [node name="SaveDataHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_body_font")
+theme_override_font_sizes/font_size = 20
 text = "Manage save data. These actions apply immediately after confirmation."
 autowrap_mode = 3
 
@@ -208,6 +215,8 @@ text = "Delete Everything"
 [node name="PlaceholderLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
 visible = false
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_body_font")
+theme_override_font_sizes/font_size = 20
 text = "Placeholder"
 horizontal_alignment = 1
 vertical_alignment = 1

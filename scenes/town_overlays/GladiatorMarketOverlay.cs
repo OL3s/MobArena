@@ -109,6 +109,7 @@ public partial class GladiatorMarketOverlay : Control
         if (gladiator == null)
             return;
 
+        var isFirstGladiatorPurchase = _runData.AliveGladiators <= 0;
         var price = gladiator.GetMarketValue();
         if (_runData.Gold < price)
         {
@@ -139,5 +140,7 @@ public partial class GladiatorMarketOverlay : Control
         }
 
         _feedbackLabel.Text = $"Hired {gladiator.GladiatorName}.";
+        if (isFirstGladiatorPurchase)
+            QueueFree();
     }
 }

@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/town_overlays/GladiatorMarketOverlay.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
 [ext_resource type="Texture2D" path="res://assets/town/icons/market_icon.svg" id="3_icon"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="4_gold"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="5_body_font"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gladiator_market_blur"]
 shader = ExtResource("2_blur_shader")
@@ -89,6 +90,10 @@ vertical_alignment = 1
 [node name="Body" type="RichTextLabel" parent="CenterContainer/Panel/MarginContainer/Layout"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("5_body_font")
+theme_override_fonts/bold_font = ExtResource("5_body_font")
+theme_override_font_sizes/normal_font_size = 20
+theme_override_font_sizes/bold_font_size = 20
 bbcode_enabled = true
 text = "Hire available recruits into the active company roster. Market recruits refresh with the daily market stock."
 fit_content = true
@@ -97,6 +102,8 @@ autowrap_mode = 3
 
 [node name="FeedbackLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 20
 text = "Choose a recruit."
 horizontal_alignment = 1
 autowrap_mode = 3

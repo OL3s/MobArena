@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scenes/town_overlays/MarketOverlay.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
 [ext_resource type="Texture2D" path="res://assets/town/icons/market_icon.svg" id="3_market_icon"]
 [ext_resource type="Texture2D" path="res://assets/town/icons/roster_icon.svg" id="4_roster_icon"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="5_body_font"]
 [ext_resource type="Texture2D" path="res://assets/town/icons/blacksmith_icon.svg" id="6_blacksmith_icon"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
@@ -79,6 +80,10 @@ vertical_alignment = 1
 [node name="Body" type="RichTextLabel" parent="CenterContainer/Panel/MarginContainer/Layout"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("5_body_font")
+theme_override_fonts/bold_font = ExtResource("5_body_font")
+theme_override_font_sizes/normal_font_size = 21
+theme_override_font_sizes/bold_font_size = 21
 bbcode_enabled = true
 text = "Choose what the company needs. Recruitment and equipment support the arena loop."
 fit_content = true
