@@ -38,7 +38,7 @@ public partial class BlacksmithStoreOverlay : Control
     private void RefreshUi()
     {
         _runData.EnsureResources();
-        _goldLabel.Text = $"Gold: {_runData.Gold}";
+        _goldLabel.Text = _runData.Gold.ToString();
 
         foreach (var child in _itemGrid.GetChildren())
             child.QueueFree();

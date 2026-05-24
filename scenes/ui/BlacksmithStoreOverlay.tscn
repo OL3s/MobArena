@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/BlacksmithStoreOverlay.cs" id="1_overlay"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/equipment.svg" id="3_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="4_gold"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
 shader = ExtResource("2_blur_shader")
@@ -73,10 +74,17 @@ theme_override_font_sizes/font_size = 28
 text = "Blacksmith"
 vertical_alignment = 1
 
+[node name="GoldIcon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/Header"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("4_gold")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="GoldLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Header"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Gold: 0"
+text = "0"
 vertical_alignment = 1
 
 [node name="DescriptionLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]

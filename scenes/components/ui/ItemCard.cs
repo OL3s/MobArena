@@ -43,7 +43,7 @@ public partial class ItemCard : PanelContainer
         _nameLabel = GetNode<Label>("MarginContainer/Layout/NameLabel");
         _conditionIcon = GetNode<TextureRect>("MarginContainer/Layout/ConditionRow/Icon");
         _conditionBar = GetNode<ProgressBar>("MarginContainer/Layout/ConditionRow/Bar");
-        _goldLabel = GetNode<Label>("MarginContainer/Layout/GoldLabel");
+        _goldLabel = GetNode<Label>("MarginContainer/Layout/GoldRow/GoldLabel");
         _buyButton = GetNode<Button>("MarginContainer/Layout/BuyButton");
         _dragButton = GetNode<Button>("MarginContainer/Layout/DragButton");
 
@@ -80,9 +80,7 @@ public partial class ItemCard : PanelContainer
         _itemIcon.Texture = _item?.Icon;
         _typeIcon.Texture = GetTypeIcon(_item);
         _nameLabel.Text = _item?.DisplayName ?? "Item";
-        _goldLabel.Text = _mode == CardMode.Purchase
-            ? $"Price {_item?.Cost ?? 0}g"
-            : $"Value {_item?.Cost ?? 0}g";
+        _goldLabel.Text = (_item?.Cost ?? 0).ToString();
 
         var condition = Mathf.Clamp(_item?.Condition ?? 0f, 0f, 1f);
         _conditionBar.MaxValue = 1.0;
