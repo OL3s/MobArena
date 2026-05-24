@@ -1,4 +1,3 @@
-using System;
 using Godot;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
@@ -51,10 +50,9 @@ public partial class SettingsOverlay : Control
 		_debugCheckBox.Toggled += OnDebugToggled;
 		_lowHealthSpinBox.ValueChanged += OnLowHealthWarningChanged;
 		_arenaMoveDeadzoneSpinBox.ValueChanged += OnArenaMoveDeadzoneChanged;
-		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteRunButton").Pressed += OnDeleteRunDataPressed;
-		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteCompanyButton").Pressed += OnDeleteCompanyDataPressed;
-		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/ClearRecordsButton").Pressed += OnClearRecordsPressed;
-		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteSettingsButton").Pressed += OnDeleteSettingsDataPressed;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/RetireCompanyButton").Pressed += OnRetireCompanyPressed;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteRecordsButton").Pressed += OnDeleteRecordsPressed;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/ResetSettingsButton").Pressed += OnResetSettingsPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteAllButton").Pressed += OnDeleteAllSaveDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Actions/ApplyButton").Pressed += OnApplyPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Actions/CloseButton").Pressed += QueueFree;
@@ -158,54 +156,66 @@ public partial class SettingsOverlay : Control
 			$"Settings could not be saved. Error: {error}.");
 	}
 
-	private void OnDeleteRunDataPressed()
+	private void OnRetireCompanyPressed()
 	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteRunData());
+		ConfirmSaveDataAction(
+			SaveNode.SaveDataDeleteScope.RetireCompany,
+			"Retire Company?",
+			"This ends the current company, saves any qualifying result to Records, and returns to the main menu.",
+			"Retire");
 	}
 
-	private void OnDeleteCompanyDataPressed()
+	private void OnDeleteRecordsPressed()
 	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteCompanyData());
+		ConfirmSaveDataAction(
+			SaveNode.SaveDataDeleteScope.Records,
+			"Delete Records?",
+			"This permanently deletes completed company records. The active company is not changed.",
+			"Delete");
 	}
 
-	private void OnDeleteSettingsDataPressed()
+	private void OnResetSettingsPressed()
 	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSettingsData());
-	}
-
-	private void OnClearRecordsPressed()
-	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteCompletedCompanyHistoryData());
+		ConfirmSaveDataAction(
+			SaveNode.SaveDataDeleteScope.Settings,
+			"Reset Settings?",
+			"This resets gameplay/settings values to defaults. Company and records are not changed.",
+			"Reset");
 	}
 
 	private void OnDeleteAllSaveDataPressed()
 	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSave());
+		ConfirmSaveDataAction(
+			SaveNode.SaveDataDeleteScope.All,
+			"Delete Everything?",
+			"This permanently deletes company, records, settings, and all save data.",
+			"Delete All");
 	}
 
-	private void ConfirmDeleteSaveData(Func<SaveNode, Error> deleteAction)
+	private void ConfirmSaveDataAction(SaveNode.SaveDataDeleteScope scope, string title, string text, string confirmText)
 	{
 		GlobalOverlay.Get()?.ShowGoCancelPopup(
-			"Delete Save Data?",
-			"This cannot be undone.",
+			title,
+			text,
 			() =>
 			{
-				DeleteSaveData(deleteAction);
+				DeleteSaveData(scope);
 			},
-			"Delete");
+			confirmText);
 	}
 
-	private void DeleteSaveData(Func<SaveNode, Error> deleteAction)
+	private void DeleteSaveData(SaveNode.SaveDataDeleteScope scope)
 	{
 		var saveNode = SaveNode.Get();
 
-		var error = deleteAction(saveNode);
+		var error = saveNode.DeleteSaveData(scope);
 		if (error != Error.Ok)
 		{
 			GlobalOverlay.Get()?.ShowBlurredPopup("Save Data", $"Save data could not be deleted. Error: {error}.");
 			return;
 		}
 
+		GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScene);
 	}
 }

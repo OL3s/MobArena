@@ -167,33 +167,28 @@ theme_override_constants/separation = 12
 
 [node name="SaveDataHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
 layout_mode = 2
-text = "Delete saved data from disk. These actions apply immediately."
+text = "Manage save data. These actions apply immediately after confirmation."
 autowrap_mode = 3
 
-[node name="DeleteRunButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+[node name="RetireCompanyButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Delete Run Data"
+text = "Retire Company"
 
-[node name="DeleteCompanyButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+[node name="DeleteRecordsButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Delete Company Data"
+text = "Delete Records"
 
-[node name="ClearRecordsButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
+[node name="ResetSettingsButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Clear Records"
-
-[node name="DeleteSettingsButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-text = "Delete Settings Data"
+text = "Reset Settings"
 
 [node name="DeleteAllButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Delete All Save Data"
+text = "Delete Everything"
 
 [node name="PlaceholderLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
 visible = false

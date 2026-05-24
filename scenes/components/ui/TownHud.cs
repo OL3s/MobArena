@@ -44,6 +44,8 @@ public partial class TownHud : CanvasLayer
 
 	private SaveNode _saveNode;
 	private TownPhaseState _phaseState;
+	private CompanyRunData _subscribedRunData;
+	private CompanyCareerData _subscribedCareerData;
 	private CompanyLogo _companyLogo;
 	private Label _companyNameLabel;
 	private Label _gladiatorCountLabel;
@@ -72,6 +74,7 @@ public partial class TownHud : CanvasLayer
 	public override void _Ready()
 	{
 		_saveNode = SaveNode.Get();
+		_saveNode.RuntimeStateResetting += OnRuntimeStateResetting;
 		_phaseState = _saveNode?.TownPhaseState ?? new TownPhaseState();
 
 		_companyLogo = GetNode<CompanyLogo>("TopPanel/Row/CompanyStatus/Shield");
@@ -111,14 +114,16 @@ public partial class TownHud : CanvasLayer
 		SetupDevMenu();
 		_phaseState.PhaseChanged += RefreshPhaseUi;
 
-		if (_saveNode?.CompanyRunData != null)
+		_subscribedRunData = _saveNode?.CompanyRunData;
+		if (_subscribedRunData != null)
 		{
-			_saveNode.CompanyRunData.RunChanged += RefreshRunUi;
-			_saveNode.CompanyRunData.GladiatorDied += OnGladiatorDied;
+			_subscribedRunData.RunChanged += RefreshRunUi;
+			_subscribedRunData.GladiatorDied += OnGladiatorDied;
 		}
 
-		if (_saveNode?.CompanyCareerData != null)
-			_saveNode.CompanyCareerData.CareerChanged += RefreshRunUi;
+		_subscribedCareerData = _saveNode?.CompanyCareerData;
+		if (_subscribedCareerData != null)
+			_subscribedCareerData.CareerChanged += RefreshRunUi;
 
 		RefreshCompanyUi();
 		RefreshRunUi();
@@ -130,8 +135,10 @@ public partial class TownHud : CanvasLayer
 
 	public override void _ExitTree()
 	{
-		if (_phaseState != null)
-			_phaseState.PhaseChanged -= RefreshPhaseUi;
+		if (_saveNode != null)
+			_saveNode.RuntimeStateResetting -= OnRuntimeStateResetting;
+
+		UnsubscribeResourceSignals();
 
 		if (_companyLogo != null)
 		{
@@ -142,15 +149,33 @@ public partial class TownHud : CanvasLayer
 
 		if (_calendarPanel != null)
 			_calendarPanel.GuiInput -= OnCalendarPanelGuiInput;
+	}
 
-		if (_saveNode?.CompanyRunData != null)
+	private void OnRuntimeStateResetting()
+	{
+		UnsubscribeResourceSignals();
+	}
+
+	private void UnsubscribeResourceSignals()
+	{
+		if (_phaseState != null)
 		{
-			_saveNode.CompanyRunData.RunChanged -= RefreshRunUi;
-			_saveNode.CompanyRunData.GladiatorDied -= OnGladiatorDied;
+			_phaseState.PhaseChanged -= RefreshPhaseUi;
+			_phaseState = null;
 		}
 
-		if (_saveNode?.CompanyCareerData != null)
-			_saveNode.CompanyCareerData.CareerChanged -= RefreshRunUi;
+		if (_subscribedRunData != null)
+		{
+			_subscribedRunData.RunChanged -= RefreshRunUi;
+			_subscribedRunData.GladiatorDied -= OnGladiatorDied;
+			_subscribedRunData = null;
+		}
+
+		if (_subscribedCareerData != null)
+		{
+			_subscribedCareerData.CareerChanged -= RefreshRunUi;
+			_subscribedCareerData = null;
+		}
 	}
 
 	private void OnBackPressed()

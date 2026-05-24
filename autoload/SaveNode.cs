@@ -6,6 +6,14 @@ namespace MobArena.Scripts;
 
 public partial class SaveNode : Node
 {
+	public enum SaveDataDeleteScope
+	{
+		RetireCompany,
+		Records,
+		Settings,
+		All
+	}
+
 	private const int SaveVersion = 1;
 	private const string DeleteFlag = "--delete";
 	private const string DeleteSaveDataFlag = "--delete-savedata";
@@ -24,6 +32,8 @@ public partial class SaveNode : Node
 	private bool _skipExitSave;
 	private string _pendingCompanyLossTitle;
 	private string _pendingCompanyLossText;
+
+	public event Action RuntimeStateResetting;
 
     [Export]
     public bool HasCompany { get; set; }
@@ -302,6 +312,39 @@ public partial class SaveNode : Node
 
 	public Error DeleteSave()
 	{
+		return DeleteSaveData(SaveDataDeleteScope.All);
+	}
+
+	public Error DeleteSettingsData()
+	{
+		return DeleteSaveData(SaveDataDeleteScope.Settings);
+	}
+
+	public Error DeleteCompletedCompanyHistoryData()
+	{
+		return DeleteSaveData(SaveDataDeleteScope.Records);
+	}
+
+	public Error DeleteSaveData(SaveDataDeleteScope scope)
+	{
+		PrepareRuntimeStateReset();
+		LocalInputConfig.Get()?.ClearControllerSetups();
+		return scope switch
+		{
+			SaveDataDeleteScope.RetireCompany => RetireCompanyCore(),
+			SaveDataDeleteScope.Settings => DeleteSettingsDataCore(),
+			SaveDataDeleteScope.Records => DeleteCompletedCompanyHistoryDataCore(),
+			_ => DeleteSaveCore()
+		};
+	}
+
+	private void PrepareRuntimeStateReset()
+	{
+		RuntimeStateResetting?.Invoke();
+	}
+
+	private Error DeleteSaveCore()
+	{
 		GD.Print("SaveNode: Deleting all save data.");
 		var error = DeleteFileIfExists(ManifestPath);
 		if (error != Error.Ok)
@@ -340,9 +383,12 @@ public partial class SaveNode : Node
 		return Error.Ok;
 	}
 
-	public Error DeleteCompanyData()
+	private Error RetireCompanyCore()
 	{
-		GD.Print("SaveNode: Deleting company data.");
+		GD.Print("SaveNode: Retiring current company.");
+		if (HasCompany)
+			TryAddCurrentCompanyToCompletedHistory();
+
 		var error = DeleteFileIfExists(CompanyLogoPath);
 		if (error != Error.Ok)
 			return error;
@@ -370,7 +416,7 @@ public partial class SaveNode : Node
 		TownPhaseState = new TownPhaseState();
 		WeatherState = new WeatherState();
 		error = SaveCurrentManifest();
-		GD.Print(error == Error.Ok ? "SaveNode: Company data deleted." : $"SaveNode: Company data delete failed while saving manifest. Error: {error}.");
+		GD.Print(error == Error.Ok ? "SaveNode: Company retired." : $"SaveNode: Company retirement failed while saving manifest. Error: {error}.");
 		return error;
 	}
 
@@ -390,6 +436,8 @@ public partial class SaveNode : Node
 		if (HasCompany)
 			TryAddCurrentCompanyToCompletedHistory();
 
+		PrepareRuntimeStateReset();
+		LocalInputConfig.Get()?.ClearControllerSetups();
 		HasCompany = false;
 		CompanyLogoData = CompanyLogoData.CreateDefault();
 		CompanyCareerData = new CompanyCareerData();
@@ -399,30 +447,7 @@ public partial class SaveNode : Node
 		return Save();
 	}
 
-	public Error DeleteRunData()
-	{
-		GD.Print("SaveNode: Deleting run data.");
-		var error = DeleteFileIfExists(CompanyRunPath);
-		if (error != Error.Ok)
-			return error;
-
-		error = DeleteFileIfExists(TownPhasePath);
-		if (error != Error.Ok)
-			return error;
-
-		error = DeleteFileIfExists(WeatherPath);
-		if (error != Error.Ok)
-			return error;
-
-		CompanyRunData = new CompanyRunData();
-		TownPhaseState = new TownPhaseState();
-		WeatherState = new WeatherState();
-		error = SaveCurrentManifest();
-		GD.Print(error == Error.Ok ? "SaveNode: Run data deleted." : $"SaveNode: Run data delete failed while saving manifest. Error: {error}.");
-		return error;
-	}
-
-	public Error DeleteSettingsData()
+	private Error DeleteSettingsDataCore()
 	{
 		GD.Print("SaveNode: Deleting settings data.");
 		var error = DeleteFileIfExists(SettingsPath);
@@ -435,7 +460,7 @@ public partial class SaveNode : Node
 		return error;
 	}
 
-	public Error DeleteCompletedCompanyHistoryData()
+	private Error DeleteCompletedCompanyHistoryDataCore()
 	{
 		GD.Print("SaveNode: Deleting completed company history data.");
 		var error = DeleteFileIfExists(CompletedCompanyHistoryPath);

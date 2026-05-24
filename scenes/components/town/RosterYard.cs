@@ -44,6 +44,8 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
     private bool _gladiatorsButtonHovered;
     private bool _equipmentButtonHovered;
     private bool _goldButtonHovered;
+    private CompanyRunData _subscribedRunData;
+    private TownPhaseState _subscribedPhaseState;
 
     public int PhaseGoldCostDisplayOrder => 0;
 
@@ -54,6 +56,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
         AddToGroup("roster_yard");
         AddToGroup(PhaseGoldCostSourceGroup);
         _saveNode = SaveNode.Get();
+        _saveNode.RuntimeStateResetting += OnRuntimeStateResetting;
         _gladiators = GetNode<Node2D>("Gladiators");
         _gladiatorsButton = GetNodeOrNull<Button>("ButtonRow/GladiatorsButton");
         _equipmentButton = GetNodeOrNull<Button>("ButtonRow/EquipmentButton");
@@ -83,14 +86,16 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
             _goldButton.Pressed += OnGoldButtonPressed;
         }
 
-        if (_saveNode?.CompanyRunData != null)
+        _subscribedRunData = _saveNode?.CompanyRunData;
+        if (_subscribedRunData != null)
         {
-            _saveNode.CompanyRunData.RunChanged += RefreshGladiators;
-            _saveNode.CompanyRunData.RunChanged += RefreshGoldCostPreview;
+            _subscribedRunData.RunChanged += RefreshGladiators;
+            _subscribedRunData.RunChanged += RefreshGoldCostPreview;
         }
 
-        if (_saveNode?.TownPhaseState != null)
-            _saveNode.TownPhaseState.PhaseChanged += RefreshGoldCostPreview;
+        _subscribedPhaseState = _saveNode?.TownPhaseState;
+        if (_subscribedPhaseState != null)
+            _subscribedPhaseState.PhaseChanged += RefreshGoldCostPreview;
 
         RefreshGladiators();
         RefreshGoldCostPreview();
@@ -98,14 +103,10 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
     public override void _ExitTree()
     {
-        if (_saveNode?.CompanyRunData != null)
-        {
-            _saveNode.CompanyRunData.RunChanged -= RefreshGladiators;
-            _saveNode.CompanyRunData.RunChanged -= RefreshGoldCostPreview;
-        }
+        if (_saveNode != null)
+            _saveNode.RuntimeStateResetting -= OnRuntimeStateResetting;
 
-        if (_saveNode?.TownPhaseState != null)
-            _saveNode.TownPhaseState.PhaseChanged -= RefreshGoldCostPreview;
+        UnsubscribeResourceSignals();
 
         if (_gladiatorsButton != null)
         {
@@ -124,6 +125,27 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
             _goldButton.MouseEntered -= OnGoldButtonMouseEntered;
             _goldButton.MouseExited -= OnGoldButtonMouseExited;
             _goldButton.Pressed -= OnGoldButtonPressed;
+        }
+    }
+
+    private void OnRuntimeStateResetting()
+    {
+        UnsubscribeResourceSignals();
+    }
+
+    private void UnsubscribeResourceSignals()
+    {
+        if (_subscribedRunData != null)
+        {
+            _subscribedRunData.RunChanged -= RefreshGladiators;
+            _subscribedRunData.RunChanged -= RefreshGoldCostPreview;
+            _subscribedRunData = null;
+        }
+
+        if (_subscribedPhaseState != null)
+        {
+            _subscribedPhaseState.PhaseChanged -= RefreshGoldCostPreview;
+            _subscribedPhaseState = null;
         }
     }
 
