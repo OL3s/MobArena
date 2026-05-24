@@ -100,7 +100,7 @@ public partial class CompanyRunData : Resource
     public bool HasShownNextDayUpkeepPopup { get; private set; }
 
     [Export]
-    public bool HasUnlockedRecoveryBuildings { get; private set; }
+    public bool HasUnlockedSpecialtyBuildings { get; private set; }
 
     [Export]
     public bool HasShownThermaeTutorialPopup { get; private set; }
@@ -213,12 +213,12 @@ public partial class CompanyRunData : Resource
         EmitSignal(SignalName.RunChanged);
     }
 
-    public void MarkRecoveryBuildingsUnlocked()
+    public void MarkSpecialtyBuildingsUnlocked()
     {
-        if (HasUnlockedRecoveryBuildings)
+        if (HasUnlockedSpecialtyBuildings)
             return;
 
-        HasUnlockedRecoveryBuildings = true;
+        HasUnlockedSpecialtyBuildings = true;
         EmitSignal(SignalName.RunChanged);
     }
 

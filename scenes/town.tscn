@@ -99,7 +99,7 @@ BuildingTexture = ExtResource("11_healer_building")
 IconTexture = ExtResource("12_healer_icon")
 HoverDescription = "Assign gladiators here for paid Roman bathhouse care. Choose health treatment or faster exhaustion recovery; work resolves on phase changes."
 OverlayToOpen = ExtResource("21_healer_overlay")
-HideUntilRecoveryBuildingsUnlocked = true
+HideUntilSpecialtyBuildingsUnlocked = true
 MaxAssignedGladiators = 2
 AssignmentLocation = 2
 
@@ -110,7 +110,7 @@ BuildingTexture = ExtResource("16_training_building")
 IconTexture = ExtResource("17_training_icon")
 HoverDescription = "Assign gladiators here to train. Choose an attribute focus or balanced overall training; work resolves on phase changes and spends gold, stamina, and exhaustion."
 OverlayToOpen = ExtResource("23_training_overlay")
-HideUntilRecoveryBuildingsUnlocked = true
+HideUntilSpecialtyBuildingsUnlocked = true
 MaxAssignedGladiators = 2
 AssignmentLocation = 3
 

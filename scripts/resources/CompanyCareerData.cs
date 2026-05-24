@@ -27,6 +27,8 @@ public partial class CompanyCareerData : Resource
 
     public bool HasCompletedContracts => ContractsCompleted > 0;
 
+    public bool HasReachedSpecialtyBuildings => ContractsCompleted >= 2;
+
     public void AddGladiator()
     {
         AddGladiators(1);

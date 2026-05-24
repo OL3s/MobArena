@@ -232,8 +232,8 @@ public partial class TownHud : CanvasLayer
 
 	private bool ShouldShowFirstNextDayTutorial(CompanyRunData runData)
 	{
-		return runData is { HasUnlockedRecoveryBuildings: false }
-			&& (_saveNode?.CompanyCareerData?.ContractsCompleted ?? 0) <= 1;
+		return runData is { HasUnlockedSpecialtyBuildings: false }
+			&& _saveNode?.CompanyCareerData?.HasReachedSpecialtyBuildings != true;
 	}
 
 	private void ShowNextDaySummaryOverlay()

@@ -16,14 +16,14 @@ public partial class Town : Node
     private const string FirstTownEntryPopupText = "Todo, add tutorial with tscn animation popups here";
     private const string FirstContractCompletedPopupTitle = "Company Ambition";
     private const string FirstContractCompletedPopupText = "Your first contract is complete. From here, build the strongest gladiator company you can: win contracts, earn gold, grow your fame, recruit better fighters, and prepare for Champion Day.";
-    private const string RecoveryBuildingsUnlockedPopupTitle = "Recovery & Training Unlocked";
-    private const string RecoveryBuildingsUnlockedPopupText = "Your second contract is complete. The company now has enough momentum to use the city between fights: heal wounded gladiators, manage exhaustion, and train stronger fighters before harder contracts.";
+    private const string SpecialtyBuildingsUnlockedPopupTitle = "Recovery & Training Unlocked";
+    private const string SpecialtyBuildingsUnlockedPopupText = "Your second contract is complete. The company now has enough momentum to use specialty buildings between fights: heal wounded gladiators, manage exhaustion, and train stronger fighters before harder contracts.";
     private const string ThermaeTutorialPopupTitle = "Thermae";
     private const string ThermaeTutorialPopupText = "Thermae is your recovery building. Drag gladiators here at Night to spend gold on healing or exhaustion recovery before the next Day.";
     private const string TrainingHallTutorialPopupTitle = "Training Hall";
     private const string TrainingHallTutorialPopupText = "Training Hall turns downtime into progress. Drag gladiators here at Night to spend gold, stamina, and exhaustion on attribute training.";
-    private const string ThermaeIconPath = "res://assets/town/icons/healer_icon.svg";
-    private const string TrainingHallIconPath = "res://assets/town/icons/training_icon.svg";
+    private const string ThermaeBuildingPath = "res://assets/town/buildings/healer.svg";
+    private const string TrainingHallBuildingPath = "res://assets/town/buildings/training_hall.svg";
 
     private TownBuilding _contractBoard;
     private EnvironmentVisualOverlay _environmentOverlay;
@@ -142,16 +142,15 @@ public partial class Town : Node
         var runData = saveNode.CompanyRunData;
         var careerData = saveNode.CompanyCareerData;
         var globalOverlay = GlobalOverlay.Get();
-        if (runData == null || globalOverlay == null || (careerData?.ContractsCompleted ?? 0) < 2)
+        if (runData == null || globalOverlay == null || careerData?.HasReachedSpecialtyBuildings != true)
             return;
 
-        if (!runData.HasUnlockedRecoveryBuildings)
+        if (!runData.HasUnlockedSpecialtyBuildings)
         {
-            runData.MarkRecoveryBuildingsUnlocked();
+            runData.MarkSpecialtyBuildingsUnlocked();
             globalOverlay.ShowBlurredPopup(
-                RecoveryBuildingsUnlockedPopupTitle,
-                RecoveryBuildingsUnlockedPopupText,
-                ResourceLoader.Load<Texture2D>(ThermaeIconPath));
+                SpecialtyBuildingsUnlockedPopupTitle,
+                SpecialtyBuildingsUnlockedPopupText);
         }
 
         if (!runData.HasShownThermaeTutorialPopup)
@@ -160,7 +159,7 @@ public partial class Town : Node
             globalOverlay.ShowBlurredPopup(
                 ThermaeTutorialPopupTitle,
                 ThermaeTutorialPopupText,
-                ResourceLoader.Load<Texture2D>(ThermaeIconPath));
+                ResourceLoader.Load<Texture2D>(ThermaeBuildingPath));
         }
 
         if (!runData.HasShownTrainingHallTutorialPopup)
@@ -169,7 +168,7 @@ public partial class Town : Node
             globalOverlay.ShowBlurredPopup(
                 TrainingHallTutorialPopupTitle,
                 TrainingHallTutorialPopupText,
-                ResourceLoader.Load<Texture2D>(TrainingHallIconPath));
+                ResourceLoader.Load<Texture2D>(TrainingHallBuildingPath));
         }
 
         saveNode.Save();

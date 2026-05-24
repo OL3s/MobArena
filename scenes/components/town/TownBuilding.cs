@@ -100,7 +100,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     public bool DisableAtNight { get; set; }
 
     [Export]
-    public bool HideUntilRecoveryBuildingsUnlocked { get; set; }
+    public bool HideUntilSpecialtyBuildingsUnlocked { get; set; }
 
     [Export]
     public bool HideWhenNoContractsCompletedAndRosterEmpty { get; set; }
@@ -205,6 +205,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         _interactionArea.InputEvent += OnInteractionInputEvent;
         _interactionArea.MouseEntered += OnMouseEntered;
         _interactionArea.MouseExited += OnMouseExited;
+        RefreshVisuals();
         RefreshOccupancyBadge();
     }
 
@@ -690,15 +691,14 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
         var saveNode = SaveNode.Get();
         var careerData = _careerData ?? saveNode?.CompanyCareerData;
-        var completedContracts = careerData?.ContractsCompleted ?? 0;
         var runData = _runData ?? saveNode?.CompanyRunData;
-        if (HideUntilRecoveryBuildingsUnlocked)
-            return runData?.HasUnlockedRecoveryBuildings != true && completedContracts < 2;
+        if (HideUntilSpecialtyBuildingsUnlocked)
+            return runData?.HasUnlockedSpecialtyBuildings != true && careerData?.HasReachedSpecialtyBuildings != true;
 
         if (!HideWhenNoContractsCompletedAndRosterEmpty)
             return false;
 
-        if (completedContracts > 0)
+        if (careerData?.HasCompletedContracts == true)
             return false;
 
         return runData?.Gladiators == null || runData.Gladiators.Count <= 0;
