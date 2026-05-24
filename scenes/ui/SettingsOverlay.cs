@@ -10,14 +10,17 @@ public partial class SettingsOverlay : Control
 	private const int VideoCategory = 0;
 	private const int SoundCategory = 1;
 	private const int GameplayCategory = 2;
-	private const int SaveDataCategory = 3;
+	private const int ControlsCategory = 3;
+	private const int SaveDataCategory = 4;
 
 	private Button _videoButton;
 	private Button _soundButton;
 	private Button _gameplayButton;
+	private Button _controlsButton;
 	private Button _saveDataButton;
 	private Label _categoryTitle;
 	private Control _gameplaySettings;
+	private Control _controlsSettings;
 	private Control _saveDataSettings;
 	private CheckBox _debugCheckBox;
 	private Label _lowHealthValueLabel;
@@ -32,20 +35,23 @@ public partial class SettingsOverlay : Control
 		_videoButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/VideoButton");
 		_soundButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/SoundButton");
 		_gameplayButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/GameplayButton");
+		_controlsButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/ControlsButton");
 		_saveDataButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/SaveDataButton");
 		_categoryTitle = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/CategoryTitle");
 		_gameplaySettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings");
+		_controlsSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings");
 		_saveDataSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings");
 		_placeholderLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/PlaceholderLabel");
 		_debugCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/DebugCheckBox");
 		_lowHealthValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthValueLabel");
 		_lowHealthSpinBox = GetNode<SpinBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthSpinBox");
-		_arenaMoveDeadzoneValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/ArenaMoveDeadzoneRow/ArenaMoveDeadzoneValueLabel");
-		_arenaMoveDeadzoneSpinBox = GetNode<SpinBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/ArenaMoveDeadzoneRow/ArenaMoveDeadzoneSpinBox");
+		_arenaMoveDeadzoneValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/ArenaMoveDeadzoneRow/ArenaMoveDeadzoneValueLabel");
+		_arenaMoveDeadzoneSpinBox = GetNode<SpinBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/ArenaMoveDeadzoneRow/ArenaMoveDeadzoneSpinBox");
 
 		_videoButton.Pressed += () => ShowCategory(VideoCategory);
 		_soundButton.Pressed += () => ShowCategory(SoundCategory);
 		_gameplayButton.Pressed += () => ShowCategory(GameplayCategory);
+		_controlsButton.Pressed += () => ShowCategory(ControlsCategory);
 		_saveDataButton.Pressed += () => ShowCategory(SaveDataCategory);
 		_debugCheckBox.Toggled += OnDebugToggled;
 		_lowHealthSpinBox.ValueChanged += OnLowHealthWarningChanged;
@@ -64,14 +70,16 @@ public partial class SettingsOverlay : Control
 	private void ShowCategory(int category)
 	{
 		_gameplaySettings.Visible = category == GameplayCategory;
+		_controlsSettings.Visible = category == ControlsCategory;
 		_saveDataSettings.Visible = category == SaveDataCategory;
-		_placeholderLabel.Visible = category != GameplayCategory && category != SaveDataCategory;
+		_placeholderLabel.Visible = category != GameplayCategory && category != ControlsCategory && category != SaveDataCategory;
 
 		_categoryTitle.Text = category switch
 		{
 			VideoCategory => "Video",
 			SoundCategory => "Sound",
 			GameplayCategory => "Gameplay",
+			ControlsCategory => "Controls",
 			SaveDataCategory => "Save Data",
 			_ => "Video"
 		};
@@ -86,6 +94,7 @@ public partial class SettingsOverlay : Control
 		_videoButton.Disabled = category == VideoCategory;
 		_soundButton.Disabled = category == SoundCategory;
 		_gameplayButton.Disabled = category == GameplayCategory;
+		_controlsButton.Disabled = category == ControlsCategory;
 		_saveDataButton.Disabled = category == SaveDataCategory;
 	}
 

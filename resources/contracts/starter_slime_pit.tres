@@ -12,5 +12,5 @@ Difficulty = 0
 FameCost = 0
 FameRewardRatio = 0.1
 FameCostRatio = 0.01
-Mobs = Array[Resource]([ExtResource("2_slime"), ExtResource("2_slime"), ExtResource("2_slime")])
+Mobs = Array[Resource]([ExtResource("2_slime")])
 GoldReward = 20

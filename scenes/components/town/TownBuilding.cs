@@ -25,7 +25,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
     private string _buildingName = "Town Building";
     private Texture2D _buildingTexture;
-    private Texture2D _disabledBuildingTexture;
+    private Texture2D _closedBuildingTexture;
     private Texture2D _iconTexture;
     private bool _disabled;
 
@@ -52,12 +52,12 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     }
 
     [Export]
-    public Texture2D DisabledBuildingTexture
+    public Texture2D ClosedBuildingTexture
     {
-        get => _disabledBuildingTexture;
+        get => _closedBuildingTexture;
         set
         {
-            _disabledBuildingTexture = value;
+            _closedBuildingTexture = value;
             RefreshVisuals();
         }
     }
@@ -98,6 +98,12 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
     [Export]
     public bool DisableAtNight { get; set; }
+
+    [Export]
+    public bool HideUntilRecoveryBuildingsUnlocked { get; set; }
+
+    [Export]
+    public bool HideWhenNoContractsCompletedAndRosterEmpty { get; set; }
 
     [Export]
     public string ConfirmationTitle { get; set; } = "Open Building?";
@@ -149,6 +155,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     private Label _occupancyCountLabel;
     private HBoxContainer _statusWarnings;
     private CompanyRunData _runData;
+    private CompanyCareerData _careerData;
     private TownPhaseState _phaseState;
     private ulong _lastInputActivationMsec;
     private bool _showCapacityDuringGladiatorDrag;
@@ -185,9 +192,12 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         AddToGroup(RosterYard.PhaseGoldCostSourceGroup);
         var saveNode = SaveNode.Get();
         _runData = saveNode?.CompanyRunData;
+        _careerData = saveNode?.CompanyCareerData;
         _phaseState = saveNode?.TownPhaseState;
         if (_runData != null)
             _runData.RunChanged += RefreshBadges;
+        if (_careerData != null)
+            _careerData.CareerChanged += RefreshBadges;
         if (_phaseState != null)
             _phaseState.PhaseChanged += RefreshBadges;
 
@@ -202,6 +212,8 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     {
         if (_runData != null)
             _runData.RunChanged -= RefreshBadges;
+        if (_careerData != null)
+            _careerData.CareerChanged -= RefreshBadges;
         if (_phaseState != null)
             _phaseState.PhaseChanged -= RefreshBadges;
     }
@@ -614,8 +626,12 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
             _nameLabel.Text = string.IsNullOrWhiteSpace(BuildingName) ? "Town Building" : BuildingName;
 
         var disabled = Disabled;
-        var visibleBuildingTexture = disabled && DisabledBuildingTexture != null
-            ? DisabledBuildingTexture
+        Visible = !ShouldHideBuilding();
+        if (!Visible)
+            GetTownHud()?.HideHoverInfo(this);
+
+        var visibleBuildingTexture = disabled && ClosedBuildingTexture != null
+            ? ClosedBuildingTexture
             : BuildingTexture;
         if (_buildingSprite != null && visibleBuildingTexture != null)
             _buildingSprite.Texture = visibleBuildingTexture;
@@ -626,7 +642,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         if (disabled)
             GetTownHud()?.HideHoverInfo(this);
 
-        Modulate = disabled && DisabledBuildingTexture == null ? new Color(0.55f, 0.55f, 0.55f, 1.0f) : Colors.White;
+        Modulate = disabled ? new Color(0.55f, 0.55f, 0.55f, 1.0f) : Colors.White;
         RefreshOccupancyBadge();
     }
 
@@ -665,6 +681,27 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
             return false;
 
         return (_phaseState ?? SaveNode.Get()?.TownPhaseState)?.IsNight() == true;
+    }
+
+    private bool ShouldHideBuilding()
+    {
+        if (Engine.IsEditorHint())
+            return false;
+
+        var saveNode = SaveNode.Get();
+        var careerData = _careerData ?? saveNode?.CompanyCareerData;
+        var completedContracts = careerData?.ContractsCompleted ?? 0;
+        var runData = _runData ?? saveNode?.CompanyRunData;
+        if (HideUntilRecoveryBuildingsUnlocked)
+            return runData?.HasUnlockedRecoveryBuildings != true && completedContracts < 2;
+
+        if (!HideWhenNoContractsCompletedAndRosterEmpty)
+            return false;
+
+        if (completedContracts > 0)
+            return false;
+
+        return runData?.Gladiators == null || runData.Gladiators.Count <= 0;
     }
 
     private void RefreshGoldPreview()

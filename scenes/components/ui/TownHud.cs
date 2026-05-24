@@ -32,6 +32,11 @@ public partial class TownHud : CanvasLayer
 	private const string CalendarInfoPopupText = "todo: implement weather condition effects and champion explanation here";
 	private const string ChampionDayPopupTitle = "Champion Day";
 	private const string ChampionDayPopupText = "A champion contract is mandatory today. Win to continue the company. Lose, and the company is force-retired.";
+	private const string NextDayUpkeepPopupTitle = "Night Upkeep";
+	private const string NextDayUpkeepPopupText = "Advancing to the next day resolves all Night costs. Assigned buildings may charge for treatment or training, and every active gladiator is paid salary. These costs can put the company into debt, so use the summary to plan your next contract.";
+	private const string FirstNextDayPopupTitle = "The City Opens Up";
+	private const string FirstNextDayPopupText = "After a fight, Night is when your company pays salaries and resolves any queued town costs. Use the summary to understand what will happen before starting the next Day.";
+	private const string GoldIconPath = "res://assets/ui/icons/gold.svg";
 
 	[Signal]
 	public delegate void BackPressedEventHandler();
@@ -197,8 +202,38 @@ public partial class TownHud : CanvasLayer
 			return;
 		}
 
+		var runData = _saveNode?.CompanyRunData;
+		if (ShouldShowFirstNextDayTutorial(runData))
+		{
+			runData.MarkNextDayUpkeepPopupShown();
+			_saveNode.Save();
+			GlobalOverlay.Get()?.ShowBlurredPopup(
+				FirstNextDayPopupTitle,
+				FirstNextDayPopupText,
+				ResourceLoader.Load<Texture2D>(GoldIconPath),
+				ShowNextDaySummaryOverlay);
+			return;
+		}
+
+		if (runData is { HasShownNextDayUpkeepPopup: false })
+		{
+			runData.MarkNextDayUpkeepPopupShown();
+			_saveNode.Save();
+			GlobalOverlay.Get()?.ShowBlurredPopup(
+				NextDayUpkeepPopupTitle,
+				NextDayUpkeepPopupText,
+				ResourceLoader.Load<Texture2D>(GoldIconPath),
+				ShowNextDaySummaryOverlay);
+			return;
+		}
 
 		ShowNextDaySummaryOverlay();
+	}
+
+	private bool ShouldShowFirstNextDayTutorial(CompanyRunData runData)
+	{
+		return runData is { HasUnlockedRecoveryBuildings: false }
+			&& (_saveNode?.CompanyCareerData?.ContractsCompleted ?? 0) <= 1;
 	}
 
 	private void ShowNextDaySummaryOverlay()
@@ -217,7 +252,8 @@ public partial class TownHud : CanvasLayer
 
 	private void AdvanceToNextDayConfirmed()
 	{
-		if (!PhaseTransitionController.AdvanceToNextDay(_phaseState, _saveNode.CompanyRunData, _saveNode.WeatherState))
+		var runData = _saveNode.CompanyRunData;
+		if (!PhaseTransitionController.AdvanceToNextDay(_phaseState, runData, _saveNode.WeatherState))
 			return;
 
 		GD.Print($"SaveNode: Autosaving at day {_phaseState.CurrentDay}.");
@@ -274,7 +310,7 @@ public partial class TownHud : CanvasLayer
 		switch (id)
 		{
 			case DevActionWinArena:
-				if (ArenaContractResultResolver.ResolveWin(_saveNode, requireActiveContract: false) != ArenaContractResultResolver.ContractResult.Completed)
+				if (!CompleteFirstArenaContract())
 					return;
 				break;
 			case DevActionAddDefaultGladiator:
@@ -293,6 +329,26 @@ public partial class TownHud : CanvasLayer
 		_saveNode.Save();
 	}
 
+	private bool CompleteFirstArenaContract()
+	{
+		var runData = _saveNode?.CompanyRunData;
+		if (runData == null)
+		{
+			GD.PushError("Dev win arena failed: company run data is missing.");
+			return false;
+		}
+
+		var contract = GetFirstArenaContract(runData.Fame, _phaseState?.IsChampionDay == true, _saveNode?.CompanyCareerData?.HasCompletedContracts == true);
+		if (contract == null)
+		{
+			GD.PushError("Dev win arena failed: no arena contract is available.");
+			return false;
+		}
+
+		runData.SetActiveArenaContract(contract);
+		return ArenaContractResultResolver.ResolveWin(_saveNode) == ArenaContractResultResolver.ContractResult.Completed;
+	}
+
 	private void QuickstartArena()
 	{
 		var runData = _saveNode?.CompanyRunData;
@@ -306,7 +362,7 @@ public partial class TownHud : CanvasLayer
 		if (runData.Gladiators.Count <= 0)
 			return;
 
-		var contract = GetQuickstartContract(runData.Fame, _phaseState?.IsChampionDay == true);
+		var contract = GetQuickstartContract(runData.Fame, _phaseState?.IsChampionDay == true, _saveNode?.CompanyCareerData?.HasCompletedContracts == true);
 		if (contract == null)
 		{
 			GD.PushError("Quickstart arena failed: no contract is available.");
@@ -343,8 +399,16 @@ public partial class TownHud : CanvasLayer
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, ArenaScenePath);
 	}
 
-	private static ArenaContractData GetQuickstartContract(int companyFame, bool isChampionDay)
+	private static ArenaContractData GetQuickstartContract(int companyFame, bool isChampionDay, bool hasCompletedContracts)
 	{
+		return GetFirstArenaContract(companyFame, isChampionDay, hasCompletedContracts);
+	}
+
+	private static ArenaContractData GetFirstArenaContract(int companyFame, bool isChampionDay, bool hasCompletedContracts)
+	{
+		if (!hasCompletedContracts)
+			return ResourceLoader.Load<ArenaContractData>(StarterSlimePitContractPath);
+
 		var generatedContracts = ArenaContractGenerator.GenerateRandomContracts(companyFame, isChampionDay);
 		if (generatedContracts.Count > 0)
 			return generatedContracts[0];

@@ -91,6 +91,24 @@ public partial class CompanyRunData : Resource
     public bool HasShownFirstTownEntryPopup { get; private set; }
 
     [Export]
+    public bool HasShownDragTutorialPopup { get; private set; }
+
+    [Export]
+    public bool HasShownFirstContractCompletedPopup { get; private set; }
+
+    [Export]
+    public bool HasShownNextDayUpkeepPopup { get; private set; }
+
+    [Export]
+    public bool HasUnlockedRecoveryBuildings { get; private set; }
+
+    [Export]
+    public bool HasShownThermaeTutorialPopup { get; private set; }
+
+    [Export]
+    public bool HasShownTrainingHallTutorialPopup { get; private set; }
+
+    [Export]
     public TreatmentFocus CurrentTreatmentFocus { get; private set; } = TreatmentFocus.Health;
 
     [Export]
@@ -165,6 +183,60 @@ public partial class CompanyRunData : Resource
             return;
 
         HasShownFirstTownEntryPopup = true;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void MarkDragTutorialPopupShown()
+    {
+        if (HasShownDragTutorialPopup)
+            return;
+
+        HasShownDragTutorialPopup = true;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void MarkFirstContractCompletedPopupShown()
+    {
+        if (HasShownFirstContractCompletedPopup)
+            return;
+
+        HasShownFirstContractCompletedPopup = true;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void MarkNextDayUpkeepPopupShown()
+    {
+        if (HasShownNextDayUpkeepPopup)
+            return;
+
+        HasShownNextDayUpkeepPopup = true;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void MarkRecoveryBuildingsUnlocked()
+    {
+        if (HasUnlockedRecoveryBuildings)
+            return;
+
+        HasUnlockedRecoveryBuildings = true;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void MarkThermaeTutorialPopupShown()
+    {
+        if (HasShownThermaeTutorialPopup)
+            return;
+
+        HasShownThermaeTutorialPopup = true;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void MarkTrainingHallTutorialPopupShown()
+    {
+        if (HasShownTrainingHallTutorialPopup)
+            return;
+
+        HasShownTrainingHallTutorialPopup = true;
         EmitSignal(SignalName.RunChanged);
     }
 

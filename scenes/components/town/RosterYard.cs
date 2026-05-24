@@ -14,6 +14,9 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
     private const string RosterYardGladiatorScenePath = "res://scenes/components/town/RosterYardGladiator.tscn";
     private const string GoldCostOverlayScenePath = "res://scenes/ui/GoldCostOverlay.tscn";
+    private const string DragIconPath = "res://assets/ui/items/drag_hand.svg";
+    private const string DragTutorialPopupTitle = "Drag to Manage";
+    private const string DragTutorialPopupText = "Gladiators in the yard can be dragged onto town buildings to assign them. The hand icon marks things you can drag.";
     private const float DragStartDistance = 8f;
     private const float DragTokenHeight = 72f;
     private const float DragTokenPointerOffsetY = 32f;
@@ -247,6 +250,23 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
             positions.Add(yardGladiator.Position);
             _gladiators.AddChild(yardGladiator);
         }
+
+        if (runData.TownAssignments.CourtyardGladiators.Count > 0)
+            CallDeferred(MethodName.ShowDragTutorialPopupIfNeeded);
+    }
+
+    private void ShowDragTutorialPopupIfNeeded()
+    {
+        var runData = _saveNode?.CompanyRunData;
+        if (runData == null || runData.HasShownDragTutorialPopup || runData.TownAssignments.CourtyardGladiators.Count <= 0)
+            return;
+
+        runData.MarkDragTutorialPopupShown();
+        _saveNode.Save();
+        GlobalOverlay.Get()?.ShowBlurredPopup(
+            DragTutorialPopupTitle,
+            DragTutorialPopupText,
+            ResourceLoader.Load<Texture2D>(DragIconPath));
     }
 
     private void RefreshShowcaseButtons(CompanyRunData runData)

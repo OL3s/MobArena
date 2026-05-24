@@ -25,6 +25,8 @@ public partial class CompanyCareerData : Resource
     [Export]
     public int ChampionsDefeated { get; private set; }
 
+    public bool HasCompletedContracts => ContractsCompleted > 0;
+
     public void AddGladiator()
     {
         AddGladiators(1);

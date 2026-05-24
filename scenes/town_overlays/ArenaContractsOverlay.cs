@@ -5,13 +5,13 @@ using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources.Contracts;
 using MobArena.Scripts.Resources;
-using MobArena.Scripts.Resources.Mobs;
 
 namespace MobArena.Scenes.TownOverlays;
 
 public partial class ArenaContractsOverlay : Control
 {
     private const string ArenaDonationOverlayScenePath = "res://scenes/town_overlays/arena_donation_overlay.tscn";
+    private const string StarterSlimePitContractPath = "res://resources/contracts/starter_slime_pit.tres";
     [Export]
     public PackedScene ArenaScene { get; set; }
 
@@ -32,12 +32,14 @@ public partial class ArenaContractsOverlay : Control
     private Button _startButton;
     private Button _rerollButton;
     private Button _closeButton;
+    private CompanyCareerData _careerData;
     private TownPhaseState _phaseState;
     private CompanyRunData _runData;
     private Array<ArenaContractData> _activeContracts = new();
     private int _selectedContractIndex = -1;
     private int _generatedForFame = -1;
     private bool _generatedForChampionDay;
+    private bool _generatedForCompletedContracts;
     private bool _refreshingUi;
 
     public override void _Ready()
@@ -52,6 +54,7 @@ public partial class ArenaContractsOverlay : Control
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
         var saveNode = SaveNode.Get();
         _runData = saveNode?.CompanyRunData;
+        _careerData = saveNode?.CompanyCareerData;
         _phaseState = saveNode?.TownPhaseState;
 
         _startButton.Pressed += OnStartPressed;
@@ -60,6 +63,8 @@ public partial class ArenaContractsOverlay : Control
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
             _runData.RunChanged += RefreshUi;
+        if (_careerData != null)
+            _careerData.CareerChanged += RefreshUi;
 
         BuildContracts();
         RefreshUi();
@@ -69,6 +74,8 @@ public partial class ArenaContractsOverlay : Control
     {
         if (_runData != null)
             _runData.RunChanged -= RefreshUi;
+        if (_careerData != null)
+            _careerData.CareerChanged -= RefreshUi;
     }
 
     private void BuildContracts()
@@ -79,9 +86,8 @@ public partial class ArenaContractsOverlay : Control
         _selectedContractIndex = -1;
         _generatedForFame = _runData?.Fame ?? 0;
         _generatedForChampionDay = _phaseState?.IsChampionDay == true;
-        _activeContracts = ArenaContractGenerator.GenerateRandomContracts(
-            _generatedForFame,
-            _generatedForChampionDay);
+        _generatedForCompletedContracts = _careerData?.HasCompletedContracts == true;
+        _activeContracts = GetVisibleContracts(_generatedForFame, _generatedForChampionDay, _generatedForCompletedContracts);
 
         if (_activeContracts.Count <= 0)
         {
@@ -131,14 +137,31 @@ public partial class ArenaContractsOverlay : Control
             return;
 
         _refreshingUi = true;
-        if ((_runData?.Fame ?? 0) != _generatedForFame || (_phaseState?.IsChampionDay == true) != _generatedForChampionDay)
+        if ((_runData?.Fame ?? 0) != _generatedForFame
+            || (_phaseState?.IsChampionDay == true) != _generatedForChampionDay
+            || (_careerData?.HasCompletedContracts == true) != _generatedForCompletedContracts)
+        {
             BuildContracts();
+        }
 
         RefreshContractCards();
         RefreshAssignedGladiators();
         RefreshContractVisibility();
         RefreshActions();
         _refreshingUi = false;
+    }
+
+    private static Array<ArenaContractData> GetVisibleContracts(int companyFame, bool isChampionDay, bool hasCompletedContracts)
+    {
+        if (hasCompletedContracts)
+            return ArenaContractGenerator.GenerateRandomContracts(companyFame, isChampionDay);
+
+        var contracts = new Array<ArenaContractData>();
+        var starterContract = ResourceLoader.Load<ArenaContractData>(StarterSlimePitContractPath);
+        if (starterContract != null)
+            contracts.Add(starterContract);
+
+        return contracts;
     }
 
     private void RefreshContractVisibility()
