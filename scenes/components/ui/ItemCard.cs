@@ -77,7 +77,7 @@ public partial class ItemCard : PanelContainer
         if (!IsNodeReady())
             return;
 
-        _itemIcon.Texture = _item?.Icon;
+        _itemIcon.Texture = _item?.UiIcon;
         _typeIcon.Texture = GetTypeIcon(_item);
         _nameLabel.Text = _item?.DisplayName ?? "Item";
         _goldLabel.Text = (_item?.Cost ?? 0).ToString();

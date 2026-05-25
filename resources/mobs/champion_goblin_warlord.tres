@@ -8,7 +8,7 @@
 script = ExtResource("1_champion")
 DisplayName = "Goblin Warlord"
 Description = "A goblin champion meant to lead same-family support mobs."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 1

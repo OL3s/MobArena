@@ -8,7 +8,7 @@
 script = ExtResource("1_enemy")
 DisplayName = "Bone Golem"
 Description = "A heavy undead construct for late hard contracts."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 2

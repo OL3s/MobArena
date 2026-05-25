@@ -229,7 +229,7 @@ public partial class CodexOverlay : Control
         };
         row.AddThemeConstantOverride("separation", 8);
 
-        var button = CreateEntryButton(enemy.DisplayName, enemy.GetIconTexture(), () => ShowEnemy(enemy));
+        var button = CreateEntryButton(enemy.DisplayName, enemy.GetUiIconTexture(), () => ShowEnemy(enemy));
         button.CustomMinimumSize = new Vector2(0, 54);
         button.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(button);
@@ -302,7 +302,7 @@ public partial class CodexOverlay : Control
         };
         row.AddThemeConstantOverride("separation", 8);
 
-        var button = CreateEntryButton(item.DisplayName, item.Icon, () => ShowItem(item));
+        var button = CreateEntryButton(item.DisplayName, item.UiIcon, () => ShowItem(item));
         button.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(button);
 
@@ -429,7 +429,7 @@ public partial class CodexOverlay : Control
     private void ShowEnemy(MobData enemy)
     {
         SetDetailsVisible(true);
-        _icon.Texture = enemy.GetIconTexture();
+        _icon.Texture = enemy.GetUiIconTexture();
         _titleLabel.Text = enemy.DisplayName;
         _descriptionLabel.Text = enemy.Description;
         ClearStats();
@@ -446,7 +446,7 @@ public partial class CodexOverlay : Control
     private void ShowItem(ItemData item)
     {
         SetDetailsVisible(true);
-        _icon.Texture = item.Icon;
+        _icon.Texture = item.UiIcon;
         _titleLabel.Text = item.DisplayName;
         _descriptionLabel.Text = item.Description;
         ClearStats();

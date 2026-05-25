@@ -8,7 +8,7 @@
 script = ExtResource("1_enemy")
 DisplayName = "Ash Cultist"
 Description = "A lesser demon-aligned caster that fills mid-to-late demon contracts."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 3

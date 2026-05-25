@@ -104,7 +104,7 @@ public partial class ArenaLaunchSummaryOverlay : Control
         row.AddThemeConstantOverride("separation", 6);
         margin.AddChild(row);
 
-        row.AddChild(CreateIcon(gladiator.GetPortraitTexture(), 38f, gladiator.GladiatorName));
+        row.AddChild(CreateIcon(gladiator.GetUiIconTexture(), 38f, gladiator.GladiatorName));
         row.AddChild(new Label
         {
             CustomMinimumSize = new Vector2(110f, 0f),
@@ -133,9 +133,9 @@ public partial class ArenaLaunchSummaryOverlay : Control
             TooltipText = item == null ? $"{slotName}: Empty" : $"{slotName}: {item.DisplayName}"
         };
 
-        if (item?.Icon != null)
+        if (item?.UiIcon != null)
         {
-            slot.AddChild(CreateIcon(item.Icon, 30f, slot.TooltipText));
+            slot.AddChild(CreateIcon(item.UiIcon, 30f, slot.TooltipText));
         }
         else
         {

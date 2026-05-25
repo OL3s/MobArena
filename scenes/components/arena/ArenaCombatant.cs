@@ -22,7 +22,12 @@ public abstract partial class ArenaCombatant : CharacterBody2D
     public float MaxSoftCollisionSpeed { get; protected set; } = 160f;
 
     [Export]
-    public Vector2 LookDirection { get; private set; } = Vector2.Zero;
+    public Vector2 LookDirection { get; private set; } = Vector2.Right;
+
+    public override void _Process(double delta)
+    {
+        ZIndex = Mathf.RoundToInt(GlobalPosition.Y);
+    }
 
     protected void ConfigureTopDownMotion()
     {
@@ -103,7 +108,10 @@ public abstract partial class ArenaCombatant : CharacterBody2D
 
     protected void ForceLookDirection(Vector2 lookDirection)
     {
-        LookDirection = lookDirection;
+        if (lookDirection == Vector2.Zero)
+            return;
+
+        LookDirection = lookDirection.Normalized();
     }
 
     protected void ApplyLookVisual(Sprite2D sprite, Texture2D frontTexture, Texture2D backTexture, float displayHeight)
@@ -130,6 +138,39 @@ public abstract partial class ArenaCombatant : CharacterBody2D
             var scale = displayHeight / texture.GetHeight();
             sprite.Scale = new Vector2(scale * xSign, scale);
         }
+    }
+
+    protected void ApplyDirectionalVisual(Sprite2D sprite, Texture2D texture, float displayHeight, Vector2 localPosition)
+    {
+        if (sprite == null)
+            return;
+
+        if (texture == null)
+        {
+            sprite.Hide();
+            return;
+        }
+
+        var xSign = GetVisualXSign();
+        sprite.Show();
+        sprite.Texture = texture;
+        sprite.Position = new Vector2(localPosition.X * xSign, localPosition.Y);
+
+        if (texture.GetHeight() > 0)
+        {
+            var scale = displayHeight / texture.GetHeight();
+            sprite.Scale = new Vector2(scale * xSign, scale);
+        }
+    }
+
+    protected float GetVisualXSign()
+    {
+        if (LookDirection.X > 0f)
+            return 1f;
+        if (LookDirection.X < 0f)
+            return -1f;
+
+        return 1f;
     }
 
     protected static void FitSpriteHeight(Sprite2D sprite, Texture2D texture, float displayHeight)

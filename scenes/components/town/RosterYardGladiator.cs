@@ -9,7 +9,14 @@ namespace MobArena.Scenes.Components.Town;
 public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHoverInfoProvider
 {
     private const float DisplayHeight = 72f;
+    private const float HandDisplayHeight = 14f;
+    private const float HeldItemDisplayHeight = 26f;
     private const float RiskWarningThreshold = 5f;
+    private static readonly Vector2 BodyLocalPosition = new(0f, -21f);
+    private static readonly Vector2 LeftHandLocalPosition = new(-20f, -15f);
+    private static readonly Vector2 RightHandLocalPosition = new(20f, -15f);
+    private static readonly Vector2 MainHandItemLocalPosition = new(9f, -1f);
+    private static readonly Vector2 OffHandItemLocalPosition = new(-9f, -1f);
     private static readonly Rect2 DropBounds = new(new Vector2(-56f, -68f), new Vector2(112f, 136f));
 
     private readonly Godot.Collections.Array<TownDragPayloadKind> _acceptedTownDragDropKinds = TownDragDropRules.GetAllAcceptedKinds();
@@ -18,10 +25,15 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
     private bool _isHovered;
     private bool _showCompactEquipment;
     private bool _showCompactHealthBar;
+    private Vector2 _lookDirection = Vector2.Right;
 
 	private GladiatorData _gladiatorData;
 	private ColorRect _background;
 	private Sprite2D _portrait;
+    private Sprite2D _leftHand;
+    private Sprite2D _rightHand;
+    private Sprite2D _mainHandItem;
+    private Sprite2D _offHandItem;
     private Area2D _interactionArea;
     private Label _nameLabel;
     private HBoxContainer _riskWarnings;
@@ -81,6 +93,10 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
 		AddToGroup("town_roster_gladiators");
 		_background = GetNode<ColorRect>("Background");
 		_portrait = GetNode<Sprite2D>("Portrait");
+        _leftHand = GetNode<Sprite2D>("LeftHand");
+        _rightHand = GetNode<Sprite2D>("RightHand");
+        _mainHandItem = GetNode<Sprite2D>("RightHand/MainHandItem");
+        _offHandItem = GetNode<Sprite2D>("LeftHand/OffHandItem");
         _interactionArea = GetNode<Area2D>("InteractionArea");
         _nameLabel = GetNode<Label>("Name");
         _riskWarnings = GetNode<HBoxContainer>("RiskWarnings");
@@ -121,6 +137,11 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
         _interactionArea.InputEvent -= OnInputEvent;
     }
 
+    public override void _Process(double delta)
+    {
+        ZIndex = Mathf.RoundToInt(GlobalPosition.Y);
+    }
+
     public void Configure(GladiatorData gladiatorData)
     {
         GladiatorData = gladiatorData;
@@ -131,11 +152,86 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
         if (!IsNodeReady() || _portrait == null || _gladiatorData == null)
             return;
 
-        var texture = _gladiatorData.GetBodyForwardTexture();
-        _portrait.Texture = texture;
+        ApplyLookVisual(_portrait, _gladiatorData.GetBodyForwardTexture(), _gladiatorData.GetBodyBackTexture(), DisplayHeight, BodyLocalPosition);
+        RefreshHandVisuals();
+    }
 
-        if (texture != null && texture.GetHeight() > 0)
-            _portrait.Scale = Vector2.One * (DisplayHeight / texture.GetHeight());
+    private void ApplyLookVisual(Sprite2D sprite, Texture2D frontTexture, Texture2D backTexture, float displayHeight, Vector2 localPosition)
+    {
+        if (sprite == null)
+            return;
+
+        var texture = _lookDirection.Y < 0f
+            ? backTexture ?? frontTexture
+            : frontTexture ?? backTexture;
+
+        if (texture == null)
+        {
+            sprite.Hide();
+            return;
+        }
+
+        var xSign = GetVisualXSign();
+        sprite.Show();
+        sprite.Texture = texture;
+        sprite.Position = new Vector2(localPosition.X * xSign, localPosition.Y);
+
+        if (texture.GetHeight() > 0)
+        {
+            var scale = displayHeight / texture.GetHeight();
+            sprite.Scale = new Vector2(scale * xSign, scale);
+        }
+    }
+
+    private void RefreshHandVisuals()
+    {
+        if (_gladiatorData?.UsesSeparatedHands() != true)
+        {
+            _leftHand?.Hide();
+            _rightHand?.Hide();
+            return;
+        }
+
+        var handTexture = _gladiatorData.GetHandTexture();
+        ApplyDirectionalVisual(_leftHand, handTexture, HandDisplayHeight, LeftHandLocalPosition);
+        ApplyDirectionalVisual(_rightHand, handTexture, HandDisplayHeight, RightHandLocalPosition);
+
+        var equipment = _gladiatorData.Equipment;
+        ApplyDirectionalVisual(_mainHandItem, equipment?.MainHand?.GetHeldTexture(), HeldItemDisplayHeight, MainHandItemLocalPosition);
+        ApplyDirectionalVisual(_offHandItem, equipment?.OffHand?.GetHeldTexture(), HeldItemDisplayHeight, OffHandItemLocalPosition);
+    }
+
+    private void ApplyDirectionalVisual(Sprite2D sprite, Texture2D texture, float displayHeight, Vector2 localPosition)
+    {
+        if (sprite == null)
+            return;
+
+        if (texture == null)
+        {
+            sprite.Hide();
+            return;
+        }
+
+        var xSign = GetVisualXSign();
+        sprite.Show();
+        sprite.Texture = texture;
+        sprite.Position = new Vector2(localPosition.X * xSign, localPosition.Y);
+
+        if (texture.GetHeight() > 0)
+        {
+            var scale = displayHeight / texture.GetHeight();
+            sprite.Scale = new Vector2(scale * xSign, scale);
+        }
+    }
+
+    private float GetVisualXSign()
+    {
+        if (_lookDirection.X > 0f)
+            return 1f;
+        if (_lookDirection.X < 0f)
+            return -1f;
+
+        return 1f;
     }
 
     private void RefreshLabels()
@@ -276,6 +372,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
         SetEquipmentIcon(_compactMainItemIcon, equipment?.MainHand, _showCompactEquipment);
         SetEquipmentIcon(_compactArmorIcon, equipment?.Armor, _showCompactEquipment);
         SetEquipmentIcon(_compactOffItemIcon, equipment?.OffHand, _showCompactEquipment);
+        RefreshHandVisuals();
 
         var riskStatus = GetRiskStatus(_gladiatorData);
         _compactExhaustionIcon.Visible = riskStatus == GladiatorRiskStatus.Exhausted;
@@ -294,7 +391,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
         if (icon == null)
             return;
 
-        icon.Texture = item?.Icon;
+        icon.Texture = item?.UiIcon;
         icon.TooltipText = item?.DisplayName ?? "Empty equipment slot";
         icon.Visible = showEquipment;
         icon.Modulate = item == null ? new Color(1f, 1f, 1f, 0.28f) : Colors.White;

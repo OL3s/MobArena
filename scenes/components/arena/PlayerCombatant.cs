@@ -8,8 +8,14 @@ public partial class PlayerCombatant : ArenaCombatant
 {
     private const string ArenaPlayersGroup = "arena_players";
     private const float DisplayHeight = 96f;
+    private const float HandDisplayHeight = 18f;
+    private const float HeldItemDisplayHeight = 34f;
 
     private Sprite2D _body;
+    private Sprite2D _leftHand;
+    private Sprite2D _rightHand;
+    private Sprite2D _mainHandItem;
+    private Sprite2D _offHandItem;
     private Label _nameLabel;
     private Label _controllerLabel;
 
@@ -22,6 +28,10 @@ public partial class PlayerCombatant : ArenaCombatant
         ConfigureTopDownMotion();
         AddToGroup(ArenaPlayersGroup);
         _body = GetNode<Sprite2D>("Body");
+        _leftHand = GetNode<Sprite2D>("LeftHand");
+        _rightHand = GetNode<Sprite2D>("RightHand");
+        _mainHandItem = GetNode<Sprite2D>("RightHand/MainHandItem");
+        _offHandItem = GetNode<Sprite2D>("LeftHand/OffHandItem");
         _nameLabel = GetNode<Label>("NameLabel");
         _controllerLabel = GetNode<Label>("ControllerLabel");
         InputState ??= new ArenaCombatInputState();
@@ -125,5 +135,28 @@ public partial class PlayerCombatant : ArenaCombatant
     private void ApplyBodyVisual()
     {
         ApplyLookVisual(_body, GladiatorData?.GetBodyForwardTexture(), GladiatorData?.GetBodyBackTexture(), DisplayHeight);
+        ApplyHandVisuals();
+        ApplyHeldItemVisuals();
+    }
+
+    private void ApplyHandVisuals()
+    {
+        if (GladiatorData?.UsesSeparatedHands() != true)
+        {
+            _leftHand?.Hide();
+            _rightHand?.Hide();
+            return;
+        }
+
+        var handTexture = GladiatorData.GetHandTexture();
+        ApplyDirectionalVisual(_leftHand, handTexture, HandDisplayHeight, new Vector2(-26f, -20f));
+        ApplyDirectionalVisual(_rightHand, handTexture, HandDisplayHeight, new Vector2(26f, -20f));
+    }
+
+    private void ApplyHeldItemVisuals()
+    {
+        var equipment = GladiatorData?.Equipment;
+        ApplyDirectionalVisual(_mainHandItem, equipment?.MainHand?.GetHeldTexture(), HeldItemDisplayHeight, new Vector2(12f, -2f));
+        ApplyDirectionalVisual(_offHandItem, equipment?.OffHand?.GetHeldTexture(), HeldItemDisplayHeight, new Vector2(-12f, -2f));
     }
 }

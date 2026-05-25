@@ -8,7 +8,7 @@
 script = ExtResource("1_enemy")
 DisplayName = "Wraith"
 Description = "A high-fame undead mob for hard generated contracts."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 2

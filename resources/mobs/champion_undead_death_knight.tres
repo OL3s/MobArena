@@ -8,7 +8,7 @@
 script = ExtResource("1_champion")
 DisplayName = "Death Knight"
 Description = "An undead champion that anchors high-pressure Champion Day contracts."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 2

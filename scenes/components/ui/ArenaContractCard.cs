@@ -110,7 +110,7 @@ public partial class ArenaContractCard : Button
             child.QueueFree();
 
         foreach (var mobGroup in GetGroupedMobs())
-            _mobsGrid.AddChild(CreateIconValue(mobGroup.Mob?.GetIconTexture(), $"x{mobGroup.Count}"));
+            _mobsGrid.AddChild(CreateIconValue(mobGroup.Mob?.GetUiIconTexture(), $"x{mobGroup.Count}"));
     }
 
     private IEnumerable<(MobData Mob, int Count)> GetGroupedMobs()

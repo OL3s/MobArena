@@ -415,7 +415,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
         CancelDrag();
         _draggedItem = item;
-        StartDragToken(item.Icon, viewportPosition);
+        StartDragToken(item.UiIcon, viewportPosition);
         SetGladiatorDragCapacityHintsVisible(false);
         RefreshGladiatorStatusContexts();
     }

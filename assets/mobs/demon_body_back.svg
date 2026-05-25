@@ -3,6 +3,4 @@
   <path d="M30 22 17 4l3 28zM66 22 79 4l-3 28z" fill="#7b2222"/>
   <circle cx="48" cy="38" r="24" fill="#d9534f"/>
   <path d="M27 30c12-15 30-15 42 0v21H27z" fill="#a73535"/>
-  <path d="M25 66 11 94M71 66l14 28" stroke="#d9534f" stroke-width="9" stroke-linecap="round"/>
-  <path d="M34 93v12M62 93v12" stroke="#2b1111" stroke-width="10" stroke-linecap="round"/>
 </svg>

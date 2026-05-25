@@ -8,6 +8,6 @@
 [resource]
 script = ExtResource("1_script")
 DisplayName = "Iron Slime Appearance"
-FaceIcon = ExtResource("2_face")
+UiIcon = ExtResource("2_face")
 BodyForward = ExtResource("3_forward")
 BodyBack = ExtResource("4_back")

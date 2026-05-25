@@ -8,7 +8,7 @@
 script = ExtResource("1_enemy")
 DisplayName = "Crystal Slime"
 Description = "A late-game slime whose fame value exceeds the current slime champion, reserved for future high-tier contracts."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 0

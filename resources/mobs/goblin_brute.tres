@@ -8,7 +8,7 @@
 script = ExtResource("1_enemy")
 DisplayName = "Goblin Brute"
 Description = "A heavy goblin that pushes the family into harder contract budgets."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 1

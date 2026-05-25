@@ -8,7 +8,7 @@
 script = ExtResource("1_enemy")
 DisplayName = "Iron Slime"
 Description = "A dense slime with high health and fame value."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 0

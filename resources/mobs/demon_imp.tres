@@ -8,7 +8,7 @@
 script = ExtResource("1_enemy")
 DisplayName = "Imp"
 Description = "The cheapest demon, still worth enough fame to avoid early easy contracts."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 3

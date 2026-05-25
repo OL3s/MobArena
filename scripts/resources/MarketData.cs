@@ -78,7 +78,7 @@ public partial class MarketData : Resource
 
         foreach (var item in ItemStock)
         {
-            if (item?.Icon == null)
+            if (item?.UiIcon == null)
                 return true;
         }
 
@@ -92,7 +92,7 @@ public partial class MarketData : Resource
 
         foreach (var gladiator in GladiatorStock)
         {
-            if (gladiator == null || gladiator.GetPortraitTexture() == null)
+            if (gladiator == null || gladiator.GetUiIconTexture() == null)
                 return true;
         }
 

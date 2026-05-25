@@ -8,7 +8,7 @@
 script = ExtResource("1_enemy")
 DisplayName = "Blue Slime"
 Description = "A tougher slime that starts pushing basic arena contracts beyond the safest starter fights."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 0

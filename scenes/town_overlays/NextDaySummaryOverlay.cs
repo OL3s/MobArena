@@ -148,7 +148,7 @@ public partial class NextDaySummaryOverlay : Control
         row.AddChild(new TextureRect
         {
             CustomMinimumSize = new Vector2(38f, 38f),
-            Texture = gladiator.GetPortraitTexture(),
+            Texture = gladiator.GetUiIconTexture(),
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
         });

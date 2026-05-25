@@ -206,7 +206,7 @@ public partial class ArenaContractsOverlay : Control
         var button = new Button
         {
             CustomMinimumSize = new Vector2(48, 48),
-            Icon = gladiator.GetPortraitTexture(),
+            Icon = gladiator.GetUiIconTexture(),
             TooltipText = $"Drag {gladiator.GladiatorName}",
             ExpandIcon = true
         };

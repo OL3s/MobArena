@@ -273,7 +273,7 @@ public partial class ArenaControlConfigOverlay : Control
         layout.AddChild(new TextureRect
         {
             CustomMinimumSize = new Vector2(76f, 76f),
-            Texture = gladiator.GetPortraitTexture(),
+            Texture = gladiator.GetUiIconTexture(),
             ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
         });

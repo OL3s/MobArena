@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/arena/EnemyCombatant.cs" id="1_enemy_combatant"]
+[ext_resource type="Texture2D" path="res://assets/ui/character_shadow.svg" id="2_shadow"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_enemy_body"]
 radius = 22.0
@@ -11,8 +12,19 @@ script = ExtResource("1_enemy_combatant")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_enemy_body")
 
+[node name="Shadow" type="Sprite2D" parent="."]
+position = Vector2(0, 10)
+texture = ExtResource("2_shadow")
+scale = Vector2(0.56, 0.56)
+
 [node name="Body" type="Sprite2D" parent="."]
 position = Vector2(0, -26)
+
+[node name="LeftHand" type="Sprite2D" parent="."]
+position = Vector2(-24, -16)
+
+[node name="RightHand" type="Sprite2D" parent="."]
+position = Vector2(24, -16)
 
 [node name="NameLabel" type="Label" parent="."]
 offset_left = -78.0

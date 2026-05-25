@@ -167,19 +167,29 @@ public partial class GladiatorData : Resource
         Appearance = LoadAppearance(PortraitIndex);
     }
 
-    public Texture2D GetPortraitTexture()
+    public Texture2D GetUiIconTexture()
     {
-        return GetAppearance()?.FaceIcon ?? ResourceLoader.Load<Texture2D>("res://assets/gladiators/gladiator_01.svg");
+        return GetAppearance()?.UiIcon ?? ResourceLoader.Load<Texture2D>("res://assets/gladiators/gladiator_01.svg");
     }
 
     public Texture2D GetBodyForwardTexture()
     {
-        return GetAppearance()?.BodyForward ?? GetPortraitTexture();
+        return GetAppearance()?.BodyForward ?? GetUiIconTexture();
     }
 
     public Texture2D GetBodyBackTexture()
     {
         return GetAppearance()?.BodyBack ?? GetBodyForwardTexture();
+    }
+
+    public bool UsesSeparatedHands()
+    {
+        return GetAppearance()?.UsesSeparatedHands == true;
+    }
+
+    public Texture2D GetHandTexture()
+    {
+        return GetAppearance()?.HandTexture;
     }
 
     public GladiatorAppearanceData GetAppearance()

@@ -8,7 +8,7 @@
 script = ExtResource("1_enemy")
 DisplayName = "Skeleton"
 Description = "A basic undead arena mob with more threat than starter families."
-Icon = ExtResource("2_icon")
+UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 2
