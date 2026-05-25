@@ -66,5 +66,15 @@ public partial class EnemyCombatant : ArenaCombatant
         var handTexture = MobData.GetHandTexture();
         ApplyDirectionalVisual(_leftHand, handTexture, HandDisplayHeight, new Vector2(-24f, -16f));
         ApplyDirectionalVisual(_rightHand, handTexture, HandDisplayHeight, new Vector2(24f, -16f));
+        ApplyHandDrawOrder();
+    }
+
+    private void ApplyHandDrawOrder()
+    {
+        var handZIndex = LookDirection.Y < 0f ? -2 : 1;
+        if (_leftHand != null)
+            _leftHand.ZIndex = handZIndex;
+        if (_rightHand != null)
+            _rightHand.ZIndex = handZIndex;
     }
 }

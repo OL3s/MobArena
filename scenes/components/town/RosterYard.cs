@@ -41,7 +41,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
     private RosterYardGladiator _draggedGladiator;
     private GladiatorData _draggedGladiatorData;
     private ItemData _draggedItem;
-    private Sprite2D _dragToken;
+    private Node2D _dragToken;
     private ITownDragDropTarget _previewedDropTarget;
     private bool _showingGladiatorDragCapacityHints;
     private bool _gladiatorsButtonHovered;
@@ -392,8 +392,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
         _pendingGladiator = null;
         _draggedGladiator.SetDragHidden(true);
 
-        var texture = _draggedGladiator.GladiatorData?.GetBodyForwardTexture();
-        StartDragToken(texture, viewportPosition);
+        StartGladiatorDragToken(_draggedGladiator.GladiatorData, viewportPosition);
         SetGladiatorDragCapacityHintsVisible(true);
     }
 
@@ -404,7 +403,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
         CancelDrag();
         _draggedGladiatorData = gladiatorData;
-        StartDragToken(gladiatorData.GetBodyForwardTexture(), viewportPosition);
+        StartGladiatorDragToken(gladiatorData, viewportPosition);
         SetGladiatorDragCapacityHintsVisible(true);
     }
 
@@ -415,12 +414,28 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
         CancelDrag();
         _draggedItem = item;
-        StartDragToken(item.UiIcon, viewportPosition);
+        StartItemDragToken(item.UiIcon, viewportPosition);
         SetGladiatorDragCapacityHintsVisible(false);
         RefreshGladiatorStatusContexts();
     }
 
-    private void StartDragToken(Texture2D texture, Vector2 viewportPosition)
+    private void StartGladiatorDragToken(GladiatorData gladiatorData, Vector2 viewportPosition)
+    {
+        if (gladiatorData == null || _rosterYardGladiatorScene == null)
+            return;
+
+        var token = _rosterYardGladiatorScene.Instantiate<RosterYardGladiator>();
+        token.Name = "DragToken";
+        token.Position = GetDragTokenPosition(viewportPosition);
+        token.Modulate = new Color(1f, 1f, 1f, 0.82f);
+        AddChild(token);
+        token.Configure(gladiatorData);
+        token.SetDragPreviewMode(true);
+        _dragToken = token;
+        _lastDragViewportPosition = viewportPosition;
+    }
+
+    private void StartItemDragToken(Texture2D texture, Vector2 viewportPosition)
     {
         _dragToken = new Sprite2D
         {

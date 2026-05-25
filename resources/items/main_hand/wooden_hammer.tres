@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="MainHandItemData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="MainHandItemData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
 [ext_resource type="Texture2D" path="res://assets/ui/items/wooden_hammer.svg" id="2_icon"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_damage_entry"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/wooden_hammer_held.svg" id="5_held"]
 
 [sub_resource type="Resource" id="Resource_wooden_hammer_crush"]
 script = ExtResource("4_damage_entry")
@@ -16,11 +17,13 @@ Entries = Array[ExtResource("4_damage_entry")]([SubResource("Resource_wooden_ham
 
 [resource]
 script = ExtResource("1_main")
+IsTwoHanded = true
+Damage = SubResource("Resource_wooden_hammer_damage")
 DisplayName = "Wooden Hammer"
 Description = "A heavy two-handed practice hammer."
 UiIcon = ExtResource("2_icon")
-HeldTexture = ExtResource("2_icon")
+HeldTexture = ExtResource("5_held")
+HeldDisplayHeight = 88.0
+HeldRotationDegrees = 10.0
+HeldTextureOffset = Vector2(-14, -66)
 Cost = 16
-Condition = 1.0
-Damage = SubResource("Resource_wooden_hammer_damage")
-IsTwoHanded = true

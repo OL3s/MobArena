@@ -655,7 +655,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         var capacity = GetAssignedGladiatorCapacity();
         var count = AssignedGladiators.Count;
         var shouldShowCapacityHint = _showCapacityDuringGladiatorDrag && count <= 0;
-        _occupancyBadge.Visible = !_showSalePreview && !IsGoldCostPreviewVisible() && AssignDroppedGladiators && capacity > 0 && !SellDroppedPayloads && (count > 0 || shouldShowCapacityHint);
+        _occupancyBadge.Visible = !Disabled && !_showSalePreview && !IsGoldCostPreviewVisible() && AssignDroppedGladiators && capacity > 0 && !SellDroppedPayloads && (count > 0 || shouldShowCapacityHint);
         _occupancyCountLabel.Text = $"{count}/{capacity}";
         RefreshStatusWarnings();
     }

@@ -13,6 +13,7 @@ script = ExtResource("1_enemy_combatant")
 shape = SubResource("CircleShape2D_enemy_body")
 
 [node name="Shadow" type="Sprite2D" parent="."]
+z_index = -2
 position = Vector2(0, 10)
 texture = ExtResource("2_shadow")
 scale = Vector2(0.56, 0.56)

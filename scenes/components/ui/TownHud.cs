@@ -13,6 +13,7 @@ public partial class TownHud : CanvasLayer
 	private const int DevActionAddDefaultGladiator = 2;
 	private const int DevActionAddGold = 3;
 	private const int DevActionQuickstartArena = 4;
+	private const int DevActionEquipmentVisualTest = 5;
 	private const int DevActionWeatherCloudy = 101;
 	private const int DevActionWeatherSun = 102;
 	private const int DevActionWeatherRain = 103;
@@ -23,6 +24,7 @@ public partial class TownHud : CanvasLayer
 	private const string ArenaScenePath = "res://scenes/arena.tscn";
 	private const string StarterSlimePitContractPath = "res://resources/contracts/starter_slime_pit.tres";
 	private const string NextDaySummaryOverlayScenePath = "res://scenes/town_overlays/next_day_summary_overlay.tscn";
+	private const string EquipmentVisualTestOverlayScenePath = "res://scenes/ui/EquipmentVisualTestOverlay.tscn";
 	private const string TownHoverInfoPanelScenePath = "res://scenes/components/ui/TownHoverInfoPanel.tscn";
 	private const string CloudyWeatherIconPath = "res://assets/ui/icons/clear.svg";
 	private const string RainWeatherIconPath = "res://assets/ui/icons/rain.svg";
@@ -281,6 +283,7 @@ public partial class TownHud : CanvasLayer
 		popup.AddItem("Add 1000 gold", DevActionAddGold);
 		popup.AddSeparator();
 		popup.AddItem("Quickstart arena", DevActionQuickstartArena);
+		popup.AddItem("Equipment visuals", DevActionEquipmentVisualTest);
 		SetupDevWeatherMenu(popup);
 		popup.IdPressed += OnDevMenuIdPressed;
 	}
@@ -322,11 +325,27 @@ public partial class TownHud : CanvasLayer
 			case DevActionQuickstartArena:
 				QuickstartArena();
 				return;
+			case DevActionEquipmentVisualTest:
+				OpenEquipmentVisualTest();
+				return;
 			default:
 				return;
 		}
 
 		_saveNode.Save();
+	}
+
+	private static void OpenEquipmentVisualTest()
+	{
+		var overlayScene = ResourceLoader.Load<PackedScene>(EquipmentVisualTestOverlayScenePath);
+		var overlay = overlayScene?.Instantiate<EquipmentVisualTestOverlay>();
+		if (overlay == null)
+		{
+			GD.PushError("Equipment visual test overlay scene is missing or has the wrong root script.");
+			return;
+		}
+
+		GlobalOverlay.Get()?.AddOverlay(overlay);
 	}
 
 	private bool CompleteFirstArenaContract()

@@ -65,11 +65,15 @@ mouse_filter = 2
 color = Color(0.08, 0.065, 0.045, 0.82)
 
 [node name="Shadow" type="Sprite2D" parent="."]
+z_index = -2
 position = Vector2(0, 10)
 texture = ExtResource("9_shadow")
 scale = Vector2(0.48, 0.48)
 
 [node name="Portrait" type="Sprite2D" parent="."]
+position = Vector2(0, -21)
+
+[node name="Armor" type="Sprite2D" parent="."]
 position = Vector2(0, -21)
 
 [node name="LeftHand" type="Sprite2D" parent="."]

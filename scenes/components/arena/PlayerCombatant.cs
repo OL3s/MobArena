@@ -9,9 +9,10 @@ public partial class PlayerCombatant : ArenaCombatant
     private const string ArenaPlayersGroup = "arena_players";
     private const float DisplayHeight = 96f;
     private const float HandDisplayHeight = 18f;
-    private const float HeldItemDisplayHeight = 34f;
+    private const float DefaultHeldItemDisplayHeight = 48f;
 
     private Sprite2D _body;
+    private Sprite2D _armor;
     private Sprite2D _leftHand;
     private Sprite2D _rightHand;
     private Sprite2D _mainHandItem;
@@ -28,6 +29,7 @@ public partial class PlayerCombatant : ArenaCombatant
         ConfigureTopDownMotion();
         AddToGroup(ArenaPlayersGroup);
         _body = GetNode<Sprite2D>("Body");
+        _armor = GetNode<Sprite2D>("Armor");
         _leftHand = GetNode<Sprite2D>("LeftHand");
         _rightHand = GetNode<Sprite2D>("RightHand");
         _mainHandItem = GetNode<Sprite2D>("RightHand/MainHandItem");
@@ -135,8 +137,17 @@ public partial class PlayerCombatant : ArenaCombatant
     private void ApplyBodyVisual()
     {
         ApplyLookVisual(_body, GladiatorData?.GetBodyForwardTexture(), GladiatorData?.GetBodyBackTexture(), DisplayHeight);
+        ApplyArmorVisual();
         ApplyHandVisuals();
         ApplyHeldItemVisuals();
+    }
+
+    private void ApplyArmorVisual()
+    {
+        var armor = GladiatorData?.Equipment?.Armor;
+        ApplyLookVisual(_armor, armor?.ArmorForwardTexture, armor?.ArmorBackTexture, armor?.GetArmorDisplayHeight(DisplayHeight) ?? DisplayHeight);
+        if (_armor != null && armor != null)
+            _armor.Offset = armor.GetArmorTextureOffset();
     }
 
     private void ApplyHandVisuals()
@@ -151,12 +162,57 @@ public partial class PlayerCombatant : ArenaCombatant
         var handTexture = GladiatorData.GetHandTexture();
         ApplyDirectionalVisual(_leftHand, handTexture, HandDisplayHeight, new Vector2(-26f, -20f));
         ApplyDirectionalVisual(_rightHand, handTexture, HandDisplayHeight, new Vector2(26f, -20f));
+        ApplyHandDrawOrder();
     }
 
     private void ApplyHeldItemVisuals()
     {
         var equipment = GladiatorData?.Equipment;
-        ApplyDirectionalVisual(_mainHandItem, equipment?.MainHand?.GetHeldTexture(), HeldItemDisplayHeight, new Vector2(12f, -2f));
-        ApplyDirectionalVisual(_offHandItem, equipment?.OffHand?.GetHeldTexture(), HeldItemDisplayHeight, new Vector2(-12f, -2f));
+        ApplyHeldVisual(_mainHandItem, equipment?.MainHand, DefaultHeldItemDisplayHeight, new Vector2(12f, -2f));
+        ApplyHeldVisual(_offHandItem, equipment?.OffHand, DefaultHeldItemDisplayHeight, new Vector2(-12f, -2f));
+        if (_mainHandItem != null && equipment?.MainHand != null)
+            _mainHandItem.RotationDegrees = equipment.MainHand.GetHeldRotationDegrees();
+        if (_offHandItem != null && equipment?.OffHand != null)
+            _offHandItem.RotationDegrees = equipment.OffHand.GetHeldRotationDegrees();
+    }
+
+    private static void ApplyHeldVisual(Sprite2D sprite, MobArena.Scripts.Resources.Items.ItemData item, float fallbackDisplayHeight, Vector2 localPosition)
+    {
+        ApplyLocalVisual(sprite, item?.GetHeldTexture(), item?.GetHeldDisplayHeight(fallbackDisplayHeight) ?? fallbackDisplayHeight, localPosition, item?.GetHeldTextureOffset() ?? Vector2.Zero);
+    }
+
+    private static void ApplyLocalVisual(Sprite2D sprite, Texture2D texture, float displayHeight, Vector2 localPosition, Vector2 textureOffset)
+    {
+        if (sprite == null)
+            return;
+
+        if (texture == null)
+        {
+            sprite.Hide();
+            return;
+        }
+
+        sprite.Show();
+        sprite.Centered = false;
+        sprite.Texture = texture;
+        sprite.Position = localPosition;
+        sprite.Offset = textureOffset;
+        sprite.RotationDegrees = 0f;
+
+        if (texture.GetHeight() > 0)
+            sprite.Scale = Vector2.One * (displayHeight / texture.GetHeight());
+    }
+
+    private void ApplyHandDrawOrder()
+    {
+        var handZIndex = LookDirection.Y < 0f ? -2 : 1;
+        if (_leftHand != null)
+            _leftHand.ZIndex = handZIndex;
+        if (_rightHand != null)
+            _rightHand.ZIndex = handZIndex;
+        if (_mainHandItem != null)
+            _mainHandItem.ZIndex = 1;
+        if (_offHandItem != null)
+            _offHandItem.ZIndex = 1;
     }
 }
