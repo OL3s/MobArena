@@ -24,6 +24,7 @@ public partial class LocalInputConfig : Node
 	public Array<LocalInputControllerConfig> ControllerSetups { get; private set; } = new();
 
 	public bool HasKeyboardPlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Keyboard);
+	public bool HasMousePlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Mouse);
 	public bool HasTouchPlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Touch);
 	public bool CanJoin => ControllerSetups.Count < MaxLocalPlayers;
 
@@ -48,11 +49,7 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasGamepadPlayer(deviceId))
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create(
-			$"Gamepad {ControllerSetups.Count + 1}",
-			LocalInputControllerConfig.ControllerKind.Gamepad,
-			deviceId,
-			XboxAIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, deviceId, XboxAIcon));
 		return true;
 	}
 
@@ -61,7 +58,16 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasKeyboardPlayer)
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create("Keyboard", LocalInputControllerConfig.ControllerKind.Keyboard, -1, MouseIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, EnterIcon));
+		return true;
+	}
+
+	public bool TryJoinMouse()
+	{
+		if (!CanJoin || HasMousePlayer)
+			return false;
+
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Mouse, -1, MouseIcon));
 		return true;
 	}
 
@@ -70,7 +76,7 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasTouchPlayer)
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create("Touch", LocalInputControllerConfig.ControllerKind.Touch, -1, PhoneIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Touch, -1, PhoneIcon));
 		return true;
 	}
 

@@ -1,6 +1,7 @@
 shader_type canvas_item;
 
 uniform float intensity : hint_range(0.0, 1.0) = 0.6;
+uniform vec2 uv_scale = vec2(1.0, 1.0);
 uniform vec4 splash_color : source_color = vec4(0.63, 0.78, 0.9, 0.45);
 
 float hash(vec2 value) {
@@ -35,8 +36,9 @@ float splash_at(vec2 uv, vec2 scale, float time_offset) {
 }
 
 void fragment() {
-    float splash = splash_at(UV, vec2(31.0, 13.0), 0.0)
-        + splash_at(UV + vec2(0.37, 0.19), vec2(19.0, 8.0), 9.3) * 0.55;
+    vec2 uv = UV * uv_scale;
+    float splash = splash_at(uv, vec2(31.0, 13.0), 0.0)
+        + splash_at(uv + vec2(0.37, 0.19), vec2(19.0, 8.0), 9.3) * 0.55;
 
     COLOR = splash_color * splash * intensity;
 }

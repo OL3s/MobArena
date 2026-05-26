@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/ui/ItemStoreStatSection.cs" id="1_section"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="2_body_font"]
+
+[node name="ItemStoreStatSection" type="VBoxContainer"]
+theme_override_constants/separation = 7
+script = ExtResource("1_section")
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_body_font")
+theme_override_font_sizes/font_size = 17
+text = "Section"
+
+[node name="Rows" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 5

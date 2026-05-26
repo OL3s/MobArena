@@ -14,6 +14,9 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
     private const string RosterYardGladiatorScenePath = "res://scenes/components/town/RosterYardGladiator.tscn";
     private const string GoldCostOverlayScenePath = "res://scenes/ui/GoldCostOverlay.tscn";
+    private const string DragIconPath = "res://assets/ui/items/drag_hand.svg";
+    private const string DragTutorialPopupTitle = "Drag to Manage";
+    private const string DragTutorialPopupText = "Gladiators in the yard can be dragged onto town buildings to assign them. The hand icon marks things you can drag.";
     private const float DragStartDistance = 8f;
     private const float DragTokenHeight = 72f;
     private const float DragTokenPointerOffsetY = 32f;
@@ -38,12 +41,14 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
     private RosterYardGladiator _draggedGladiator;
     private GladiatorData _draggedGladiatorData;
     private ItemData _draggedItem;
-    private Sprite2D _dragToken;
+    private Node2D _dragToken;
     private ITownDragDropTarget _previewedDropTarget;
     private bool _showingGladiatorDragCapacityHints;
     private bool _gladiatorsButtonHovered;
     private bool _equipmentButtonHovered;
     private bool _goldButtonHovered;
+    private CompanyRunData _subscribedRunData;
+    private TownPhaseState _subscribedPhaseState;
 
     public int PhaseGoldCostDisplayOrder => 0;
 
@@ -54,6 +59,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
         AddToGroup("roster_yard");
         AddToGroup(PhaseGoldCostSourceGroup);
         _saveNode = SaveNode.Get();
+        _saveNode.RuntimeStateResetting += OnRuntimeStateResetting;
         _gladiators = GetNode<Node2D>("Gladiators");
         _gladiatorsButton = GetNodeOrNull<Button>("ButtonRow/GladiatorsButton");
         _equipmentButton = GetNodeOrNull<Button>("ButtonRow/EquipmentButton");
@@ -83,14 +89,16 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
             _goldButton.Pressed += OnGoldButtonPressed;
         }
 
-        if (_saveNode?.CompanyRunData != null)
+        _subscribedRunData = _saveNode?.CompanyRunData;
+        if (_subscribedRunData != null)
         {
-            _saveNode.CompanyRunData.RunChanged += RefreshGladiators;
-            _saveNode.CompanyRunData.RunChanged += RefreshGoldCostPreview;
+            _subscribedRunData.RunChanged += RefreshGladiators;
+            _subscribedRunData.RunChanged += RefreshGoldCostPreview;
         }
 
-        if (_saveNode?.TownPhaseState != null)
-            _saveNode.TownPhaseState.PhaseChanged += RefreshGoldCostPreview;
+        _subscribedPhaseState = _saveNode?.TownPhaseState;
+        if (_subscribedPhaseState != null)
+            _subscribedPhaseState.PhaseChanged += RefreshGoldCostPreview;
 
         RefreshGladiators();
         RefreshGoldCostPreview();
@@ -98,14 +106,10 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
     public override void _ExitTree()
     {
-        if (_saveNode?.CompanyRunData != null)
-        {
-            _saveNode.CompanyRunData.RunChanged -= RefreshGladiators;
-            _saveNode.CompanyRunData.RunChanged -= RefreshGoldCostPreview;
-        }
+        if (_saveNode != null)
+            _saveNode.RuntimeStateResetting -= OnRuntimeStateResetting;
 
-        if (_saveNode?.TownPhaseState != null)
-            _saveNode.TownPhaseState.PhaseChanged -= RefreshGoldCostPreview;
+        UnsubscribeResourceSignals();
 
         if (_gladiatorsButton != null)
         {
@@ -124,6 +128,27 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
             _goldButton.MouseEntered -= OnGoldButtonMouseEntered;
             _goldButton.MouseExited -= OnGoldButtonMouseExited;
             _goldButton.Pressed -= OnGoldButtonPressed;
+        }
+    }
+
+    private void OnRuntimeStateResetting()
+    {
+        UnsubscribeResourceSignals();
+    }
+
+    private void UnsubscribeResourceSignals()
+    {
+        if (_subscribedRunData != null)
+        {
+            _subscribedRunData.RunChanged -= RefreshGladiators;
+            _subscribedRunData.RunChanged -= RefreshGoldCostPreview;
+            _subscribedRunData = null;
+        }
+
+        if (_subscribedPhaseState != null)
+        {
+            _subscribedPhaseState.PhaseChanged -= RefreshGoldCostPreview;
+            _subscribedPhaseState = null;
         }
     }
 
@@ -225,6 +250,23 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
             positions.Add(yardGladiator.Position);
             _gladiators.AddChild(yardGladiator);
         }
+
+        if (runData.TownAssignments.CourtyardGladiators.Count > 0)
+            CallDeferred(MethodName.ShowDragTutorialPopupIfNeeded);
+    }
+
+    private void ShowDragTutorialPopupIfNeeded()
+    {
+        var runData = _saveNode?.CompanyRunData;
+        if (_saveNode?.SkipTutorial == true || runData == null || runData.HasShownDragTutorialPopup || runData.TownAssignments.CourtyardGladiators.Count <= 0)
+            return;
+
+        runData.MarkDragTutorialPopupShown();
+        _saveNode.Save();
+        GlobalOverlay.Get()?.ShowBlurredPopup(
+            DragTutorialPopupTitle,
+            DragTutorialPopupText,
+            ResourceLoader.Load<Texture2D>(DragIconPath));
     }
 
     private void RefreshShowcaseButtons(CompanyRunData runData)
@@ -350,8 +392,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
         _pendingGladiator = null;
         _draggedGladiator.SetDragHidden(true);
 
-        var texture = _draggedGladiator.GladiatorData?.GetPortraitTexture();
-        StartDragToken(texture, viewportPosition);
+        StartGladiatorDragToken(_draggedGladiator.GladiatorData, viewportPosition);
         SetGladiatorDragCapacityHintsVisible(true);
     }
 
@@ -362,7 +403,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
         CancelDrag();
         _draggedGladiatorData = gladiatorData;
-        StartDragToken(gladiatorData.GetPortraitTexture(), viewportPosition);
+        StartGladiatorDragToken(gladiatorData, viewportPosition);
         SetGladiatorDragCapacityHintsVisible(true);
     }
 
@@ -373,12 +414,28 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
         CancelDrag();
         _draggedItem = item;
-        StartDragToken(item.Icon, viewportPosition);
+        StartItemDragToken(item.UiIcon, viewportPosition);
         SetGladiatorDragCapacityHintsVisible(false);
         RefreshGladiatorStatusContexts();
     }
 
-    private void StartDragToken(Texture2D texture, Vector2 viewportPosition)
+    private void StartGladiatorDragToken(GladiatorData gladiatorData, Vector2 viewportPosition)
+    {
+        if (gladiatorData == null || _rosterYardGladiatorScene == null)
+            return;
+
+        var token = _rosterYardGladiatorScene.Instantiate<RosterYardGladiator>();
+        token.Name = "DragToken";
+        token.Position = GetDragTokenPosition(viewportPosition);
+        token.Modulate = new Color(1f, 1f, 1f, 0.82f);
+        AddChild(token);
+        token.Configure(gladiatorData);
+        token.SetDragPreviewMode(true);
+        _dragToken = token;
+        _lastDragViewportPosition = viewportPosition;
+    }
+
+    private void StartItemDragToken(Texture2D texture, Vector2 viewportPosition)
     {
         _dragToken = new Sprite2D
         {

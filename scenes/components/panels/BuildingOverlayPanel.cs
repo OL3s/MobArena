@@ -301,7 +301,7 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
         var portrait = new Button
         {
             CustomMinimumSize = new Vector2(56f, 56f),
-            Icon = gladiator.GetPortraitTexture(),
+            Icon = gladiator.GetUiIconTexture(),
             ExpandIcon = true,
             TooltipText = $"Drag {gladiator.GladiatorName}",
             FocusMode = FocusModeEnum.None
@@ -542,7 +542,7 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
         var button = new Button
         {
             AnchorsPreset = (int)LayoutPreset.FullRect,
-            Icon = gladiator.GetPortraitTexture(),
+            Icon = gladiator.GetUiIconTexture(),
             TooltipText = $"Drag {gladiator.GladiatorName}",
             ExpandIcon = true
         };

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MobAppearanceData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mobs/MobAppearanceData.cs" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/mobs/demon_hellhound.svg" id="2_face"]
+[ext_resource type="Texture2D" path="res://assets/mobs/demon_body_forward.svg" id="3_forward"]
+[ext_resource type="Texture2D" path="res://assets/mobs/demon_body_back.svg" id="4_back"]
+[ext_resource type="Texture2D" path="res://assets/mobs/demon_hand.svg" id="5_hand"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Hellhound Appearance"
+UiIcon = ExtResource("2_face")
+BodyForward = ExtResource("3_forward")
+BodyBack = ExtResource("4_back")
+UsesSeparatedHands = true
+HandTexture = ExtResource("5_hand")

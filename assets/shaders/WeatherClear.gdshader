@@ -1,8 +1,9 @@
 shader_type canvas_item;
 
 uniform float intensity : hint_range(0.0, 1.0) = 1.0;
+uniform vec2 uv_scale = vec2(1.0, 1.0);
 uniform vec4 shadow_color : source_color = vec4(0.06, 0.075, 0.095, 0.34);
-uniform vec4 background_overlay_color : source_color = vec4(0.03, 0.035, 0.045, 0.045);
+uniform vec4 background_overlay_color : source_color = vec4(0.03, 0.035, 0.045, 0.01);
 
 float hash(vec2 value) {
     return fract(sin(dot(value, vec2(127.1, 311.7))) * 43758.5453123);
@@ -37,12 +38,12 @@ float tiled_cloud_cluster(vec2 uv, vec2 center, vec2 radius) {
 
 void fragment() {
     vec2 drift = vec2(TIME * 0.065, TIME * 0.018);
-    vec2 uv = UV + drift;
+    vec2 uv = UV * uv_scale + drift;
 
     float cloud_shadow = 0.0;
-    cloud_shadow += tiled_cloud_cluster(uv + vec2(0.08, 0.18), vec2(0.34, 0.42), vec2(0.42, 0.22)) * 0.72;
-    cloud_shadow += tiled_cloud_cluster(uv * vec2(0.78, 0.88) + vec2(0.52, 0.68), vec2(0.58, 0.38), vec2(0.5, 0.26)) * 0.62;
-    cloud_shadow += tiled_cloud_cluster(uv * vec2(1.08, 0.8) + vec2(0.2, 0.84), vec2(0.36, 0.55), vec2(0.36, 0.19)) * 0.38;
+    cloud_shadow += tiled_cloud_cluster(uv * vec2(1.15, 1.02) + vec2(0.08, 0.18), vec2(0.34, 0.42), vec2(0.38, 0.2)) * 0.44;
+    cloud_shadow += tiled_cloud_cluster(uv * vec2(0.92, 1.04) + vec2(0.52, 0.68), vec2(0.58, 0.38), vec2(0.42, 0.22)) * 0.32;
+    cloud_shadow += tiled_cloud_cluster(uv * vec2(1.3, 0.98) + vec2(0.2, 0.84), vec2(0.36, 0.55), vec2(0.3, 0.16)) * 0.18;
 
     cloud_shadow = clamp(cloud_shadow, 0.0, 1.0);
 

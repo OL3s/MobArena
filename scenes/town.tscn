@@ -7,6 +7,8 @@
 [ext_resource type="Texture2D" uid="uid://dsx13f4gv7khh" path="res://assets/town/icons/arena_icon.svg" id="6_arena_icon"]
 [ext_resource type="Texture2D" uid="uid://bu5pp8s2uvtvj" path="res://assets/town/buildings/market.svg" id="7_market_building"]
 [ext_resource type="Texture2D" uid="uid://533ql43e0mj6" path="res://assets/town/icons/market_icon.svg" id="8_market_icon"]
+[ext_resource type="Texture2D" path="res://assets/town/buildings/arena_closed.svg" id="9_arena_closed"]
+[ext_resource type="Texture2D" path="res://assets/town/buildings/market_closed.svg" id="10_market_closed"]
 [ext_resource type="Texture2D" uid="uid://cfrhwjaf8qv1w" path="res://assets/town/buildings/healer.svg" id="11_healer_building"]
 [ext_resource type="Texture2D" uid="uid://cp4qthx7406sr" path="res://assets/town/icons/healer_icon.svg" id="12_healer_icon"]
 [ext_resource type="Texture2D" uid="uid://cuwjn0ry6whd7" path="res://assets/town/icons/roster_icon.svg" id="14_roster_icon"]
@@ -54,7 +56,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.12, 0.09, 0.06, 1)
 
-[node name="EnvironmentOverlay" parent="." instance=ExtResource("28_environment_overlay")]
+[node name="EnvironmentOverlay" parent="." unique_id=645621127 instance=ExtResource("28_environment_overlay")]
 
 [node name="World" type="Node2D" parent="." unique_id=14334605]
 
@@ -65,10 +67,13 @@ position = Vector2(576, 324)
 position = Vector2(144, 246)
 BuildingName = "Arena"
 BuildingTexture = ExtResource("5_arena_building")
+ClosedBuildingTexture = ExtResource("9_arena_closed")
 IconTexture = ExtResource("6_arena_icon")
 SceneToOpen = ExtResource("3_arena")
 HoverDescription = "Assign gladiators here, choose a contract, then set controls before entering the arena. Returning from the arena ends the day and starts Night."
 OverlayToOpen = ExtResource("18_arena_overlay")
+DisableAtNight = true
+HideWhenNoContractsCompletedAndRosterEmpty = true
 ConfirmationTitle = "Start Contract?"
 ConfirmationMessage = "Travel to the arena for the starter contract? Current prototype goal: defeat slimes and return to town."
 MaxAssignedGladiators = 4
@@ -78,30 +83,34 @@ AssignmentLocation = 1
 position = Vector2(1008, 246)
 BuildingName = "Market"
 BuildingTexture = ExtResource("7_market_building")
+ClosedBuildingTexture = ExtResource("10_market_closed")
 IconTexture = ExtResource("8_market_icon")
 HoverDescription = "Recruit gladiators, buy equipment at the blacksmith, or sell dropped gladiators and equipment for gold."
 OverlayToOpen = ExtResource("19_market_overlay")
+DisableAtNight = true
 TownDragDropPriority = 5
 SellDroppedPayloads = true
 MaxAssignedGladiators = 0
 
 [node name="Thermae" parent="World" unique_id=668293402 instance=ExtResource("2_townbuilding")]
-position = Vector2(1008, 448)
+position = Vector2(1008, 464)
 BuildingName = "Thermae"
 BuildingTexture = ExtResource("11_healer_building")
 IconTexture = ExtResource("12_healer_icon")
 HoverDescription = "Assign gladiators here for paid Roman bathhouse care. Choose health treatment or faster exhaustion recovery; work resolves on phase changes."
 OverlayToOpen = ExtResource("21_healer_overlay")
+HideUntilSpecialtyBuildingsUnlocked = true
 MaxAssignedGladiators = 2
 AssignmentLocation = 2
 
 [node name="TrainingHall" parent="World" unique_id=639749834 instance=ExtResource("2_townbuilding")]
-position = Vector2(144, 448)
+position = Vector2(144, 464)
 BuildingName = "Training Hall"
 BuildingTexture = ExtResource("16_training_building")
 IconTexture = ExtResource("17_training_icon")
 HoverDescription = "Assign gladiators here to train. Choose an attribute focus or balanced overall training; work resolves on phase changes and spends gold, stamina, and exhaustion."
 OverlayToOpen = ExtResource("23_training_overlay")
+HideUntilSpecialtyBuildingsUnlocked = true
 MaxAssignedGladiators = 2
 AssignmentLocation = 3
 
@@ -119,7 +128,7 @@ color = Color(0.2, 0.15, 0.1, 0.86)
 
 [node name="Gladiators" type="Node2D" parent="World/RosterYard" unique_id=310366897]
 
-[node name="EmptyCourtyardLabel" type="RichTextLabel" parent="World/RosterYard"]
+[node name="EmptyCourtyardLabel" type="RichTextLabel" parent="World/RosterYard" unique_id=1542078086]
 offset_left = -160.0
 offset_top = -34.0
 offset_right = 160.0
@@ -128,15 +137,14 @@ theme_override_fonts/bold_font = SubResource("FontVariation_market_bold")
 theme_override_font_sizes/normal_font_size = 22
 theme_override_font_sizes/bold_font_size = 22
 bbcode_enabled = true
-fit_content = true
-scroll_active = false
 text = "No gladiators found
 Go to [b]Market[/b] to buy gladiators"
+fit_content = true
+scroll_active = false
 horizontal_alignment = 1
 vertical_alignment = 1
-autowrap_mode = 3
 
-[node name="ButtonRow" type="HBoxContainer" parent="World/RosterYard"]
+[node name="ButtonRow" type="HBoxContainer" parent="World/RosterYard" unique_id=579376449]
 offset_left = -100.0
 offset_top = 92.0
 offset_right = 100.0
@@ -158,15 +166,16 @@ tooltip_text = "Open equipment inventory."
 icon = ExtResource("25_equipment_icon")
 expand_icon = true
 
-[node name="GoldButton" type="Button" parent="World/RosterYard/ButtonRow"]
+[node name="GoldButton" type="Button" parent="World/RosterYard/ButtonRow" unique_id=1268396392]
 custom_minimum_size = Vector2(56, 44)
 layout_mode = 2
 tooltip_text = "Show phase costs and next salary payment."
 icon = ExtResource("27_gold_icon")
 expand_icon = true
 
-[node name="GoldTotalPreview" type="PanelContainer" parent="World/RosterYard/ButtonRow/GoldButton"]
+[node name="GoldTotalPreview" type="PanelContainer" parent="World/RosterYard/ButtonRow/GoldButton" unique_id=1890737458]
 visible = false
+layout_mode = 0
 offset_left = -10.0
 offset_top = -48.0
 offset_right = 66.0
@@ -174,13 +183,13 @@ offset_bottom = -8.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_gold_total_preview")
 
-[node name="Row" type="HBoxContainer" parent="World/RosterYard/ButtonRow/GoldButton/GoldTotalPreview"]
+[node name="Row" type="HBoxContainer" parent="World/RosterYard/ButtonRow/GoldButton/GoldTotalPreview" unique_id=356274772]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 alignment = 1
 
-[node name="GoldIcon" type="TextureRect" parent="World/RosterYard/ButtonRow/GoldButton/GoldTotalPreview/Row"]
+[node name="GoldIcon" type="TextureRect" parent="World/RosterYard/ButtonRow/GoldButton/GoldTotalPreview/Row" unique_id=461056070]
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
 mouse_filter = 2
@@ -188,9 +197,8 @@ texture = ExtResource("27_gold_icon")
 expand_mode = 2
 stretch_mode = 5
 
-[node name="TotalLabel" type="Label" parent="World/RosterYard/ButtonRow/GoldButton/GoldTotalPreview/Row"]
+[node name="TotalLabel" type="Label" parent="World/RosterYard/ButtonRow/GoldButton/GoldTotalPreview/Row" unique_id=650833219]
 layout_mode = 2
-mouse_filter = 2
 theme_override_font_sizes/font_size = 22
 text = "0"
 vertical_alignment = 1

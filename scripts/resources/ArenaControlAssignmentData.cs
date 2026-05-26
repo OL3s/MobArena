@@ -4,11 +4,10 @@ namespace MobArena.Scripts.Resources;
 
 public partial class ArenaControlAssignmentData : Resource
 {
-    [Export]
-    public GladiatorData Gladiator { get; set; }
+	public readonly record struct ControllerIdentity(LocalInputControllerConfig.ControllerKind Kind, int DeviceId);
 
     [Export]
-    public string ControllerName { get; set; } = string.Empty;
+    public GladiatorData Gladiator { get; set; }
 
     [Export]
     public LocalInputControllerConfig.ControllerKind ControllerKind { get; set; } = LocalInputControllerConfig.ControllerKind.Keyboard;
@@ -16,7 +15,8 @@ public partial class ArenaControlAssignmentData : Resource
     [Export]
     public int DeviceId { get; set; } = -1;
 
-    public string ControllerKey => GetControllerKey(ControllerKind, DeviceId, ControllerName);
+    public ControllerIdentity ControllerKey => GetControllerKey(ControllerKind, DeviceId);
+    public string DisplayName => LocalInputControllerConfig.GetDisplayName(ControllerKind, DeviceId);
 
     public bool MatchesController(LocalInputControllerConfig controllerSetup)
     {
@@ -28,19 +28,18 @@ public partial class ArenaControlAssignmentData : Resource
         return new ArenaControlAssignmentData
         {
             Gladiator = gladiator,
-            ControllerName = controllerSetup?.ControllerName ?? string.Empty,
             ControllerKind = controllerSetup?.Kind ?? LocalInputControllerConfig.ControllerKind.Keyboard,
             DeviceId = controllerSetup?.DeviceId ?? -1
         };
     }
 
-    public static string GetControllerKey(LocalInputControllerConfig controllerSetup)
+    public static ControllerIdentity GetControllerKey(LocalInputControllerConfig controllerSetup)
     {
-        return controllerSetup == null ? string.Empty : GetControllerKey(controllerSetup.Kind, controllerSetup.DeviceId, controllerSetup.ControllerName);
+        return controllerSetup == null ? default : GetControllerKey(controllerSetup.Kind, controllerSetup.DeviceId);
     }
 
-    private static string GetControllerKey(LocalInputControllerConfig.ControllerKind kind, int deviceId, string controllerName)
+    private static ControllerIdentity GetControllerKey(LocalInputControllerConfig.ControllerKind kind, int deviceId)
     {
-        return $"{kind}:{deviceId}:{controllerName}";
+        return new ControllerIdentity(kind, deviceId);
     }
 }

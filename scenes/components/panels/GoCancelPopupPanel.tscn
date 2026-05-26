@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/panels/GoCancelPopupPanel.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="3_body_font"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
 shader = ExtResource("2_blur_shader")
@@ -63,6 +64,12 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_fonts/normal_font = ExtResource("3_body_font")
+theme_override_fonts/bold_font = ExtResource("3_body_font")
+theme_override_fonts/italics_font = ExtResource("3_body_font")
+theme_override_font_sizes/normal_font_size = 21
+theme_override_font_sizes/bold_font_size = 21
+theme_override_font_sizes/italics_font_size = 21
 bbcode_enabled = true
 fit_content = true
 scroll_active = false

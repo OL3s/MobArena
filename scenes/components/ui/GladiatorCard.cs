@@ -80,7 +80,7 @@ public partial class GladiatorCard : PanelContainer
     {
         _pendingGladiatorData = null;
 
-        _portrait.Texture = gladiatorData.GetPortraitTexture();
+        _portrait.Texture = gladiatorData.GetUiIconTexture();
         _nameLabel.Text = gladiatorData.GladiatorName;
         ConfigureEquipmentIcons(gladiatorData.Equipment);
         _healthBar.ShowHealth(gladiatorData);
@@ -126,10 +126,11 @@ public partial class GladiatorCard : PanelContainer
     {
         return skill switch
         {
+            GladiatorEquipmentData.SignatureSkill.Dodge => "res://assets/ui/gladiator_icons/skill_dodge.svg",
             GladiatorEquipmentData.SignatureSkill.Parry => "res://assets/ui/gladiator_icons/skill_parry.svg",
             GladiatorEquipmentData.SignatureSkill.Bash => "res://assets/ui/gladiator_icons/skill_bash.svg",
             GladiatorEquipmentData.SignatureSkill.Cleave => "res://assets/ui/gladiator_icons/skill_cleave.svg",
-            _ => "res://assets/ui/gladiator_icons/skill_dodge.svg"
+            _ => "res://assets/ui/icons/question_mark.svg"
         };
     }
 
@@ -138,7 +139,7 @@ public partial class GladiatorCard : PanelContainer
         if (icon == null)
             return;
 
-        icon.Texture = item?.Icon;
+        icon.Texture = item?.UiIcon;
         icon.TooltipText = item?.DisplayName ?? string.Empty;
     }
 }

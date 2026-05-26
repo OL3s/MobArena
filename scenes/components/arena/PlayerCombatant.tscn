@@ -1,0 +1,55 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/arena/PlayerCombatant.cs" id="1_player_combatant"]
+[ext_resource type="Texture2D" path="res://assets/ui/character_shadow.svg" id="2_shadow"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_player_body"]
+radius = 22.0
+
+[node name="PlayerCombatant" type="CharacterBody2D"]
+script = ExtResource("1_player_combatant")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_player_body")
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -2
+position = Vector2(0, 10)
+texture = ExtResource("2_shadow")
+scale = Vector2(0.62, 0.62)
+
+[node name="Body" type="Sprite2D" parent="."]
+position = Vector2(0, -28)
+
+[node name="Armor" type="Sprite2D" parent="."]
+position = Vector2(0, -28)
+
+[node name="LeftHand" type="Sprite2D" parent="."]
+position = Vector2(-26, -20)
+
+[node name="OffHandItem" type="Sprite2D" parent="LeftHand"]
+position = Vector2(-12, -2)
+
+[node name="RightHand" type="Sprite2D" parent="."]
+position = Vector2(26, -20)
+
+[node name="MainHandItem" type="Sprite2D" parent="RightHand"]
+position = Vector2(12, -2)
+
+[node name="NameLabel" type="Label" parent="."]
+offset_left = -80.0
+offset_top = 36.0
+offset_right = 80.0
+offset_bottom = 59.0
+theme_override_font_sizes/font_size = 14
+text = "Gladiator"
+horizontal_alignment = 1
+
+[node name="ControllerLabel" type="Label" parent="."]
+offset_left = -80.0
+offset_top = 58.0
+offset_right = 80.0
+offset_bottom = 78.0
+theme_override_font_sizes/font_size = 11
+text = "Controller"
+horizontal_alignment = 1

@@ -1,8 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/town_overlays/GladiatorMarketOverlay.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
 [ext_resource type="Texture2D" path="res://assets/town/icons/market_icon.svg" id="3_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="4_gold"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="5_body_font"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gladiator_market_blur"]
 shader = ExtResource("2_blur_shader")
@@ -33,34 +35,34 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = -24.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(820, 560)
+custom_minimum_size = Vector2(820, 0)
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
 
 [node name="Layout" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 8
 
 [node name="Header" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
 theme_override_constants/separation = 14
 
 [node name="Icon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 texture = ExtResource("3_icon")
 expand_mode = 1
@@ -73,14 +75,25 @@ theme_override_font_sizes/font_size = 28
 text = "Gladiator Market"
 vertical_alignment = 1
 
+[node name="GoldIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("4_gold")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="GoldLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
 layout_mode = 2
-text = "Gold: 0"
+text = "0"
 vertical_alignment = 1
 
 [node name="Body" type="RichTextLabel" parent="CenterContainer/Panel/MarginContainer/Layout"]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("5_body_font")
+theme_override_fonts/bold_font = ExtResource("5_body_font")
+theme_override_font_sizes/normal_font_size = 20
+theme_override_font_sizes/bold_font_size = 20
 bbcode_enabled = true
 text = "Hire available recruits into the active company roster. Market recruits refresh with the daily market stock."
 fit_content = true
@@ -89,12 +102,14 @@ autowrap_mode = 3
 
 [node name="FeedbackLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 20
 text = "Choose a recruit."
 horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
-custom_minimum_size = Vector2(0, 430)
+custom_minimum_size = Vector2(0, 346)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 1
@@ -106,7 +121,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 14
 
 [node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout"]
-custom_minimum_size = Vector2(0, 54)
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 2
 text = "Close"

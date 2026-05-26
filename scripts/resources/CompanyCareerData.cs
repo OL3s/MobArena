@@ -25,6 +25,10 @@ public partial class CompanyCareerData : Resource
     [Export]
     public int ChampionsDefeated { get; private set; }
 
+    public bool HasCompletedContracts => ContractsCompleted > 0;
+
+    public bool HasReachedSpecialtyBuildings => ContractsCompleted >= 2;
+
     public void AddGladiator()
     {
         AddGladiators(1);
@@ -36,12 +40,14 @@ public partial class CompanyCareerData : Resource
             return;
 
         TotalGladiatorsInCareer += amount;
+        GD.Print($"CompanyCareerData: Added {amount} gladiator(s). Total recruited: {TotalGladiatorsInCareer}.");
         EmitSignal(SignalName.CareerChanged);
     }
 
     public void AddGladiatorDeath()
     {
         GladiatorsDead++;
+        GD.Print($"CompanyCareerData: Added gladiator death. Total deaths: {GladiatorsDead}.");
         EmitSignal(SignalName.CareerChanged);
     }
 
@@ -51,12 +57,14 @@ public partial class CompanyCareerData : Resource
             return;
 
         TotalGoldEarned += amount;
+        GD.Print($"CompanyCareerData: Added {amount} total gold earned. Total: {TotalGoldEarned}.");
         EmitSignal(SignalName.CareerChanged);
     }
 
     public void AddContractCompleted()
     {
         ContractsCompleted++;
+        GD.Print($"CompanyCareerData: Added completed contract. Total completed: {ContractsCompleted}.");
         EmitSignal(SignalName.CareerChanged);
     }
 
@@ -71,12 +79,14 @@ public partial class CompanyCareerData : Resource
             return;
 
         MobsKilled += amount;
+        GD.Print($"CompanyCareerData: Added {amount} mob kills. Total kills: {MobsKilled}.");
         EmitSignal(SignalName.CareerChanged);
     }
 
     public void AddChampionDefeated()
     {
         ChampionsDefeated++;
+        GD.Print($"CompanyCareerData: Added champion defeated. Total champions: {ChampionsDefeated}.");
         EmitSignal(SignalName.CareerChanged);
     }
 

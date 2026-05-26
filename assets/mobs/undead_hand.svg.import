@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqt8h0c73w6rg"
-path="res://.godot/imported/green_slime.svg-8ffc650f60a7cb8193edd7257d145c2f.ctex"
+uid="uid://dbm50rwswsngs"
+path="res://.godot/imported/undead_hand.svg-d51e0be606a9ffcfc6f5c1ad38434d2e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/mobs/green_slime.svg"
-dest_files=["res://.godot/imported/green_slime.svg-8ffc650f60a7cb8193edd7257d145c2f.ctex"]
+source_file="res://assets/mobs/undead_hand.svg"
+dest_files=["res://.godot/imported/undead_hand.svg-d51e0be606a9ffcfc6f5c1ad38434d2e.ctex"]
 
 [params]
 

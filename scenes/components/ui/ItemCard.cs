@@ -17,6 +17,7 @@ public partial class ItemCard : PanelContainer
     private const string MainHandTypeIconPath = "res://assets/ui/items/type_main_hand.svg";
     private const string TwoHandedTypeIconPath = "res://assets/ui/items/type_two_handed.svg";
     private const string OffHandTypeIconPath = "res://assets/ui/items/type_off_hand.svg";
+    private const string UnknownIconPath = "res://assets/ui/icons/question_mark.svg";
 
     [Signal]
     public delegate void BuyPressedEventHandler(ItemData item);
@@ -43,7 +44,7 @@ public partial class ItemCard : PanelContainer
         _nameLabel = GetNode<Label>("MarginContainer/Layout/NameLabel");
         _conditionIcon = GetNode<TextureRect>("MarginContainer/Layout/ConditionRow/Icon");
         _conditionBar = GetNode<ProgressBar>("MarginContainer/Layout/ConditionRow/Bar");
-        _goldLabel = GetNode<Label>("MarginContainer/Layout/GoldLabel");
+        _goldLabel = GetNode<Label>("MarginContainer/Layout/GoldRow/GoldLabel");
         _buyButton = GetNode<Button>("MarginContainer/Layout/BuyButton");
         _dragButton = GetNode<Button>("MarginContainer/Layout/DragButton");
 
@@ -77,12 +78,10 @@ public partial class ItemCard : PanelContainer
         if (!IsNodeReady())
             return;
 
-        _itemIcon.Texture = _item?.Icon;
+        _itemIcon.Texture = _item?.UiIcon;
         _typeIcon.Texture = GetTypeIcon(_item);
         _nameLabel.Text = _item?.DisplayName ?? "Item";
-        _goldLabel.Text = _mode == CardMode.Purchase
-            ? $"Price {_item?.Cost ?? 0}g"
-            : $"Value {_item?.Cost ?? 0}g";
+        _goldLabel.Text = (_item?.Cost ?? 0).ToString();
 
         var condition = Mathf.Clamp(_item?.Condition ?? 0f, 0f, 1f);
         _conditionBar.MaxValue = 1.0;
@@ -114,10 +113,10 @@ public partial class ItemCard : PanelContainer
             ArmorItemData => ArmorTypeIconPath,
             MainHandItemData mainHand => mainHand.IsTwoHanded ? TwoHandedTypeIconPath : MainHandTypeIconPath,
             OffHandItemData => OffHandTypeIconPath,
-            _ => string.Empty
+            _ => UnknownIconPath
         };
 
-        return string.IsNullOrEmpty(iconPath) ? null : ResourceLoader.Load<Texture2D>(iconPath);
+        return ResourceLoader.Load<Texture2D>(iconPath);
     }
 
     private static Color GetConditionColor(float condition)

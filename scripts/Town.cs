@@ -14,6 +14,16 @@ public partial class Town : Node
     private const string GladiatorMarketOverlayScene = "res://scenes/town_overlays/gladiator_market_overlay.tscn";
     private const string FirstTownEntryPopupTitle = "Tutorial";
     private const string FirstTownEntryPopupText = "Todo, add tutorial with tscn animation popups here";
+    private const string FirstContractCompletedPopupTitle = "Company Ambition";
+    private const string FirstContractCompletedPopupText = "Your first contract is complete. From here, build the strongest gladiator company you can: win contracts, earn gold, grow your fame, recruit better fighters, and prepare for Champion Day.";
+    private const string SpecialtyBuildingsUnlockedPopupTitle = "Recovery & Training Unlocked";
+    private const string SpecialtyBuildingsUnlockedPopupText = "Your second contract is complete. The company now has enough momentum to use specialty buildings between fights: heal wounded gladiators, manage exhaustion, and train stronger fighters before harder contracts.";
+    private const string ThermaeTutorialPopupTitle = "Thermae";
+    private const string ThermaeTutorialPopupText = "Thermae is your recovery building. Drag gladiators here at Night to spend gold on healing or exhaustion recovery before the next Day.";
+    private const string TrainingHallTutorialPopupTitle = "Training Hall";
+    private const string TrainingHallTutorialPopupText = "Training Hall turns downtime into progress. Drag gladiators here at Night to spend gold, stamina, and exhaustion on attribute training.";
+    private const string ThermaeBuildingPath = "res://assets/town/buildings/healer.svg";
+    private const string TrainingHallBuildingPath = "res://assets/town/buildings/training_hall.svg";
 
     private TownBuilding _contractBoard;
     private EnvironmentVisualOverlay _environmentOverlay;
@@ -43,6 +53,8 @@ public partial class Town : Node
         RefreshEnvironmentVisuals();
         RefreshWeatherVisuals();
         CallDeferred(MethodName.ShowFirstTownEntryPopupIfNeeded);
+        CallDeferred(MethodName.ShowFirstContractCompletedPopupIfNeeded);
+        CallDeferred(MethodName.ShowRecoveryBuildingTutorialsIfNeeded);
     }
 
     public override void _ExitTree()
@@ -56,6 +68,9 @@ public partial class Town : Node
 
     public override void _UnhandledInput(InputEvent inputEvent)
     {
+        if (GlobalOverlay.Get()?.HasOpenOverlays == true)
+            return;
+
         if (!inputEvent.IsActionPressed("ui_accept"))
             return;
 
@@ -103,12 +118,61 @@ public partial class Town : Node
     {
         var saveNode = SaveNode.Get();
         var runData = saveNode.CompanyRunData;
-        if (runData == null || runData.HasShownFirstTownEntryPopup)
+        if (saveNode.SkipTutorial || runData == null || runData.HasShownFirstTownEntryPopup)
             return;
 
         runData.MarkFirstTownEntryPopupShown();
         saveNode.Save();
         GlobalOverlay.Get()?.ShowBlurredPopup(FirstTownEntryPopupTitle, FirstTownEntryPopupText);
+    }
+
+    private static void ShowFirstContractCompletedPopupIfNeeded()
+    {
+        var saveNode = SaveNode.Get();
+        var runData = saveNode.CompanyRunData;
+        if (saveNode.SkipTutorial || runData == null || !saveNode.HasCompletedContractsForProgression || runData.HasShownFirstContractCompletedPopup)
+            return;
+
+        runData.MarkFirstContractCompletedPopupShown();
+        saveNode.Save();
+        GlobalOverlay.Get()?.ShowBlurredPopup(FirstContractCompletedPopupTitle, FirstContractCompletedPopupText);
+    }
+
+    private static void ShowRecoveryBuildingTutorialsIfNeeded()
+    {
+        var saveNode = SaveNode.Get();
+        var runData = saveNode.CompanyRunData;
+        var globalOverlay = GlobalOverlay.Get();
+        if (saveNode.SkipTutorial || runData == null || globalOverlay == null || !saveNode.HasReachedSpecialtyBuildingsForProgression)
+            return;
+
+        if (!runData.HasUnlockedSpecialtyBuildings)
+        {
+            runData.MarkSpecialtyBuildingsUnlocked();
+            globalOverlay.ShowBlurredPopup(
+                SpecialtyBuildingsUnlockedPopupTitle,
+                SpecialtyBuildingsUnlockedPopupText);
+        }
+
+        if (!runData.HasShownThermaeTutorialPopup)
+        {
+            runData.MarkThermaeTutorialPopupShown();
+            globalOverlay.ShowBlurredPopup(
+                ThermaeTutorialPopupTitle,
+                ThermaeTutorialPopupText,
+                ResourceLoader.Load<Texture2D>(ThermaeBuildingPath));
+        }
+
+        if (!runData.HasShownTrainingHallTutorialPopup)
+        {
+            runData.MarkTrainingHallTutorialPopupShown();
+            globalOverlay.ShowBlurredPopup(
+                TrainingHallTutorialPopupTitle,
+                TrainingHallTutorialPopupText,
+                ResourceLoader.Load<Texture2D>(TrainingHallBuildingPath));
+        }
+
+        saveNode.Save();
     }
 
     private void RefreshEnvironmentVisuals()

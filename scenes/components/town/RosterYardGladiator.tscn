@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/town/RosterYardGladiator.cs" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/health.svg" id="2_health"]
@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/critical_risk.svg" id="6_critical_risk"]
 [ext_resource type="Script" path="res://scenes/components/ui/VitalProgressBar.cs" id="7_vital_bar"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="8_gold"]
+[ext_resource type="Texture2D" path="res://assets/ui/character_shadow.svg" id="9_shadow"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_interaction"]
 size = Vector2(112, 136)
@@ -63,7 +64,29 @@ offset_bottom = 78.0
 mouse_filter = 2
 color = Color(0.08, 0.065, 0.045, 0.82)
 
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -2
+position = Vector2(0, 10)
+texture = ExtResource("9_shadow")
+scale = Vector2(0.48, 0.48)
+
 [node name="Portrait" type="Sprite2D" parent="."]
+position = Vector2(0, -21)
+
+[node name="Armor" type="Sprite2D" parent="."]
+position = Vector2(0, -21)
+
+[node name="LeftHand" type="Sprite2D" parent="."]
+position = Vector2(-20, -15)
+
+[node name="OffHandItem" type="Sprite2D" parent="LeftHand"]
+position = Vector2(-9, -1)
+
+[node name="RightHand" type="Sprite2D" parent="."]
+position = Vector2(20, -15)
+
+[node name="MainHandItem" type="Sprite2D" parent="RightHand"]
+position = Vector2(9, -1)
 
 [node name="SalaryPreview" type="PanelContainer" parent="."]
 visible = false

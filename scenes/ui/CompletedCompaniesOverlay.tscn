@@ -191,12 +191,6 @@ layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="DeleteButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
-custom_minimum_size = Vector2(150, 50)
-layout_mode = 2
-focus_mode = 2
-text = "Delete"
-
 [node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/Actions"]
 custom_minimum_size = Vector2(150, 50)
 layout_mode = 2

@@ -60,9 +60,12 @@ theme_override_font_sizes/font_size = 26
 text = "Arena Controls"
 horizontal_alignment = 1
 
-[node name="StatusLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
+[node name="StatusLabel" type="RichTextLabel" parent="CenterContainer/Panel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
-autowrap_mode = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
 
 [node name="PromptRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
@@ -80,12 +83,6 @@ alignment = 1
 layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 2
-
-[node name="MockCompleteButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
-visible = false
-custom_minimum_size = Vector2(170, 54)
-layout_mode = 2
-text = "Mock Complete"
 
 [node name="ResetButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(150, 54)

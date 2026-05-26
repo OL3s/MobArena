@@ -1,4 +1,3 @@
-using System;
 using Godot;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
@@ -11,18 +10,24 @@ public partial class SettingsOverlay : Control
 	private const int VideoCategory = 0;
 	private const int SoundCategory = 1;
 	private const int GameplayCategory = 2;
-	private const int SaveDataCategory = 3;
+	private const int ControlsCategory = 3;
+	private const int SaveDataCategory = 4;
 
 	private Button _videoButton;
 	private Button _soundButton;
 	private Button _gameplayButton;
+	private Button _controlsButton;
 	private Button _saveDataButton;
 	private Label _categoryTitle;
 	private Control _gameplaySettings;
+	private Control _controlsSettings;
 	private Control _saveDataSettings;
 	private CheckBox _debugCheckBox;
+	private CheckBox _skipTutorialCheckBox;
 	private Label _lowHealthValueLabel;
 	private SpinBox _lowHealthSpinBox;
+	private Label _arenaMoveDeadzoneValueLabel;
+	private SpinBox _arenaMoveDeadzoneSpinBox;
 	private Label _placeholderLabel;
 	private bool _refreshingUi;
 
@@ -31,24 +36,32 @@ public partial class SettingsOverlay : Control
 		_videoButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/VideoButton");
 		_soundButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/SoundButton");
 		_gameplayButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/GameplayButton");
+		_controlsButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/ControlsButton");
 		_saveDataButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/SaveDataButton");
 		_categoryTitle = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/CategoryTitle");
 		_gameplaySettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings");
+		_controlsSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings");
 		_saveDataSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings");
 		_placeholderLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/PlaceholderLabel");
 		_debugCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/DebugCheckBox");
+		_skipTutorialCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/SkipTutorialCheckBox");
 		_lowHealthValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthValueLabel");
 		_lowHealthSpinBox = GetNode<SpinBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthSpinBox");
+		_arenaMoveDeadzoneValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/ArenaMoveDeadzoneRow/ArenaMoveDeadzoneValueLabel");
+		_arenaMoveDeadzoneSpinBox = GetNode<SpinBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/ArenaMoveDeadzoneRow/ArenaMoveDeadzoneSpinBox");
 
 		_videoButton.Pressed += () => ShowCategory(VideoCategory);
 		_soundButton.Pressed += () => ShowCategory(SoundCategory);
 		_gameplayButton.Pressed += () => ShowCategory(GameplayCategory);
+		_controlsButton.Pressed += () => ShowCategory(ControlsCategory);
 		_saveDataButton.Pressed += () => ShowCategory(SaveDataCategory);
 		_debugCheckBox.Toggled += OnDebugToggled;
+		_skipTutorialCheckBox.Toggled += OnSkipTutorialToggled;
 		_lowHealthSpinBox.ValueChanged += OnLowHealthWarningChanged;
-		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteRunButton").Pressed += OnDeleteRunDataPressed;
-		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteCompanyButton").Pressed += OnDeleteCompanyDataPressed;
-		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteSettingsButton").Pressed += OnDeleteSettingsDataPressed;
+		_arenaMoveDeadzoneSpinBox.ValueChanged += OnArenaMoveDeadzoneChanged;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/RetireCompanyButton").Pressed += OnRetireCompanyPressed;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteRecordsButton").Pressed += OnDeleteRecordsPressed;
+		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/ResetSettingsButton").Pressed += OnResetSettingsPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/DeleteAllButton").Pressed += OnDeleteAllSaveDataPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Actions/ApplyButton").Pressed += OnApplyPressed;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Actions/CloseButton").Pressed += QueueFree;
@@ -60,14 +73,16 @@ public partial class SettingsOverlay : Control
 	private void ShowCategory(int category)
 	{
 		_gameplaySettings.Visible = category == GameplayCategory;
+		_controlsSettings.Visible = category == ControlsCategory;
 		_saveDataSettings.Visible = category == SaveDataCategory;
-		_placeholderLabel.Visible = category != GameplayCategory && category != SaveDataCategory;
+		_placeholderLabel.Visible = category != GameplayCategory && category != ControlsCategory && category != SaveDataCategory;
 
 		_categoryTitle.Text = category switch
 		{
 			VideoCategory => "Video",
 			SoundCategory => "Sound",
 			GameplayCategory => "Gameplay",
+			ControlsCategory => "Controls",
 			SaveDataCategory => "Save Data",
 			_ => "Video"
 		};
@@ -82,6 +97,7 @@ public partial class SettingsOverlay : Control
 		_videoButton.Disabled = category == VideoCategory;
 		_soundButton.Disabled = category == SoundCategory;
 		_gameplayButton.Disabled = category == GameplayCategory;
+		_controlsButton.Disabled = category == ControlsCategory;
 		_saveDataButton.Disabled = category == SaveDataCategory;
 	}
 
@@ -90,8 +106,11 @@ public partial class SettingsOverlay : Control
 		_refreshingUi = true;
 		var settingsConfig = SaveNode.Get().SettingsConfig;
 		_debugCheckBox.ButtonPressed = settingsConfig.DebugEnabled;
+		_skipTutorialCheckBox.ButtonPressed = settingsConfig.SkipTutorial;
 		_lowHealthSpinBox.Value = Mathf.RoundToInt(settingsConfig.LowHealthWarningRatio * 100f);
 		_lowHealthValueLabel.Text = $"{_lowHealthSpinBox.Value:0}%";
+		_arenaMoveDeadzoneSpinBox.Value = Mathf.RoundToInt(settingsConfig.ArenaMoveDeadzone * 100f);
+		_arenaMoveDeadzoneValueLabel.Text = $"{_arenaMoveDeadzoneSpinBox.Value:0}%";
 		_refreshingUi = false;
 	}
 
@@ -108,6 +127,19 @@ public partial class SettingsOverlay : Control
 		RefreshSettingsUi();
 	}
 
+	private void OnSkipTutorialToggled(bool enabled)
+	{
+		if (_refreshingUi)
+			return;
+
+		var settingsConfig = SaveNode.Get().SettingsConfig;
+		if (settingsConfig == null)
+			return;
+
+		settingsConfig.SkipTutorial = enabled;
+		RefreshSettingsUi();
+	}
+
 	private void OnLowHealthWarningChanged(double value)
 	{
 		if (_refreshingUi)
@@ -118,6 +150,19 @@ public partial class SettingsOverlay : Control
 			return;
 
 		settingsConfig.LowHealthWarningRatio = Mathf.Clamp((float)value / 100f, 0.1f, 1f);
+		RefreshSettingsUi();
+	}
+
+	private void OnArenaMoveDeadzoneChanged(double value)
+	{
+		if (_refreshingUi)
+			return;
+
+		var settingsConfig = SaveNode.Get().SettingsConfig;
+		if (settingsConfig == null)
+			return;
+
+		settingsConfig.ArenaMoveDeadzone = Mathf.Clamp((float)value / 100f, 0f, 0.95f);
 		RefreshSettingsUi();
 	}
 
@@ -137,49 +182,66 @@ public partial class SettingsOverlay : Control
 			$"Settings could not be saved. Error: {error}.");
 	}
 
-	private void OnDeleteRunDataPressed()
+	private void OnRetireCompanyPressed()
 	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteRunData());
+		ConfirmSaveDataAction(
+			SaveNode.SaveDataDeleteScope.RetireCompany,
+			"Retire Company?",
+			"This ends the current company, saves any qualifying result to Records, and returns to the main menu.",
+			"Retire");
 	}
 
-	private void OnDeleteCompanyDataPressed()
+	private void OnDeleteRecordsPressed()
 	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteCompanyData());
+		ConfirmSaveDataAction(
+			SaveNode.SaveDataDeleteScope.Records,
+			"Delete Records?",
+			"This permanently deletes completed company records. The active company is not changed.",
+			"Delete");
 	}
 
-	private void OnDeleteSettingsDataPressed()
+	private void OnResetSettingsPressed()
 	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSettingsData());
+		ConfirmSaveDataAction(
+			SaveNode.SaveDataDeleteScope.Settings,
+			"Reset Settings?",
+			"This resets gameplay/settings values to defaults. Company and records are not changed.",
+			"Reset");
 	}
 
 	private void OnDeleteAllSaveDataPressed()
 	{
-		ConfirmDeleteSaveData(saveNode => saveNode.DeleteSave());
+		ConfirmSaveDataAction(
+			SaveNode.SaveDataDeleteScope.All,
+			"Delete Everything?",
+			"This permanently deletes company, records, settings, and all save data.",
+			"Delete All");
 	}
 
-	private void ConfirmDeleteSaveData(Func<SaveNode, Error> deleteAction)
+	private void ConfirmSaveDataAction(SaveNode.SaveDataDeleteScope scope, string title, string text, string confirmText)
 	{
 		GlobalOverlay.Get()?.ShowGoCancelPopup(
-			"Delete Save Data?",
-			"This cannot be undone.",
+			title,
+			text,
 			() =>
 			{
-				DeleteSaveData(deleteAction);
+				DeleteSaveData(scope);
 			},
-			"Delete");
+			confirmText);
 	}
 
-	private void DeleteSaveData(Func<SaveNode, Error> deleteAction)
+	private void DeleteSaveData(SaveNode.SaveDataDeleteScope scope)
 	{
 		var saveNode = SaveNode.Get();
 
-		var error = deleteAction(saveNode);
+		var error = saveNode.DeleteSaveData(scope);
 		if (error != Error.Ok)
 		{
 			GlobalOverlay.Get()?.ShowBlurredPopup("Save Data", $"Save data could not be deleted. Error: {error}.");
 			return;
 		}
 
+		GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScene);
 	}
 }

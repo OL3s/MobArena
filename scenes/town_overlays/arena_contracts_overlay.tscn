@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scenes/town_overlays/ArenaContractsOverlay.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/icons/local_coop.svg" id="7_local_coop_icon"]
 [ext_resource type="Resource" path="res://resources/contracts/starter_slime_pit.tres" id="8_starter_slime"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/gold.svg" id="9_gold_icon"]
+[ext_resource type="Resource" path="res://resources/contracts/champion_slime_trial.tres" id="10_champion_slime"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_arena_blur"]
 shader = ExtResource("2_blur_shader")
@@ -25,7 +26,7 @@ script = ExtResource("1_script")
 ArenaScene = ExtResource("3_arena")
 ContractCardScene = ExtResource("5_contract_card")
 ControlConfigOverlayScene = ExtResource("6_control_config")
-Contracts = Array[Resource]([ExtResource("8_starter_slime")])
+Contracts = Array[Resource]([ExtResource("8_starter_slime"), ExtResource("10_champion_slime")])
 
 [node name="BlurBackdrop" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_arena_blur")
@@ -82,6 +83,14 @@ custom_minimum_size = Vector2(126, 44)
 layout_mode = 2
 text = "Donate"
 
+[node name="RerollButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Header"]
+custom_minimum_size = Vector2(150, 44)
+layout_mode = 2
+tooltip_text = "Future contract reroll action."
+text = "Reroll 0"
+icon = ExtResource("9_gold_icon")
+expand_icon = true
+
 [node name="ContractArea" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -92,9 +101,31 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Choose Contract"
 
-[node name="Description" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea"]
+[node name="MissingGladiatorMessage" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea"]
+visible = false
+custom_minimum_size = Vector2(0, 210)
 layout_mode = 2
-text = "Mock contracts for now. Each card can become a richer contract preview as real contracts are added."
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="DragIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea/MissingGladiatorMessage"]
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+texture = ExtResource("4_drag_hand")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Message" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea/MissingGladiatorMessage"]
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+text = "Arena building is missing at least one gladiator. Drag a gladiator to the Arena first."
+horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 3
 
 [node name="ContractsScroll" type="ScrollContainer" parent="CenterContainer/Panel/MarginContainer/Layout/ContractArea"]
@@ -139,14 +170,6 @@ theme_override_constants/separation = 6
 custom_minimum_size = Vector2(150, 54)
 layout_mode = 2
 text = "Start"
-
-[node name="RerollButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
-custom_minimum_size = Vector2(150, 54)
-layout_mode = 2
-tooltip_text = "Future contract reroll action."
-text = "Reroll 0"
-icon = ExtResource("9_gold_icon")
-expand_icon = true
 
 [node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(150, 54)

@@ -1,8 +1,8 @@
 using Godot;
 using System;
-using System.Text;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Contracts;
 
 namespace MobArena.Scenes.TownOverlays;
 
@@ -10,43 +10,47 @@ public partial class ArenaControlConfigOverlay : Control
 {
     private const float CardWidth = 170f;
     private const double WaitingAnimationIntervalSeconds = 0.35;
+    private const float PromptPulseAmplitude = 0.1f;
+    private const float PromptPulseBaseScale = 1.0f;
+    private const float PromptPulseMinimumScale = 0.9f;
+    private const float PromptPulseSpeed = 3.2f;
+    private const float PromptPulsePhaseOffset = 0.75f;
+    private const string LaunchSummaryOverlayScenePath = "res://scenes/town_overlays/arena_launch_summary_overlay.tscn";
 
-    private Label _statusLabel;
+    private RichTextLabel _statusLabel;
     private HBoxContainer _promptRow;
     private HBoxContainer _assignmentRow;
-    private Button _mockCompleteButton;
     private Button _resetButton;
     private Button _closeButton;
     private CompanyRunData _runData;
     private LocalInputConfig _localInputConfig;
+    private ArenaContractData _contract;
     private Action _launchAction;
-    private Action _mockCompleteAction;
     private int _nextGladiatorIndex;
     private int _waitingDotCount = 1;
     private double _waitingAnimationElapsed;
+    private double _promptAnimationElapsed;
+    private string _promptSignature = string.Empty;
     private bool _readyPromptOpen;
 
-    public void Configure(Action launchAction, Action mockCompleteAction = null)
+    public void Configure(ArenaContractData contract, Action launchAction)
     {
+        _contract = contract;
         _launchAction = launchAction;
-        _mockCompleteAction = mockCompleteAction;
     }
 
     public override void _Ready()
     {
-        _statusLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/StatusLabel");
+        _statusLabel = GetNode<RichTextLabel>("CenterContainer/Panel/MarginContainer/Layout/StatusLabel");
         _promptRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/PromptRow");
         _assignmentRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/AssignmentRow");
-        _mockCompleteButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/MockCompleteButton");
         _resetButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/ResetButton");
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
         _runData = SaveNode.Get()?.CompanyRunData;
         _localInputConfig = LocalInputConfig.Get();
 
-        _mockCompleteButton.FocusMode = FocusModeEnum.None;
         _resetButton.FocusMode = FocusModeEnum.None;
         _closeButton.FocusMode = FocusModeEnum.None;
-        _mockCompleteButton.Pressed += OnMockCompletePressed;
         _resetButton.Pressed += ResetAssignments;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
@@ -62,28 +66,31 @@ public partial class ArenaControlConfigOverlay : Control
             _runData.RunChanged -= RefreshUi;
     }
 
-    public override void _Input(InputEvent inputEvent)
+    public override void _UnhandledInput(InputEvent inputEvent)
     {
         if (!IsJoinInput(inputEvent))
             return;
 
-        GetViewport()?.SetInputAsHandled();
         if (_readyPromptOpen || !IsVisibleInTree())
             return;
 
         if (TryHandleJoinInput(inputEvent, out var controllerSetup))
+        {
+            GetViewport()?.SetInputAsHandled();
             AssignNextGladiator(controllerSetup);
+        }
     }
 
     private static bool IsJoinInput(InputEvent inputEvent)
     {
         return inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Enter or Key.KpEnter }
-            || inputEvent is InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.A }
-            || inputEvent is InputEventScreenTouch { Pressed: true };
+            || inputEvent is InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.A };
     }
 
     public override void _Process(double delta)
     {
+        AnimatePromptRow(delta);
+
         if (!HasNextGladiator() || _readyPromptOpen)
             return;
 
@@ -94,6 +101,28 @@ public partial class ArenaControlConfigOverlay : Control
         _waitingAnimationElapsed = 0d;
         _waitingDotCount = _waitingDotCount >= 3 ? 1 : _waitingDotCount + 1;
         RefreshUi();
+    }
+
+    private void AnimatePromptRow(double delta)
+    {
+        if (_promptRow == null || !_promptRow.Visible)
+            return;
+
+        _promptAnimationElapsed += delta;
+        for (var index = 0; index < _promptRow.GetChildCount(); index++)
+        {
+            if (_promptRow.GetChild(index) is not Control prompt)
+                continue;
+
+            if (prompt.GetNodeOrNull<Control>("Icon") is not { } icon)
+                continue;
+
+            icon.PivotOffset = icon.Size * 0.5f;
+            var phase = (float)_promptAnimationElapsed * PromptPulseSpeed - index * PromptPulsePhaseOffset;
+            var scale = PromptPulseBaseScale + Mathf.Sin(phase) * PromptPulseAmplitude;
+            scale = Mathf.Max(PromptPulseMinimumScale, scale);
+            icon.Scale = Vector2.One * scale;
+        }
     }
 
     private bool TryHandleJoinInput(InputEvent inputEvent, out LocalInputControllerConfig controllerSetup)
@@ -118,15 +147,6 @@ public partial class ArenaControlConfigOverlay : Control
                 return false;
 
             controllerSetup = GetControllerSetup(LocalInputControllerConfig.ControllerKind.Gamepad, joypadButton.Device);
-            return controllerSetup != null;
-        }
-
-        if (inputEvent is InputEventScreenTouch { Pressed: true })
-        {
-            if (!_localInputConfig.TryJoinTouch())
-                return false;
-
-            controllerSetup = GetControllerSetup(LocalInputControllerConfig.ControllerKind.Touch, -1);
             return controllerSetup != null;
         }
 
@@ -165,11 +185,6 @@ public partial class ArenaControlConfigOverlay : Control
             ShowReadyPrompt();
     }
 
-    private void OnMockCompletePressed()
-    {
-        _mockCompleteAction?.Invoke();
-    }
-
     private GladiatorData GetNextUnassignedGladiator()
     {
         var arenaGladiators = _runData?.TownAssignments?.ArenaGladiators;
@@ -200,6 +215,7 @@ public partial class ArenaControlConfigOverlay : Control
         _nextGladiatorIndex = 0;
         _waitingDotCount = 1;
         _waitingAnimationElapsed = 0d;
+        _promptAnimationElapsed = 0d;
         _localInputConfig?.ClearControllerSetups();
         _runData?.ClearArenaControlAssignments();
         RefreshUi();
@@ -213,18 +229,16 @@ public partial class ArenaControlConfigOverlay : Control
         var arenaGladiators = _runData?.TownAssignments?.ArenaGladiators;
         if (arenaGladiators == null || arenaGladiators.Count <= 0)
         {
-            _statusLabel.Text = "Assign gladiators to the Arena building first.";
-            _mockCompleteButton.Visible = false;
+            _statusLabel.Text = "[center]Assign gladiators to the Arena building first.[/center]";
             _resetButton.Disabled = true;
+            BuildPromptRow();
             return;
         }
 
-        _mockCompleteButton.Visible = SaveNode.Get()?.SettingsConfig?.DebugEnabled == true;
-        _mockCompleteButton.Disabled = _mockCompleteAction == null;
         _resetButton.Disabled = false;
         _statusLabel.Text = HasNextGladiator()
-            ? "Join controls from left to right."
-            : "All arena gladiators have controls assigned.";
+            ? "[center]Press an input to claim the [b]waiting[/b] gladiator.[/center]"
+            : "[center]All arena gladiators have controls assigned.[/center]";
 
         for (var index = 0; index < arenaGladiators.Count; index++)
         {
@@ -232,6 +246,8 @@ public partial class ArenaControlConfigOverlay : Control
             if (gladiator != null)
                 _assignmentRow.AddChild(CreateGladiatorCard(gladiator, index));
         }
+
+        BuildPromptRow();
     }
 
     private Control CreateGladiatorCard(GladiatorData gladiator, int index)
@@ -243,7 +259,10 @@ public partial class ArenaControlConfigOverlay : Control
             CustomMinimumSize = new Vector2(CardWidth, 210f)
         };
         if (isCurrent)
+        {
             panel.Modulate = new Color(1f, 0.92f, 0.55f);
+            panel.GuiInput += OnWaitingCardGuiInput;
+        }
 
         var margin = new MarginContainer();
         margin.AddThemeConstantOverride("margin_left", 10);
@@ -259,7 +278,7 @@ public partial class ArenaControlConfigOverlay : Control
         layout.AddChild(new TextureRect
         {
             CustomMinimumSize = new Vector2(76f, 76f),
-            Texture = gladiator.GetPortraitTexture(),
+            Texture = gladiator.GetUiIconTexture(),
             ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
         });
@@ -281,24 +300,83 @@ public partial class ArenaControlConfigOverlay : Control
         return panel;
     }
 
+    private void OnWaitingCardGuiInput(InputEvent inputEvent)
+    {
+        if (_readyPromptOpen || !IsVisibleInTree())
+            return;
+
+        if (inputEvent is InputEventMouseButton { Pressed: true })
+        {
+            TryAssignPointerController(LocalInputControllerConfig.ControllerKind.Mouse);
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
+
+        if (inputEvent is InputEventScreenTouch { Pressed: true })
+        {
+            TryAssignPointerController(LocalInputControllerConfig.ControllerKind.Touch);
+            GetViewport()?.SetInputAsHandled();
+        }
+    }
+
+    private void TryAssignPointerController(LocalInputControllerConfig.ControllerKind kind)
+    {
+        if (_localInputConfig == null || !HasNextGladiator())
+            return;
+
+        var joined = kind switch
+        {
+            LocalInputControllerConfig.ControllerKind.Mouse => _localInputConfig.TryJoinMouse(),
+            LocalInputControllerConfig.ControllerKind.Touch => _localInputConfig.TryJoinTouch(),
+            _ => false
+        };
+        if (!joined)
+            return;
+
+        var controllerSetup = GetControllerSetup(kind, -1);
+        if (controllerSetup != null)
+            AssignNextGladiator(controllerSetup);
+    }
+
     private void BuildPromptRow()
     {
+        var shouldShow = HasNextGladiator() && !_readyPromptOpen;
+        var signature = _localInputConfig == null
+            ? shouldShow.ToString()
+            : $"{shouldShow}:{_localInputConfig.HasKeyboardPlayer}:{_localInputConfig.HasMousePlayer}:{_localInputConfig.HasTouchPlayer}:{_localInputConfig.CanJoin}";
+        if (signature == _promptSignature)
+            return;
+
+        _promptSignature = signature;
         foreach (var child in _promptRow.GetChildren())
             child.QueueFree();
 
-        AddPrompt(_localInputConfig?.EnterIcon, "Enter");
-        AddPrompt(_localInputConfig?.PhoneIcon, "Touch");
-        AddPrompt(_localInputConfig?.XboxAIcon, "A");
+        _promptRow.Visible = shouldShow;
+        if (!_promptRow.Visible || _localInputConfig == null)
+            return;
+
+        if (!_localInputConfig.HasKeyboardPlayer)
+            AddPrompt(_localInputConfig.EnterIcon, LocalInputControllerConfig.ControllerKind.Keyboard.ToString());
+		if (!_localInputConfig.HasMousePlayer)
+			AddPrompt(_localInputConfig.MouseIcon, LocalInputControllerConfig.ControllerKind.Mouse.ToString());
+		if (!_localInputConfig.HasTouchPlayer)
+			AddPrompt(_localInputConfig.PhoneIcon, LocalInputControllerConfig.ControllerKind.Touch.ToString());
+        if (_localInputConfig.CanJoin)
+            AddPrompt(_localInputConfig.XboxAIcon, LocalInputControllerConfig.ControllerKind.Gamepad.ToString());
     }
 
     private void AddPrompt(Texture2D icon, string label)
     {
-        var row = new HBoxContainer();
+        var row = new HBoxContainer
+        {
+            MouseFilter = MouseFilterEnum.Ignore
+        };
         row.AddThemeConstantOverride("separation", 6);
         _promptRow.AddChild(row);
 
         row.AddChild(new TextureRect
         {
+            Name = "Icon",
             CustomMinimumSize = new Vector2(30f, 30f),
             Texture = icon,
             ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
@@ -309,7 +387,8 @@ public partial class ArenaControlConfigOverlay : Control
         row.AddChild(new Label
         {
             Text = label,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = MouseFilterEnum.Ignore
         });
     }
 
@@ -319,38 +398,21 @@ public partial class ArenaControlConfigOverlay : Control
             return;
 
         _readyPromptOpen = true;
-        GlobalOverlay.Get()?.ShowGoCancelPopup(
-            "Start Arena?",
-            BuildReadySummary(),
-            StartArena,
-            "Start",
-            "Reset",
-            cancelAction: ResetAssignments);
+        var overlayScene = ResourceLoader.Load<PackedScene>(LaunchSummaryOverlayScenePath);
+        var overlay = overlayScene?.Instantiate<ArenaLaunchSummaryOverlay>();
+        if (overlay == null)
+        {
+            GD.PushError("Arena launch summary overlay scene is missing or has the wrong root script.");
+            return;
+        }
+
+        overlay.Configure(_contract, StartArena, ResetAssignments);
+        GlobalOverlay.Get()?.AddOverlay(overlay);
     }
 
     private string GetWaitingText()
     {
         return $"Waiting{new string('.', _waitingDotCount)}";
-    }
-
-    private string BuildReadySummary()
-    {
-        var builder = new StringBuilder("Ready to enter the arena?\n\n");
-        var arenaGladiators = _runData?.TownAssignments?.ArenaGladiators;
-        if (arenaGladiators == null)
-            return builder.ToString();
-
-        for (var index = 0; index < arenaGladiators.Count; index++)
-        {
-            var gladiator = arenaGladiators[index];
-            if (gladiator == null)
-                continue;
-
-            var assignment = _runData.GetArenaControlAssignment(gladiator);
-            builder.AppendLine($"Player {index + 1}: {gladiator.GladiatorName} - {GetControllerLabel(assignment)}");
-        }
-
-        return builder.ToString();
     }
 
     private void StartArena()
@@ -364,9 +426,6 @@ public partial class ArenaControlConfigOverlay : Control
         if (assignment == null)
             return "Unassigned";
 
-        var deviceLabel = assignment.ControllerKind == LocalInputControllerConfig.ControllerKind.Gamepad
-            ? $" device {assignment.DeviceId}"
-            : string.Empty;
-        return $"{assignment.ControllerName} ({assignment.ControllerKind}{deviceLabel})";
+        return assignment.DisplayName;
     }
 }

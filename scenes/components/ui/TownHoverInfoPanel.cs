@@ -58,7 +58,7 @@ public partial class TownHoverInfoPanel : PanelContainer
             return;
 
         Visible = true;
-        _icon.Texture = gladiatorData.GetPortraitTexture();
+        _icon.Texture = gladiatorData.GetUiIconTexture();
         _title.Text = gladiatorData.GladiatorName;
         _description.Visible = false;
         _equipmentColumn.Visible = true;
@@ -101,7 +101,7 @@ public partial class TownHoverInfoPanel : PanelContainer
 
     private static void SetEquipmentIcon(TextureRect icon, ItemData item, string fallbackTooltip)
     {
-        icon.Texture = item?.Icon;
+        icon.Texture = item?.UiIcon;
         icon.TooltipText = item?.DisplayName ?? fallbackTooltip;
         icon.Modulate = item == null ? new Color(1f, 1f, 1f, 0.28f) : Colors.White;
     }
@@ -118,10 +118,11 @@ public partial class TownHoverInfoPanel : PanelContainer
     {
         return skill switch
         {
+            GladiatorEquipmentData.SignatureSkill.Dodge => "res://assets/ui/gladiator_icons/skill_dodge.svg",
             GladiatorEquipmentData.SignatureSkill.Parry => "res://assets/ui/gladiator_icons/skill_parry.svg",
             GladiatorEquipmentData.SignatureSkill.Bash => "res://assets/ui/gladiator_icons/skill_bash.svg",
             GladiatorEquipmentData.SignatureSkill.Cleave => "res://assets/ui/gladiator_icons/skill_cleave.svg",
-            _ => "res://assets/ui/gladiator_icons/skill_dodge.svg"
+            _ => "res://assets/ui/icons/question_mark.svg"
         };
     }
 }

@@ -9,6 +9,8 @@ public partial class ArenaContractCard : Button
 {
     private const string FameIconPath = "res://assets/ui/icons/fame.svg";
     private const string GoldIconPath = "res://assets/ui/icons/gold.svg";
+    private const string StarIconPath = "res://assets/ui/icons/star.svg";
+    private const string ChampionIconPath = "res://assets/ui/icons/champion.svg";
 
     [Signal]
     public delegate void ContractSelectedEventHandler(int contractIndex);
@@ -21,20 +23,31 @@ public partial class ArenaContractCard : Button
 
     public int CurrentCompanyFame { get; private set; }
 
-    private Label _titleLabel;
-    private HBoxContainer _mobsRow;
+    private HBoxContainer _difficultyStars;
+    private TextureRect _familyIcon;
+    private Label _familyNameLabel;
+    private TextureRect _championIcon;
+    private GridContainer _mobsGrid;
     private HBoxContainer _rewardsRow;
     private Texture2D _fameIcon;
     private Texture2D _goldIcon;
+    private Texture2D _starIcon;
+    private Texture2D _championTexture;
 
     public override void _Ready()
     {
         ToggleMode = true;
-        _titleLabel = GetNode<Label>("MarginContainer/Layout/Title");
-        _mobsRow = GetNode<HBoxContainer>("MarginContainer/Layout/MobsRow");
+        _difficultyStars = GetNode<HBoxContainer>("MarginContainer/Layout/DifficultyStars");
+        _familyIcon = GetNode<TextureRect>("MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout/FamilyRow/FamilyIcon");
+        _familyNameLabel = GetNode<Label>("MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout/FamilyRow/FamilyName");
+        _championIcon = GetNode<TextureRect>("MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout/FamilyRow/ChampionIcon");
+        _mobsGrid = GetNode<GridContainer>("MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout/MobsGrid");
         _rewardsRow = GetNode<HBoxContainer>("MarginContainer/Layout/RewardsRow");
         _fameIcon = ResourceLoader.Load<Texture2D>(FameIconPath);
         _goldIcon = ResourceLoader.Load<Texture2D>(GoldIconPath);
+        _starIcon = ResourceLoader.Load<Texture2D>(StarIconPath);
+        _championTexture = ResourceLoader.Load<Texture2D>(ChampionIconPath);
+        _championIcon.Texture = _championTexture;
 
         Pressed += () => EmitSignal(SignalName.ContractSelected, ContractIndex);
         RefreshUi();
@@ -56,25 +69,48 @@ public partial class ArenaContractCard : Button
 
     private void RefreshUi()
     {
-        if (_titleLabel == null)
+        if (_familyNameLabel == null)
             return;
 
         var netFameReward = ContractData?.GetNetFameReward(CurrentCompanyFame) ?? 0;
-        _titleLabel.Text = ContractData?.DisplayName ?? "Contract";
-        RebuildMobsRow();
+        _familyNameLabel.Text = (ContractData?.Family ?? MobFamily.Slimes).ToString();
+        _familyIcon.Texture = ResourceLoader.Load<Texture2D>(GetFamilyIconPath(ContractData?.Family ?? MobFamily.Slimes));
+        _championIcon.Visible = ContractData?.IsChampionContract() == true;
+        RebuildDifficultyStars();
+        RebuildMobsGrid();
         RebuildRow(
             _rewardsRow,
             CreateIconValue(_goldIcon, (ContractData?.GoldReward ?? 0).ToString()),
             CreateIconValue(_fameIcon, netFameReward >= 0 ? $"+{netFameReward}" : netFameReward.ToString()));
     }
 
-    private void RebuildMobsRow()
+    private void RebuildDifficultyStars()
     {
-        foreach (var child in _mobsRow.GetChildren())
+        foreach (var child in _difficultyStars.GetChildren())
+            child.QueueFree();
+
+        var starCount = ContractData?.GetThreatStarCount() ?? 1;
+
+        for (var i = 0; i < starCount; i++)
+        {
+            _difficultyStars.AddChild(new TextureRect
+            {
+                CustomMinimumSize = new Vector2(22, 22),
+                Texture = _starIcon,
+                ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                MouseFilter = MouseFilterEnum.Ignore
+            });
+        }
+    }
+
+    private void RebuildMobsGrid()
+    {
+        foreach (var child in _mobsGrid.GetChildren())
             child.QueueFree();
 
         foreach (var mobGroup in GetGroupedMobs())
-            _mobsRow.AddChild(CreateIconValue(mobGroup.Mob?.Icon, $"x{mobGroup.Count}"));
+            _mobsGrid.AddChild(CreateIconValue(mobGroup.Mob?.GetUiIconTexture(), $"x{mobGroup.Count}"));
     }
 
     private IEnumerable<(MobData Mob, int Count)> GetGroupedMobs()
@@ -132,4 +168,17 @@ public partial class ArenaContractCard : Button
 
         return row;
     }
+
+    private static string GetFamilyIconPath(MobFamily family)
+    {
+        return family switch
+        {
+            MobFamily.Slimes => "res://assets/ui/icons/family_slimes.svg",
+            MobFamily.Goblins => "res://assets/ui/icons/family_goblins.svg",
+            MobFamily.Undead => "res://assets/ui/icons/family_undead.svg",
+            MobFamily.Demons => "res://assets/ui/icons/family_demons.svg",
+            _ => "res://assets/ui/icons/question_mark.svg"
+        };
+    }
+
 }

@@ -1,9 +1,21 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/ui/ArenaContractCard.cs" id="1_script"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mob_panel"]
+bg_color = Color(0.08, 0.075, 0.065, 0.78)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.48, 0.39, 0.24, 0.78)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
 [node name="ArenaContractCard" type="Button"]
-custom_minimum_size = Vector2(220, 230)
+custom_minimum_size = Vector2(224, 244)
 layout_mode = 2
 size_flags_horizontal = 4
 toggle_mode = true
@@ -26,24 +38,72 @@ mouse_filter = 2
 
 [node name="Layout" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
-[node name="Title" type="Label" parent="MarginContainer/Layout"]
+[node name="DifficultyStars" type="HBoxContainer" parent="MarginContainer/Layout"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Contract"
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="MobsLabel" type="Label" parent="MarginContainer/Layout"]
-layout_mode = 2
-text = "Enemies"
-horizontal_alignment = 1
-
-[node name="MobsRow" type="HBoxContainer" parent="MarginContainer/Layout"]
-layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 2
 alignment = 1
+
+[node name="MobPanel" type="PanelContainer" parent="MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 132)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mob_panel")
+
+[node name="MobPanelMargin" type="MarginContainer" parent="MarginContainer/Layout/MobPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/margin_left = 7
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 7
+theme_override_constants/margin_bottom = 7
+
+[node name="CenterContainer" type="CenterContainer" parent="MarginContainer/Layout/MobPanel/MobPanelMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="MobPanelLayout" type="VBoxContainer" parent="MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="FamilyRow" type="HBoxContainer" parent="MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="FamilyIcon" type="TextureRect" parent="MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout/FamilyRow"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FamilyName" type="Label" parent="MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout/FamilyRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 17
+text = "Family"
+vertical_alignment = 1
+
+[node name="ChampionIcon" type="TextureRect" parent="MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout/FamilyRow"]
+visible = false
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MobsGrid" type="GridContainer" parent="MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 3
+columns = 2
 
 [node name="RewardsRow" type="HBoxContainer" parent="MarginContainer/Layout"]
 layout_mode = 2

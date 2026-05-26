@@ -29,11 +29,13 @@ Outside combat, the player makes business decisions: who to recruit, who to trai
 ## Main Systems
 
 - Gladiator roster with stats, levels, gear, and permanent death.
+- Character appearance resources with separate body-facing art for town/arena and face portraits for UI.
 - Recruitment with cheap weak fighters, average fighters, and expensive trained gladiators.
 - Company money used for recruitment, gear, healing, training, and upkeep.
 - Fame gained from winning contracts, unlocking harder and better-paying fights.
 - Arena contracts with different enemy groups, rewards, and restrictions.
 - Gear that changes stats, combat strength, and risk when a gladiator dies.
+- Equipped gear should eventually be visible on the gladiator's body in town and arena, not only represented by inventory/menu icons.
 - City phase for management through simple menus.
 
 ## Economy And Time Pressure
@@ -52,9 +54,11 @@ The town phase uses two explicit states: Day before the arena fight and Night af
 
 Phase state should be represented by Godot `Resource`s so management systems can consume the same API without coupling directly to town UI. `TownPhaseState` owns current day and Day/Night phase. `PhaseTransitionController` owns the transition flow and calls company phase work.
 
-Town time should advance from a one-second `Timer` tick, not from continuous per-frame processing. Each timer tick should call the game time controller, which advances 1 in-game minute at x1, 10 in-game minutes at x10, and 100 in-game minutes at x100 before applying passed-time gameplay effects.
+Continuous town time has been removed from the current implementation direction. Town advancement happens through explicit Day -> Night and Night -> Day phase transitions, with phase work resolved once per transition.
 
 If the player fails to fight the champion before the deadline, the run should be lost or otherwise severely failed. This creates pressure to balance economy, roster health, stamina, and arena income instead of waiting forever.
+
+Champion Day is the current hard failure pressure point: the player must take a champion contract when it arrives, and losing that champion fight force-retires the gladiator company. The run is recorded if it qualifies for completed-company history, then the active company/run data is wiped and the player returns to the main menu.
 
 ## Combat Direction
 
@@ -93,6 +97,8 @@ Design requirements:
 Start with simple enemies and add complexity gradually.
 
 Enemy definitions should be authored as Godot `.tres` resources so contracts, codex UI, and future combat spawning reference the same source of truth. Each enemy resource should hold display data such as name/icon, basic stats such as max health, and a packed-scene reference for the runtime combat actor when one exists.
+
+Enemy `FameValue` is the contract budget, threat, and reward contribution value. Families should feel like power bands rather than equivalent skins. Slimes are the low-entry starter family, beginning at 5 fame and then jumping to 20+ for stronger slimes. Goblins and Undead begin around 40 fame, but Undead should jump harder after the first unit so two common Undead can feel comparable to a large starter Slime swarm. Demons begin with Imp around 60 fame, then scale sharply into late-game values. Add future low-tier enemies only when their family fantasy supports that entry point; do not flatten all families into the same low-value range.
 
 Possible progression:
 

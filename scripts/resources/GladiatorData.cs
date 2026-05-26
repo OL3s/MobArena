@@ -1,4 +1,6 @@
 using Godot;
+using MobArena.Scripts.Resources.Combat;
+using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scripts.Resources;
 
@@ -31,11 +33,11 @@ public partial class GladiatorData : Resource
         "Sabina"
     };
 
-    private static readonly string[] PortraitPaths =
+    private static readonly string[] AppearancePaths =
     {
-        "res://assets/gladiators/gladiator_01.svg",
-        "res://assets/gladiators/gladiator_02.svg",
-        "res://assets/gladiators/gladiator_03.svg"
+        "res://resources/gladiator_appearances/appearance_01.tres",
+        "res://resources/gladiator_appearances/appearance_02.tres",
+        "res://resources/gladiator_appearances/appearance_03.tres"
     };
 
     [Export]
@@ -43,6 +45,9 @@ public partial class GladiatorData : Resource
 
     [Export]
     public int PortraitIndex { get; private set; }
+
+    [Export]
+    public GladiatorAppearanceData Appearance { get; private set; }
 
     [Export]
     public int Health { get; private set; } = 35;
@@ -104,6 +109,26 @@ public partial class GladiatorData : Resource
         return isLowHealth ? GladiatorRiskStatus.LowHealth : GladiatorRiskStatus.None;
     }
 
+    public int GetArmorValue(ArmorDamageType damageType)
+    {
+        return Equipment?.Armor?.GetArmorValue(damageType) ?? 0;
+    }
+
+    public int ApplyArmorToDamage(int damage, ArmorDamageType damageType)
+    {
+        return ArmorItemData.ApplyArmorToDamage(damage, GetArmorValue(damageType));
+    }
+
+    public int ApplyArmorToDamage(CombatDamageData damageData)
+    {
+        return damageData?.GetMitigatedTotalDamage(this) ?? 0;
+    }
+
+    public int GetArmorSpecialtyValue(ArmorSpecialType specialType)
+    {
+        return Equipment?.Armor?.GetSpecialtyValue(specialType) ?? 0;
+    }
+
     public static GladiatorData CreateDefault()
     {
         var random = new RandomNumberGenerator();
@@ -112,11 +137,13 @@ public partial class GladiatorData : Resource
         var level = GladiatorLevelData.CreateDefault(random);
         var maxHealth = level.GetMaxHealth();
         var health = Mathf.Max(1, Mathf.RoundToInt(maxHealth * random.RandfRange(DefaultHealthMinRatio, 1f)));
+        var appearanceIndex = random.RandiRange(0, AppearancePaths.Length - 1);
 
         return new GladiatorData
         {
             GladiatorName = DefaultNames[random.RandiRange(0, DefaultNames.Length - 1)],
-            PortraitIndex = random.RandiRange(0, PortraitPaths.Length - 1),
+            PortraitIndex = appearanceIndex,
+            Appearance = LoadAppearance(appearanceIndex),
             Level = level,
             Health = health,
             Stamina = level.GetMaxStamina(),
@@ -136,12 +163,39 @@ public partial class GladiatorData : Resource
 
     public void SetPortraitIndex(int portraitIndex)
     {
-        PortraitIndex = NormalizeIndex(portraitIndex, PortraitPaths.Length);
+        PortraitIndex = NormalizeIndex(portraitIndex, AppearancePaths.Length);
+        Appearance = LoadAppearance(PortraitIndex);
     }
 
-    public Texture2D GetPortraitTexture()
+    public Texture2D GetUiIconTexture()
     {
-        return ResourceLoader.Load<Texture2D>(PortraitPaths[NormalizeIndex(PortraitIndex, PortraitPaths.Length)]);
+        return GetAppearance()?.UiIcon ?? ResourceLoader.Load<Texture2D>("res://assets/gladiators/gladiator_01.svg");
+    }
+
+    public Texture2D GetBodyForwardTexture()
+    {
+        return GetAppearance()?.BodyForward ?? GetUiIconTexture();
+    }
+
+    public Texture2D GetBodyBackTexture()
+    {
+        return GetAppearance()?.BodyBack ?? GetBodyForwardTexture();
+    }
+
+    public bool UsesSeparatedHands()
+    {
+        return GetAppearance()?.UsesSeparatedHands == true;
+    }
+
+    public Texture2D GetHandTexture()
+    {
+        return GetAppearance()?.HandTexture;
+    }
+
+    public GladiatorAppearanceData GetAppearance()
+    {
+        Appearance ??= LoadAppearance(PortraitIndex);
+        return Appearance;
     }
 
     public void AddExhaustion(float amount)
@@ -231,5 +285,10 @@ public partial class GladiatorData : Resource
     private static int NormalizeIndex(int index, int count)
     {
         return ((index % count) + count) % count;
+    }
+
+    private static GladiatorAppearanceData LoadAppearance(int index)
+    {
+        return ResourceLoader.Load<GladiatorAppearanceData>(AppearancePaths[NormalizeIndex(index, AppearancePaths.Length)]);
     }
 }

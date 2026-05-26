@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/arena/ArenaEnemySpawner.cs" id="1_enemy_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/components/arena/EnemyCombatant.tscn" id="2_enemy_combatant"]
+
+[node name="ArenaEnemySpawner" type="Node2D"]
+script = ExtResource("1_enemy_spawner")
+FallbackEnemyScene = ExtResource("2_enemy_combatant")

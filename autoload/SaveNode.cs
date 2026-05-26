@@ -6,11 +6,15 @@ namespace MobArena.Scripts;
 
 public partial class SaveNode : Node
 {
+	public enum SaveDataDeleteScope
+	{
+		RetireCompany,
+		Records,
+		Settings,
+		All
+	}
+
 	private const int SaveVersion = 1;
-	private const string DeleteFlag = "--delete";
-	private const string DeleteSaveDataFlag = "--delete-savedata";
-	private const string DeleteStorageFlag = "--del-storage";
-	private const string DeleteUserDataFlag = "--delete-user-data";
 	private const string SaveDirectory = "user://save";
 	private const string ManifestPath = SaveDirectory + "/save.cfg";
 	private const string CompanyLogoPath = SaveDirectory + "/company_logo.tres";
@@ -22,6 +26,10 @@ public partial class SaveNode : Node
 	private const string SettingsPath = SaveDirectory + "/settings.tres";
 
 	private bool _skipExitSave;
+	private string _pendingCompanyLossTitle;
+	private string _pendingCompanyLossText;
+
+	public event Action RuntimeStateResetting;
 
     [Export]
     public bool HasCompany { get; set; }
@@ -48,6 +56,26 @@ public partial class SaveNode : Node
 	public SettingsConfig SettingsConfig { get; private set; } = new();
 
 	public bool DebugEnabled => SettingsConfig?.DebugEnabled == true;
+	public bool SkipTutorial => SettingsConfig?.SkipTutorial == true;
+	public bool HasCompletedContractsForProgression => SkipTutorial || CompanyCareerData?.HasCompletedContracts == true;
+	public bool HasReachedSpecialtyBuildingsForProgression => SkipTutorial || CompanyCareerData?.HasReachedSpecialtyBuildings == true;
+
+	public void QueueCompanyLossNotification(string title, string text)
+	{
+		_pendingCompanyLossTitle = string.IsNullOrWhiteSpace(title) ? "Company Retired" : title;
+		_pendingCompanyLossText = string.IsNullOrWhiteSpace(text)
+			? "The company has been retired and the run has ended."
+			: text;
+	}
+
+	public bool TryConsumeCompanyLossNotification(out string title, out string text)
+	{
+		title = _pendingCompanyLossTitle;
+		text = _pendingCompanyLossText;
+		_pendingCompanyLossTitle = null;
+		_pendingCompanyLossText = null;
+		return !string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(text);
+	}
 
 	public void StartNewCompanyRun()
 	{
@@ -85,9 +113,11 @@ public partial class SaveNode : Node
 
 	public override void _Ready()
 	{
-		if (TryHandleCommandLineSaveOperation())
+		_skipExitSave = true;
+		if (SaveCommandLineController.TryHandle(this))
 			return;
 
+		_skipExitSave = false;
 		Load();
 	}
 
@@ -97,38 +127,6 @@ public partial class SaveNode : Node
 			return;
 
 		Save();
-	}
-
-	private bool TryHandleCommandLineSaveOperation()
-	{
-		if (!HasCommandLineFlag(DeleteFlag, DeleteSaveDataFlag, DeleteStorageFlag, DeleteUserDataFlag))
-			return false;
-
-		_skipExitSave = true;
-		var error = DeleteSave();
-		var exitCode = error == Error.Ok ? 0 : 1;
-		GD.Print($"SaveNode: Command-line save data delete completed with exit code {exitCode}.");
-		GetTree().Quit(exitCode);
-		return true;
-	}
-
-	private static bool HasCommandLineFlag(params string[] acceptedFlags)
-	{
-		return ContainsAnyFlag(OS.GetCmdlineUserArgs(), acceptedFlags) || ContainsAnyFlag(OS.GetCmdlineArgs(), acceptedFlags);
-	}
-
-	private static bool ContainsAnyFlag(string[] args, string[] acceptedFlags)
-	{
-		foreach (var arg in args)
-		{
-			foreach (var acceptedFlag in acceptedFlags)
-			{
-				if (string.Equals(arg, acceptedFlag, StringComparison.OrdinalIgnoreCase))
-					return true;
-			}
-		}
-
-		return false;
 	}
 
     public bool HasSave()
@@ -143,6 +141,33 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 		{
 			GD.Print($"SaveNode: Save failed while creating save directory. Error: {error}.");
+			return error;
+		}
+
+		if (!HasCompany)
+		{
+			error = DeleteActiveCompanyFiles();
+			if (error != Error.Ok)
+				return error;
+
+			error = SaveResource(CompletedCompanyHistory, CompletedCompanyHistoryPath);
+			if (error != Error.Ok)
+			{
+				GD.Print($"SaveNode: Save failed for completed company history. Error: {error}.");
+				return error;
+			}
+
+			error = SaveResource(SettingsConfig, SettingsPath);
+			if (error != Error.Ok)
+			{
+				GD.Print($"SaveNode: Save failed for settings. Error: {error}.");
+				return error;
+			}
+
+			error = SaveManifest(CreateManifest());
+			if (error != Error.Ok)
+				GD.PushError($"SaveNode: Save failed for manifest. Error: {error}.");
+
 			return error;
 		}
 
@@ -221,6 +246,32 @@ public partial class SaveNode : Node
 
 		HasCompany = (bool)manifest.GetValue("company", "has_company", false);
 
+		error = LoadResource(GetResourcePath(manifest, "completed_company_history", CompletedCompanyHistoryPath), CompletedCompanyHistory, out var completedCompanyHistory);
+		if (error != Error.Ok)
+		{
+			GD.Print($"SaveNode: Load failed for completed company history. Error: {error}.");
+			return error;
+		}
+
+		error = LoadResource(GetResourcePath(manifest, "settings", SettingsPath), SettingsConfig, out var settingsConfig);
+		if (error != Error.Ok)
+		{
+			GD.Print($"SaveNode: Load failed for settings. Error: {error}.");
+			return error;
+		}
+
+		CompletedCompanyHistory = completedCompanyHistory;
+		SettingsConfig = settingsConfig;
+		if (!HasCompany)
+		{
+			CompanyLogoData = CompanyLogoData.CreateDefault();
+			CompanyCareerData = new CompanyCareerData();
+			CompanyRunData = new CompanyRunData();
+			TownPhaseState = new TownPhaseState();
+			WeatherState = new WeatherState();
+			return Error.Ok;
+		}
+
 		error = LoadResource(GetResourcePath(manifest, "company_logo", CompanyLogoPath), CompanyLogoData, out var companyLogoData);
 		if (error != Error.Ok)
 		{
@@ -232,13 +283,6 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 		{
 			GD.Print($"SaveNode: Load failed for company career. Error: {error}.");
-			return error;
-		}
-
-		error = LoadResource(GetResourcePath(manifest, "completed_company_history", CompletedCompanyHistoryPath), CompletedCompanyHistory, out var completedCompanyHistory);
-		if (error != Error.Ok)
-		{
-			GD.Print($"SaveNode: Load failed for completed company history. Error: {error}.");
 			return error;
 		}
 
@@ -263,56 +307,52 @@ public partial class SaveNode : Node
 			return error;
 		}
 
-		error = LoadResource(GetResourcePath(manifest, "settings", SettingsPath), SettingsConfig, out var settingsConfig);
-		if (error != Error.Ok)
-		{
-			GD.Print($"SaveNode: Load failed for settings. Error: {error}.");
-			return error;
-		}
-
 		CompanyLogoData = companyLogoData;
 		CompanyCareerData = companyCareerData;
-		CompletedCompanyHistory = completedCompanyHistory;
 		CompanyRunData = companyRunData;
 		CompanyRunData.ApplyGladiatorRecoverableCaps();
 		TownPhaseState = townPhaseState;
 		WeatherState = weatherState;
-		SettingsConfig = settingsConfig;
 		return Error.Ok;
     }
 
 	public Error DeleteSave()
 	{
+		return DeleteSaveData(SaveDataDeleteScope.All);
+	}
+
+	public Error DeleteSettingsData()
+	{
+		return DeleteSaveData(SaveDataDeleteScope.Settings);
+	}
+
+	public Error DeleteCompletedCompanyHistoryData()
+	{
+		return DeleteSaveData(SaveDataDeleteScope.Records);
+	}
+
+	public Error DeleteSaveData(SaveDataDeleteScope scope)
+	{
+		PrepareRuntimeStateReset();
+		LocalInputConfig.Get()?.ClearControllerSetups();
+		return scope switch
+		{
+			SaveDataDeleteScope.RetireCompany => RetireCompanyCore(),
+			SaveDataDeleteScope.Settings => DeleteSettingsDataCore(),
+			SaveDataDeleteScope.Records => DeleteCompletedCompanyHistoryDataCore(),
+			_ => DeleteSaveCore()
+		};
+	}
+
+	private void PrepareRuntimeStateReset()
+	{
+		RuntimeStateResetting?.Invoke();
+	}
+
+	private Error DeleteSaveCore()
+	{
 		GD.Print("SaveNode: Deleting all save data.");
-		var error = DeleteFileIfExists(ManifestPath);
-		if (error != Error.Ok)
-			return error;
-
-		error = DeleteFileIfExists(CompanyLogoPath);
-		if (error != Error.Ok)
-			return error;
-
-		error = DeleteFileIfExists(CompanyCareerPath);
-		if (error != Error.Ok)
-			return error;
-
-		error = DeleteFileIfExists(CompletedCompanyHistoryPath);
-		if (error != Error.Ok)
-			return error;
-
-		error = DeleteFileIfExists(CompanyRunPath);
-		if (error != Error.Ok)
-			return error;
-
-		error = DeleteFileIfExists(TownPhasePath);
-		if (error != Error.Ok)
-			return error;
-
-		error = DeleteFileIfExists(WeatherPath);
-		if (error != Error.Ok)
-			return error;
-
-		error = DeleteFileIfExists(SettingsPath);
+		var error = DeleteSaveDirectoryContents();
 		if (error != Error.Ok)
 			return error;
 
@@ -321,9 +361,83 @@ public partial class SaveNode : Node
 		return Error.Ok;
 	}
 
-	public Error DeleteCompanyData()
+	private static Error DeleteSaveDirectoryContents()
 	{
-		GD.Print("SaveNode: Deleting company data.");
+		var directoryPath = ProjectSettings.GlobalizePath(SaveDirectory);
+		if (!DirAccess.DirExistsAbsolute(directoryPath))
+			return Error.Ok;
+
+		return DeleteDirectoryContents(directoryPath);
+	}
+
+	private static Error DeleteDirectoryContents(string directoryPath)
+	{
+		var directory = DirAccess.Open(directoryPath);
+		if (directory == null)
+			return Error.CantOpen;
+
+		directory.ListDirBegin();
+		while (true)
+		{
+			var entry = directory.GetNext();
+			if (string.IsNullOrEmpty(entry))
+				break;
+
+			if (entry.StartsWith(".", StringComparison.Ordinal))
+				continue;
+
+			var entryPath = $"{directoryPath}/{entry}";
+			var error = directory.CurrentIsDir()
+				? DeleteDirectoryTree(entryPath)
+				: DirAccess.RemoveAbsolute(entryPath);
+
+			if (error != Error.Ok)
+			{
+				directory.ListDirEnd();
+				GD.PushError($"Failed to delete save path '{entryPath}': {error}");
+				return error;
+			}
+
+			GD.Print($"SaveNode: Deleted save path: {entryPath}");
+		}
+
+		directory.ListDirEnd();
+		return Error.Ok;
+	}
+
+	private static Error DeleteDirectoryTree(string directoryPath)
+	{
+		var error = DeleteDirectoryContents(directoryPath);
+		return error == Error.Ok ? DirAccess.RemoveAbsolute(directoryPath) : error;
+	}
+
+	private static Error DeleteActiveCompanyFiles()
+	{
+		var error = DeleteFileIfExists(CompanyLogoPath, false);
+		if (error != Error.Ok)
+			return error;
+
+		error = DeleteFileIfExists(CompanyCareerPath, false);
+		if (error != Error.Ok)
+			return error;
+
+		error = DeleteFileIfExists(CompanyRunPath, false);
+		if (error != Error.Ok)
+			return error;
+
+		error = DeleteFileIfExists(TownPhasePath, false);
+		if (error != Error.Ok)
+			return error;
+
+		return DeleteFileIfExists(WeatherPath, false);
+	}
+
+	private Error RetireCompanyCore()
+	{
+		GD.Print("SaveNode: Retiring current company.");
+		if (HasCompany)
+			TryAddCurrentCompanyToCompletedHistory();
+
 		var error = DeleteFileIfExists(CompanyLogoPath);
 		if (error != Error.Ok)
 			return error;
@@ -351,7 +465,7 @@ public partial class SaveNode : Node
 		TownPhaseState = new TownPhaseState();
 		WeatherState = new WeatherState();
 		error = SaveCurrentManifest();
-		GD.Print(error == Error.Ok ? "SaveNode: Company data deleted." : $"SaveNode: Company data delete failed while saving manifest. Error: {error}.");
+		GD.Print(error == Error.Ok ? "SaveNode: Company retired." : $"SaveNode: Company retirement failed while saving manifest. Error: {error}.");
 		return error;
 	}
 
@@ -365,30 +479,24 @@ public partial class SaveNode : Node
 		return added;
 	}
 
-	public Error DeleteRunData()
+	public Error ForceRetireCurrentCompany()
 	{
-		GD.Print("SaveNode: Deleting run data.");
-		var error = DeleteFileIfExists(CompanyRunPath);
-		if (error != Error.Ok)
-			return error;
+		GD.Print("SaveNode: Force-retiring current company.");
+		if (HasCompany)
+			TryAddCurrentCompanyToCompletedHistory();
 
-		error = DeleteFileIfExists(TownPhasePath);
-		if (error != Error.Ok)
-			return error;
-
-		error = DeleteFileIfExists(WeatherPath);
-		if (error != Error.Ok)
-			return error;
-
+		PrepareRuntimeStateReset();
+		LocalInputConfig.Get()?.ClearControllerSetups();
+		HasCompany = false;
+		CompanyLogoData = CompanyLogoData.CreateDefault();
+		CompanyCareerData = new CompanyCareerData();
 		CompanyRunData = new CompanyRunData();
 		TownPhaseState = new TownPhaseState();
 		WeatherState = new WeatherState();
-		error = SaveCurrentManifest();
-		GD.Print(error == Error.Ok ? "SaveNode: Run data deleted." : $"SaveNode: Run data delete failed while saving manifest. Error: {error}.");
-		return error;
+		return Save();
 	}
 
-	public Error DeleteSettingsData()
+	private Error DeleteSettingsDataCore()
 	{
 		GD.Print("SaveNode: Deleting settings data.");
 		var error = DeleteFileIfExists(SettingsPath);
@@ -398,6 +506,19 @@ public partial class SaveNode : Node
 		SettingsConfig = new SettingsConfig();
 		error = SaveCurrentManifest();
 		GD.Print(error == Error.Ok ? "SaveNode: Settings data deleted." : $"SaveNode: Settings data delete failed while saving manifest. Error: {error}.");
+		return error;
+	}
+
+	private Error DeleteCompletedCompanyHistoryDataCore()
+	{
+		GD.Print("SaveNode: Deleting completed company history data.");
+		var error = DeleteFileIfExists(CompletedCompanyHistoryPath);
+		if (error != Error.Ok)
+			return error;
+
+		CompletedCompanyHistory = new CompletedCompanyHistory();
+		error = SaveCurrentManifest();
+		GD.Print(error == Error.Ok ? "SaveNode: Completed company history data deleted." : $"SaveNode: Completed company history data delete failed while saving manifest. Error: {error}.");
 		return error;
 	}
 
@@ -481,13 +602,6 @@ public partial class SaveNode : Node
 			return Error.Ok;
 		}
 
-		if (ReferencesMissingResourcePaths(path))
-		{
-			GD.PushWarning($"SaveNode: Save resource '{path}' references missing project resources. Using fresh fallback data for the current refactor.");
-			result = fallback;
-			return Error.Ok;
-		}
-
 		var resource = ResourceLoader.Load<T>(path);
 		if (resource == null)
 		{
@@ -500,43 +614,17 @@ public partial class SaveNode : Node
 		return Error.Ok;
 	}
 
-	private static bool ReferencesMissingResourcePaths(string path)
-	{
-		if (!FileAccess.FileExists(path))
-			return false;
-
-		var text = FileAccess.GetFileAsString(path);
-		var searchStart = 0;
-		const string marker = "path=\"res://";
-		while (true)
-		{
-			var markerIndex = text.IndexOf(marker, searchStart, StringComparison.Ordinal);
-			if (markerIndex < 0)
-				return false;
-
-			var pathStart = markerIndex + "path=\"".Length;
-			var pathEnd = text.IndexOf('"', pathStart);
-			if (pathEnd < 0)
-				return false;
-
-			var resourcePath = text[pathStart..pathEnd];
-			if (!ResourceLoader.Exists(resourcePath) && !FileAccess.FileExists(resourcePath))
-				return true;
-
-			searchStart = pathEnd + 1;
-		}
-	}
-
 	private static string GetResourcePath(ConfigFile manifest, string key, string fallback)
 	{
 		return (string)manifest.GetValue("resources", key, fallback);
 	}
 
-	private static Error DeleteFileIfExists(string path)
+	private static Error DeleteFileIfExists(string path, bool printSkipped = true)
 	{
 		if (!FileAccess.FileExists(path))
 		{
-			GD.Print($"SaveNode: Delete skipped; file does not exist: {path}");
+			if (printSkipped)
+				GD.Print($"SaveNode: Delete skipped; file does not exist: {path}");
 			return Error.Ok;
 		}
 

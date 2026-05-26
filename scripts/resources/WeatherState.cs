@@ -29,7 +29,9 @@ public partial class WeatherState : Resource
         if (CurrentWeather == weather)
             return;
 
+        var previousWeather = CurrentWeather;
         CurrentWeather = weather;
+        GD.Print($"WeatherState: Weather changed from {previousWeather} to {CurrentWeather}.");
         EmitSignal(SignalName.WeatherChanged);
     }
 

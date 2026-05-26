@@ -16,17 +16,13 @@ public partial class MarketData : Resource
         "res://resources/items/off_hand/dagger.tres"
     };
 
-    [Export]
-    public Array<ItemData> ItemStock { get; private set; } = new();
+	public Array<ItemData> ItemStock { get; private set; } = new();
 
-    [Export]
-    public Array<GladiatorData> GladiatorStock { get; private set; } = new();
+	public Array<GladiatorData> GladiatorStock { get; private set; } = new();
 
-    [Export]
-    public bool HasInitializedItemStock { get; private set; }
+	public bool HasInitializedItemStock { get; private set; }
 
-    [Export]
-    public bool HasInitializedGladiatorStock { get; private set; }
+	public bool HasInitializedGladiatorStock { get; private set; }
 
     public void EnsureResources()
     {
@@ -78,7 +74,7 @@ public partial class MarketData : Resource
 
         foreach (var item in ItemStock)
         {
-            if (item?.Icon == null)
+            if (item?.UiIcon == null)
                 return true;
         }
 
@@ -92,7 +88,7 @@ public partial class MarketData : Resource
 
         foreach (var gladiator in GladiatorStock)
         {
-            if (gladiator == null || gladiator.GetPortraitTexture() == null)
+            if (gladiator == null || gladiator.GetUiIconTexture() == null)
                 return true;
         }
 
