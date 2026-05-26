@@ -17,6 +17,7 @@ public partial class ItemCard : PanelContainer
     private const string MainHandTypeIconPath = "res://assets/ui/items/type_main_hand.svg";
     private const string TwoHandedTypeIconPath = "res://assets/ui/items/type_two_handed.svg";
     private const string OffHandTypeIconPath = "res://assets/ui/items/type_off_hand.svg";
+    private const string UnknownIconPath = "res://assets/ui/icons/question_mark.svg";
 
     [Signal]
     public delegate void BuyPressedEventHandler(ItemData item);
@@ -112,10 +113,10 @@ public partial class ItemCard : PanelContainer
             ArmorItemData => ArmorTypeIconPath,
             MainHandItemData mainHand => mainHand.IsTwoHanded ? TwoHandedTypeIconPath : MainHandTypeIconPath,
             OffHandItemData => OffHandTypeIconPath,
-            _ => string.Empty
+            _ => UnknownIconPath
         };
 
-        return string.IsNullOrEmpty(iconPath) ? null : ResourceLoader.Load<Texture2D>(iconPath);
+        return ResourceLoader.Load<Texture2D>(iconPath);
     }
 
     private static Color GetConditionColor(float condition)

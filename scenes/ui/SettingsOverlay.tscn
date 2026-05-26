@@ -121,6 +121,17 @@ theme_override_font_sizes/font_size = 20
 text = "Temporary project-wide debug flag for development-only behavior."
 autowrap_mode = 3
 
+[node name="SkipTutorialCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
+layout_mode = 2
+text = "Skip tutorial progression"
+
+[node name="SkipTutorialHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_body_font")
+theme_override_font_sizes/font_size = 20
+text = "New companies start with the full town and generated contracts instead of starter-contract/tutorial gates."
+autowrap_mode = 3
+
 [node name="LowHealthRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
 layout_mode = 2
 theme_override_constants/separation = 12

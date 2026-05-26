@@ -21,6 +21,7 @@ public partial class ArenaLaunchSummaryOverlay : Control
     private Action _startAction;
     private Action _resetAction;
     private Texture2D _keyboardDeviceIcon;
+    private Texture2D _mouseDeviceIcon;
     private Texture2D _touchDeviceIcon;
     private Texture2D _gamepadDeviceIcon;
     private Texture2D _goldIcon;
@@ -44,6 +45,7 @@ public partial class ArenaLaunchSummaryOverlay : Control
         _phaseState = saveNode?.TownPhaseState;
         _localInputConfig = LocalInputConfig.Get();
         _keyboardDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_pc.png");
+        _mouseDeviceIcon = _localInputConfig?.MouseIcon;
         _touchDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_phone.png");
         _gamepadDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_console.png");
         _goldIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/gold.svg");
@@ -165,6 +167,7 @@ public partial class ArenaLaunchSummaryOverlay : Control
         return assignment.ControllerKind switch
         {
             LocalInputControllerConfig.ControllerKind.Keyboard => _keyboardDeviceIcon,
+            LocalInputControllerConfig.ControllerKind.Mouse => _mouseDeviceIcon,
             LocalInputControllerConfig.ControllerKind.Touch => _touchDeviceIcon,
             LocalInputControllerConfig.ControllerKind.Gamepad => _gamepadDeviceIcon,
             _ => null

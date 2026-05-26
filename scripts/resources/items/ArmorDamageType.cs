@@ -6,5 +6,6 @@ public enum ArmorDamageType
     Pierce,
     Crush,
     Heat,
-    Cold
+    Cold,
+    Acid
 }

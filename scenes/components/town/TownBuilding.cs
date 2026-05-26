@@ -690,15 +690,14 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
             return false;
 
         var saveNode = SaveNode.Get();
-        var careerData = _careerData ?? saveNode?.CompanyCareerData;
         var runData = _runData ?? saveNode?.CompanyRunData;
         if (HideUntilSpecialtyBuildingsUnlocked)
-            return runData?.HasUnlockedSpecialtyBuildings != true && careerData?.HasReachedSpecialtyBuildings != true;
+            return !saveNode.HasReachedSpecialtyBuildingsForProgression && runData?.HasUnlockedSpecialtyBuildings != true;
 
         if (!HideWhenNoContractsCompletedAndRosterEmpty)
             return false;
 
-        if (careerData?.HasCompletedContracts == true)
+        if (saveNode.HasCompletedContractsForProgression)
             return false;
 
         return runData?.Gladiators == null || runData.Gladiators.Count <= 0;

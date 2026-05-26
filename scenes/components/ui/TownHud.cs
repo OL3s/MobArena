@@ -217,7 +217,7 @@ public partial class TownHud : CanvasLayer
 			return;
 		}
 
-		if (runData is { HasShownNextDayUpkeepPopup: false })
+		if (_saveNode?.SkipTutorial != true && runData is { HasShownNextDayUpkeepPopup: false })
 		{
 			runData.MarkNextDayUpkeepPopupShown();
 			_saveNode.Save();
@@ -234,8 +234,9 @@ public partial class TownHud : CanvasLayer
 
 	private bool ShouldShowFirstNextDayTutorial(CompanyRunData runData)
 	{
-		return runData is { HasUnlockedSpecialtyBuildings: false }
-			&& _saveNode?.CompanyCareerData?.HasReachedSpecialtyBuildings != true;
+		return _saveNode?.SkipTutorial != true
+			&& runData is { HasUnlockedSpecialtyBuildings: false }
+			&& _saveNode?.HasReachedSpecialtyBuildingsForProgression != true;
 	}
 
 	private void ShowNextDaySummaryOverlay()
@@ -357,7 +358,7 @@ public partial class TownHud : CanvasLayer
 			return false;
 		}
 
-		var contract = GetFirstArenaContract(runData.Fame, _phaseState?.IsChampionDay == true, _saveNode?.CompanyCareerData?.HasCompletedContracts == true);
+		var contract = GetFirstArenaContract(runData.Fame, _phaseState?.IsChampionDay == true, _saveNode?.HasCompletedContractsForProgression == true);
 		if (contract == null)
 		{
 			GD.PushError("Dev win arena failed: no arena contract is available.");
@@ -381,7 +382,7 @@ public partial class TownHud : CanvasLayer
 		if (runData.Gladiators.Count <= 0)
 			return;
 
-		var contract = GetQuickstartContract(runData.Fame, _phaseState?.IsChampionDay == true, _saveNode?.CompanyCareerData?.HasCompletedContracts == true);
+		var contract = GetQuickstartContract(runData.Fame, _phaseState?.IsChampionDay == true, _saveNode?.HasCompletedContractsForProgression == true);
 		if (contract == null)
 		{
 			GD.PushError("Quickstart arena failed: no contract is available.");
@@ -432,7 +433,7 @@ public partial class TownHud : CanvasLayer
 		if (generatedContracts.Count > 0)
 			return generatedContracts[0];
 
-		return ResourceLoader.Load<ArenaContractData>(StarterSlimePitContractPath);
+		return null;
 	}
 
 	private static Godot.Collections.Array<LocalInputControllerConfig> CreateQuickstartControllerSetups(LocalInputConfig localInputConfig, int controllerCount)
@@ -448,19 +449,19 @@ public partial class TownHud : CanvasLayer
 						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, null));
 					break;
 				case 1:
+					localInputConfig?.TryJoinMouse();
+					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Mouse, -1)
+						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Mouse, -1, null));
+					break;
+				case 2:
 					localInputConfig?.TryJoinGamepad(0);
 					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Gamepad, 0)
 						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 0, null));
 					break;
-				case 2:
+				case 3:
 					localInputConfig?.TryJoinGamepad(1);
 					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Gamepad, 1)
 						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 1, null));
-					break;
-				case 3:
-					localInputConfig?.TryJoinGamepad(2);
-					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Gamepad, 2)
-						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 2, null));
 					break;
 			}
 		}
@@ -683,9 +684,9 @@ public partial class TownHud : CanvasLayer
 	{
 		return string.Join(", ",
 			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Keyboard, -1),
+			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Mouse, -1),
 			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Gamepad, 0),
-			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Gamepad, 1),
-			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Gamepad, 2));
+			LocalInputControllerConfig.GetDisplayName(LocalInputControllerConfig.ControllerKind.Gamepad, 1));
 	}
 
 	private void RefreshNextDayButton()

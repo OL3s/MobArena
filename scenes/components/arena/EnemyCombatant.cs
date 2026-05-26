@@ -1,4 +1,5 @@
 using Godot;
+using MobArena.Scripts.Resources.Combat;
 using MobArena.Scripts.Resources.Mobs;
 
 namespace MobArena.Scenes.Components.Arena;
@@ -39,7 +40,24 @@ public partial class EnemyCombatant : ArenaCombatant
             ? "EnemyCombatant"
             : $"{mobData.DisplayName}EnemyCombatant";
 
+        ConfigureCombatState(CreateCombatState(mobData), ArenaCombatTeam.Enemy);
+
         Refresh();
+    }
+
+    private static ArenaCombatState CreateCombatState(EnemyMobData mobData)
+    {
+        var combatState = new ArenaCombatState();
+        combatState.Configure(
+            Mathf.Max(1, mobData?.MaxHealth ?? 1),
+            mobData?.MaxHealth ?? 1,
+            mobData?.ArmorProfile);
+        return combatState;
+    }
+
+    protected override void OnCombatStateHealthChanged(int currentHealth, int maxHealth)
+    {
+        RefreshHealthLabel();
     }
 
     private void Refresh()
@@ -51,7 +69,17 @@ public partial class EnemyCombatant : ArenaCombatant
         ApplyHandVisuals();
 
         _nameLabel.Text = MobData?.DisplayName ?? "Enemy";
-        _healthLabel.Text = MobData == null ? string.Empty : $"HP {MobData.MaxHealth}";
+        RefreshHealthLabel();
+    }
+
+    private void RefreshHealthLabel()
+    {
+        if (_healthLabel == null)
+            return;
+
+        _healthLabel.Text = CombatState == null
+            ? string.Empty
+            : $"HP {CombatState.CurrentHealth}/{CombatState.MaxHealth}";
     }
 
     private void ApplyHandVisuals()

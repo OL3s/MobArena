@@ -1,5 +1,6 @@
 using Godot;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Combat;
 
 namespace MobArena.Scenes.Components.Arena;
 
@@ -24,6 +25,12 @@ public abstract partial class ArenaCombatant : CharacterBody2D
     [Export]
     public Vector2 LookDirection { get; private set; } = Vector2.Right;
 
+    public ArenaCombatTeam Team { get; private set; } = ArenaCombatTeam.Neutral;
+
+    public ArenaCombatState CombatState { get; private set; }
+
+    public bool IsDead => CombatState?.IsDead == true;
+
     public override void _Process(double delta)
     {
         ZIndex = Mathf.RoundToInt(GlobalPosition.Y);
@@ -35,6 +42,60 @@ public abstract partial class ArenaCombatant : CharacterBody2D
         CollisionLayer = CombatantCollisionLayer;
         CollisionMask = WallCollisionMask;
         AddToGroup(ArenaCombatantGroup);
+    }
+
+    protected void ConfigureCombatState(ArenaCombatState combatState, ArenaCombatTeam team)
+    {
+        if (CombatState != null)
+        {
+            CombatState.HealthChanged -= OnCombatStateHealthChanged;
+            CombatState.Died -= OnCombatStateDied;
+        }
+
+        CombatState = combatState;
+        Team = team;
+
+        if (CombatState == null)
+            return;
+
+        CombatState.HealthChanged += OnCombatStateHealthChanged;
+        CombatState.Died += OnCombatStateDied;
+        OnCombatStateHealthChanged(CombatState.CurrentHealth, CombatState.MaxHealth);
+    }
+
+    public bool CanReceiveDamageFrom(ArenaCombatant source)
+    {
+        if (IsDead)
+            return false;
+
+        if (source == null || source.Team == ArenaCombatTeam.Neutral || Team == ArenaCombatTeam.Neutral)
+            return true;
+
+        return source.Team != Team;
+    }
+
+    public int ApplyDamage(CombatDamageData damage, ArenaCombatant source = null)
+    {
+        if (!CanReceiveDamageFrom(source))
+            return 0;
+
+        return CombatState?.ApplyDamage(damage) ?? 0;
+    }
+
+    public int ApplyRawDamage(int amount, ArenaCombatant source = null)
+    {
+        if (!CanReceiveDamageFrom(source))
+            return 0;
+
+        return CombatState?.ApplyRawDamage(amount) ?? 0;
+    }
+
+    protected virtual void OnCombatStateHealthChanged(int currentHealth, int maxHealth)
+    {
+    }
+
+    protected virtual void OnCombatStateDied()
+    {
     }
 
     protected void MoveWithDirection(Vector2 direction)

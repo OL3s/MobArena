@@ -47,6 +47,15 @@ public static class ArenaContractResultResolver
         return ContractResult.Completed;
     }
 
+    public static ContractResult ResolveVisibleContractWin(SaveNode saveNode, int contractIndex)
+    {
+        if (!ArenaContractSelection.TryGetVisibleContract(saveNode, contractIndex, out var contract))
+            return ContractResult.None;
+
+        saveNode.CompanyRunData?.SetActiveArenaContract(contract);
+        return ResolveWin(saveNode);
+    }
+
     public static ContractResult ResolveLoss(SaveNode saveNode)
     {
         var runData = saveNode?.CompanyRunData;

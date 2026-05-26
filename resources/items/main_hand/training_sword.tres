@@ -5,6 +5,8 @@
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_damage_entry"]
 [ext_resource type="Texture2D" path="res://assets/ui/items/training_sword_held.svg" id="5_held"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="6_action"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="7_melee_effect"]
 
 [sub_resource type="Resource" id="Resource_training_sword_slash"]
 script = ExtResource("4_damage_entry")
@@ -19,9 +21,27 @@ Damage = 4
 script = ExtResource("3_damage")
 Entries = Array[ExtResource("4_damage_entry")]([SubResource("Resource_training_sword_slash"), SubResource("Resource_training_sword_crush")])
 
+[sub_resource type="Resource" id="Resource_training_sword_melee_effect"]
+script = ExtResource("7_melee_effect")
+ScenePath = "res://scenes/components/arena/effects/ArenaMeleeHitbox.tscn"
+LifetimeSeconds = 0.16
+MaxHits = 1
+HitboxRadius = 30.0
+ActiveSeconds = 0.12
+ForwardOffset = 8.0
+
+[sub_resource type="Resource" id="Resource_training_sword_main_action"]
+script = ExtResource("6_action")
+DisplayName = "Sword Slash"
+Effect = SubResource("Resource_training_sword_melee_effect")
+CooldownSeconds = 0.55
+WindupSeconds = 0.04
+SpawnDistance = 34.0
+
 [resource]
 script = ExtResource("1_main")
 Damage = SubResource("Resource_training_sword_damage")
+MainAction = SubResource("Resource_training_sword_main_action")
 DisplayName = "Training Sword"
 Description = "A blunt one-handed sword for basic arena drills."
 UiIcon = ExtResource("2_icon")

@@ -24,6 +24,7 @@ public partial class LocalInputConfig : Node
 	public Array<LocalInputControllerConfig> ControllerSetups { get; private set; } = new();
 
 	public bool HasKeyboardPlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Keyboard);
+	public bool HasMousePlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Mouse);
 	public bool HasTouchPlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Touch);
 	public bool CanJoin => ControllerSetups.Count < MaxLocalPlayers;
 
@@ -58,6 +59,15 @@ public partial class LocalInputConfig : Node
 			return false;
 
 		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, EnterIcon));
+		return true;
+	}
+
+	public bool TryJoinMouse()
+	{
+		if (!CanJoin || HasMousePlayer)
+			return false;
+
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Mouse, -1, MouseIcon));
 		return true;
 	}
 

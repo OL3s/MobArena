@@ -258,7 +258,7 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
     private void ShowDragTutorialPopupIfNeeded()
     {
         var runData = _saveNode?.CompanyRunData;
-        if (runData == null || runData.HasShownDragTutorialPopup || runData.TownAssignments.CourtyardGladiators.Count <= 0)
+        if (_saveNode?.SkipTutorial == true || runData == null || runData.HasShownDragTutorialPopup || runData.TownAssignments.CourtyardGladiators.Count <= 0)
             return;
 
         runData.MarkDragTutorialPopupShown();

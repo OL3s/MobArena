@@ -68,6 +68,9 @@ public partial class Town : Node
 
     public override void _UnhandledInput(InputEvent inputEvent)
     {
+        if (GlobalOverlay.Get()?.HasOpenOverlays == true)
+            return;
+
         if (!inputEvent.IsActionPressed("ui_accept"))
             return;
 
@@ -115,7 +118,7 @@ public partial class Town : Node
     {
         var saveNode = SaveNode.Get();
         var runData = saveNode.CompanyRunData;
-        if (runData == null || runData.HasShownFirstTownEntryPopup)
+        if (saveNode.SkipTutorial || runData == null || runData.HasShownFirstTownEntryPopup)
             return;
 
         runData.MarkFirstTownEntryPopupShown();
@@ -127,8 +130,7 @@ public partial class Town : Node
     {
         var saveNode = SaveNode.Get();
         var runData = saveNode.CompanyRunData;
-        var careerData = saveNode.CompanyCareerData;
-        if (runData == null || careerData?.HasCompletedContracts != true || runData.HasShownFirstContractCompletedPopup)
+        if (saveNode.SkipTutorial || runData == null || !saveNode.HasCompletedContractsForProgression || runData.HasShownFirstContractCompletedPopup)
             return;
 
         runData.MarkFirstContractCompletedPopupShown();
@@ -140,9 +142,8 @@ public partial class Town : Node
     {
         var saveNode = SaveNode.Get();
         var runData = saveNode.CompanyRunData;
-        var careerData = saveNode.CompanyCareerData;
         var globalOverlay = GlobalOverlay.Get();
-        if (runData == null || globalOverlay == null || careerData?.HasReachedSpecialtyBuildings != true)
+        if (saveNode.SkipTutorial || runData == null || globalOverlay == null || !saveNode.HasReachedSpecialtyBuildingsForProgression)
             return;
 
         if (!runData.HasUnlockedSpecialtyBuildings)

@@ -43,7 +43,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="PopupPanel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(760, 0)
+custom_minimum_size = Vector2(920, 0)
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel"]
@@ -84,6 +84,7 @@ stretch_mode = 5
 
 [node name="GoldLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/Header"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
 theme_override_font_sizes/font_size = 18
 text = "0"
 vertical_alignment = 1
@@ -95,17 +96,116 @@ theme_override_font_sizes/font_size = 20
 text = "Buy equipment for the company inventory. Each item here is a runtime copy of an authored item template."
 autowrap_mode = 3
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
-custom_minimum_size = Vector2(0, 360)
+[node name="StoreBody" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+custom_minimum_size = Vector2(0, 430)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="ItemListPanel" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody"]
+custom_minimum_size = Vector2(390, 0)
+layout_mode = 2
+
+[node name="ItemListMargin" type="MarginContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/ItemListPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="ItemListScroll" type="ScrollContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/ItemListPanel/ItemListMargin"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ItemGrid" type="GridContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/ScrollContainer"]
+[node name="ItemList" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/ItemListPanel/ItemListMargin/ItemListScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 12
-theme_override_constants/v_separation = 12
-columns = 3
+theme_override_constants/separation = 8
+
+[node name="DetailPanel" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DetailMargin" type="MarginContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="DetailLayout" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DetailHeader" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DetailIcon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout/DetailHeader"]
+custom_minimum_size = Vector2(74, 74)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DetailTitleBlock" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout/DetailHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DetailNameLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout/DetailHeader/DetailTitleBlock"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Select an item"
+autowrap_mode = 3
+
+[node name="DetailTypeLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout/DetailHeader/DetailTitleBlock"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 15
+text = "Type"
+
+[node name="DetailDescriptionLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 17
+text = "Select an item from the left list to inspect its stats."
+autowrap_mode = 3
+
+[node name="ShowcaseScroll" type="ScrollContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ShowcaseHost" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout/ShowcaseScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="DetailFooter" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DetailCostBox" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout/DetailFooter"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="GoldIcon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout/DetailFooter/DetailCostBox"]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+texture = ExtResource("4_gold")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DetailCostLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout/DetailFooter/DetailCostBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 20
+text = "-"
+vertical_alignment = 1
+
+[node name="BuyButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/DetailPanel/DetailMargin/DetailLayout/DetailFooter"]
+custom_minimum_size = Vector2(160, 52)
+layout_mode = 2
+text = "Buy"
 
 [node name="CloseButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 custom_minimum_size = Vector2(0, 54)

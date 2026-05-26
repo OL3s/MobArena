@@ -50,6 +50,8 @@ public partial class GlobalOverlay : CanvasLayer
         return sceneTree?.Root?.GetNodeOrNull<GlobalOverlay>("/root/GlobalOverlay");
     }
 
+    public bool HasOpenOverlays => GetChildCount() > 0 || _popupQueue.Count > 0;
+
 	public override void _ExitTree()
 	{
 		CloseAllOverlaysImmediate();

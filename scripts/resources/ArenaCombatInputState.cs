@@ -29,6 +29,9 @@ public partial class ArenaCombatInputState : Resource
     [Export]
     public bool AbilityPressed { get; private set; }
 
+    [Export]
+    public bool BlockPressed { get; private set; }
+
     public void SetMoveDirection(Vector2 moveDirection)
     {
         _moveInput = moveDirection;
@@ -58,11 +61,12 @@ public partial class ArenaCombatInputState : Resource
         IsMoving = MoveDirection != Vector2.Zero;
     }
 
-    public void SetActionPressed(bool mainHandPressed, bool offHandPressed, bool abilityPressed)
+    public void SetActionPressed(bool mainHandPressed, bool offHandPressed, bool abilityPressed, bool blockPressed)
     {
         MainHandPressed = mainHandPressed;
         OffHandPressed = offHandPressed;
         AbilityPressed = abilityPressed;
+        BlockPressed = blockPressed;
     }
 
     public void ClearActions()
@@ -70,6 +74,7 @@ public partial class ArenaCombatInputState : Resource
         MainHandPressed = false;
         OffHandPressed = false;
         AbilityPressed = false;
+        BlockPressed = false;
     }
 
     public void Reset()

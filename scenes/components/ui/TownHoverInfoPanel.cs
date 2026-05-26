@@ -118,10 +118,11 @@ public partial class TownHoverInfoPanel : PanelContainer
     {
         return skill switch
         {
+            GladiatorEquipmentData.SignatureSkill.Dodge => "res://assets/ui/gladiator_icons/skill_dodge.svg",
             GladiatorEquipmentData.SignatureSkill.Parry => "res://assets/ui/gladiator_icons/skill_parry.svg",
             GladiatorEquipmentData.SignatureSkill.Bash => "res://assets/ui/gladiator_icons/skill_bash.svg",
             GladiatorEquipmentData.SignatureSkill.Cleave => "res://assets/ui/gladiator_icons/skill_cleave.svg",
-            _ => "res://assets/ui/gladiator_icons/skill_dodge.svg"
+            _ => "res://assets/ui/icons/question_mark.svg"
         };
     }
 }

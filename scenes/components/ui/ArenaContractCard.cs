@@ -173,10 +173,11 @@ public partial class ArenaContractCard : Button
     {
         return family switch
         {
+            MobFamily.Slimes => "res://assets/ui/icons/family_slimes.svg",
             MobFamily.Goblins => "res://assets/ui/icons/family_goblins.svg",
             MobFamily.Undead => "res://assets/ui/icons/family_undead.svg",
             MobFamily.Demons => "res://assets/ui/icons/family_demons.svg",
-            _ => "res://assets/ui/icons/family_slimes.svg"
+            _ => "res://assets/ui/icons/question_mark.svg"
         };
     }
 

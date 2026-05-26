@@ -16,17 +16,13 @@ public partial class MarketData : Resource
         "res://resources/items/off_hand/dagger.tres"
     };
 
-    [Export]
-    public Array<ItemData> ItemStock { get; private set; } = new();
+	public Array<ItemData> ItemStock { get; private set; } = new();
 
-    [Export]
-    public Array<GladiatorData> GladiatorStock { get; private set; } = new();
+	public Array<GladiatorData> GladiatorStock { get; private set; } = new();
 
-    [Export]
-    public bool HasInitializedItemStock { get; private set; }
+	public bool HasInitializedItemStock { get; private set; }
 
-    [Export]
-    public bool HasInitializedGladiatorStock { get; private set; }
+	public bool HasInitializedGladiatorStock { get; private set; }
 
     public void EnsureResources()
     {

@@ -281,7 +281,7 @@ public partial class CompanyLogoData : Resource
             CompanyLogoIcon.Skull => "res://assets/ui/company_logos/skull.svg",
             CompanyLogoIcon.Sunburst => "res://assets/ui/company_logos/sunburst.svg",
             CompanyLogoIcon.Horseshoe => "res://assets/ui/company_logos/horseshoe.svg",
-            _ => "res://assets/ui/company_logos/cross.svg"
+            _ => "res://assets/ui/icons/question_mark.svg"
         };
     }
 

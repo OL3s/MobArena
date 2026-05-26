@@ -23,6 +23,7 @@ public partial class SettingsOverlay : Control
 	private Control _controlsSettings;
 	private Control _saveDataSettings;
 	private CheckBox _debugCheckBox;
+	private CheckBox _skipTutorialCheckBox;
 	private Label _lowHealthValueLabel;
 	private SpinBox _lowHealthSpinBox;
 	private Label _arenaMoveDeadzoneValueLabel;
@@ -43,6 +44,7 @@ public partial class SettingsOverlay : Control
 		_saveDataSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings");
 		_placeholderLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/PlaceholderLabel");
 		_debugCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/DebugCheckBox");
+		_skipTutorialCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/SkipTutorialCheckBox");
 		_lowHealthValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthValueLabel");
 		_lowHealthSpinBox = GetNode<SpinBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthSpinBox");
 		_arenaMoveDeadzoneValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings/ArenaMoveDeadzoneRow/ArenaMoveDeadzoneValueLabel");
@@ -54,6 +56,7 @@ public partial class SettingsOverlay : Control
 		_controlsButton.Pressed += () => ShowCategory(ControlsCategory);
 		_saveDataButton.Pressed += () => ShowCategory(SaveDataCategory);
 		_debugCheckBox.Toggled += OnDebugToggled;
+		_skipTutorialCheckBox.Toggled += OnSkipTutorialToggled;
 		_lowHealthSpinBox.ValueChanged += OnLowHealthWarningChanged;
 		_arenaMoveDeadzoneSpinBox.ValueChanged += OnArenaMoveDeadzoneChanged;
 		GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings/RetireCompanyButton").Pressed += OnRetireCompanyPressed;
@@ -103,6 +106,7 @@ public partial class SettingsOverlay : Control
 		_refreshingUi = true;
 		var settingsConfig = SaveNode.Get().SettingsConfig;
 		_debugCheckBox.ButtonPressed = settingsConfig.DebugEnabled;
+		_skipTutorialCheckBox.ButtonPressed = settingsConfig.SkipTutorial;
 		_lowHealthSpinBox.Value = Mathf.RoundToInt(settingsConfig.LowHealthWarningRatio * 100f);
 		_lowHealthValueLabel.Text = $"{_lowHealthSpinBox.Value:0}%";
 		_arenaMoveDeadzoneSpinBox.Value = Mathf.RoundToInt(settingsConfig.ArenaMoveDeadzone * 100f);
@@ -120,6 +124,19 @@ public partial class SettingsOverlay : Control
 			return;
 
 		settingsConfig.DebugEnabled = enabled;
+		RefreshSettingsUi();
+	}
+
+	private void OnSkipTutorialToggled(bool enabled)
+	{
+		if (_refreshingUi)
+			return;
+
+		var settingsConfig = SaveNode.Get().SettingsConfig;
+		if (settingsConfig == null)
+			return;
+
+		settingsConfig.SkipTutorial = enabled;
 		RefreshSettingsUi();
 	}
 

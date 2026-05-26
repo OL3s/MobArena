@@ -1,6 +1,9 @@
 using Godot;
+using MobArena.Scenes.Components.Arena.Effects;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Combat;
+using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scenes.Components.Arena;
 
@@ -24,6 +27,12 @@ public partial class PlayerCombatant : ArenaCombatant
     public ArenaControlAssignmentData ControlAssignment { get; private set; }
     public ArenaCombatInputState InputState { get; private set; } = new();
 
+    private float _mainHandCooldownRemaining;
+    private bool _wasMainHandPressed;
+    private bool _wasOffHandPressed;
+    private bool _wasAbilityPressed;
+    private bool _wasBlockPressed;
+
     public override void _Ready()
     {
         ConfigureTopDownMotion();
@@ -43,7 +52,19 @@ public partial class PlayerCombatant : ArenaCombatant
 
     public override void _PhysicsProcess(double delta)
     {
-        ApplyCombatInput(ReadAssignedMoveInput(), false, false, false);
+        var mainHandPressed = ReadAssignedMainHandInput();
+        var offHandPressed = ReadAssignedOffHandInput();
+        var abilityPressed = ReadAssignedAbilityInput();
+        var blockPressed = ReadAssignedBlockInput();
+        ApplyCombatInput(ReadAssignedMoveInput(), mainHandPressed, offHandPressed, abilityPressed, blockPressed);
+        LogActionPresses(mainHandPressed, offHandPressed, abilityPressed, blockPressed);
+        UpdateActionCooldowns((float)delta);
+        TryActivateMainHand(mainHandPressed);
+        _wasMainHandPressed = mainHandPressed;
+        _wasOffHandPressed = offHandPressed;
+        _wasAbilityPressed = abilityPressed;
+        _wasBlockPressed = blockPressed;
+
         if (InputState.IsMoving)
             SetLookDirectionFromInput(InputState.MoveDirection);
 
@@ -58,11 +79,29 @@ public partial class PlayerCombatant : ArenaCombatant
         InputState ??= new ArenaCombatInputState();
         ApplySettingsDeadzone();
         InputState.Reset();
+        ResetActionPressTracking();
         Name = string.IsNullOrWhiteSpace(gladiatorData?.GladiatorName)
             ? "PlayerCombatant"
             : $"{gladiatorData.GladiatorName}PlayerCombatant";
 
+        ConfigureCombatState(CreateCombatState(gladiatorData), ArenaCombatTeam.Player);
+
         Refresh();
+    }
+
+    private static ArenaCombatState CreateCombatState(GladiatorData gladiatorData)
+    {
+        var combatState = new ArenaCombatState();
+        combatState.Configure(
+            Mathf.Max(1, gladiatorData?.MaxHealth ?? 1),
+            gladiatorData?.Health ?? 1,
+            gladiatorData?.Equipment?.Armor?.ArmorProfile);
+        return combatState;
+    }
+
+    protected override void OnCombatStateHealthChanged(int currentHealth, int maxHealth)
+    {
+        GladiatorData?.SetHealth(currentHealth);
     }
 
     private void ApplySettingsDeadzone()
@@ -71,11 +110,11 @@ public partial class PlayerCombatant : ArenaCombatant
         InputState.SetMoveDeadzone(deadzone);
     }
 
-    public void ApplyCombatInput(Vector2 moveDirection, bool mainHandPressed, bool offHandPressed, bool abilityPressed)
+    public void ApplyCombatInput(Vector2 moveDirection, bool mainHandPressed, bool offHandPressed, bool abilityPressed, bool blockPressed)
     {
         InputState ??= new ArenaCombatInputState();
         InputState.SetMoveDirection(moveDirection);
-        InputState.SetActionPressed(mainHandPressed, offHandPressed, abilityPressed);
+        InputState.SetActionPressed(mainHandPressed, offHandPressed, abilityPressed, blockPressed);
     }
 
     private Vector2 ReadAssignedMoveInput()
@@ -83,6 +122,7 @@ public partial class PlayerCombatant : ArenaCombatant
         return ControlAssignment?.ControllerKind switch
         {
             LocalInputControllerConfig.ControllerKind.Keyboard => ReadKeyboardMoveInput(),
+            LocalInputControllerConfig.ControllerKind.Mouse => ReadKeyboardMoveInput(),
             LocalInputControllerConfig.ControllerKind.Gamepad => ReadGamepadMoveInput(ControlAssignment.DeviceId),
             _ => Vector2.Zero
         };
@@ -119,6 +159,162 @@ public partial class PlayerCombatant : ArenaCombatant
             direction.Y += 1f;
 
         return direction;
+    }
+
+    private bool ReadAssignedMainHandInput()
+    {
+        return ControlAssignment?.ControllerKind switch
+        {
+            LocalInputControllerConfig.ControllerKind.Keyboard => ReadKeyboardMainHandInput(),
+            LocalInputControllerConfig.ControllerKind.Mouse => ReadMouseMainHandInput(),
+            LocalInputControllerConfig.ControllerKind.Gamepad => ReadGamepadMainHandInput(ControlAssignment.DeviceId),
+            _ => false
+        };
+    }
+
+    private static bool ReadKeyboardMainHandInput()
+    {
+        return Input.IsKeyPressed(Key.Space);
+    }
+
+    private static bool ReadMouseMainHandInput()
+    {
+        return Input.IsMouseButtonPressed(MouseButton.Left);
+    }
+
+    private static bool ReadGamepadMainHandInput(int deviceId)
+    {
+        return Input.IsJoyButtonPressed(deviceId, JoyButton.X);
+    }
+
+    private bool ReadAssignedOffHandInput()
+    {
+        return ControlAssignment?.ControllerKind switch
+        {
+            LocalInputControllerConfig.ControllerKind.Keyboard => ReadKeyboardOffHandInput(),
+            LocalInputControllerConfig.ControllerKind.Mouse => ReadMouseOffHandInput(),
+            LocalInputControllerConfig.ControllerKind.Gamepad => ReadGamepadOffHandInput(ControlAssignment.DeviceId),
+            _ => false
+        };
+    }
+
+    private static bool ReadKeyboardOffHandInput()
+    {
+        return Input.IsKeyPressed(Key.E);
+    }
+
+    private static bool ReadMouseOffHandInput()
+    {
+        return Input.IsMouseButtonPressed(MouseButton.Right);
+    }
+
+    private static bool ReadGamepadOffHandInput(int deviceId)
+    {
+        return Input.IsJoyButtonPressed(deviceId, JoyButton.A);
+    }
+
+    private bool ReadAssignedAbilityInput()
+    {
+        return ControlAssignment?.ControllerKind switch
+        {
+            LocalInputControllerConfig.ControllerKind.Keyboard => ReadKeyboardAbilityInput(),
+            LocalInputControllerConfig.ControllerKind.Mouse => ReadMouseAbilityInput(),
+            LocalInputControllerConfig.ControllerKind.Gamepad => ReadGamepadAbilityInput(ControlAssignment.DeviceId),
+            _ => false
+        };
+    }
+
+    private static bool ReadKeyboardAbilityInput()
+    {
+        return Input.IsKeyPressed(Key.F);
+    }
+
+    private static bool ReadMouseAbilityInput()
+    {
+        return Input.IsKeyPressed(Key.Q);
+    }
+
+    private static bool ReadGamepadAbilityInput(int deviceId)
+    {
+        return Input.IsJoyButtonPressed(deviceId, JoyButton.B);
+    }
+
+    private bool ReadAssignedBlockInput()
+    {
+        return ControlAssignment?.ControllerKind switch
+        {
+            LocalInputControllerConfig.ControllerKind.Keyboard => ReadKeyboardBlockInput(),
+            LocalInputControllerConfig.ControllerKind.Mouse => ReadMouseBlockInput(),
+            LocalInputControllerConfig.ControllerKind.Gamepad => ReadGamepadBlockInput(ControlAssignment.DeviceId),
+            _ => false
+        };
+    }
+
+    private static bool ReadKeyboardBlockInput()
+    {
+        return Input.IsKeyPressed(Key.Q);
+    }
+
+    private static bool ReadMouseBlockInput()
+    {
+        return Input.IsKeyPressed(Key.Space);
+    }
+
+    private static bool ReadGamepadBlockInput(int deviceId)
+    {
+        return Input.IsJoyButtonPressed(deviceId, JoyButton.Y);
+    }
+
+    private void LogActionPresses(bool mainHandPressed, bool offHandPressed, bool abilityPressed, bool blockPressed)
+    {
+        if (mainHandPressed && !_wasMainHandPressed)
+            LogActionPressed("Main");
+        if (offHandPressed && !_wasOffHandPressed)
+            LogActionPressed("Off");
+        if (abilityPressed && !_wasAbilityPressed)
+            LogActionPressed("Ability");
+        if (blockPressed && !_wasBlockPressed)
+            LogActionPressed("Block");
+    }
+
+    private void LogActionPressed(string actionName)
+    {
+        GD.Print($"PlayerCombatant: {GladiatorData?.GladiatorName ?? Name} pressed {actionName} action ({ControlAssignment?.DisplayName ?? "Unassigned"}).");
+    }
+
+    private void ResetActionPressTracking()
+    {
+        _wasMainHandPressed = false;
+        _wasOffHandPressed = false;
+        _wasAbilityPressed = false;
+        _wasBlockPressed = false;
+    }
+
+    private void UpdateActionCooldowns(float delta)
+    {
+        if (_mainHandCooldownRemaining > 0f)
+            _mainHandCooldownRemaining = Mathf.Max(0f, _mainHandCooldownRemaining - delta);
+    }
+
+    private void TryActivateMainHand(bool mainHandPressed)
+    {
+        if (!mainHandPressed || _wasMainHandPressed || _mainHandCooldownRemaining > 0f || IsDead)
+            return;
+
+        if (GladiatorData?.Equipment?.MainHand is not DamageItemData mainHand || mainHand.MainAction == null)
+            return;
+
+        var staminaCost = mainHand.MainAction.StaminaCost;
+        if (staminaCost > 0 && GladiatorData.Stamina < staminaCost)
+            return;
+
+        if (!ArenaCombatActionRunner.TryActivate(this, mainHand, mainHand.MainAction))
+            return;
+
+        if (staminaCost > 0)
+            GladiatorData.SpendStamina(staminaCost);
+
+        _mainHandCooldownRemaining = Mathf.Max(0f, mainHand.MainAction.CooldownSeconds);
     }
 
     private void Refresh()

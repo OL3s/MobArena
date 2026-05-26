@@ -29,12 +29,14 @@ The current town-management foundation is in place.
 - Character visuals are split through shared `CharacterAppearanceData` resources. `GladiatorAppearanceData` lives under `resources/gladiator_appearances/`, while `MobAppearanceData` lives under `resources/mob_appearances/`. These resources now use `UiIcon` for menus/cards/HUD UI plus `BodyForward` and `BodyBack` for town/arena world presentation. Some appearances use `UsesSeparatedHands` plus `HandTexture`; slimes remain body-only, while gladiators/goblins/undead/demons currently use simple circular hand sprites. New code should use `GetUiIconTexture()`, `GetBodyForwardTexture()`, `GetBodyBackTexture()`, and `GetHandTexture()`.
 - New companies start with no gladiators. Market recruitment is the first step, and recruit health varies from 20-100% max health with buy/sell value based on current readiness.
 - Equipment ownership and equip/unequip paths exist through `CompanyRunData.TryEquipItemOnGladiator`; town drag/drop can equip items onto roster-yard gladiators. Equipped armor/weapons are visibly layered on gladiators in town and arena. Gladiator drag previews instantiate the roster-yard gladiator scene so body, armor, hands, held items, and shadow stay visible while dragging.
-- Item combat stats now have resource containers: armor items expose `ArmorProfile` (`ArmorData`), while main-hand/off-hand items inherit `DamageItemData` and expose `CombatDamageData`. Damage entries are typed rows using `ArmorDamageType` (`Slash`, `Pierce`, `Crush`, `Heat`, `Cold`). Armor uses `BaseValue` unless `ArmorTypeOverrideData { Type, Value }` overrides a type; negative values are vulnerabilities. Special armor rows use `ArmorSpecialType` and are conditional tags, not damage types. Item visual data uses `UiIcon` for inventory/codex/shop UI and `HeldTexture`/`HeldDisplayHeight` for in-hand world visuals. `ArmorItemData` also has `ArmorForwardTexture` and `ArmorBackTexture` overlays.
+- Item combat stats now have resource containers: armor items expose `ArmorProfile` (`ArmorData`), while main-hand/off-hand items inherit `DamageItemData` and expose `CombatDamageData`. Damage entries are typed rows using `ArmorDamageType` (`Slash`, `Pierce`, `Crush`, `Heat`, `Cold`, `Acid`). Armor uses `BaseValue` unless `ArmorTypeOverrideData { Type, Value }` overrides a type; negative values are vulnerabilities. Special armor rows use `ArmorSpecialType` and are conditional tags, not damage types. Item visual data uses `UiIcon` for inventory/codex/shop UI and `HeldTexture`/`HeldDisplayHeight` for in-hand world visuals. `ArmorItemData` also has `ArmorForwardTexture` and `ArmorBackTexture` overlays.
 - Contract resources are now partially implemented through `ArenaContractData` and `resources/contracts/starter_slime_pit.tres`. Arena startup now has first-pass spawn nodes: `ArenaPlayerSpawner` spawns assigned arena gladiators from `CompanyRunData.TownAssignments.ArenaGladiators`, and `ArenaEnemySpawner` spawns enemies from `CompanyRunData.ActiveArenaContract.Mobs`, using packed mob scenes when present and fallback metadata visuals otherwise. Arena combat/result handling is still placeholder-level.
 - The town HUD dev menu has `Quickstart arena`, which uses existing roster gladiators instead of fake test data: first four gladiators are assigned to enum-derived Keyboard, Gamepad 0, Gamepad 1, and Gamepad 2 identities, then the first generated contract launches through the arena scene. Touch arena control is temporarily disabled.
 - The town HUD dev menu also has `Equipment visuals`, which opens `scenes/ui/EquipmentVisualTestOverlay.tscn`. It scans `resources/items/**/*.tres` and displays UI icons plus held main/off-hand textures and armor front/back overlays for visual tuning.
 - Arena combatants use hard collision for walls only and soft radius-based separation against every other combatant, including players and mobs. `ArenaCombatant` owns the tunable soft collision radius, strength, and max separation speed so crowds behave like repelling atoms instead of hard-locking `CharacterBody2D` bodies.
 - Arena/town character draw order uses world Y position (`ZIndex = GlobalPosition.Y`) so lower characters render in front. `PlayerCombatant`, `EnemyCombatant`, and `RosterYardGladiator` have a default shadow under the body. Body and armor use front/back textures based on look direction, and the default/right-facing forward SVGs are intentionally asymmetrical so mirrored left/right reads as front-left/front-right instead of straight at camera.
+- Arena combatants now share a runtime combat-state foundation. `ArenaCombatState` stores current/max health, optional `ArmorData`, damage application, raw damage, healing, and health/death signals. `ArenaCombatant` owns the state plus `ArenaCombatTeam` for player/enemy/neutral targeting. `PlayerCombatant` transfers health and equipped armor from `GladiatorData` and syncs health changes back to the gladiator; `EnemyCombatant` transfers max health and authored armor from `EnemyMobData`. All authored mob `.tres` files now include an `ArmorProfile` subresource with neutral base armor ready for tuning.
+- The first resource-driven combat action path exists. `ArenaCombatActionData` owns item activation timing and points to an `ArenaCombatEffectData`; `ArenaMeleeEffectData` configures the starter melee hitbox. `ArenaCombatActionRunner` instantiates effect scenes and initializes them through `IArenaCombatEffect` with `ArenaCombatEffectContext`. `ArenaMeleeHitbox.tscn` applies damage through `ArenaCombatant.ApplyDamage`, tracks hit targets, honors max hits and lifetime, and can spawn chained scenes. Starter weapons `training_sword.tres`, `wooden_hammer.tres`, `spear.tres`, and `dagger.tres` now have inline melee action/effect subresources. `PlayerCombatant` can trigger the equipped main-hand action with keyboard Space/mouse left or gamepad A.
 - Company customization was expanded on `feature/company-customization`: the editor now supports shield shape, muted shield color, logo icon, logo size, random company names, and full randomization. New company creation opens with a randomized identity. Name generation lives in `CompanyNameGenerator`, while logo state/rendering stays in `CompanyLogoData`/`CompanyLogo`.
 - A project CLI save-data delete path exists: `godot --headless -- --delete-savedata`, with aliases `--delete`, `--del-storage`, and `--delete-user-data`. It calls `SaveNode.DeleteSave()` and suppresses exit autosave.
 - Completed company history now has a saved resource foundation: `CompletedCompanyHistory` stores capped, fame-sorted `CompletedCompanyRecord` entries with identity, career totals, and final fame only. `SaveNode.TryAddCurrentCompanyToCompletedHistory()` snapshots the active company if it qualifies. The main menu top-right `Records` button opens `CompletedCompaniesOverlay`, which shows `[list][details]` for saved completed companies and can delete entries. Details stay hidden until a company is pressed.
@@ -52,42 +54,42 @@ The current town-management foundation is in place.
 
 ## Next Focus
 
-Work the short-term backlog in this order unless the user redirects.
+Continue from the first resource-driven melee action path into actual arena combat behavior.
 
-1. Continue arena combat startup: replace placeholder spawned views with runtime player/enemy actor behavior, movement, health, and basic attack handling.
-2. `#18 Equip inventory items onto gladiators with validation`
-3. `#3 Add item combat stats and equipment requirements`
-4. `#49 Improve gladiator market recruit cards and variety`
-5. `#10 Improve Thermae overlay around phase-based paid treatment`
-6. `#11 Expand Training Hall progression actions on phase transitions`
-7. `#16 Implement MVP XP and level progression`
+1. Add basic enemy movement/chase behavior to `EnemyCombatant`, targeting the nearest living player combatant.
+2. Add enemy melee/contact attacks using the same item/action/effect pattern where practical, or a small enemy action resource if mobs need authored attacks outside item data.
+3. Add enemy death handling: hide/free dead enemies, emit an arena-level death event, and keep kill accounting outside hitbox scenes.
+4. Add player death handling from `ArenaCombatState.Died`, leaving permanent death/result mutation to arena result resolution.
+5. Add arena victory detection when all spawned enemies are dead.
+6. Add arena defeat detection when all active player combatants are dead.
+7. Add a minimal arena HUD for player HP and enemies remaining once health changes during combat.
+8. Tune starter melee action values after the hitbox can be tested in arena.
+9. Then add projectile, thrown projectile, and AoE effect configs/scenes using the same action/effect/context architecture.
 
 ## Immediate Direction
 
-- Arena players now sample their stored control assignment for simple movement: keyboard uses WASD/arrows, and gamepads use left stick/D-pad by device id. Touch arena control is temporarily disabled until it has a proper control surface. Continue from this into attacks and animation facing.
-- Do not make the main menu the place where contract control setup is finalized. Main menu controls can remain a general display/settings entry point, but contract participant/controller mapping should stay resolved immediately before starting a contract.
-- Keep launch validation in run/resource APIs where practical so stale controller setup or assignment state cannot start a contract accidentally.
-- Continue from the arena spawn foundation by adding real player and enemy actor behavior while preserving the spawner API boundary: player actors come from assigned gladiators/control assignments, enemies come from the active contract mob resources.
-- After the first arena actor behavior is usable, continue with equipment assignment: let players equip/unequip items from `CompanyRunData.Inventory` onto a gladiator's `GladiatorEquipmentData`.
-- Equipment visuals are currently duplicated between `PlayerCombatant`, `EnemyCombatant`, and `RosterYardGladiator`. A good next cleanup is extracting a reusable `CharacterVisual.tscn`/script with `Shadow`, `Body`, `Armor`, `LeftHand/OffHandItem`, and `RightHand/MainHandItem`, so future attacks/animations do not need to be copied across arena and town.
-- Preserve slot rules: armor/main-hand/off-hand type validation, two-handed main-hand clearing or blocking off-hand, and replaced equipment returning to inventory.
-- Prefer using the existing town drag/drop system. Dragging equipment onto roaming roster-yard gladiators should be the primary physical interaction, with an overlay/button path only if needed for clarity.
-- Keep item movement centralized through `CompanyRunData` helpers and emit `RunChanged` after mutations.
-- Keep authored `.tres` item files immutable templates. Runtime owned/stock items should remain duplicated resource instances.
-- Add clear invalid-action feedback for wrong slot, missing item, dead/cemetery gladiator, requirement failures, and direct purchases that still require enough gold. Do not show unaffordable blockers for phase/upkeep flows that intentionally allow debt. Use concise labels/tooltips or `GlobalOverlay` popups.
-- Avoid adding parallel UI-local state for inventory, equipment, market stock, assignments, or selected combat participants.
+- Keep item behavior authored in item `.tres` files through action/effect subresources. Do not hardcode weapon behavior in `PlayerCombatant` beyond selecting the equipped item and triggering its action.
+- Keep effect scene configuration in typed `.tres` resources, not scattered exported fields on every spawned scene. The `.tscn` should be a reusable executor initialized from config.
+- Use `CombatDamageData` from the effect config by default. Item-driven attacks are the special case: set `UseSourceItemDamage` so the effect uses the source item's `DamageItemData.Damage`. Damage can be null for future pure-spawner effects such as poison clouds or thrown vials.
+- All effect scenes should target `ArenaCombatant.ApplyDamage(...)`, never mutate `GladiatorData`, `EnemyMobData`, or `CompanyRunData` directly.
+- Preserve the spawner API boundary: player actors come from assigned gladiators/control assignments, enemies come from active contract mob resources.
+- Touch arena control remains disabled for now; keep the first action input to keyboard/mouse and gamepad.
+- Run `godot --headless --import`, `dotnet build`, and `godot --headless --quit` after adding action/effect resources or scenes.
 
 ## Short-Term Direction
 
-- Improve gladiator market cards and recruit variety after the equip path is usable. Hiring must stay centralized through `CompanyRunData.TryBuyGladiator`/`AddGladiator` so purchase value and `CompanyCareerData.TotalGladiatorsInCareer` stay correct.
-- Tune Thermae treatment balance after playtesting. It currently supports paid health treatment and paid exhaustion recovery, but does not restore stamina.
-- Expand Training Hall progression once `#16` defines final MVP rules. It currently supports overall or focused attribute XP; exhaustion remains the limiter for repeated use and overtraining.
-- Keep gladiator death centralized through `CompanyRunData.KillGladiator`; dead gladiators move from active `Gladiators` to `Cemetery`, not an active-roster dead flag.
+- Add enemy death cleanup and mob-kill tracking through arena-level result handling, not directly from hitboxes.
+- Add victory detection when all contract enemies are dead.
+- Add defeat detection when all active player combatants are dead.
+- Add minimal arena HUD health/objective display once runtime combat can change health.
+- Add projectile, thrown projectile, and AoE effect data/scenes after the melee path proves the action/effect architecture.
 
 ## Later, Not Now
 
-- `#4`, `#8`, and `#20-#25` cover ContractData, CombatResultData, real arena contract launch, player gladiator spawning, slime enemies, combat resolution, and arena HUD/result flow.
-- `#26-#30` cover champion contract/deadline behavior after the real contract/combat path exists.
-- `#31-#35` cover controller/touch/responsive/accessibility polish after core flows are functional.
+- `ArenaProjectileEffectData` and `ArenaProjectile.tscn` for arrows, bolts, and impact-spawning projectiles.
+- `ArenaThrownEffectData` and `ArenaThrownProjectile.tscn` for arc travel, floor hit, bounce/break wall behavior, and landing-spawned scenes.
+- `ArenaAreaEffectData` and `ArenaAreaEffect.tscn` for poison clouds, fire patches, explosions, shockwaves, healing zones, and ticking area effects.
+- Item requirements, stamina costs, block/defense actions, attack speed tuning, and advanced weapon behavior after the first melee loop is playable.
+- Controller/touch/responsive/accessibility polish after core combat interactions are functional.
 - Add phase transition animation around `PhaseTransitionController` once core phase flow and weather visuals are stable.
-- `#36-#41` cover MVP checklist, balance, bug bash, docs, and release tagging after the playable loop exists.
+- MVP checklist, balance, bug bash, docs, and release tagging after the playable loop exists.

@@ -66,17 +66,19 @@ public partial class ArenaControlConfigOverlay : Control
             _runData.RunChanged -= RefreshUi;
     }
 
-    public override void _Input(InputEvent inputEvent)
+    public override void _UnhandledInput(InputEvent inputEvent)
     {
         if (!IsJoinInput(inputEvent))
             return;
 
-        GetViewport()?.SetInputAsHandled();
         if (_readyPromptOpen || !IsVisibleInTree())
             return;
 
         if (TryHandleJoinInput(inputEvent, out var controllerSetup))
+        {
+            GetViewport()?.SetInputAsHandled();
             AssignNextGladiator(controllerSetup);
+        }
     }
 
     private static bool IsJoinInput(InputEvent inputEvent)
@@ -257,7 +259,10 @@ public partial class ArenaControlConfigOverlay : Control
             CustomMinimumSize = new Vector2(CardWidth, 210f)
         };
         if (isCurrent)
+        {
             panel.Modulate = new Color(1f, 0.92f, 0.55f);
+            panel.GuiInput += OnWaitingCardGuiInput;
+        }
 
         var margin = new MarginContainer();
         margin.AddThemeConstantOverride("margin_left", 10);
@@ -295,12 +300,50 @@ public partial class ArenaControlConfigOverlay : Control
         return panel;
     }
 
+    private void OnWaitingCardGuiInput(InputEvent inputEvent)
+    {
+        if (_readyPromptOpen || !IsVisibleInTree())
+            return;
+
+        if (inputEvent is InputEventMouseButton { Pressed: true })
+        {
+            TryAssignPointerController(LocalInputControllerConfig.ControllerKind.Mouse);
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
+
+        if (inputEvent is InputEventScreenTouch { Pressed: true })
+        {
+            TryAssignPointerController(LocalInputControllerConfig.ControllerKind.Touch);
+            GetViewport()?.SetInputAsHandled();
+        }
+    }
+
+    private void TryAssignPointerController(LocalInputControllerConfig.ControllerKind kind)
+    {
+        if (_localInputConfig == null || !HasNextGladiator())
+            return;
+
+        var joined = kind switch
+        {
+            LocalInputControllerConfig.ControllerKind.Mouse => _localInputConfig.TryJoinMouse(),
+            LocalInputControllerConfig.ControllerKind.Touch => _localInputConfig.TryJoinTouch(),
+            _ => false
+        };
+        if (!joined)
+            return;
+
+        var controllerSetup = GetControllerSetup(kind, -1);
+        if (controllerSetup != null)
+            AssignNextGladiator(controllerSetup);
+    }
+
     private void BuildPromptRow()
     {
         var shouldShow = HasNextGladiator() && !_readyPromptOpen;
         var signature = _localInputConfig == null
             ? shouldShow.ToString()
-            : $"{shouldShow}:{_localInputConfig.HasKeyboardPlayer}:{_localInputConfig.CanJoin}";
+            : $"{shouldShow}:{_localInputConfig.HasKeyboardPlayer}:{_localInputConfig.HasMousePlayer}:{_localInputConfig.HasTouchPlayer}:{_localInputConfig.CanJoin}";
         if (signature == _promptSignature)
             return;
 
@@ -314,6 +357,10 @@ public partial class ArenaControlConfigOverlay : Control
 
         if (!_localInputConfig.HasKeyboardPlayer)
             AddPrompt(_localInputConfig.EnterIcon, LocalInputControllerConfig.ControllerKind.Keyboard.ToString());
+		if (!_localInputConfig.HasMousePlayer)
+			AddPrompt(_localInputConfig.MouseIcon, LocalInputControllerConfig.ControllerKind.Mouse.ToString());
+		if (!_localInputConfig.HasTouchPlayer)
+			AddPrompt(_localInputConfig.PhoneIcon, LocalInputControllerConfig.ControllerKind.Touch.ToString());
         if (_localInputConfig.CanJoin)
             AddPrompt(_localInputConfig.XboxAIcon, LocalInputControllerConfig.ControllerKind.Gamepad.ToString());
     }

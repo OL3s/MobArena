@@ -11,7 +11,6 @@ namespace MobArena.Scenes.TownOverlays;
 public partial class ArenaContractsOverlay : Control
 {
     private const string ArenaDonationOverlayScenePath = "res://scenes/town_overlays/arena_donation_overlay.tscn";
-    private const string StarterSlimePitContractPath = "res://resources/contracts/starter_slime_pit.tres";
     [Export]
     public PackedScene ArenaScene { get; set; }
 
@@ -40,6 +39,7 @@ public partial class ArenaContractsOverlay : Control
     private int _generatedForFame = -1;
     private bool _generatedForChampionDay;
     private bool _generatedForCompletedContracts;
+    private bool _generatedForSkipTutorial;
     private bool _refreshingUi;
 
     public override void _Ready()
@@ -86,10 +86,11 @@ public partial class ArenaContractsOverlay : Control
         _selectedContractIndex = -1;
         _generatedForFame = _runData?.Fame ?? 0;
         _generatedForChampionDay = _phaseState?.IsChampionDay == true;
-        _generatedForCompletedContracts = _careerData?.HasCompletedContracts == true;
-        _activeContracts = GetVisibleContracts(_generatedForFame, _generatedForChampionDay, _generatedForCompletedContracts);
+        _generatedForSkipTutorial = SaveNode.Get().SkipTutorial;
+        _generatedForCompletedContracts = _careerData?.HasCompletedContracts == true || _generatedForSkipTutorial;
+		_activeContracts = ArenaContractSelection.GetVisibleContracts(_generatedForFame, _generatedForChampionDay, _generatedForCompletedContracts);
 
-        if (_activeContracts.Count <= 0)
+		if (_activeContracts.Count <= 0 && !_generatedForSkipTutorial)
         {
             foreach (var contract in Contracts)
             {
@@ -139,7 +140,8 @@ public partial class ArenaContractsOverlay : Control
         _refreshingUi = true;
         if ((_runData?.Fame ?? 0) != _generatedForFame
             || (_phaseState?.IsChampionDay == true) != _generatedForChampionDay
-            || (_careerData?.HasCompletedContracts == true) != _generatedForCompletedContracts)
+            || SaveNode.Get().SkipTutorial != _generatedForSkipTutorial
+            || ((_careerData?.HasCompletedContracts == true) || SaveNode.Get().SkipTutorial) != _generatedForCompletedContracts)
         {
             BuildContracts();
         }
@@ -149,19 +151,6 @@ public partial class ArenaContractsOverlay : Control
         RefreshContractVisibility();
         RefreshActions();
         _refreshingUi = false;
-    }
-
-    private static Array<ArenaContractData> GetVisibleContracts(int companyFame, bool isChampionDay, bool hasCompletedContracts)
-    {
-        if (hasCompletedContracts)
-            return ArenaContractGenerator.GenerateRandomContracts(companyFame, isChampionDay);
-
-        var contracts = new Array<ArenaContractData>();
-        var starterContract = ResourceLoader.Load<ArenaContractData>(StarterSlimePitContractPath);
-        if (starterContract != null)
-            contracts.Add(starterContract);
-
-        return contracts;
     }
 
     private void RefreshContractVisibility()

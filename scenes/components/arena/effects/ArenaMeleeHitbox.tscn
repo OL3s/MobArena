@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/arena/effects/ArenaMeleeHitbox.cs" id="1_melee_hitbox"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_melee_hitbox"]
+radius = 28.0
+
+[node name="ArenaMeleeHitbox" type="Area2D"]
+monitoring = true
+monitorable = false
+script = ExtResource("1_melee_hitbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_melee_hitbox")

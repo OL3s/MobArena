@@ -290,8 +290,10 @@ public partial class CompanyRunData : Resource
         if (amount <= 0)
             return;
 
+        var previousGold = Gold;
         Gold += amount;
         careerData?.AddGoldEarned(amount);
+        GD.Print($"CompanyRunData: Added {amount} gold ({previousGold} -> {Gold}).");
         EmitSignal(SignalName.RunChanged);
     }
 
@@ -300,7 +302,9 @@ public partial class CompanyRunData : Resource
         if (amount <= 0)
             return;
 
+        var previousFame = Fame;
         Fame += amount;
+        GD.Print($"CompanyRunData: Added {amount} fame ({previousFame} -> {Fame}).");
         EmitSignal(SignalName.RunChanged);
     }
 
@@ -309,7 +313,9 @@ public partial class CompanyRunData : Resource
         if (amount <= 0)
             return;
 
+        var previousFame = Fame;
         Fame = Mathf.Max(Fame - amount, 0);
+        GD.Print($"CompanyRunData: Lost {amount} fame ({previousFame} -> {Fame}).");
         EmitSignal(SignalName.RunChanged);
     }
 
@@ -319,9 +325,14 @@ public partial class CompanyRunData : Resource
             return true;
 
         if (Fame < amount)
+        {
+            GD.Print($"CompanyRunData: Spend fame failed; has {Fame}, needs {amount}.");
             return false;
+        }
 
+        var previousFame = Fame;
         Fame -= amount;
+        GD.Print($"CompanyRunData: Spent {amount} fame ({previousFame} -> {Fame}).");
         EmitSignal(SignalName.RunChanged);
         return true;
     }
@@ -347,8 +358,12 @@ public partial class CompanyRunData : Resource
     {
         var cost = GetFameDonationGoldCost(fameAmount);
         if (fameAmount <= 0 || cost <= 0 || !TrySpendGold(cost))
+        {
+            GD.Print($"CompanyRunData: Donate for fame failed; fame={fameAmount}, cost={cost}, gold={Gold}.");
             return false;
+        }
 
+        GD.Print($"CompanyRunData: Donated {cost} gold for {fameAmount} fame.");
         AddFame(fameAmount);
         return true;
     }
@@ -359,9 +374,14 @@ public partial class CompanyRunData : Resource
             return true;
 
         if (Gold < amount)
+        {
+            GD.Print($"CompanyRunData: Spend gold failed; has {Gold}, needs {amount}.");
             return false;
+        }
 
+        var previousGold = Gold;
         Gold -= amount;
+        GD.Print($"CompanyRunData: Spent {amount} gold ({previousGold} -> {Gold}).");
         EmitSignal(SignalName.RunChanged);
         return true;
     }
@@ -371,13 +391,16 @@ public partial class CompanyRunData : Resource
         if (amount <= 0)
             return;
 
+        var previousGold = Gold;
         Gold -= amount;
+        GD.Print($"CompanyRunData: Spent {amount} gold allowing debt ({previousGold} -> {Gold}).");
         EmitSignal(SignalName.RunChanged);
     }
 
     public void SetActiveArenaContract(ArenaContractData contractData)
     {
         ActiveArenaContract = contractData;
+        GD.Print($"CompanyRunData: Active arena contract set to '{contractData?.DisplayName ?? "None"}'.");
         EmitSignal(SignalName.RunChanged);
     }
 
@@ -387,6 +410,7 @@ public partial class CompanyRunData : Resource
             return;
 
         ActiveArenaContract = null;
+        GD.Print("CompanyRunData: Cleared active arena contract.");
         EmitSignal(SignalName.RunChanged);
     }
 
@@ -397,6 +421,7 @@ public partial class CompanyRunData : Resource
 
         EnsureResources();
         Inventory.Add(item);
+        GD.Print($"CompanyRunData: Added item '{item.DisplayName}' to inventory. Inventory: {Inventory.Count}.");
         EmitSignal(SignalName.RunChanged);
     }
 
@@ -568,6 +593,7 @@ public partial class CompanyRunData : Resource
 
         EnsureResources();
         Inventory.Add(item);
+        GD.Print($"CompanyRunData: Bought item '{item.DisplayName}' for {price} gold. Inventory: {Inventory.Count}.");
         EmitSignal(SignalName.RunChanged);
         return true;
     }
@@ -577,11 +603,65 @@ public partial class CompanyRunData : Resource
         return TryBuyItem(item, item?.Cost ?? 0);
     }
 
+    public bool TryBuyMarketItem(int itemIndex)
+    {
+        EnsureResources();
+        var stock = Market?.ItemStock;
+        if (stock == null || stock.Count <= 0)
+        {
+            GD.Print("CompanyRunData: Buy market item failed; market item stock is empty.");
+            return false;
+        }
+
+        if (itemIndex < 0 || itemIndex >= stock.Count)
+        {
+            GD.Print($"CompanyRunData: Buy market item failed; item index {itemIndex} is outside available range 0..{stock.Count - 1}.");
+            return false;
+        }
+
+        var item = stock[itemIndex];
+        if (item == null)
+        {
+            GD.Print($"CompanyRunData: Buy market item failed; item index {itemIndex} is empty.");
+            return false;
+        }
+
+        if (!stock.Remove(item))
+        {
+            GD.Print($"CompanyRunData: Buy market item failed; item '{item.DisplayName}' could not be removed from stock.");
+            return false;
+        }
+
+        if (TryBuyItem(item))
+            return true;
+
+        stock.Insert(itemIndex, item);
+        GD.Print($"CompanyRunData: Buy market item failed; rolled back '{item.DisplayName}' to stock.");
+        return false;
+    }
+
+    public bool TryBuyMarketItem(ItemData item)
+    {
+        EnsureResources();
+        var itemIndex = Market?.ItemStock?.IndexOf(item) ?? -1;
+        if (itemIndex < 0)
+        {
+            GD.Print($"CompanyRunData: Buy market item failed; item '{item?.DisplayName ?? "null"}' is not in market stock.");
+            return false;
+        }
+
+        return TryBuyMarketItem(itemIndex);
+    }
+
     public bool TryBuyGladiator(GladiatorData gladiatorData, CompanyCareerData careerData, int price)
     {
         if (gladiatorData == null || !CanAddGladiator() || !TrySpendGold(price))
+        {
+            GD.Print($"CompanyRunData: Buy gladiator failed; gladiator='{gladiatorData?.GladiatorName ?? "null"}', price={price}, gold={Gold}, roster={AliveGladiators}/{GladiatorCapacity}.");
             return false;
+        }
 
+        GD.Print($"CompanyRunData: Bought gladiator '{gladiatorData.GladiatorName}' for {price} gold.");
         AddGladiator(gladiatorData, careerData);
         return true;
     }
@@ -621,6 +701,7 @@ public partial class CompanyRunData : Resource
         if (!RemoveItem(item))
             return false;
 
+        GD.Print($"CompanyRunData: Sold item '{item.DisplayName}' for {saleValue} gold.");
         AddGold(saleValue, careerData);
         return true;
     }
@@ -645,6 +726,7 @@ public partial class CompanyRunData : Resource
         if (!RemoveGladiator(gladiatorData))
             return false;
 
+        GD.Print($"CompanyRunData: Sold gladiator '{gladiatorData.GladiatorName}' for {saleValue} gold.");
         AddGold(saleValue, careerData);
         return true;
     }
@@ -665,6 +747,7 @@ public partial class CompanyRunData : Resource
             return false;
         }
 
+        GD.Print($"CompanyRunData: Assigned gladiator '{gladiatorData.GladiatorName}' to {location}.");
         EmitSignal(SignalName.RunChanged);
         return true;
     }
@@ -679,6 +762,7 @@ public partial class CompanyRunData : Resource
         }
 
         TownAssignments.MoveToCourtyard(gladiatorData);
+        GD.Print($"CompanyRunData: Moved gladiator '{gladiatorData.GladiatorName}' to courtyard.");
         EmitSignal(SignalName.RunChanged);
         return true;
     }
@@ -697,6 +781,7 @@ public partial class CompanyRunData : Resource
 
         MobsKilled += amount;
         careerData?.AddMobsKilled(amount);
+        GD.Print($"CompanyRunData: Added {amount} mob kills. Run mobs killed: {MobsKilled}.");
         EmitSignal(SignalName.RunChanged);
     }
 
@@ -1128,7 +1213,9 @@ public partial class CompanyRunData : Resource
 
     public bool PayNightSalary()
     {
-        SpendGoldAllowDebt(GetNightSalaryGoldCost());
+        var salary = GetNightSalaryGoldCost();
+        GD.Print($"CompanyRunData: Paying night salary: {salary} gold.");
+        SpendGoldAllowDebt(salary);
         return true;
     }
 
@@ -1138,6 +1225,7 @@ public partial class CompanyRunData : Resource
         RecoverCourtyardAndArenaGladiators();
         ExecuteTreatmentPhaseWork();
         ExecuteTrainingPhaseWork();
+        GD.Print("CompanyRunData: Executed phase building work.");
         EmitSignal(SignalName.RunChanged);
     }
 

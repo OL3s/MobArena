@@ -7,6 +7,7 @@ public partial class LocalInputControllerConfig : Resource
 	public enum ControllerKind
 	{
 		Keyboard,
+		Mouse,
 		Touch,
 		Gamepad
 	}
