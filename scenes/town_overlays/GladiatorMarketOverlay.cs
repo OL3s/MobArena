@@ -124,16 +124,8 @@ public partial class GladiatorMarketOverlay : Control
             return;
         }
 
-        if (!_runData.Market.GladiatorStock.Remove(gladiator))
+        if (!_runData.TryBuyMarketGladiator(gladiator, _saveNode.CompanyCareerData))
         {
-            _feedbackLabel.Text = $"{gladiator.GladiatorName} is no longer available.";
-            RefreshUi();
-            return;
-        }
-
-        if (!_runData.TryBuyGladiator(gladiator, _saveNode.CompanyCareerData, price))
-        {
-            _runData.Market.GladiatorStock.Add(gladiator);
             _feedbackLabel.Text = $"Could not hire {gladiator.GladiatorName}.";
             RefreshUi();
             return;

@@ -9,13 +9,14 @@ Value commands use `--flag=value`. Space-separated values are not consumed, so e
 Example:
 
 ```bash
-godot --headless -- --delete --generate-company --add-money=250 --buy=1 --add-gladiator --contract --next-day
+godot --headless -- --delete --generate-company --add-money=250 --buy-equipment=1 --generate-gladiator --contract --next-day
 ```
 
 ## Save Data
 
 - `--help`: print the runtime CLI command list and exit.
 - `--save`: save the current runtime save state and exit.
+- `--print-save`: print the current save summary and exit.
 - `--delete`: delete all project save data under `user://save` and exit without writing a fresh save.
 
 ## Company Setup
@@ -25,11 +26,11 @@ godot --headless -- --delete --generate-company --add-money=250 --buy=1 --add-gl
 
 ## Run Mutation
 
-- `--add-gladiator`: add and save one `GladiatorData.CreateDefault()` gladiator to the active company, then exit. Fails if no active company exists.
+- `--generate-gladiator`: add and save one `GladiatorData.CreateDefault()` gladiator to the active company, then exit. Fails if no active company exists.
 - `--add-money=<amount>`: add gold to the active company and career totals, then save. Alias: `--add-gold`.
 - `--add-fame=<amount>`: add fame to the active company, then save.
-- `--lose-fame=<amount>`: remove fame from the active company, clamped to zero, then save.
-- `--buy[=index]`: buy and save the generated blacksmith item stock entry at `index`. Defaults to `0`. Aliases: `--buy-equipment`, `--buy-gear`.
+- `--buy-equipment[=index]`: buy and save the generated blacksmith item stock entry at `index`. Defaults to `0`.
+- `--buy-gladiator[=index]`: buy and save the generated gladiator market stock entry at `index`. Defaults to `0`.
 - `--contract[=index]`: complete the available arena contract at `index` for the active company. Defaults to `0`. Alias: `--complete-contract`.
 - `--complete-day`: complete the current day phase without selecting a contract, then save. Alias: `--complete-arena-day`.
 - `--next-day`: advance from night to the next day, including salary and market refresh work, then save.
@@ -45,4 +46,4 @@ godot --headless -- --delete --generate-company --add-money=250 --buy=1 --add-gl
 
 `--complete-contract` uses the same contract visibility rules as the arena contract UI: starter contract before the company has completed contracts, generated contracts afterward or when tutorial skipping is enabled.
 
-Order matters. For example, `--add-gladiator --generate-company` fails on a clean save because there is no active company when `--add-gladiator` runs.
+Order matters. For example, `--generate-gladiator --generate-company` fails on a clean save because there is no active company when `--generate-gladiator` runs.

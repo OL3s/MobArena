@@ -671,6 +671,56 @@ public partial class CompanyRunData : Resource
         return TryBuyGladiator(gladiatorData, careerData, gladiatorData?.GetMarketValue() ?? 0);
     }
 
+    public bool TryBuyMarketGladiator(int gladiatorIndex, CompanyCareerData careerData)
+    {
+        EnsureResources();
+        var stock = Market?.GladiatorStock;
+        if (stock == null || stock.Count <= 0)
+        {
+            GD.Print("CompanyRunData: Buy market gladiator failed; market gladiator stock is empty.");
+            return false;
+        }
+
+        if (gladiatorIndex < 0 || gladiatorIndex >= stock.Count)
+        {
+            GD.Print($"CompanyRunData: Buy market gladiator failed; gladiator index {gladiatorIndex} is outside available range 0..{stock.Count - 1}.");
+            return false;
+        }
+
+        var gladiator = stock[gladiatorIndex];
+        if (gladiator == null)
+        {
+            GD.Print($"CompanyRunData: Buy market gladiator failed; gladiator index {gladiatorIndex} is empty.");
+            return false;
+        }
+
+        if (!stock.Remove(gladiator))
+        {
+            GD.Print($"CompanyRunData: Buy market gladiator failed; gladiator '{gladiator.GladiatorName}' could not be removed from stock.");
+            return false;
+        }
+
+        if (TryBuyGladiator(gladiator, careerData))
+            return true;
+
+        stock.Insert(gladiatorIndex, gladiator);
+        GD.Print($"CompanyRunData: Buy market gladiator failed; rolled back '{gladiator.GladiatorName}' to stock.");
+        return false;
+    }
+
+    public bool TryBuyMarketGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)
+    {
+        EnsureResources();
+        var gladiatorIndex = Market?.GladiatorStock?.IndexOf(gladiatorData) ?? -1;
+        if (gladiatorIndex < 0)
+        {
+            GD.Print($"CompanyRunData: Buy market gladiator failed; gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not in market stock.");
+            return false;
+        }
+
+        return TryBuyMarketGladiator(gladiatorIndex, careerData);
+    }
+
     public int GetSaleValue(ItemData item)
     {
         return item == null
