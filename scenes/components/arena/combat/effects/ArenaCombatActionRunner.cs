@@ -2,7 +2,7 @@ using Godot;
 using MobArena.Scripts.Resources.Combat.Actions;
 using MobArena.Scripts.Resources.Items;
 
-namespace MobArena.Scenes.Components.Arena.Effects;
+namespace MobArena.Scenes.Components.Arena.Combat.Effects;
 
 public static class ArenaCombatActionRunner
 {

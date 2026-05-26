@@ -4,7 +4,7 @@ using MobArena.Scripts.Resources.Combat.Actions;
 using MobArena.Scripts.Resources.Combat.Effects;
 using MobArena.Scripts.Resources.Items;
 
-namespace MobArena.Scenes.Components.Arena.Effects;
+namespace MobArena.Scenes.Components.Arena.Combat.Effects;
 
 public sealed class ArenaCombatEffectContext
 {

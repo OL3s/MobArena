@@ -87,16 +87,18 @@ When this item or mob activates, what effect should be spawned and with what bas
 
 `ArenaCombatEffectData` is the base config for spawned effects.
 
-Current fields:
+Current exported fields:
 
-- `Scene`
+- `ScenePath`
 - `Damage`
 - `UseSourceItemDamage`
-- `OnHitScene`
-- `OnExpireScene`
+- `OnHitScenePath`
+- `OnExpireScenePath`
 - `LifetimeSeconds`
 - `MaxHits`
 - `CanHitSameTargetMultipleTimes`
+
+The resource also exposes computed `PackedScene` properties named `Scene`, `OnHitScene`, and `OnExpireScene` by loading those paths at runtime.
 
 It answers:
 
@@ -182,7 +184,9 @@ Current first-pass input:
 
 - keyboard `Space`
 - mouse left
-- gamepad `A`
+- gamepad `X`
+
+Additional first-pass action inputs exist but do not activate authored effects yet: keyboard `E`/mouse right/gamepad `A` for off-hand, keyboard `F`/mouse-mode `Q`/gamepad `B` for ability, and keyboard `Q`/mouse-mode `Space`/gamepad `Y` for block.
 
 The player path uses source item damage by default.
 
@@ -201,7 +205,7 @@ Resource_training_sword_main_action: ArenaCombatActionData
   SpawnDistance = 34.0
 
 Resource_training_sword_melee_effect: ArenaMeleeEffectData
-  Scene = ArenaMeleeHitbox.tscn
+  ScenePath = res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn
   UseSourceItemDamage = true
   LifetimeSeconds = 0.16
   MaxHits = 1
@@ -212,7 +216,7 @@ Resource_training_sword_melee_effect: ArenaMeleeEffectData
 
 ## Current Melee Hitbox
 
-`ArenaMeleeHitbox.tscn` is the first reusable effect executor.
+`ArenaMeleeHitbox.tscn` is the first reusable effect executor. Runtime arena combat effect executors and helpers live under `scenes/components/arena/combat/effects/`; authored effect config resources live under `scripts/resources/combat/effects/`.
 
 It:
 
@@ -301,7 +305,7 @@ Resource_slime_green_bump_action: ArenaCombatActionData
   SpawnDistance = 24.0
 
 Resource_slime_green_bump_effect: ArenaMeleeEffectData
-  Scene = ArenaMeleeHitbox.tscn
+  ScenePath = res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn
   Damage = Resource_slime_green_bump_damage
   UseSourceItemDamage = false
   LifetimeSeconds = 0.14

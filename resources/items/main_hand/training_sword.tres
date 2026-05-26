@@ -23,7 +23,7 @@ Entries = Array[ExtResource("4_damage_entry")]([SubResource("Resource_training_s
 
 [sub_resource type="Resource" id="Resource_training_sword_melee_effect"]
 script = ExtResource("7_melee_effect")
-ScenePath = "res://scenes/components/arena/effects/ArenaMeleeHitbox.tscn"
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
 LifetimeSeconds = 0.16
 MaxHits = 1
 HitboxRadius = 30.0

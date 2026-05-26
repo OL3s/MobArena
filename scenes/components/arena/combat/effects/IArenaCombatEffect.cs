@@ -1,4 +1,4 @@
-namespace MobArena.Scenes.Components.Arena.Effects;
+namespace MobArena.Scenes.Components.Arena.Combat.Effects;
 
 public interface IArenaCombatEffect
 {

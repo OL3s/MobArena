@@ -14,7 +14,7 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
     private const string ItemStoreStatRowScenePath = "res://scenes/components/ui/ItemStoreStatRow.tscn";
     private const string ItemStoreStatSectionScenePath = "res://scenes/components/ui/ItemStoreStatSection.tscn";
     private const string ItemStoreDamagePillScenePath = "res://scenes/components/ui/ItemStoreDamagePill.tscn";
-    private const string ArenaMeleeHitboxScenePath = "res://scenes/components/arena/effects/ArenaMeleeHitbox.tscn";
+    private const string ArenaMeleeHitboxScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn";
 
     private static readonly Dictionary<string, string> EffectSceneLabels = new()
     {

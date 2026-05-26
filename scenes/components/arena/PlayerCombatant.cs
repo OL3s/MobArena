@@ -1,5 +1,5 @@
 using Godot;
-using MobArena.Scenes.Components.Arena.Effects;
+using MobArena.Scenes.Components.Arena.Combat.Effects;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Combat;

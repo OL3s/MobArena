@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using MobArena.Scripts.Resources.Combat;
 using MobArena.Scripts.Resources.Combat.Effects;
 
-namespace MobArena.Scenes.Components.Arena.Effects;
+namespace MobArena.Scenes.Components.Arena.Combat.Effects;
 
 public partial class ArenaMeleeHitbox : Area2D, IArenaCombatEffect
 {

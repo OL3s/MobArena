@@ -54,7 +54,7 @@ The town phase uses two explicit states: Day before the arena fight and Night af
 
 Phase state should be represented by Godot `Resource`s so management systems can consume the same API without coupling directly to town UI. `TownPhaseState` owns current day and Day/Night phase. `PhaseTransitionController` owns the transition flow and calls company phase work.
 
-Town time should advance from a one-second `Timer` tick, not from continuous per-frame processing. Each timer tick should call the game time controller, which advances 1 in-game minute at x1, 10 in-game minutes at x10, and 100 in-game minutes at x100 before applying passed-time gameplay effects.
+Continuous town time has been removed from the current implementation direction. Town advancement happens through explicit Day -> Night and Night -> Day phase transitions, with phase work resolved once per transition.
 
 If the player fails to fight the champion before the deadline, the run should be lost or otherwise severely failed. This creates pressure to balance economy, roster health, stamina, and arena income instead of waiting forever.
 
