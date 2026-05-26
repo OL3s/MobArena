@@ -9,14 +9,14 @@ Value commands use `--flag=value`. Space-separated values are not consumed, so e
 Example:
 
 ```bash
-godot --headless -- --delete-savedata --generate-company --add-money=250 --buy=1 --add-gladiator --contract --next-day
+godot --headless -- --delete --generate-company --add-money=250 --buy=1 --add-gladiator --contract --next-day
 ```
 
 ## Save Data
 
+- `--help`: print the runtime CLI command list and exit.
 - `--save`: save the current runtime save state and exit.
-- `--delete-savedata`: delete all project save data under `user://save` and exit without writing a fresh save.
-- Aliases: `--delete`, `--del-storage`, `--delete-user-data`.
+- `--delete`: delete all project save data under `user://save` and exit without writing a fresh save.
 
 ## Company Setup
 

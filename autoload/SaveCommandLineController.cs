@@ -8,10 +8,8 @@ namespace MobArena.Scripts;
 
 public static class SaveCommandLineController
 {
+	private const string HelpFlag = "--help";
 	private const string DeleteFlag = "--delete";
-	private const string DeleteSaveDataFlag = "--delete-savedata";
-	private const string DeleteStorageFlag = "--del-storage";
-	private const string DeleteUserDataFlag = "--delete-user-data";
 	private const string SaveFlag = "--save";
 	private const string GenerateCompanyFlag = "--generate-company";
 	private const string GenerateCompanyIfMissingFlag = "--generate-company-if-missing";
@@ -37,6 +35,27 @@ public static class SaveCommandLineController
 	private const string MainMenuScenePath = "res://scenes/main_menu.tscn";
 	private const string TownScenePath = "res://scenes/town.tscn";
 	private const string ArenaScenePath = "res://scenes/arena.tscn";
+	private const string HelpText = """
+Mob Arena runtime CLI commands:
+  --help                                      Print this help text and exit.
+  --save                                      Save current runtime state.
+  --delete                                    Delete all save data.
+  --generate-company-if-missing               Create a default company only when none exists.
+  --generate-company                          Create a default company, replacing active company data.
+  --add-gladiator                             Add one default gladiator to the active company.
+  --add-money[=amount]                        Add gold. Alias: --add-gold. Missing/invalid amount defaults to 0.
+  --add-fame[=amount]                         Add fame. Missing/invalid amount defaults to 0.
+  --lose-fame[=amount]                        Remove fame, clamped to zero. Missing/invalid amount defaults to 0.
+  --buy[=index]                               Buy blacksmith stock item by index. Aliases: --buy-equipment, --buy-gear. Default index: 0.
+  --contract[=index]                          Complete visible arena contract by index. Alias: --complete-contract. Default index: 0.
+  --complete-day                              Complete current day phase. Alias: --complete-arena-day.
+  --next-day                                  Advance from night to the next day.
+  --weather[=Cloudy|Sun|Rain|0|1|2]           Set weather. Missing/invalid value defaults to Cloudy.
+  --goto-scene=<main-menu|town|arena>         Load a scene resource. Alias: --goto=<scene>.
+  --goto-main-menu | --goto-town | --goto-arena
+
+Commands can be stacked left to right and quit automatically. Values use --flag=value; spaces separate commands.
+""";
 
 	private readonly record struct CommandLineCommand(string Name, string Value);
 
@@ -66,8 +85,9 @@ public static class SaveCommandLineController
 	{
 		return command.Name switch
 		{
+			HelpFlag => HandleHelp(),
 			SaveFlag => SaveCommand(saveNode, "save"),
-			DeleteFlag or DeleteSaveDataFlag or DeleteStorageFlag or DeleteUserDataFlag => HandleSaveDelete(saveNode),
+			DeleteFlag => HandleSaveDelete(saveNode),
 			GenerateCompanyFlag => HandleCompanyGeneration(saveNode, true),
 			GenerateCompanyIfMissingFlag => HandleCompanyGeneration(saveNode, false),
 			AddGladiatorFlag => HandleAddGladiator(saveNode),
@@ -85,6 +105,12 @@ public static class SaveCommandLineController
 			GotoArenaFlag => HandleGotoScene(saveNode, "arena"),
 			_ => 0
 		};
+	}
+
+	private static int HandleHelp()
+	{
+		GD.Print(HelpText);
+		return 0;
 	}
 
 	private static int HandleSaveDelete(SaveNode saveNode)
@@ -341,8 +367,9 @@ public static class SaveCommandLineController
 	{
 		return arg switch
 		{
+			HelpFlag => true,
 			SaveFlag => true,
-			DeleteFlag or DeleteSaveDataFlag or DeleteStorageFlag or DeleteUserDataFlag => true,
+			DeleteFlag => true,
 			GenerateCompanyFlag or GenerateCompanyIfMissingFlag => true,
 			AddGladiatorFlag or ContractFlag or CompleteContractFlag => true,
 			AddMoneyFlag or AddGoldFlag => true,
