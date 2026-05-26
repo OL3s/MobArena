@@ -100,7 +100,7 @@ public partial class Arena : Node
 	{
 		_runData?.EnsureResources();
 		_playerSpawner?.SpawnFromRunData(_runData);
-		_enemySpawner?.SpawnFromContract(_runData?.ActiveArenaContract);
+		_enemySpawner?.SpawnMobs(_runData?.ActiveArenaContract?.GetEnemyMobs());
 	}
 
 	private void RefreshStatus()
@@ -116,7 +116,7 @@ public partial class Arena : Node
 		}
 
 		var playerCount = _runData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
-		var enemyCount = contract.Mobs?.Count ?? 0;
+		var enemyCount = contract.GetEnemyMobs().Count;
 		_statusLabel.Text = $"{contract.DisplayName}: {playerCount} gladiator(s) vs {enemyCount} enemy/enemies.";
 	}
 

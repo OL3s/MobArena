@@ -94,6 +94,7 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 - Equipment visuals are tied to `GladiatorEquipmentData`: equipped armor/weapons from inventory are visible on gladiator body art in the town roster and arena. Menu/card UI uses `UiIcon`; body/world presentation layers body, armor, hands, held items, and shadow. The current implementation is duplicated in town and arena actors and should be extracted into a reusable character visual component before adding attack animation.
 - Arena combatants own a runtime `ArenaCombatState` resource. `PlayerCombatant` configures it from `GladiatorData.Health`, derived max health, and equipped `ArmorProfile`, then syncs runtime health changes back into `GladiatorData.SetHealth`. `EnemyCombatant` configures it from `EnemyMobData.MaxHealth` and the mob's authored `ArmorProfile`; enemy health labels display the runtime current/max value. `ArenaCombatant` owns team identity and shared damage entry points so future melee, projectile, thrown, and AoE scenes can target combatants without duplicating damage/armor rules.
 - Item combat activation is resource-driven. `DamageItemData.MainAction` points to `ArenaCombatActionData`, which references typed effect config resources such as `ArenaMeleeEffectData`. `ArenaCombatActionRunner` spawns reusable effect scenes and initializes them with `ArenaCombatEffectContext`; `ArenaMeleeHitbox.tscn` is the first executor and applies damage through `ArenaCombatant.ApplyDamage`. Starter sword, hammer, spear, and dagger resources now include inline melee action/effect subresources.
+- Enemy spawning is resource-driven but not scene-generated. Contracts expose typed enemy resources through `ArenaContractData.GetEnemyMobs()`, and `ArenaEnemySpawner` accepts an array of `EnemyMobData`. If a mob's `Scene` is null, the arena fallback generic `EnemyCombatant.tscn` is used and configured from the `.tres`; if `Scene` is set, it should point to a family or unique behavior-composition scene such as a future `SlimeEnemyCombatant.tscn`. Keep `EnemyCombatant` as the shared shell and put family movement, attack, and logic in child components on those behavior scenes.
 
 ## Settings And Input
 
@@ -108,9 +109,8 @@ The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` 
 
 ## Not Yet Present
 
-- Gameplay combat scripts
-- Player, roster, gear, upkeep, healing, stamina, training, champion deadline failure handling, or full city UI systems
-- Runtime enemy mob actors; enemy `.tres` metadata exists, but mob gameplay scenes are not implemented yet
+- Full gameplay combat loop
+- Runtime enemy behavior scenes; enemy `.tres` metadata and generic fallback spawning exist, but family-specific mob gameplay scenes are not implemented yet
 - Runtime contract execution; arena contract `.tres` metadata exists, but actual combat spawning/result handling is still placeholder-level
 - Real local co-op join/leave input handling and per-player gameplay spawning
 - Export presets

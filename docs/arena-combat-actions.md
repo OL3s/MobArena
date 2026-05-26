@@ -231,11 +231,50 @@ The hitbox does not own rewards, victory checks, death cleanup, or save data.
 
 Mobs do not activate actions yet.
 
-The intended mob path is the same system, but the action should be authored on `EnemyMobData` instead of an item.
+The intended mob path should use the same action/effect system, but enemy behavior should be composed through scenes and child components instead of turning `EnemyCombatant` into one large AI switchboard.
+
+Recommended ownership:
 
 ```text
-EnemyCombatant AI
-  -> EnemyMobData.MainAction
+EnemyMobData .tres
+  -> identity, stats, visuals, armor, fame, optional behavior scene override
+
+EnemyCombatant.tscn
+  -> generic fallback shell for health, team, collision, visuals, and damage entry points
+
+Family or unique enemy .tscn
+  -> EnemyCombatant root plus movement, attack, and logic child components
+
+ArenaCombatActionData / ArenaCombatEffectData
+  -> authored activation and effect tuning
+
+Reusable effect .tscn
+  -> visible runtime executor initialized from config
+```
+
+`EnemyMobData.Scene` should be treated as an override. `null` means the arena uses the fallback generic `EnemyCombatant.tscn`; a non-null scene means this mob or family needs custom behavior composition.
+
+Example future slime setup:
+
+```text
+SlimeEnemyCombatant.tscn
+  EnemyCombatant
+    SlimeMovementController
+    EnemyMeleeAttackController
+    ChaseNearestPlayerBrain
+
+slime_green.tres
+  Scene = SlimeEnemyCombatant.tscn
+  MaxHealth = 12
+  ArmorProfile = Resource_slime_green_armor
+  MainAction = Resource_slime_green_bump_action
+```
+
+The action trigger path would then be:
+
+```text
+Enemy logic/attack component
+  -> EnemyMobData.MainAction or component-assigned action
   -> ArenaCombatActionRunner.TryActivate(enemy, null, action)
   -> ArenaMeleeHitbox.tscn
   -> player.ApplyDamage(...)
@@ -358,19 +397,23 @@ Example use cases:
 ## Ownership Rules
 
 - Item `.tres` files own item activation through `DamageItemData.MainAction`.
-- Mob `.tres` files should own mob activation once `EnemyMobData.MainAction` is added.
+- Mob `.tres` files own enemy identity, stats, visuals, armor, fame, and optional behavior scene overrides.
+- Mob `.tscn` scenes own behavior composition through child movement, attack, and logic components.
+- Mob action tuning may live on `EnemyMobData` once `EnemyMobData.MainAction` is added, or on a small behavior/action component when scene-local behavior needs it.
 - `ArenaCombatActionData` owns activation timing and effect reference.
 - `ArenaCombatEffectData` subtypes own effect-specific tuning.
 - Effect `.tscn` files are reusable runtime executors initialized from config.
 - `ArenaCombatant.ApplyDamage(...)` is the common damage entry point.
 - Arena result systems own rewards, deaths, contract completion, and scene transitions.
+- `EnemyCombatant` should stay a shared runtime shell, not the place where every family movement or attack rule is switched.
 
 ## Next Work
 
-1. Add `EnemyMobData.MainAction`.
-2. Add a starter `Slime Bump` action/effect to `slime_green.tres`.
-3. Add simple `EnemyCombatant` chase behavior toward the nearest living player.
-4. Let enemy AI trigger its authored action in range.
-5. Add enemy death cleanup and arena-level victory detection.
-6. Add player defeat detection.
-7. Add projectile, thrown, and AoE effect configs after melee combat proves stable.
+1. Make the current melee effect scene visibly usable in arena with clear placement, timing, hit, and damage/debug feedback.
+2. Add reusable visible projectile effect data and `.tscn` executors.
+3. Add reusable visible thrown-projectile effect data and `.tscn` executors.
+4. Add reusable visible area-effect data and `.tscn` executors.
+5. After visible attack/effect scenes are in place, add optional enemy movement/attack/logic components under `EnemyCombatant`-rooted scenes.
+6. Add `EnemyMobData.MainAction` or a minimal enemy action component when the first mob attack needs authored tuning.
+7. Add `SlimeEnemyCombatant.tscn` and assign slime mob `Scene` fields once slime movement/attack behavior exists.
+8. Add enemy death cleanup, arena-level victory detection, and player defeat detection.

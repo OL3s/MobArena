@@ -1,7 +1,6 @@
 using Godot;
 using System.Collections.Generic;
 using Godot.Collections;
-using MobArena.Scripts.Resources.Contracts;
 using MobArena.Scripts.Resources.Mobs;
 
 namespace MobArena.Scenes.Components.Arena;
@@ -17,27 +16,15 @@ public partial class ArenaEnemySpawner : Node2D
     [Export]
     public PackedScene FallbackEnemyScene { get; private set; }
 
-    public void SpawnFromContract(ArenaContractData contractData)
-    {
-        ClearSpawned();
-        if (contractData?.Mobs == null)
-            return;
-
-        SpawnMobs(contractData.Mobs);
-    }
-
-    public void SpawnMobs(Array<MobData> mobs)
+    public void SpawnMobs(Array<EnemyMobData> mobs)
     {
         ClearSpawned();
         if (mobs == null)
             return;
 
         var enemyIndex = 0;
-        foreach (var mob in mobs)
+        foreach (var enemyMob in mobs)
         {
-            if (mob is not EnemyMobData enemyMob)
-                continue;
-
             var enemy = InstantiateEnemy(enemyMob);
             if (enemy == null)
                 continue;

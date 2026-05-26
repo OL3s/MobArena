@@ -74,6 +74,18 @@ public partial class ArenaContractData : Resource
         return value;
     }
 
+    public Array<EnemyMobData> GetEnemyMobs()
+    {
+        var enemyMobs = new Array<EnemyMobData>();
+        foreach (var mob in Mobs)
+        {
+            if (mob is EnemyMobData enemyMob)
+                enemyMobs.Add(enemyMob);
+        }
+
+        return enemyMobs;
+    }
+
     public int GetGrossFameReward()
     {
         return Mathf.RoundToInt(GetThreatFameValue() * FameRewardRatio);
