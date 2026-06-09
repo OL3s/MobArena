@@ -25,13 +25,16 @@ ArenaCombatant
   Team: ArenaCombatTeam
 ```
 
-`ArenaCombatState` stores runtime health and armor behavior:
+`ArenaCombatState` stores runtime health, armor, and status behavior:
 
 - `MaxHealth`
 - `CurrentHealth`
 - `ArmorProfile`
+- `StatusProfile`
 - `ApplyDamage(CombatDamageData)`
 - `ApplyRawDamage(int)`
+- `ApplyStatusEffect(StatusEffectType, float, ArenaCombatantState)`
+- `TickStatusEffects(float)`
 - `Heal(int)`
 - `SetHealth(int)`
 - `HealthChanged`
@@ -51,6 +54,7 @@ Enemies configure this state from `EnemyMobData`:
 ```text
 EnemyMobData.MaxHealth
 EnemyMobData.ArmorProfile
+EnemyMobData.StatusProfile
   -> EnemyCombatant.CombatState
 ```
 
@@ -62,6 +66,41 @@ target.ApplyDamage(damage, source);
 
 They should not mutate `GladiatorData`, `EnemyMobData`, `CompanyRunData`, contract rewards, or arena results directly.
 
+## Damage And Immunity
+
+`CombatDamageData` has one damage array:
+
+- `Entries`: typed damage such as Slash, Pierce, Crush, Heat, Cold, Acid, Silver, Holy, Cursed, Undead, Demon, Beast, and Champion.
+
+Damage uses `ArmorData.BaseValue` unless an `ArmorTypeOverrideData` exists for that damage type.
+
+`ArmorData.ImmuneTypes` ignores listed damage types completely. By default, armor is immune to `Silver` and `Holy`; a specific armor profile can remove that by setting a different `ImmuneTypes` array in its `.tres`.
+
+Example:
+
+```text
+Weapon damage: Slash 80 + Holy 100
+Target armor ImmuneTypes: [Silver, Holy]
+Result: Slash resolves normally, Holy is ignored.
+
+Weapon damage: Slash 80 + Holy 100
+Target armor ImmuneTypes: [Silver]
+Target armor TypeOverrides: [Holy 0]
+Result: Slash resolves normally, Holy applies at full value.
+
+Weapon damage: Slash 80 + Holy 100
+Target armor ImmuneTypes: [Silver]
+Target armor TypeOverrides: [Holy 50]
+Result: Slash resolves normally, Holy is mitigated by defense 50.
+
+Weapon damage: Slash 80 + Holy 100
+Target armor ImmuneTypes: [Silver]
+Target armor TypeOverrides: [Holy -25]
+Result: Slash resolves normally, Holy is increased by vulnerability 25%.
+```
+
+This keeps damage resolution normalized: Holy and Silver are normal damage types, and immunity decides whether a target ignores them.
+
 ## Core Resources
 
 ### ArenaCombatActionData
@@ -72,7 +111,6 @@ Current fields:
 
 - `DisplayName`
 - `Effect`
-- `CooldownSeconds`
 - `WindupSeconds`
 - `StaminaCost`
 - `SpawnDistance`
@@ -83,6 +121,43 @@ It answers:
 When this item or mob activates, what effect should be spawned and with what basic timing?
 ```
 
+### ArenaCombatApplyData
+
+`ArenaCombatApplyData` describes what a successful hit applies to a target.
+
+Current exported fields:
+
+- `Damage`
+- `UseSourceItemDamage`
+- `ForceStrength`
+- `StatusApplications`
+
+It answers:
+
+```text
+When this effect hits, what damage, force, and status values should be applied?
+```
+
+Damage resolution currently works like this:
+
+```text
+UseSourceItemDamage is true and source item has DamageItemData.Damage
+  -> use the source item's DamageItemData.Damage
+else
+  -> use apply Damage, which may be null
+```
+
+Force resolution currently works like this:
+
+```text
+ForceStrength <= 0
+  -> no force
+else
+  -> attack direction * ForceStrength
+```
+
+Status application uses `StatusEffectApplicationData` rows and the target's `CombatantStatusProfileData`. Runtime status values use `100` as about one second. Incoming status values do not stack additively; targets keep `max(currentValue, actualHitValue)` so weak repeated hits do not spam-build statuses. Status profiles also define min thresholds, max caps, immunity, effect defense, and state/status multipliers such as Windup + Stun.
+
 ### ArenaCombatEffectData
 
 `ArenaCombatEffectData` is the base config for spawned effects.
@@ -90,8 +165,7 @@ When this item or mob activates, what effect should be spawned and with what bas
 Current exported fields:
 
 - `ScenePath`
-- `Damage`
-- `UseSourceItemDamage`
+- `Apply`
 - `OnHitScenePath`
 - `OnExpireScenePath`
 - `LifetimeSeconds`
@@ -103,19 +177,10 @@ The resource also exposes computed `PackedScene` properties named `Scene`, `OnHi
 It answers:
 
 ```text
-What scene gets spawned, what damage should it use, and what shared hit rules apply?
+What scene gets spawned, what apply payload should it use, and what shared hit rules apply?
 ```
 
-Damage resolution currently works like this:
-
-```text
-UseSourceItemDamage is true and source item has DamageItemData.Damage
-  -> use the source item's DamageItemData.Damage
-else
-  -> use effect Damage, which may be null
-```
-
-This makes authored effect damage the normal case and source item damage the special reusable-item case. Null damage remains valid for future effects such as poison vials that deal no direct hit damage but spawn a cloud scene.
+Null `Apply` remains valid for future pure-spawner effects. Null `Apply.Damage` remains valid for force-only or status-only hits.
 
 ### ArenaMeleeEffectData
 
@@ -200,13 +265,12 @@ training_sword.tres
 Resource_training_sword_main_action: ArenaCombatActionData
   DisplayName = "Sword Slash"
   Effect = Resource_training_sword_melee_effect
-  CooldownSeconds = 0.55
   WindupSeconds = 0.04
   SpawnDistance = 34.0
 
 Resource_training_sword_melee_effect: ArenaMeleeEffectData
   ScenePath = res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn
-  UseSourceItemDamage = true
+  Apply = Resource_training_sword_apply
   LifetimeSeconds = 0.16
   MaxHits = 1
   HitboxRadius = 30.0
@@ -223,6 +287,8 @@ It:
 - uses `Area2D`
 - initializes from `ArenaMeleeEffectData`
 - applies damage through `ArenaCombatant.ApplyDamage(...)`
+- applies force through `ArenaCombatant.AddExternalForce(...)`
+- applies status values through `ArenaCombatant.ApplyStatusEffect(...)`
 - tracks hit targets
 - honors `MaxHits`
 - honors active time and lifetime
@@ -300,14 +366,16 @@ Resource_slime_green_bump_damage: CombatDamageData
 Resource_slime_green_bump_action: ArenaCombatActionData
   DisplayName = "Slime Bump"
   Effect = Resource_slime_green_bump_effect
-  CooldownSeconds = 0.9
   WindupSeconds = 0.05
   SpawnDistance = 24.0
 
-Resource_slime_green_bump_effect: ArenaMeleeEffectData
-  ScenePath = res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn
+Resource_slime_green_bump_apply: ArenaCombatApplyData
   Damage = Resource_slime_green_bump_damage
   UseSourceItemDamage = false
+
+Resource_slime_green_bump_effect: ArenaMeleeEffectData
+  ScenePath = res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn
+  Apply = Resource_slime_green_bump_apply
   LifetimeSeconds = 0.14
   MaxHits = 1
   HitboxRadius = 24.0

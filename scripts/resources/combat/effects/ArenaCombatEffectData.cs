@@ -9,10 +9,7 @@ public partial class ArenaCombatEffectData : Resource
 	public string ScenePath { get; private set; } = string.Empty;
 
     [Export]
-    public CombatDamageData Damage { get; private set; }
-
-    [Export]
-    public bool UseSourceItemDamage { get; private set; } = true;
+    public ArenaCombatApplyData Apply { get; private set; }
 
 	[Export(PropertyHint.File, "*.tscn")]
 	public string OnHitScenePath { get; private set; } = string.Empty;

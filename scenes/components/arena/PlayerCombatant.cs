@@ -2,6 +2,8 @@ using Godot;
 using MobArena.Scenes.Components.Arena.Combat.Effects;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Combat.Actions;
+using MobArena.Scripts.Resources.Combat.Effects;
 using MobArena.Scripts.Resources.Combat;
 using MobArena.Scripts.Resources.Items;
 
@@ -10,9 +12,11 @@ namespace MobArena.Scenes.Components.Arena;
 public partial class PlayerCombatant : ArenaCombatant
 {
     private const string ArenaPlayersGroup = "arena_players";
+    private const string DefaultStatusProfilePath = "res://resources/combat/status_profiles/default_player_status_profile.tres";
     private const float DisplayHeight = 96f;
     private const float HandDisplayHeight = 18f;
     private const float DefaultHeldItemDisplayHeight = 48f;
+    private const float StaminaRegenPerMaxStaminaPerSecond = 0.2f;
 
     private Sprite2D _body;
     private Sprite2D _armor;
@@ -21,17 +25,23 @@ public partial class PlayerCombatant : ArenaCombatant
     private Sprite2D _mainHandItem;
     private Sprite2D _offHandItem;
     private Label _nameLabel;
+    private Label _healthLabel;
+    private Label _stateLabel;
     private Label _controllerLabel;
 
     public GladiatorData GladiatorData { get; private set; }
     public ArenaControlAssignmentData ControlAssignment { get; private set; }
     public ArenaCombatInputState InputState { get; private set; } = new();
 
-    private float _mainHandCooldownRemaining;
     private bool _wasMainHandPressed;
     private bool _wasOffHandPressed;
     private bool _wasAbilityPressed;
     private bool _wasBlockPressed;
+    private float _staminaRegenAccumulator;
+    private DamageItemData _pendingActionItem;
+    private ArenaCombatActionData _pendingAction;
+    private float _windupRemaining;
+    private float _releaseRemaining;
 
     public override void _Ready()
     {
@@ -44,6 +54,8 @@ public partial class PlayerCombatant : ArenaCombatant
         _mainHandItem = GetNode<Sprite2D>("RightHand/MainHandItem");
         _offHandItem = GetNode<Sprite2D>("LeftHand/OffHandItem");
         _nameLabel = GetNode<Label>("NameLabel");
+        _healthLabel = GetNode<Label>("HealthLabel");
+        _stateLabel = GetNode<Label>("StateLabel");
         _controllerLabel = GetNode<Label>("ControllerLabel");
         InputState ??= new ArenaCombatInputState();
         ApplySettingsDeadzone();
@@ -52,23 +64,31 @@ public partial class PlayerCombatant : ArenaCombatant
 
     public override void _PhysicsProcess(double delta)
     {
+        var deltaSeconds = (float)delta;
         var mainHandPressed = ReadAssignedMainHandInput();
         var offHandPressed = ReadAssignedOffHandInput();
         var abilityPressed = ReadAssignedAbilityInput();
         var blockPressed = ReadAssignedBlockInput();
         ApplyCombatInput(ReadAssignedMoveInput(), mainHandPressed, offHandPressed, abilityPressed, blockPressed);
         LogActionPresses(mainHandPressed, offHandPressed, abilityPressed, blockPressed);
-        UpdateActionCooldowns((float)delta);
+        UpdateCombatantState(deltaSeconds);
         TryActivateMainHand(mainHandPressed);
+        TryActivateOffHand(offHandPressed);
+        RegenerateStamina(deltaSeconds);
         _wasMainHandPressed = mainHandPressed;
         _wasOffHandPressed = offHandPressed;
         _wasAbilityPressed = abilityPressed;
         _wasBlockPressed = blockPressed;
 
-        if (InputState.IsMoving)
+        if (InputState.IsMoving && CanMove())
             SetLookDirectionFromInput(InputState.MoveDirection);
 
-        MoveWithInputState(InputState);
+        if (CanMove())
+            MoveWithInputState(InputState);
+        else
+            MoveWithSoftCollisionOnly();
+        DecayExternalForce(deltaSeconds);
+        TickCombatantStatusEffects(deltaSeconds);
         ApplyBodyVisual();
     }
 
@@ -80,6 +100,9 @@ public partial class PlayerCombatant : ArenaCombatant
         ApplySettingsDeadzone();
         InputState.Reset();
         ResetActionPressTracking();
+        ClearPendingAction();
+        SetCombatantState(ArenaCombatantState.Default);
+        _staminaRegenAccumulator = 0f;
         Name = string.IsNullOrWhiteSpace(gladiatorData?.GladiatorName)
             ? "PlayerCombatant"
             : $"{gladiatorData.GladiatorName}PlayerCombatant";
@@ -95,13 +118,20 @@ public partial class PlayerCombatant : ArenaCombatant
         combatState.Configure(
             Mathf.Max(1, gladiatorData?.MaxHealth ?? 1),
             gladiatorData?.Health ?? 1,
-            gladiatorData?.Equipment?.Armor?.ArmorProfile);
+            gladiatorData?.Equipment?.Armor?.ArmorProfile,
+            ResourceLoader.Load<CombatantStatusProfileData>(DefaultStatusProfilePath));
         return combatState;
     }
 
     protected override void OnCombatStateHealthChanged(int currentHealth, int maxHealth)
     {
         GladiatorData?.SetHealth(currentHealth);
+        RefreshHealthLabel();
+    }
+
+    protected override void OnCombatantStateChanged(ArenaCombatantState state)
+    {
+        RefreshStateLabel();
     }
 
     private void ApplySettingsDeadzone()
@@ -290,15 +320,9 @@ public partial class PlayerCombatant : ArenaCombatant
         _wasBlockPressed = false;
     }
 
-    private void UpdateActionCooldowns(float delta)
-    {
-        if (_mainHandCooldownRemaining > 0f)
-            _mainHandCooldownRemaining = Mathf.Max(0f, _mainHandCooldownRemaining - delta);
-    }
-
     private void TryActivateMainHand(bool mainHandPressed)
     {
-        if (!mainHandPressed || _wasMainHandPressed || _mainHandCooldownRemaining > 0f || IsDead)
+        if (!mainHandPressed || _wasMainHandPressed || IsDead || !CanStartAction())
             return;
 
         if (GladiatorData?.Equipment?.MainHand is not DamageItemData mainHand || mainHand.MainAction == null)
@@ -308,13 +332,119 @@ public partial class PlayerCombatant : ArenaCombatant
         if (staminaCost > 0 && GladiatorData.Stamina < staminaCost)
             return;
 
-        if (!ArenaCombatActionRunner.TryActivate(this, mainHand, mainHand.MainAction))
+        if (staminaCost > 0)
+            GladiatorData.SpendStamina(staminaCost);
+
+        StartAction(mainHand, mainHand.MainAction);
+    }
+
+    private void TryActivateOffHand(bool offHandPressed)
+    {
+        if (!offHandPressed || _wasOffHandPressed || IsDead || !CanStartAction())
+            return;
+
+        if (GladiatorData?.Equipment?.OffHand is not DamageItemData offHand || offHand.MainAction == null)
+            return;
+
+        var staminaCost = offHand.MainAction.StaminaCost;
+        if (staminaCost > 0 && GladiatorData.Stamina < staminaCost)
             return;
 
         if (staminaCost > 0)
             GladiatorData.SpendStamina(staminaCost);
 
-        _mainHandCooldownRemaining = Mathf.Max(0f, mainHand.MainAction.CooldownSeconds);
+        StartAction(offHand, offHand.MainAction);
+    }
+
+    private void StartAction(DamageItemData item, ArenaCombatActionData action)
+    {
+        _pendingActionItem = item;
+        _pendingAction = action;
+        _windupRemaining = Mathf.Max(0f, action.WindupSeconds);
+
+        if (_windupRemaining <= 0f)
+        {
+            ExecutePendingAction();
+            return;
+        }
+
+        SetCombatantState(ArenaCombatantState.Windup);
+    }
+
+    private void UpdateCombatantState(float delta)
+    {
+        if (delta <= 0f || IsDead)
+            return;
+
+        if (CombatantState == ArenaCombatantState.Windup)
+        {
+            _windupRemaining -= delta;
+            if (_windupRemaining <= 0f)
+                ExecutePendingAction();
+
+            return;
+        }
+
+        if (CombatantState != ArenaCombatantState.Release)
+            return;
+
+        _releaseRemaining -= delta;
+        if (_releaseRemaining <= 0f)
+        {
+            ClearPendingAction();
+            SetCombatantState(ArenaCombatantState.Default);
+        }
+    }
+
+    private void ExecutePendingAction()
+    {
+        if (_pendingAction == null || _pendingActionItem == null)
+        {
+            ClearPendingAction();
+            SetCombatantState(ArenaCombatantState.Default);
+            return;
+        }
+
+        var action = _pendingAction;
+        var item = _pendingActionItem;
+        var activated = ArenaCombatActionRunner.TryActivate(this, item, action);
+        _releaseRemaining = Mathf.Max(0.05f, action.Effect?.LifetimeSeconds ?? 0.05f);
+        SetCombatantState(ArenaCombatantState.Release);
+
+        if (!activated)
+        {
+            ClearPendingAction();
+            SetCombatantState(ArenaCombatantState.Default);
+        }
+    }
+
+    private void ClearPendingAction()
+    {
+        _pendingActionItem = null;
+        _pendingAction = null;
+        _windupRemaining = 0f;
+        _releaseRemaining = 0f;
+    }
+
+    private void RegenerateStamina(float delta)
+    {
+        if (GladiatorData == null || IsDead || delta <= 0f)
+            return;
+
+        var recoverableMaxStamina = GladiatorData.RecoverableMaxStamina;
+        if (recoverableMaxStamina <= 0 || GladiatorData.Stamina >= recoverableMaxStamina)
+        {
+            _staminaRegenAccumulator = 0f;
+            return;
+        }
+
+        _staminaRegenAccumulator += recoverableMaxStamina * StaminaRegenPerMaxStaminaPerSecond * delta;
+        var restoreAmount = Mathf.FloorToInt(_staminaRegenAccumulator);
+        if (restoreAmount <= 0)
+            return;
+
+        GladiatorData.RestoreStamina(restoreAmount);
+        _staminaRegenAccumulator -= restoreAmount;
     }
 
     private void Refresh()
@@ -325,9 +455,33 @@ public partial class PlayerCombatant : ArenaCombatant
         ApplyBodyVisual();
 
         _nameLabel.Text = GladiatorData?.GladiatorName ?? "Gladiator";
+        RefreshHealthLabel();
+        RefreshStateLabel();
         _controllerLabel.Text = ControlAssignment == null
             ? "Unassigned"
             : ControlAssignment.DisplayName;
+    }
+
+    private void RefreshHealthLabel()
+    {
+        if (_healthLabel == null)
+            return;
+
+        _healthLabel.Text = CombatState == null
+            ? string.Empty
+            : $"HP {CombatState.CurrentHealth}/{CombatState.MaxHealth}";
+    }
+
+    private void RefreshStateLabel()
+    {
+        if (_stateLabel == null)
+            return;
+
+        _stateLabel.Visible = SaveNode.Get().DebugEnabled;
+        _stateLabel.Text = CombatantState.ToString();
+        _stateLabel.Modulate = CombatantState == ArenaCombatantState.Windup
+            ? new Color(1f, 0.72f, 0.35f)
+            : Colors.White;
     }
 
     private void ApplyBodyVisual()

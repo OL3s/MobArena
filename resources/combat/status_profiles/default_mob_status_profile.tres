@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="CombatantStatusProfileData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/CombatantStatusProfileData.cs" id="1_profile"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/EffectDefenseData.cs" id="2_defense"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/StatusEffectRulesData.cs" id="3_rules"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/StatusEffectValueOverrideData.cs" id="4_value_override"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/CombatantStateStatusMultiplierData.cs" id="5_state_multiplier"]
+
+[sub_resource type="Resource" id="Resource_mob_effect_defense"]
+script = ExtResource("2_defense")
+BaseValue = 0
+
+[sub_resource type="Resource" id="Resource_mob_stun_min"]
+script = ExtResource("4_value_override")
+Type = 1
+Value = 25.0
+
+[sub_resource type="Resource" id="Resource_mob_stun_max"]
+script = ExtResource("4_value_override")
+Type = 1
+Value = 100.0
+
+[sub_resource type="Resource" id="Resource_mob_poison_max"]
+script = ExtResource("4_value_override")
+Value = 500.0
+
+[sub_resource type="Resource" id="Resource_mob_status_rules"]
+script = ExtResource("3_rules")
+BaseMinValue = 1.0
+MinValueOverrides = Array[ExtResource("4_value_override")]([SubResource("Resource_mob_stun_min")])
+BaseMaxValue = 300.0
+MaxValueOverrides = Array[ExtResource("4_value_override")]([SubResource("Resource_mob_stun_max"), SubResource("Resource_mob_poison_max")])
+
+[sub_resource type="Resource" id="Resource_mob_windup_stun_multiplier"]
+script = ExtResource("5_state_multiplier")
+State = 1
+Type = 1
+Multiplier = 2.0
+
+[resource]
+script = ExtResource("1_profile")
+EffectDefenseProfile = SubResource("Resource_mob_effect_defense")
+StatusRules = SubResource("Resource_mob_status_rules")
+StateStatusMultipliers = Array[ExtResource("5_state_multiplier")]([SubResource("Resource_mob_windup_stun_multiplier")])

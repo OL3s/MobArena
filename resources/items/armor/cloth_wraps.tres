@@ -8,7 +8,7 @@
 
 [sub_resource type="Resource" id="Resource_cloth_wraps_armor"]
 script = ExtResource("3_armor_data")
-BaseValue = 1
+BaseValue = 10
 
 [resource]
 script = ExtResource("1_armor")

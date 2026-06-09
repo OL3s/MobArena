@@ -14,25 +14,25 @@ grow_horizontal = 2
 theme_override_constants/margin_left = 320
 theme_override_constants/margin_right = 320
 
-[node name="BossPanel" type="PanelContainer" parent="TopMargin"]
+[node name="ChampionPanel" type="PanelContainer" parent="TopMargin"]
 layout_mode = 2
 
-[node name="Content" type="VBoxContainer" parent="TopMargin/BossPanel"]
+[node name="Content" type="VBoxContainer" parent="TopMargin/ChampionPanel"]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="BossName" type="Label" parent="TopMargin/BossPanel/Content"]
+[node name="ChampionName" type="Label" parent="TopMargin/ChampionPanel/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
-text = "Boss"
+text = "Champion"
 horizontal_alignment = 1
 
-[node name="BossHealthBar" type="ProgressBar" parent="TopMargin/BossPanel/Content"]
+[node name="ChampionHealthBar" type="ProgressBar" parent="TopMargin/ChampionPanel/Content"]
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
 show_percentage = false
 
-[node name="BossHealthLabel" type="Label" parent="TopMargin/BossPanel/Content"]
+[node name="ChampionHealthLabel" type="Label" parent="TopMargin/ChampionPanel/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "0/0"

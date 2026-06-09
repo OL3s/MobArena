@@ -17,6 +17,6 @@ UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 3
-MaxHealth = 66
+MaxHealth = 660
 ArmorProfile = SubResource("Resource_demon_hellhound_armor")
 FameValue = 120

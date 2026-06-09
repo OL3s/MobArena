@@ -12,21 +12,21 @@ public partial class CombatHud : CanvasLayer
     private const int EquipmentIconSize = 28;
 
     private HBoxContainer _playerCards;
-    private PanelContainer _bossPanel;
-    private Label _bossNameLabel;
-    private ProgressBar _bossHealthBar;
-    private Label _bossHealthLabel;
-    private EnemyCombatant _boss;
+    private PanelContainer _championPanel;
+    private Label _championNameLabel;
+    private ProgressBar _championHealthBar;
+    private Label _championHealthLabel;
+    private EnemyCombatant _champion;
     private readonly List<PlayerCardBinding> _playerBindings = new();
 
     public override void _Ready()
     {
         _playerCards = GetNode<HBoxContainer>("BottomMargin/PlayerCards");
-        _bossPanel = GetNode<PanelContainer>("TopMargin/BossPanel");
-        _bossNameLabel = GetNode<Label>("TopMargin/BossPanel/Content/BossName");
-        _bossHealthBar = GetNode<ProgressBar>("TopMargin/BossPanel/Content/BossHealthBar");
-        _bossHealthLabel = GetNode<Label>("TopMargin/BossPanel/Content/BossHealthLabel");
-        RefreshBossPanel();
+        _championPanel = GetNode<PanelContainer>("TopMargin/ChampionPanel");
+        _championNameLabel = GetNode<Label>("TopMargin/ChampionPanel/Content/ChampionName");
+        _championHealthBar = GetNode<ProgressBar>("TopMargin/ChampionPanel/Content/ChampionHealthBar");
+        _championHealthLabel = GetNode<Label>("TopMargin/ChampionPanel/Content/ChampionHealthLabel");
+        RefreshChampionPanel();
     }
 
     public override void _Process(double delta)
@@ -34,7 +34,7 @@ public partial class CombatHud : CanvasLayer
         foreach (var binding in _playerBindings)
             binding.Refresh();
 
-        RefreshBossHealth();
+        RefreshChampionHealth();
     }
 
     public override void _ExitTree()
@@ -42,8 +42,8 @@ public partial class CombatHud : CanvasLayer
         foreach (var binding in _playerBindings)
             binding.Dispose();
 
-        if (_boss?.CombatState != null)
-            _boss.CombatState.HealthChanged -= OnBossHealthChanged;
+        if (_champion?.CombatState != null)
+            _champion.CombatState.HealthChanged -= OnChampionHealthChanged;
     }
 
     public void SetPlayers(IEnumerable<PlayerCombatant> players)
@@ -75,17 +75,17 @@ public partial class CombatHud : CanvasLayer
         SetPlayers((IEnumerable<PlayerCombatant>)players);
     }
 
-    public void SetBoss(EnemyCombatant boss)
+    public void SetChampion(EnemyCombatant champion)
     {
-        if (_boss?.CombatState != null)
-            _boss.CombatState.HealthChanged -= OnBossHealthChanged;
+        if (_champion?.CombatState != null)
+            _champion.CombatState.HealthChanged -= OnChampionHealthChanged;
 
-        _boss = boss;
+        _champion = champion;
 
-        if (_boss?.CombatState != null)
-            _boss.CombatState.HealthChanged += OnBossHealthChanged;
+        if (_champion?.CombatState != null)
+            _champion.CombatState.HealthChanged += OnChampionHealthChanged;
 
-        RefreshBossPanel();
+        RefreshChampionPanel();
     }
 
     private PlayerCardBinding CreatePlayerCard(PlayerCombatant player)
@@ -123,6 +123,14 @@ public partial class CombatHud : CanvasLayer
         staminaBar.Modulate = new Color(0.55f, 0.85f, 1f);
         content.AddChild(staminaBar);
 
+        var stateLabel = new Label
+        {
+            Text = "Default",
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        stateLabel.AddThemeFontSizeOverride("font_size", 10);
+        content.AddChild(stateLabel);
+
         var equipmentRow = new HBoxContainer
         {
             Alignment = BoxContainer.AlignmentMode.Center
@@ -137,7 +145,7 @@ public partial class CombatHud : CanvasLayer
         equipmentRow.AddChild(mainHandIcon);
         equipmentRow.AddChild(offHandIcon);
 
-        return new PlayerCardBinding(player, panel, nameLabel, healthBar, staminaBar, armorIcon, mainHandIcon, offHandIcon);
+        return new PlayerCardBinding(player, panel, nameLabel, healthBar, staminaBar, stateLabel, armorIcon, mainHandIcon, offHandIcon);
     }
 
     private static ProgressBar CreateProgressBar()
@@ -162,33 +170,33 @@ public partial class CombatHud : CanvasLayer
         };
     }
 
-    private void OnBossHealthChanged(int currentHealth, int maxHealth)
+    private void OnChampionHealthChanged(int currentHealth, int maxHealth)
     {
-        RefreshBossHealth();
+        RefreshChampionHealth();
     }
 
-    private void RefreshBossPanel()
+    private void RefreshChampionPanel()
     {
-        if (_bossPanel == null)
+        if (_championPanel == null)
             return;
 
-        _bossPanel.Visible = _boss != null;
-        if (_boss == null)
+        _championPanel.Visible = _champion != null;
+        if (_champion == null)
             return;
 
-        _bossNameLabel.Text = _boss.MobData?.DisplayName ?? "Boss";
-        RefreshBossHealth();
+        _championNameLabel.Text = _champion.MobData?.DisplayName ?? "Champion";
+        RefreshChampionHealth();
     }
 
-    private void RefreshBossHealth()
+    private void RefreshChampionHealth()
     {
-        if (_bossHealthBar == null || _bossHealthLabel == null || _boss?.CombatState == null)
+        if (_championHealthBar == null || _championHealthLabel == null || _champion?.CombatState == null)
             return;
 
-        var state = _boss.CombatState;
-        _bossHealthBar.MaxValue = state.MaxHealth;
-        _bossHealthBar.Value = state.CurrentHealth;
-        _bossHealthLabel.Text = $"{state.CurrentHealth}/{state.MaxHealth}";
+        var state = _champion.CombatState;
+        _championHealthBar.MaxValue = state.MaxHealth;
+        _championHealthBar.Value = state.CurrentHealth;
+        _championHealthLabel.Text = $"{state.CurrentHealth}/{state.MaxHealth}";
     }
 
     private sealed class PlayerCardBinding
@@ -197,6 +205,7 @@ public partial class CombatHud : CanvasLayer
         private readonly Label _nameLabel;
         private readonly ProgressBar _healthBar;
         private readonly ProgressBar _staminaBar;
+        private readonly Label _stateLabel;
         private readonly TextureRect _armorIcon;
         private readonly TextureRect _mainHandIcon;
         private readonly TextureRect _offHandIcon;
@@ -209,6 +218,7 @@ public partial class CombatHud : CanvasLayer
             Label nameLabel,
             ProgressBar healthBar,
             ProgressBar staminaBar,
+            Label stateLabel,
             TextureRect armorIcon,
             TextureRect mainHandIcon,
             TextureRect offHandIcon)
@@ -218,18 +228,23 @@ public partial class CombatHud : CanvasLayer
             _nameLabel = nameLabel;
             _healthBar = healthBar;
             _staminaBar = staminaBar;
+            _stateLabel = stateLabel;
             _armorIcon = armorIcon;
             _mainHandIcon = mainHandIcon;
             _offHandIcon = offHandIcon;
 
             if (_player.CombatState != null)
                 _player.CombatState.HealthChanged += OnHealthChanged;
+            if (_player != null)
+                _player.CombatantStateChanged += OnCombatantStateChanged;
         }
 
         public void Dispose()
         {
             if (_player?.CombatState != null)
                 _player.CombatState.HealthChanged -= OnHealthChanged;
+            if (_player != null)
+                _player.CombatantStateChanged -= OnCombatantStateChanged;
         }
 
         public void Refresh()
@@ -246,6 +261,7 @@ public partial class CombatHud : CanvasLayer
             var maxStamina = Mathf.Max(1, gladiator?.MaxStamina ?? 1);
             _staminaBar.MaxValue = maxStamina;
             _staminaBar.Value = Mathf.Clamp(gladiator?.Stamina ?? 0, 0, maxStamina);
+            RefreshStateLabel();
 
             SetIcon(_armorIcon, gladiator?.Equipment?.Armor);
             SetIcon(_mainHandIcon, gladiator?.Equipment?.MainHand);
@@ -256,6 +272,25 @@ public partial class CombatHud : CanvasLayer
         {
             _healthBar.MaxValue = maxHealth;
             _healthBar.Value = currentHealth;
+        }
+
+        private void OnCombatantStateChanged(ArenaCombatantState state)
+        {
+            RefreshStateLabel();
+        }
+
+        private void RefreshStateLabel()
+        {
+            if (_stateLabel == null)
+                return;
+
+            var state = _player?.CombatantState ?? ArenaCombatantState.Default;
+            _stateLabel.Text = state == ArenaCombatantState.Default
+                ? "Default"
+                : state.ToString();
+            _stateLabel.Modulate = state == ArenaCombatantState.Windup
+                ? new Color(1f, 0.72f, 0.35f)
+                : Colors.White;
         }
 
         private static void SetIcon(TextureRect icon, ItemData item)

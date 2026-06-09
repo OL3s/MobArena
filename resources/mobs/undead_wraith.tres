@@ -17,6 +17,6 @@ UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 2
-MaxHealth = 54
+MaxHealth = 540
 ArmorProfile = SubResource("Resource_undead_wraith_armor")
 FameValue = 120

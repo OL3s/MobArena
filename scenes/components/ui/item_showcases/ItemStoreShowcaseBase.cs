@@ -46,7 +46,7 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
     protected void AddDamageStats(DamageItemData item)
     {
         BeginStatSection("Damage");
-        if (item.Damage?.Entries == null || item.Damage.Entries.Count <= 0)
+        if (!HasAnyDamage(item.Damage))
         {
             AddStat("Damage", "None");
             return;
@@ -66,7 +66,6 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
         }
 
         AddStat("Action", action.DisplayName);
-        AddStat("Cooldown", $"{action.CooldownSeconds:0.##}s");
         AddStat("Windup", $"{action.WindupSeconds:0.##}s");
         AddStat("Stamina Cost", action.StaminaCost.ToString());
         AddStat("Spawn Distance", action.SpawnDistance.ToString("0.#"));
@@ -78,13 +77,17 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
 		AddStat("Scene", GetEffectSceneLabel(action.Effect.ScenePath));
         AddStat("Effect Lifetime", $"{action.Effect.LifetimeSeconds:0.##}s");
         AddStat("Max Hits", action.Effect.MaxHits.ToString());
-        AddStat("Uses Item Damage", action.Effect.UseSourceItemDamage ? "Yes" : "No");
+        var apply = action.Effect.Apply;
+        AddStat("Uses Item Damage", apply?.UseSourceItemDamage == true ? "Yes" : "No");
 
-        if (action.Effect.Damage?.Entries?.Count > 0)
+        if (HasAnyDamage(apply?.Damage))
         {
-            AddStat("Effect Damage", action.Effect.Damage.GetRawTotalDamage().ToString());
-            AddDamagePillStack(action.Effect.Damage);
+            AddStat("Effect Damage", apply.Damage.GetRawTotalDamage().ToString());
+            AddDamagePillStack(apply.Damage);
         }
+
+        if (apply?.ForceStrength > 0f)
+            AddStat("Hit Force", apply.ForceStrength.ToString("0.#"));
 
         if (action.Effect is ArenaMeleeEffectData melee)
         {
@@ -107,6 +110,7 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
         AddStat("Base Armor", profile.BaseValue.ToString());
         AddArmorComparisonStack("Weaknesses", profile, armorValue => armorValue < profile.BaseValue);
         AddArmorComparisonStack("Strengths", profile, armorValue => armorValue > profile.BaseValue);
+        AddArmorImmunityStats(profile);
     }
 
     protected void AddStat(string label, string value)
@@ -144,10 +148,23 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
         _activeStatSection.AddRow(row);
     }
 
+    private void AddArmorImmunityStats(ArmorData armor)
+    {
+        if (armor?.ImmuneTypes == null || armor.ImmuneTypes.Count <= 0)
+            return;
+
+        AddStat("Immune", string.Join(", ", armor.ImmuneTypes));
+    }
+
+    private static bool HasAnyDamage(CombatDamageData damage)
+    {
+        return damage?.Entries != null && damage.Entries.Count > 0;
+    }
+
     private void AddArmorComparisonStack(string label, ArmorData armor, Func<int, bool> includeArmorValue)
     {
-        var matchingTypes = new List<(ArmorDamageType Type, int Value)>();
-        foreach (ArmorDamageType type in Enum.GetValues<ArmorDamageType>())
+        var matchingTypes = new List<(CombatDamageType Type, int Value)>();
+        foreach (CombatDamageType type in Enum.GetValues<CombatDamageType>())
         {
             var value = armor.GetArmorValue(type);
             if (includeArmorValue(value))

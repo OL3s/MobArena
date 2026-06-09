@@ -12,9 +12,6 @@ public partial class ArenaCombatActionData : Resource
     [Export]
     public ArenaCombatEffectData Effect { get; private set; }
 
-    [Export(PropertyHint.Range, "0,10,0.01")]
-    public float CooldownSeconds { get; private set; } = 0.6f;
-
     [Export(PropertyHint.Range, "0,5,0.01")]
     public float WindupSeconds { get; private set; }
 

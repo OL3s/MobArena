@@ -4,10 +4,10 @@ namespace MobArena.Scripts.Resources;
 
 public partial class GladiatorLevelData : Resource
 {
-    private const int BaseHealth = 20;
-    private const int HealthPerVitality = 3;
-    private const int BaseStamina = 12;
-    private const int StaminaPerEndurance = 2;
+    private const int BaseHealth = 200;
+    private const int HealthPerVitality = 30;
+    private const int BaseStamina = 120;
+    private const int StaminaPerEndurance = 20;
     private const float FirstAttributeLevelExp = 200f;
     private const float AttributeLevelExpStep = 20f;
     private const int DefaultAttributeMaxStartingLevel = 5;
