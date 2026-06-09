@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="ArenaContractData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ArenaContractData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/contracts/ArenaContractData.cs" id="1_contract"]
 [ext_resource type="Resource" path="res://resources/mobs/champion_slime_green.tres" id="2_champion_slime"]
+[ext_resource type="Resource" path="res://resources/mob_families/slimes.tres" id="3_family"]
 
 [resource]
 script = ExtResource("1_contract")
 DisplayName = "Champion Slime Trial"
 Description = "A placeholder Champion Day contract against a marked champion slime. It keeps the cadence filter testable before real champion combat exists."
-Family = 0
+FamilyData = ExtResource("3_family")
 Difficulty = 3
 FameCost = 0
 FameRewardRatio = 0.1

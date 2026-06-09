@@ -22,7 +22,6 @@ public partial class CodexOverlay : Control
         Other
     }
 
-    private const string EnemyResourceDirectory = "res://resources/mobs";
     private const string ItemResourceDirectory = "res://resources/items";
     private const string ChampionIconPath = "res://assets/ui/icons/champion.svg";
     private static readonly Color ExpandedFamilyHeaderColor = new(0.86f, 1f, 0.86f);
@@ -41,12 +40,11 @@ public partial class CodexOverlay : Control
     private GridContainer _stats;
     private Texture2D _championIcon;
     private Texture2D _twoHandedIcon;
-    private readonly Dictionary<MobFamily, Texture2D> _familyIcons = new();
     private readonly Dictionary<ItemTypeCategory, Texture2D> _itemTypeIcons = new();
     private CodexCategory _category = CodexCategory.Enemies;
-    private readonly List<MobData> _enemies = new();
+    private readonly List<EnemyMobFamilyData> _enemyFamilies = new();
     private readonly List<ItemData> _items = new();
-    private readonly Dictionary<MobFamily, bool> _expandedEnemyFamilies = new();
+    private readonly Dictionary<EnemyMobFamilyData, bool> _expandedEnemyFamilies = new();
     private readonly Dictionary<ItemTypeCategory, bool> _expandedItemTypes = new();
 
     public override void _Ready()
@@ -62,7 +60,6 @@ public partial class CodexOverlay : Control
         _stats = GetNode<GridContainer>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats");
         _championIcon = ResourceLoader.Load<Texture2D>(ChampionIconPath);
         _twoHandedIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/items/type_two_handed.svg");
-        LoadFamilyIcons();
         LoadItemTypeIcons();
 
         _enemiesButton.Pressed += () => SelectCategory(CodexCategory.Enemies);
@@ -75,15 +72,10 @@ public partial class CodexOverlay : Control
 
     private void LoadResources()
     {
-        _enemies.Clear();
+        _enemyFamilies.Clear();
         _items.Clear();
 
-        foreach (var path in GetTresPaths(EnemyResourceDirectory))
-        {
-            var enemy = ResourceLoader.Load<MobData>(path);
-            if (enemy != null)
-                _enemies.Add(enemy);
-        }
+        _enemyFamilies.AddRange(MobFamilyCatalog.LoadEnemyFamiliesList());
 
         foreach (var path in GetTresPaths(ItemResourceDirectory))
         {
@@ -109,9 +101,9 @@ public partial class CodexOverlay : Control
 
         if (_category == CodexCategory.Enemies)
         {
-            _emptyListLabel.Visible = _enemies.Count <= 0;
-            foreach (var enemyGroup in GetSortedEnemyGroups())
-                AddEnemyGroup(enemyGroup.Key, enemyGroup);
+            _emptyListLabel.Visible = _enemyFamilies.Count <= 0;
+            foreach (var enemyFamily in GetSortedEnemyFamilies())
+                AddEnemyGroup(enemyFamily);
             return;
         }
 
@@ -136,22 +128,22 @@ public partial class CodexOverlay : Control
         return button;
     }
 
-    private IEnumerable<IGrouping<MobFamily, EnemyMobData>> GetSortedEnemyGroups()
+    private IEnumerable<EnemyMobFamilyData> GetSortedEnemyFamilies()
     {
-        return _enemies
-            .OfType<EnemyMobData>()
-            .GroupBy(enemy => enemy.Family)
-            .OrderBy(group => group.Sum(enemy => enemy.FameValue))
-            .ThenBy(group => group.Key.ToString());
+        return _enemyFamilies
+            .OrderBy(family => family.FameValue)
+            .ThenBy(family => family.DisplayName);
     }
 
-    private void AddEnemyGroup(MobFamily family, IEnumerable<EnemyMobData> enemies)
+    private void AddEnemyGroup(EnemyMobFamilyData family)
     {
         if (!_expandedEnemyFamilies.ContainsKey(family))
             _expandedEnemyFamilies[family] = false;
 
         var isExpanded = _expandedEnemyFamilies[family];
-        var groupEnemies = enemies
+        var groupEnemies = family.Mobs
+            .Where(entry => entry?.Mob != null)
+            .Select(entry => entry.Mob)
             .OrderBy(enemy => enemy.FameValue)
             .ThenBy(enemy => enemy.DisplayName)
             .ToList();
@@ -189,8 +181,8 @@ public partial class CodexOverlay : Control
         var headerButton = new Button
         {
             CustomMinimumSize = new Vector2(280, 46),
-            Text = family.ToString(),
-            Icon = GetFamilyIcon(family),
+            Text = family.DisplayName,
+            Icon = family.UiIcon,
             ExpandIcon = true,
             FocusMode = FocusModeEnum.All,
             Alignment = HorizontalAlignment.Left
@@ -379,19 +371,6 @@ public partial class CodexOverlay : Control
         return headerButton;
     }
 
-    private void LoadFamilyIcons()
-    {
-        _familyIcons[MobFamily.Slimes] = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/family_slimes.svg");
-        _familyIcons[MobFamily.Goblins] = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/family_goblins.svg");
-        _familyIcons[MobFamily.Undead] = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/family_undead.svg");
-        _familyIcons[MobFamily.Demons] = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/family_demons.svg");
-    }
-
-    private Texture2D GetFamilyIcon(MobFamily family)
-    {
-        return _familyIcons.TryGetValue(family, out var icon) ? icon : null;
-    }
-
     private void LoadItemTypeIcons()
     {
         _itemTypeIcons[ItemTypeCategory.Armor] = ResourceLoader.Load<Texture2D>("res://assets/ui/items/type_armor.svg");
@@ -436,11 +415,17 @@ public partial class CodexOverlay : Control
 
         if (enemy is EnemyMobData enemyMob)
         {
-            AddStat("Family", enemyMob.Family.ToString());
+            AddStat("Family", GetFamilyLabel(enemyMob));
             AddStat("Health", enemyMob.MaxHealth.ToString());
             AddStat("Fame value", enemyMob.FameValue.ToString());
             AddStat("Scene", enemy.Scene == null ? "Not assigned" : enemy.Scene.ResourcePath);
         }
+    }
+
+    private string GetFamilyLabel(EnemyMobData enemy)
+    {
+        var family = _enemyFamilies.FirstOrDefault(familyData => familyData.Mobs.Any(entry => entry?.Mob == enemy));
+        return family?.DisplayName ?? enemy.Family.ToString();
     }
 
     private void ShowItem(ItemData item)

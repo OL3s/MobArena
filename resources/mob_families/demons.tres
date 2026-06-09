@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="EnemyMobFamilyData" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mobs/EnemyMobFamilyData.cs" id="1_family"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/family_demons.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/mobs/MobFamilyMobEntryData.cs" id="3_entry"]
+[ext_resource type="Resource" path="res://resources/mobs/demon_imp.tres" id="4_imp"]
+[ext_resource type="Resource" path="res://resources/mobs/demon_hellhound.tres" id="5_hellhound"]
+[ext_resource type="Resource" path="res://resources/mobs/demon_ash_cultist.tres" id="6_cultist"]
+[ext_resource type="Resource" path="res://resources/mobs/demon_guard.tres" id="7_guard"]
+[ext_resource type="Resource" path="res://resources/mobs/demon_pit_fiend.tres" id="8_fiend"]
+[ext_resource type="Resource" path="res://resources/mobs/champion_demon_lord.tres" id="9_champion"]
+
+[sub_resource type="Resource" id="Resource_demon_imp_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("4_imp")
+MinimumCompanyFame = 50
+
+[sub_resource type="Resource" id="Resource_demon_hellhound_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("5_hellhound")
+MinimumCompanyFame = 90
+
+[sub_resource type="Resource" id="Resource_demon_ash_cultist_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("6_cultist")
+MinimumCompanyFame = 130
+
+[sub_resource type="Resource" id="Resource_demon_guard_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("7_guard")
+MinimumCompanyFame = 180
+
+[sub_resource type="Resource" id="Resource_demon_pit_fiend_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("8_fiend")
+MinimumCompanyFame = 240
+
+[sub_resource type="Resource" id="Resource_champion_demon_lord_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("9_champion")
+MinimumCompanyFame = 100
+
+[resource]
+script = ExtResource("1_family")
+DisplayName = "Demons"
+Description = "Late-entry enemies with steep fame scaling and dangerous high-end threats."
+UiIcon = ExtResource("2_icon")
+Family = 3
+FameValue = 50
+Mobs = Array[Resource]([SubResource("Resource_demon_imp_entry"), SubResource("Resource_demon_hellhound_entry"), SubResource("Resource_demon_ash_cultist_entry"), SubResource("Resource_demon_guard_entry"), SubResource("Resource_demon_pit_fiend_entry"), SubResource("Resource_champion_demon_lord_entry")])

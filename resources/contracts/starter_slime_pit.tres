@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="ArenaContractData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ArenaContractData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/contracts/ArenaContractData.cs" id="1_contract"]
 [ext_resource type="Resource" path="res://resources/mobs/slime_green.tres" id="2_slime"]
+[ext_resource type="Resource" path="res://resources/mob_families/slimes.tres" id="3_family"]
 
 [resource]
 script = ExtResource("1_contract")
 DisplayName = "Starter Slime Pit"
 Description = "A safe first arena contract against slow green slimes. Good for testing a new company."
-Family = 0
+FamilyData = ExtResource("3_family")
 Difficulty = 0
 FameCost = 0
 FameRewardRatio = 0.1

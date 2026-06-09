@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="EnemyMobFamilyData" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mobs/EnemyMobFamilyData.cs" id="1_family"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/family_slimes.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/mobs/MobFamilyMobEntryData.cs" id="3_entry"]
+[ext_resource type="Resource" path="res://resources/mobs/slime_green.tres" id="4_green"]
+[ext_resource type="Resource" path="res://resources/mobs/slime_blue.tres" id="5_blue"]
+[ext_resource type="Resource" path="res://resources/mobs/slime_red.tres" id="6_red"]
+[ext_resource type="Resource" path="res://resources/mobs/slime_iron.tres" id="7_iron"]
+[ext_resource type="Resource" path="res://resources/mobs/slime_crystal.tres" id="8_crystal"]
+[ext_resource type="Resource" path="res://resources/mobs/champion_slime_green.tres" id="9_champion"]
+
+[sub_resource type="Resource" id="Resource_slime_green_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("4_green")
+MinimumCompanyFame = 0
+
+[sub_resource type="Resource" id="Resource_slime_blue_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("5_blue")
+MinimumCompanyFame = 10
+
+[sub_resource type="Resource" id="Resource_slime_red_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("6_red")
+MinimumCompanyFame = 25
+
+[sub_resource type="Resource" id="Resource_slime_iron_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("7_iron")
+MinimumCompanyFame = 40
+
+[sub_resource type="Resource" id="Resource_slime_crystal_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("8_crystal")
+MinimumCompanyFame = 60
+
+[sub_resource type="Resource" id="Resource_champion_slime_green_entry"]
+script = ExtResource("3_entry")
+Mob = ExtResource("9_champion")
+MinimumCompanyFame = 0
+
+[resource]
+script = ExtResource("1_family")
+DisplayName = "Slimes"
+Description = "Low-entry starter enemies built around simple movement, swarms, and escalating durability."
+UiIcon = ExtResource("2_icon")
+Family = 0
+FameValue = 0
+Mobs = Array[Resource]([SubResource("Resource_slime_green_entry"), SubResource("Resource_slime_blue_entry"), SubResource("Resource_slime_red_entry"), SubResource("Resource_slime_iron_entry"), SubResource("Resource_slime_crystal_entry"), SubResource("Resource_champion_slime_green_entry")])

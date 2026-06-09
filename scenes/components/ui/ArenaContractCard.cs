@@ -73,8 +73,8 @@ public partial class ArenaContractCard : Button
             return;
 
         var netFameReward = ContractData?.GetNetFameReward(CurrentCompanyFame) ?? 0;
-        _familyNameLabel.Text = (ContractData?.Family ?? MobFamily.Slimes).ToString();
-        _familyIcon.Texture = ResourceLoader.Load<Texture2D>(GetFamilyIconPath(ContractData?.Family ?? MobFamily.Slimes));
+        _familyNameLabel.Text = GetFamilyName();
+        _familyIcon.Texture = GetFamilyIcon();
         _championIcon.Visible = ContractData?.IsChampionContract() == true;
         RebuildDifficultyStars();
         RebuildMobsGrid();
@@ -179,6 +179,22 @@ public partial class ArenaContractCard : Button
             MobFamily.Demons => "res://assets/ui/icons/family_demons.svg",
             _ => "res://assets/ui/icons/question_mark.svg"
         };
+    }
+
+    private string GetFamilyName()
+    {
+        if (!string.IsNullOrWhiteSpace(ContractData?.FamilyData?.DisplayName))
+            return ContractData.FamilyData.DisplayName;
+
+        return (ContractData?.GetFamilyKey() ?? MobFamily.Slimes).ToString();
+    }
+
+    private Texture2D GetFamilyIcon()
+    {
+        if (ContractData?.FamilyData?.UiIcon != null)
+            return ContractData.FamilyData.UiIcon;
+
+        return ResourceLoader.Load<Texture2D>(GetFamilyIconPath(ContractData?.GetFamilyKey() ?? MobFamily.Slimes));
     }
 
 }

@@ -20,7 +20,7 @@ public partial class ArenaContractData : Resource
     public string Description { get; private set; } = string.Empty;
 
     [Export]
-    public MobFamily Family { get; private set; } = MobFamily.Slimes;
+    public EnemyMobFamilyData FamilyData { get; private set; }
 
     [Export]
     public ArenaContractDifficulty Difficulty { get; private set; } = ArenaContractDifficulty.Easy;
@@ -43,7 +43,7 @@ public partial class ArenaContractData : Resource
     public void ConfigureGenerated(
         string displayName,
         string description,
-        MobFamily family,
+        EnemyMobFamilyData mobFamily,
         ArenaContractDifficulty difficulty,
         Array<MobData> mobs,
         int goldReward,
@@ -53,13 +53,18 @@ public partial class ArenaContractData : Resource
     {
         DisplayName = displayName;
         Description = description;
-        Family = family;
+        FamilyData = mobFamily;
         Difficulty = difficulty;
         Mobs = mobs ?? new Array<MobData>();
         GoldReward = goldReward;
         FameCost = minimumFameCost;
         FameRewardRatio = fameRewardRatio;
         FameCostRatio = fameDecayRatio;
+    }
+
+    public MobFamily GetFamilyKey()
+    {
+        return FamilyData?.Family ?? MobFamily.Slimes;
     }
 
     public int GetThreatFameValue()
