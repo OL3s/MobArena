@@ -31,6 +31,20 @@ dotnet build
 godot --headless --quit
 ```
 
+## Combat Test Scene
+
+Run only the preplaced combat test room from the project root with:
+
+```bash
+godot scenes/test_mob_fight.tscn
+```
+
+For a headless load check, use:
+
+```bash
+godot --headless scenes/test_mob_fight.tscn --quit
+```
+
 ## Documentation
 
 | File | Theme |

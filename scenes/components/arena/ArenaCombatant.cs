@@ -31,6 +31,8 @@ public abstract partial class ArenaCombatant : CharacterBody2D
 
     public bool IsDead => CombatState?.IsDead == true;
 
+    private float _visualXSign = 1f;
+
     public override void _Process(double delta)
     {
         ZIndex = Mathf.RoundToInt(GlobalPosition.Y);
@@ -160,6 +162,8 @@ public abstract partial class ArenaCombatant : CharacterBody2D
             return;
 
         LookDirection = lookDirection.Normalized();
+        if (!Mathf.IsZeroApprox(LookDirection.X))
+            _visualXSign = Mathf.Sign(LookDirection.X);
     }
 
     protected void SetLookDirectionFromInput(Vector2 lookDirection)
@@ -180,14 +184,7 @@ public abstract partial class ArenaCombatant : CharacterBody2D
         if (sprite == null)
             return;
 
-        var xSign = (float)Mathf.Sign(sprite.Scale.X);
-        if (LookDirection.X > 0f)
-            xSign = 1f;
-        else if (LookDirection.X < 0f)
-            xSign = -1f;
-
-        if (xSign == 0f)
-            xSign = 1f;
+        var xSign = GetVisualXSign();
 
         var texture = LookDirection.Y < 0f
             ? backTexture ?? frontTexture
@@ -226,12 +223,7 @@ public abstract partial class ArenaCombatant : CharacterBody2D
 
     protected float GetVisualXSign()
     {
-        if (LookDirection.X > 0f)
-            return 1f;
-        if (LookDirection.X < 0f)
-            return -1f;
-
-        return 1f;
+        return _visualXSign;
     }
 
     protected static void FitSpriteHeight(Sprite2D sprite, Texture2D texture, float displayHeight)
