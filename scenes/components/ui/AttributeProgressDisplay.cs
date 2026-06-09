@@ -87,10 +87,10 @@ public partial class AttributeProgressDisplay : Control
     {
         return attributeKind switch
         {
-            GladiatorLevelData.AttributeKind.Agility => "Agi",
-            GladiatorLevelData.AttributeKind.Vitality => "Vit",
-            GladiatorLevelData.AttributeKind.Endurance => "End",
-            _ => "Str"
+            GladiatorLevelData.AttributeKind.Agility => "AGI",
+            GladiatorLevelData.AttributeKind.Vitality => "VIT",
+            GladiatorLevelData.AttributeKind.Endurance => "END",
+            _ => "STR"
         };
     }
 }

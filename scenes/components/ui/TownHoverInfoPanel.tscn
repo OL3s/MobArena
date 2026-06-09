@@ -235,6 +235,15 @@ layout_mode = 2
 [node name="EnduranceLabel" parent="MarginContainer/Row/SkillColumn/StatsGrid" instance=ExtResource("6_attribute_progress")]
 layout_mode = 2
 
+[node name="StatsTotal" type="HBoxContainer" parent="MarginContainer/Row/SkillColumn"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="TotalLevel" parent="MarginContainer/Row/SkillColumn/StatsTotal" instance=ExtResource("6_attribute_progress")]
+custom_minimum_size = Vector2(108, 20)
+layout_mode = 2
+
 [node name="Details" type="VBoxContainer" parent="MarginContainer/Row"]
 layout_mode = 2
 size_flags_horizontal = 3

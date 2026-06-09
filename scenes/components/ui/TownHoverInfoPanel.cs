@@ -26,6 +26,7 @@ public partial class TownHoverInfoPanel : PanelContainer
     private AttributeProgressDisplay _agilityDisplay;
     private AttributeProgressDisplay _vitalityDisplay;
     private AttributeProgressDisplay _enduranceDisplay;
+    private AttributeProgressDisplay _totalLevelDisplay;
 
     public override void _Ready()
     {
@@ -49,6 +50,7 @@ public partial class TownHoverInfoPanel : PanelContainer
         _agilityDisplay = GetNode<AttributeProgressDisplay>("MarginContainer/Row/SkillColumn/StatsGrid/AgilityLabel");
         _vitalityDisplay = GetNode<AttributeProgressDisplay>("MarginContainer/Row/SkillColumn/StatsGrid/VitalityLabel");
         _enduranceDisplay = GetNode<AttributeProgressDisplay>("MarginContainer/Row/SkillColumn/StatsGrid/EnduranceLabel");
+        _totalLevelDisplay = GetNode<AttributeProgressDisplay>("MarginContainer/Row/SkillColumn/StatsTotal/TotalLevel");
         Clear();
     }
 
@@ -112,6 +114,7 @@ public partial class TownHoverInfoPanel : PanelContainer
         _agilityDisplay.Configure(levelData, GladiatorLevelData.AttributeKind.Agility);
         _vitalityDisplay.Configure(levelData, GladiatorLevelData.AttributeKind.Vitality);
         _enduranceDisplay.Configure(levelData, GladiatorLevelData.AttributeKind.Endurance);
+        _totalLevelDisplay.Configure("TOT", levelData?.TotalLevel ?? 4, 1f);
     }
 
     private static string GetSkillIconPath(GladiatorEquipmentData.SignatureSkill skill)

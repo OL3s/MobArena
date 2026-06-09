@@ -100,6 +100,12 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     public bool DisableAtNight { get; set; }
 
     [Export]
+    public string ClosedTitle { get; set; } = "Closed";
+
+    [Export(PropertyHint.MultilineText)]
+    public string ClosedMessage { get; set; }
+
+    [Export]
     public bool HideUntilSpecialtyBuildingsUnlocked { get; set; }
 
     [Export]
@@ -239,7 +245,13 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         if (DebugInteraction)
             GD.Print($"TownBuilding Activate: {BuildingName}, disabled={Disabled}, overlay={OverlayToOpen != null}, scene={SceneToOpen != null}");
 
-        if (Disabled || (SceneToOpen == null && OverlayToOpen == null))
+        if (Disabled)
+        {
+            ShowClosedPopupIfConfigured();
+            return;
+        }
+
+        if (SceneToOpen == null && OverlayToOpen == null)
             return;
 
         if (OverlayToOpen != null)
@@ -542,6 +554,17 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
             GD.Print($"TownBuilding opening overlay: {BuildingName}");
 
         globalOverlay.AddOverlay(OverlayToOpen);
+    }
+
+    private void ShowClosedPopupIfConfigured()
+    {
+        if (string.IsNullOrWhiteSpace(ClosedMessage))
+            return;
+
+        GlobalOverlay.Get()?.ShowBlurredPopup(
+            string.IsNullOrWhiteSpace(ClosedTitle) ? "Closed" : ClosedTitle,
+            ClosedMessage,
+            IconTexture);
     }
 
     private void OnInteractionInputEvent(Node viewport, InputEvent inputEvent, long shapeIdx)
