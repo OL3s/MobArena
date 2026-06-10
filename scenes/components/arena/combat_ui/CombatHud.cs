@@ -113,7 +113,7 @@ public partial class CombatHud : CanvasLayer
         headerRow.AddThemeConstantOverride("separation", 4);
         content.AddChild(headerRow);
 
-        var (playerBadge, playerIdLabel, deviceIcon, deviceIdLabel) = CreatePlayerBadge();
+        var (playerBadge, playerIdLabel, deviceIcon) = CreatePlayerBadge();
         headerRow.AddChild(playerBadge);
 
         var nameLabel = new Label
@@ -155,17 +155,22 @@ public partial class CombatHud : CanvasLayer
         equipmentRow.AddChild(mainHandIcon);
         equipmentRow.AddChild(offHandIcon);
 
-        return new PlayerCardBinding(player, panel, playerIdLabel, deviceIcon, deviceIdLabel, nameLabel, healthBar, staminaBar, stateLabel, armorIcon, mainHandIcon, offHandIcon);
+        return new PlayerCardBinding(player, panel, playerIdLabel, deviceIcon, nameLabel, healthBar, staminaBar, stateLabel, armorIcon, mainHandIcon, offHandIcon);
     }
 
-    private static (PanelContainer Badge, Label PlayerIdLabel, TextureRect DeviceIcon, Label DeviceIdLabel) CreatePlayerBadge()
+    private static (HBoxContainer Badge, Label PlayerIdLabel, TextureRect DeviceIcon) CreatePlayerBadge()
     {
-        var badge = new PanelContainer
+        var badge = new HBoxContainer
         {
-            CustomMinimumSize = new Vector2(58f, 22f),
-            TooltipText = "Player id | device | device id"
+            TooltipText = "Player id and device"
         };
+        badge.AddThemeConstantOverride("separation", 4);
 
+        var playerCircle = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(22f, 22f),
+            TooltipText = "Player id"
+        };
         var style = new StyleBoxFlat
         {
             BgColor = new Color(0.08f, 0.1f, 0.12f, 0.86f),
@@ -179,21 +184,15 @@ public partial class CombatHud : CanvasLayer
             CornerRadiusBottomLeft = 11,
             CornerRadiusBottomRight = 11
         };
-        badge.AddThemeStyleboxOverride("panel", style);
+        playerCircle.AddThemeStyleboxOverride("panel", style);
+        badge.AddChild(playerCircle);
 
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 7);
-        margin.AddThemeConstantOverride("margin_right", 7);
+        margin.AddThemeConstantOverride("margin_left", 2);
+        margin.AddThemeConstantOverride("margin_right", 2);
         margin.AddThemeConstantOverride("margin_top", 2);
         margin.AddThemeConstantOverride("margin_bottom", 2);
-        badge.AddChild(margin);
-
-        var row = new HBoxContainer
-        {
-            Alignment = BoxContainer.AlignmentMode.Center
-        };
-        row.AddThemeConstantOverride("separation", 3);
-        margin.AddChild(row);
+        playerCircle.AddChild(margin);
 
         var playerIdLabel = new Label
         {
@@ -202,9 +201,7 @@ public partial class CombatHud : CanvasLayer
             VerticalAlignment = VerticalAlignment.Center
         };
         playerIdLabel.AddThemeFontSizeOverride("font_size", 11);
-        row.AddChild(playerIdLabel);
-
-        row.AddChild(CreateBadgeSeparator());
+        margin.AddChild(playerIdLabel);
 
         var deviceIcon = new TextureRect
         {
@@ -212,34 +209,9 @@ public partial class CombatHud : CanvasLayer
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize
         };
-        row.AddChild(deviceIcon);
+        badge.AddChild(deviceIcon);
 
-        var deviceIdLabel = new Label
-        {
-            Text = "-1",
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Visible = false
-        };
-        deviceIdLabel.AddThemeFontSizeOverride("font_size", 11);
-        row.AddChild(CreateBadgeSeparator(deviceIdLabel));
-        row.AddChild(deviceIdLabel);
-
-        return (badge, playerIdLabel, deviceIcon, deviceIdLabel);
-    }
-
-    private static Label CreateBadgeSeparator(Control visibilityPeer = null)
-    {
-        var label = new Label
-        {
-            Text = "|",
-            VerticalAlignment = VerticalAlignment.Center,
-            Modulate = new Color(1f, 1f, 1f, 0.45f)
-        };
-        label.AddThemeFontSizeOverride("font_size", 10);
-        if (visibilityPeer != null)
-            label.Visible = visibilityPeer.Visible;
-        return label;
+        return (badge, playerIdLabel, deviceIcon);
     }
 
     private static ProgressBar CreateProgressBar()
@@ -298,7 +270,6 @@ public partial class CombatHud : CanvasLayer
         private readonly PlayerCombatant _player;
         private readonly Label _playerIdLabel;
         private readonly TextureRect _deviceIcon;
-        private readonly Label _deviceIdLabel;
         private readonly Label _nameLabel;
         private readonly ProgressBar _healthBar;
         private readonly ProgressBar _staminaBar;
@@ -314,7 +285,6 @@ public partial class CombatHud : CanvasLayer
             PanelContainer panel,
             Label playerIdLabel,
             TextureRect deviceIcon,
-            Label deviceIdLabel,
             Label nameLabel,
             ProgressBar healthBar,
             ProgressBar staminaBar,
@@ -327,7 +297,6 @@ public partial class CombatHud : CanvasLayer
             Panel = panel;
             _playerIdLabel = playerIdLabel;
             _deviceIcon = deviceIcon;
-            _deviceIdLabel = deviceIdLabel;
             _nameLabel = nameLabel;
             _healthBar = healthBar;
             _staminaBar = staminaBar;
@@ -414,12 +383,6 @@ public partial class CombatHud : CanvasLayer
             _playerIdLabel.Text = (assignment?.PlayerId ?? -1).ToString();
             _deviceIcon.Texture = GetControllerIcon(assignment);
             _deviceIcon.Modulate = _deviceIcon.Texture == null ? new Color(1f, 1f, 1f, 0.2f) : Colors.White;
-
-            var deviceId = assignment?.DeviceId ?? -1;
-            _deviceIdLabel.Text = deviceId.ToString();
-            _deviceIdLabel.Visible = deviceId >= 0;
-            if (_deviceIdLabel.GetParent()?.GetChild(_deviceIdLabel.GetIndex() - 1) is Control separator)
-                separator.Visible = _deviceIdLabel.Visible;
         }
 
         private static Texture2D GetControllerIcon(ArenaControlAssignmentData assignment)
