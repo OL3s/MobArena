@@ -256,7 +256,7 @@ public partial class CompanyRunData : Resource
 
         if (!CanAddGladiator())
         {
-            GD.PushError($"Add gladiator failed: active roster is full ({AliveGladiators}/{GladiatorCapacity}).");
+            GD.Print($"Add gladiator failed: active roster is full ({AliveGladiators}/{GladiatorCapacity}).");
             return;
         }
 
@@ -452,20 +452,20 @@ public partial class CompanyRunData : Resource
         EnsureResources();
         if (!HasGladiator(gladiatorData))
         {
-            GD.PushError($"Equip failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not in the active roster.");
+            GD.Print($"Equip failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not in the active roster.");
             return false;
         }
 
         if (!HasItem(item))
         {
-            GD.PushError($"Equip failed: item '{item?.DisplayName ?? "null"}' is not in company inventory.");
+            GD.Print($"Equip failed: item '{item?.DisplayName ?? "null"}' is not in company inventory.");
             return false;
         }
 
         var equipment = gladiatorData.Equipment;
         if (equipment == null)
         {
-            GD.PushError($"Equip failed: gladiator '{gladiatorData.GladiatorName}' has no equipment data.");
+            GD.Print($"Equip failed: gladiator '{gladiatorData.GladiatorName}' has no equipment data.");
             return false;
         }
 
@@ -573,7 +573,7 @@ public partial class CompanyRunData : Resource
         if (!equipment.TryEquipOffHand(offHand))
         {
             Inventory.Add(offHand);
-            GD.PushError($"Equip failed: gladiator '{gladiatorData.GladiatorName}' rejected off-hand '{offHand.DisplayName}'.");
+            GD.Print($"Equip failed: gladiator '{gladiatorData.GladiatorName}' rejected off-hand '{offHand.DisplayName}'.");
             return false;
         }
 
@@ -584,7 +584,7 @@ public partial class CompanyRunData : Resource
 
     private static bool PushUnsupportedEquipItem(ItemData item)
     {
-        GD.PushError($"Equip failed: item '{item?.DisplayName ?? "null"}' is not an armor, main-hand, or off-hand item.");
+        GD.Print($"Equip failed: item '{item?.DisplayName ?? "null"}' is not an armor, main-hand, or off-hand item.");
         return false;
     }
 
@@ -740,13 +740,13 @@ public partial class CompanyRunData : Resource
         var saleValue = GetSaleValue(item);
         if (saleValue <= 0)
         {
-            GD.PushError($"Drop sell failed: item '{item?.DisplayName ?? "null"}' has no sale value.");
+            GD.Print($"Drop sell failed: item '{item?.DisplayName ?? "null"}' has no sale value.");
             return false;
         }
 
         if (!HasItem(item))
         {
-            GD.PushError($"Drop sell failed: item '{item?.DisplayName ?? "null"}' is not in company inventory.");
+            GD.Print($"Drop sell failed: item '{item?.DisplayName ?? "null"}' is not in company inventory.");
             return false;
         }
 
@@ -763,13 +763,13 @@ public partial class CompanyRunData : Resource
         var saleValue = GetSaleValue(gladiatorData);
         if (saleValue <= 0)
         {
-            GD.PushError($"Drop sell failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' has no sale value.");
+            GD.Print($"Drop sell failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' has no sale value.");
             return false;
         }
 
         if (!HasGladiator(gladiatorData))
         {
-            GD.PushError($"Drop sell failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not in the active roster.");
+            GD.Print($"Drop sell failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not in the active roster.");
             return false;
         }
 
@@ -788,14 +788,14 @@ public partial class CompanyRunData : Resource
         EnsureResources();
         if (!HasGladiator(gladiatorData))
         {
-            GD.PushError($"Town assignment failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not in the active roster.");
+            GD.Print($"Town assignment failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not in the active roster.");
             return false;
         }
 
         if (!TownAssignments.TryMoveToLocation(gladiatorData, location, capacity))
         {
             var assignedCount = TownAssignments.GetGladiators(location).Count;
-            GD.PushError($"Town assignment failed: could not move gladiator '{gladiatorData.GladiatorName}' to {location} ({assignedCount}/{capacity}).");
+            GD.Print($"Town assignment failed: could not move gladiator '{gladiatorData.GladiatorName}' to {location} ({assignedCount}/{capacity}).");
             return false;
         }
 
@@ -809,7 +809,7 @@ public partial class CompanyRunData : Resource
         EnsureResources();
         if (!HasGladiator(gladiatorData))
         {
-            GD.PushError($"Town assignment failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' cannot move to courtyard because they are not in the active roster.");
+            GD.Print($"Town assignment failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' cannot move to courtyard because they are not in the active roster.");
             return false;
         }
 
@@ -865,7 +865,7 @@ public partial class CompanyRunData : Resource
 
         if (!HasGladiator(gladiatorData) || TownAssignments.GetLocation(gladiatorData) != TownAssignmentData.AssignmentLocation.Arena)
         {
-            GD.PushError($"Arena control assignment failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not assigned to the Arena building.");
+            GD.Print($"Arena control assignment failed: gladiator '{gladiatorData?.GladiatorName ?? "null"}' is not assigned to the Arena building.");
             return false;
         }
 

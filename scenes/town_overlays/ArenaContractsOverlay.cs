@@ -296,7 +296,7 @@ public partial class ArenaContractsOverlay : Control
         var selectedContract = GetSelectedContractOrNull();
         if (selectedContract == null)
         {
-            GD.PushError("Arena launch failed: no selected contract.");
+            GD.Print("Arena launch failed: no selected contract.");
             return;
         }
 

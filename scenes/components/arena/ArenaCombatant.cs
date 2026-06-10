@@ -60,6 +60,11 @@ public abstract partial class ArenaCombatant : CharacterBody2D
         ZIndex = Mathf.RoundToInt(GlobalPosition.Y);
     }
 
+    public override void _ExitTree()
+    {
+        DetachCombatStateSignals();
+    }
+
     protected void ConfigureTopDownMotion()
     {
         MotionMode = MotionModeEnum.Floating;
@@ -70,11 +75,7 @@ public abstract partial class ArenaCombatant : CharacterBody2D
 
     protected void ConfigureCombatState(ArenaCombatState combatState, ArenaCombatTeam team)
     {
-        if (CombatState != null)
-        {
-            CombatState.HealthChanged -= OnCombatStateHealthChanged;
-            CombatState.Died -= OnCombatStateDied;
-        }
+        DetachCombatStateSignals();
 
         CombatState = combatState;
         Team = team;
@@ -85,6 +86,15 @@ public abstract partial class ArenaCombatant : CharacterBody2D
         CombatState.HealthChanged += OnCombatStateHealthChanged;
         CombatState.Died += OnCombatStateDied;
         OnCombatStateHealthChanged(CombatState.CurrentHealth, CombatState.MaxHealth);
+    }
+
+    private void DetachCombatStateSignals()
+    {
+        if (CombatState == null)
+            return;
+
+        CombatState.HealthChanged -= OnCombatStateHealthChanged;
+        CombatState.Died -= OnCombatStateDied;
     }
 
     public bool CanReceiveDamageFrom(ArenaCombatant source)

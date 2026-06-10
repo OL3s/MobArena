@@ -16,6 +16,8 @@ public partial class ArenaEnemySpawner : Node2D
     [Export]
     public PackedScene FallbackEnemyScene { get; private set; }
 
+    public int SpawnedEnemyCount => _spawnedEnemies.Count;
+
     public void SpawnMobs(Array<EnemyMobData> mobs)
     {
         ClearSpawned();

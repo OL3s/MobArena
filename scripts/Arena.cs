@@ -23,6 +23,7 @@ public partial class Arena : Node
 	private Label _statusLabel;
 	private Button _debugWinButton;
 	private Button _debugLoseButton;
+	private bool _isResolvingContract;
 
 	public override void _Ready()
 	{
@@ -50,22 +51,43 @@ public partial class Arena : Node
 		RefreshStatus();
 	}
 
+	public override void _Process(double delta)
+	{
+		TryResolveAllPlayersDefeated();
+	}
+
 	public override void _ExitTree()
 	{
 		if (_weatherState != null)
 			_weatherState.WeatherChanged -= RefreshWeatherVisuals;
+
+		if (_debugWinButton != null)
+			_debugWinButton.Pressed -= ResolveContractWin;
+		if (_debugLoseButton != null)
+			_debugLoseButton.Pressed -= ResolveContractLoss;
 	}
 
 	public void ResolveContractWin()
 	{
-		if (ArenaContractResultResolver.ResolveWin(_saveNode) != ArenaContractResultResolver.ContractResult.Completed)
+		if (_isResolvingContract)
 			return;
 
-		SaveAndReturnToTown();
+		_isResolvingContract = true;
+		if (ArenaContractResultResolver.ResolveWin(_saveNode) != ArenaContractResultResolver.ContractResult.Completed)
+		{
+			_isResolvingContract = false;
+			return;
+		}
+
+		SaveAndReturnToTown("arena win resolved");
 	}
 
 	public void ResolveContractLoss()
 	{
+		if (_isResolvingContract)
+			return;
+
+		_isResolvingContract = true;
 		var result = ArenaContractResultResolver.ResolveLoss(_saveNode);
 		if (result == ArenaContractResultResolver.ContractResult.ForceRetired)
 		{
@@ -75,20 +97,71 @@ public partial class Arena : Node
 		}
 
 		if (result == ArenaContractResultResolver.ContractResult.Completed)
-			SaveAndReturnToTown();
+		{
+			SaveAndReturnToTown("arena loss resolved");
+			return;
+		}
+
+		_isResolvingContract = false;
 	}
 
 	public void ResolveContractForfeit()
 	{
+		if (_isResolvingContract)
+			return;
+
+		_isResolvingContract = true;
 		if (ArenaContractResultResolver.ResolveForfeit(_saveNode) == ArenaContractResultResolver.ContractResult.Completed)
-			SaveAndReturnToTown();
+		{
+			SaveAndReturnToTown("arena forfeit resolved");
+			return;
+		}
+
+		_isResolvingContract = false;
 	}
 
-	private void SaveAndReturnToTown()
+	private void SaveAndReturnToTown(string reason)
 	{
-		_saveNode?.Save();
-		SceneTransitionLogger.LogChange(GetTree(), TownScene, "arena resolved");
+		var saveError = _saveNode?.Save() ?? Error.Unavailable;
+		GD.Print($"Arena: Save before town transition returned {saveError}.");
+		SceneTransitionLogger.LogChange(GetTree(), TownScene, reason);
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, TownScene);
+	}
+
+	private void TryResolveAllPlayersDefeated()
+	{
+		if (_isResolvingContract || _playerSpawner == null || _runData?.ActiveArenaContract == null)
+			return;
+
+		var playerCount = 0;
+		var defeatedCount = 0;
+		foreach (var player in _playerSpawner.GetSpawnedPlayerCombatants())
+		{
+			playerCount++;
+			if (player.IsDead)
+				defeatedCount++;
+		}
+
+		if (playerCount <= 0 || defeatedCount < playerCount)
+			return;
+
+		_isResolvingContract = true;
+		GD.Print($"Arena: all spawned players defeated ({defeatedCount}/{playerCount}).");
+		var result = ArenaContractResultResolver.ResolveAllPlayersDefeated(_saveNode);
+		if (result == ArenaContractResultResolver.ContractResult.ForceRetired)
+		{
+			SceneTransitionLogger.LogChange(GetTree(), MainMenuScene, "arena all players defeated force retired");
+			GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScene);
+			return;
+		}
+
+		if (result == ArenaContractResultResolver.ContractResult.Completed)
+		{
+			SaveAndReturnToTown("arena all players defeated resolved");
+			return;
+		}
+
+		_isResolvingContract = false;
 	}
 
 	private void RefreshDebugButtons()
@@ -104,9 +177,14 @@ public partial class Arena : Node
 	private void SpawnContractActors()
 	{
 		_runData?.EnsureResources();
+		var contract = _runData?.ActiveArenaContract;
+		var assignedPlayers = _runData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
+		var expectedEnemies = contract?.GetEnemyMobs()?.Count ?? 0;
+		GD.Print($"Arena: setup start; contract='{contract?.DisplayName ?? "none"}', assignedPlayers={assignedPlayers}, expectedEnemies={expectedEnemies}, day={_phaseState?.CurrentDay.ToString() ?? "unknown"}, phase={_phaseState?.CurrentPhase.ToString() ?? "unknown"}.");
 		_playerSpawner?.SpawnFromRunData(_runData);
-		_enemySpawner?.SpawnMobs(_runData?.ActiveArenaContract?.GetEnemyMobs());
+		_enemySpawner?.SpawnMobs(contract?.GetEnemyMobs());
 		_combatHud?.SetPlayers(_playerSpawner?.GetSpawnedPlayerCombatants());
+		GD.Print($"Arena: setup complete; spawnedPlayers={_playerSpawner?.SpawnedPlayerCount ?? 0}/{assignedPlayers}, spawnedEnemies={_enemySpawner?.SpawnedEnemyCount ?? 0}/{expectedEnemies}.");
 	}
 
 	private void RefreshStatus()

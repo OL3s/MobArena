@@ -69,7 +69,7 @@ public partial class AttackEffectSandbox : Node
             var action = ResourceLoader.Load<ArenaCombatActionData>(path);
             if (action?.Effect == null)
             {
-                GD.PushWarning($"Attack sandbox skipped '{path}' because it is not an ArenaCombatActionData with an Effect.");
+                GD.Print($"Attack sandbox skipped '{path}' because it is not an ArenaCombatActionData with an Effect.");
                 continue;
             }
 
@@ -85,7 +85,7 @@ public partial class AttackEffectSandbox : Node
         var directory = DirAccess.Open(directoryPath);
         if (directory == null)
         {
-            GD.PushWarning($"Attack sandbox attack directory does not exist: {directoryPath}");
+            GD.Print($"Attack sandbox attack directory does not exist: {directoryPath}");
             yield break;
         }
 

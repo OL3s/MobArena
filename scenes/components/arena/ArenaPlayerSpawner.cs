@@ -14,6 +14,8 @@ public partial class ArenaPlayerSpawner : Node2D
     [Export]
     public PackedScene PlayerScene { get; private set; }
 
+    public int SpawnedPlayerCount => _spawnedPlayers.Count;
+
     public void SpawnFromRunData(CompanyRunData runData)
     {
         ClearSpawned();

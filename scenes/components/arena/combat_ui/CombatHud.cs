@@ -2,6 +2,7 @@ using Godot;
 using MobArena.Scenes.Components.Arena;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Combat;
 using MobArena.Scripts.Resources.Items;
 using System.Collections.Generic;
 
@@ -162,14 +163,12 @@ public partial class CombatHud : CanvasLayer
     {
         var badge = new HBoxContainer
         {
-            TooltipText = "Player id and device"
         };
         badge.AddThemeConstantOverride("separation", 4);
 
         var playerCircle = new PanelContainer
         {
-            CustomMinimumSize = new Vector2(22f, 22f),
-            TooltipText = "Player id"
+            CustomMinimumSize = new Vector2(22f, 22f)
         };
         var style = new StyleBoxFlat
         {
@@ -277,6 +276,9 @@ public partial class CombatHud : CanvasLayer
         private readonly TextureRect _armorIcon;
         private readonly TextureRect _mainHandIcon;
         private readonly TextureRect _offHandIcon;
+        private readonly ArenaCombatState _subscribedCombatState;
+        private readonly PlayerCombatant _subscribedPlayer;
+        private bool _disposed;
 
         public PanelContainer Panel { get; }
 
@@ -305,22 +307,32 @@ public partial class CombatHud : CanvasLayer
             _mainHandIcon = mainHandIcon;
             _offHandIcon = offHandIcon;
 
-            if (_player.CombatState != null)
-                _player.CombatState.HealthChanged += OnHealthChanged;
-            if (_player != null)
-                _player.CombatantStateChanged += OnCombatantStateChanged;
+            _subscribedCombatState = _player?.CombatState;
+            _subscribedPlayer = _player;
+
+            if (_subscribedCombatState != null)
+                _subscribedCombatState.HealthChanged += OnHealthChanged;
+            if (_subscribedPlayer != null)
+                _subscribedPlayer.CombatantStateChanged += OnCombatantStateChanged;
         }
 
         public void Dispose()
         {
-            if (_player?.CombatState != null)
-                _player.CombatState.HealthChanged -= OnHealthChanged;
-            if (_player != null)
-                _player.CombatantStateChanged -= OnCombatantStateChanged;
+            if (_disposed)
+                return;
+
+            _disposed = true;
+            if (_subscribedCombatState != null)
+                _subscribedCombatState.HealthChanged -= OnHealthChanged;
+            if (_subscribedPlayer != null && GodotObject.IsInstanceValid(_subscribedPlayer))
+                _subscribedPlayer.CombatantStateChanged -= OnCombatantStateChanged;
         }
 
         public void Refresh()
         {
+            if (_disposed)
+                return;
+
             var gladiator = _player?.GladiatorData;
             RefreshPlayerBadge(_player?.ControlAssignment);
             _nameLabel.Text = gladiator?.GladiatorName ?? "Gladiator";
@@ -343,12 +355,18 @@ public partial class CombatHud : CanvasLayer
 
         private void OnHealthChanged(int currentHealth, int maxHealth)
         {
+            if (_disposed)
+                return;
+
             _healthBar.MaxValue = maxHealth;
             _healthBar.Value = currentHealth;
         }
 
         private void OnCombatantStateChanged(ArenaCombatantState state)
         {
+            if (_disposed)
+                return;
+
             RefreshStateLabel();
         }
 

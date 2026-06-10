@@ -337,6 +337,9 @@ public partial class PlayerCombatant : ArenaCombatant
 
     private void LogActionPresses(bool mainHandPressed, bool offHandPressed, bool abilityPressed, bool blockPressed)
     {
+        if (SaveNode.Get()?.DebugEnabled != true)
+            return;
+
         if (mainHandPressed && !_wasMainHandPressed)
             LogActionPressed("Main");
         if (offHandPressed && !_wasOffHandPressed)

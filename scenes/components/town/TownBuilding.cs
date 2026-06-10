@@ -269,7 +269,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         var globalOverlay = GlobalOverlay.Get();
         if (globalOverlay == null)
         {
-            GD.PushWarning("Could not load global overlay. Opening scene directly.");
+            GD.Print("TownBuilding: GlobalOverlay missing while opening scene; opening scene directly.");
             OpenScene();
             return;
         }
@@ -354,26 +354,26 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     {
         if (Disabled)
         {
-            GD.PushError($"Building assignment failed: '{DropTargetName}' is disabled.");
+            GD.Print($"Building assignment failed: '{DropTargetName}' is disabled.");
             return false;
         }
 
         if (!AssignDroppedGladiators)
         {
-            GD.PushError($"Building assignment failed: '{DropTargetName}' does not assign dropped gladiators.");
+            GD.Print($"Building assignment failed: '{DropTargetName}' does not assign dropped gladiators.");
             return false;
         }
 
         if (gladiatorData == null)
         {
-            GD.PushError($"Building assignment failed: null gladiator dropped on '{DropTargetName}'.");
+            GD.Print($"Building assignment failed: null gladiator dropped on '{DropTargetName}'.");
             return false;
         }
 
         var runData = SaveNode.Get()?.CompanyRunData;
         if (runData == null || !runData.HasGladiator(gladiatorData))
         {
-            GD.PushError($"Building assignment failed: gladiator '{gladiatorData.GladiatorName}' is not in the active roster.");
+            GD.Print($"Building assignment failed: gladiator '{gladiatorData.GladiatorName}' is not in the active roster.");
             return false;
         }
 
@@ -387,7 +387,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         var capacity = GetAssignedGladiatorCapacity();
         if (assignedGladiators.Count >= capacity)
         {
-            GD.PushError($"Building assignment failed: '{DropTargetName}' is full ({assignedGladiators.Count}/{capacity}).");
+            GD.Print($"Building assignment failed: '{DropTargetName}' is full ({assignedGladiators.Count}/{capacity}).");
             return false;
         }
 
@@ -500,7 +500,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
         var currentSaleValue = GetSaleValue(payload);
         if (currentSaleValue != expectedSaleValue)
-            GD.PushError($"Market sale warning: {payload.Kind} '{payload.GetDebugName()}' sale value changed from {expectedSaleValue} to {currentSaleValue} before confirmation.");
+            GD.Print($"Market sale warning: {payload.Kind} '{payload.GetDebugName()}' sale value changed from {expectedSaleValue} to {currentSaleValue} before confirmation.");
 
         var sold = payload.Kind switch
         {
@@ -546,7 +546,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         var globalOverlay = GlobalOverlay.Get();
         if (globalOverlay == null)
         {
-            GD.PushWarning($"TownBuilding overlay failed: GlobalOverlay missing for {BuildingName}.");
+            GD.Print($"TownBuilding overlay failed: GlobalOverlay missing for {BuildingName}.");
             return;
         }
 

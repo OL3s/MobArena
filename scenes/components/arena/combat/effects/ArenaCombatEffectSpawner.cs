@@ -13,7 +13,7 @@ public static class ArenaCombatEffectSpawner
 
         if (context.ChainDepth >= context.MaxChainDepth)
         {
-            GD.PushWarning($"Combat spawn blocked: chain depth limit reached for {effect}. {context.ToStringExtended()}");
+            GD.Print($"Combat spawn blocked: chain depth limit reached for {effect}. {context.ToStringExtended()}");
             return false;
         }
 

@@ -8,7 +8,7 @@ public static class PhaseTransitionController
     {
         if (phaseState == null || !phaseState.IsDay())
         {
-            GD.Print("PhaseTransitionController: Complete arena day failed; phase is not day.");
+            GD.Print($"PhaseTransitionController: Complete arena day failed; {DescribeContext(phaseState, companyRunData)}.");
             return false;
         }
 
@@ -25,7 +25,7 @@ public static class PhaseTransitionController
     {
         if (phaseState == null || !phaseState.IsDay())
         {
-            GD.Print("PhaseTransitionController: Complete arena contract failed; phase is not day.");
+            GD.Print($"PhaseTransitionController: Complete arena contract failed; {DescribeContext(phaseState, companyRunData)}.");
             return false;
         }
 
@@ -42,7 +42,7 @@ public static class PhaseTransitionController
     {
         if (phaseState == null || !phaseState.CanAdvanceToNextDay)
         {
-            GD.Print("PhaseTransitionController: Advance to next day failed; phase is not night.");
+            GD.Print($"PhaseTransitionController: Advance to next day failed; {DescribeContext(phaseState, companyRunData)}.");
             return false;
         }
 
@@ -59,5 +59,14 @@ public static class PhaseTransitionController
     private static void ExecuteBuildingWork(CompanyRunData companyRunData)
     {
         companyRunData?.ExecutePhaseBuildingWork();
+    }
+
+    private static string DescribeContext(TownPhaseState phaseState, CompanyRunData companyRunData)
+    {
+        var day = phaseState?.CurrentDay.ToString() ?? "unknown";
+        var phase = phaseState?.CurrentPhase.ToString() ?? "unknown";
+        var contract = companyRunData?.ActiveArenaContract?.DisplayName ?? "none";
+        var arenaGladiators = companyRunData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
+        return $"day={day}, phase={phase}, contract='{contract}', arenaGladiators={arenaGladiators}";
     }
 }
