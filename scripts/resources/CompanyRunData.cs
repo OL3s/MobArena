@@ -40,6 +40,7 @@ public partial class CompanyRunData : Resource
     private const int FameDonationCostGrowthPerFame = 5;
     private const int BuildingUpgradeBaseGoldCost = 50;
     private const int BuildingUpgradeCostGrowth = 50;
+    private static readonly WeatherEffectConfig NeutralWeatherEffects = WeatherEffectConfig.Create(1f, 1f, 1f);
 
     [Signal]
     public delegate void RunChangedEventHandler();
@@ -1127,7 +1128,7 @@ public partial class CompanyRunData : Resource
         return CurrentTreatmentFocus switch
         {
             TreatmentFocus.Exhaustion => gladiator.Exhaustion < GladiatorData.MaxConditionValue,
-            _ => gladiator.Health < gladiator.RecoverableMaxHealth && GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio) > 0
+            _ => gladiator.Health < gladiator.RecoverableMaxHealth && GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio, GetWeatherEffects().RecoveryMultiplier) > 0
         };
     }
 
@@ -1139,29 +1140,31 @@ public partial class CompanyRunData : Resource
             && gladiator.Exhaustion > TrainingExhaustionCost;
     }
 
-    public int GetTreatmentHealthRecoveryPreview(GladiatorData gladiator)
+    public int GetTreatmentHealthRecoveryPreview(GladiatorData gladiator, WeatherState weatherState = null)
     {
         if (gladiator == null || !HasGladiator(gladiator))
             return 0;
 
-        var recoveryAmount = GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio);
+        var recoveryAmount = GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio, GetWeatherEffects(weatherState).RecoveryMultiplier);
         return Mathf.Max(0, Mathf.Min(gladiator.RecoverableMaxHealth, gladiator.Health + recoveryAmount) - gladiator.Health);
     }
 
-    public float GetTreatmentExhaustionRecoveryPreview(GladiatorData gladiator)
+    public float GetTreatmentExhaustionRecoveryPreview(GladiatorData gladiator, WeatherState weatherState = null)
     {
         if (gladiator == null || !HasGladiator(gladiator))
             return 0f;
 
-        return Mathf.Max(0f, Mathf.Min(GladiatorData.MaxConditionValue, gladiator.Exhaustion + TreatmentExhaustionRecovery) - gladiator.Exhaustion);
+        var recovery = TreatmentExhaustionRecovery * GetWeatherEffects(weatherState).RecoveryMultiplier;
+        return Mathf.Max(0f, Mathf.Min(GladiatorData.MaxConditionValue, gladiator.Exhaustion + recovery) - gladiator.Exhaustion);
     }
 
-    public float GetTrainingAttributeExpPreview(TrainingFocus trainingFocus, GladiatorLevelData.AttributeKind attributeKind)
+    public float GetTrainingAttributeExpPreview(TrainingFocus trainingFocus, GladiatorLevelData.AttributeKind attributeKind, WeatherState weatherState = null)
     {
+        var trainingMultiplier = GetWeatherEffects(weatherState).TrainingMultiplier;
         if (trainingFocus == TrainingFocus.Overall)
-            return TrainingAttributeExp / 4f;
+            return (TrainingAttributeExp * trainingMultiplier) / 4f;
 
-        return GetFocusedTrainingAttribute(trainingFocus) == attributeKind ? TrainingAttributeExp : 0f;
+        return GetFocusedTrainingAttribute(trainingFocus) == attributeKind ? TrainingAttributeExp * trainingMultiplier : 0f;
     }
 
     public int GetRiskStatusCount(GladiatorRiskStatus riskStatus, float lowHealthWarningRatio)
@@ -1176,13 +1179,13 @@ public partial class CompanyRunData : Resource
         return count;
     }
 
-    public int GetPhaseBuildingGoldCost(TownAssignmentData.AssignmentLocation assignmentLocation)
+    public int GetPhaseBuildingGoldCost(TownAssignmentData.AssignmentLocation assignmentLocation, WeatherState weatherState = null)
     {
         EnsureResources();
         return assignmentLocation switch
         {
-            TownAssignmentData.AssignmentLocation.Healer => GetTreatmentPhaseGoldCost(),
-            TownAssignmentData.AssignmentLocation.TrainingHall => GetTrainingPhaseGoldCost(),
+            TownAssignmentData.AssignmentLocation.Healer => GetTreatmentPhaseGoldCost(weatherState),
+            TownAssignmentData.AssignmentLocation.TrainingHall => GetTrainingPhaseGoldCost(weatherState),
             _ => 0
         };
     }
@@ -1288,17 +1291,18 @@ public partial class CompanyRunData : Resource
         return true;
     }
 
-    public void ExecutePhaseBuildingWork()
+    public void ExecutePhaseBuildingWork(WeatherState weatherState = null)
     {
         EnsureResources();
-        RecoverCourtyardAndArenaGladiators();
-        ExecuteTreatmentPhaseWork();
-        ExecuteTrainingPhaseWork();
+        var weatherEffects = GetWeatherEffects(weatherState);
+        RecoverCourtyardAndArenaGladiators(weatherEffects);
+        ExecuteTreatmentPhaseWork(weatherEffects);
+        ExecuteTrainingPhaseWork(weatherEffects);
         GD.Print("CompanyRunData: Executed phase building work.");
         EmitSignal(SignalName.RunChanged);
     }
 
-    private void RecoverCourtyardAndArenaGladiators()
+    private void RecoverCourtyardAndArenaGladiators(WeatherEffectConfig weatherEffects)
     {
         foreach (var gladiator in Gladiators)
         {
@@ -1308,44 +1312,44 @@ public partial class CompanyRunData : Resource
             var location = TownAssignments.GetLocation(gladiator);
             if (location is TownAssignmentData.AssignmentLocation.Courtyard or TownAssignmentData.AssignmentLocation.Arena)
             {
-                gladiator.SetExhaustion(gladiator.Exhaustion + PhaseRestExhaustionRecovery);
-                gladiator.RestoreHealth(GetHealthRecoveryAmount(gladiator, PhaseRestHealthRecoveryRatio));
+                gladiator.SetExhaustion(gladiator.Exhaustion + (PhaseRestExhaustionRecovery * weatherEffects.RecoveryMultiplier));
+                gladiator.RestoreHealth(GetHealthRecoveryAmount(gladiator, PhaseRestHealthRecoveryRatio, weatherEffects.RecoveryMultiplier));
             }
         }
     }
 
-    private void ExecuteTreatmentPhaseWork()
+    private void ExecuteTreatmentPhaseWork(WeatherEffectConfig weatherEffects)
     {
         foreach (var gladiator in TownAssignments.HealerGladiators)
         {
             if (!CanExecuteTreatmentPhaseWork(gladiator))
                 continue;
 
-            SpendGoldAllowDebt(TreatmentGoldCostPerGladiator);
-            ExecuteTreatmentPhaseWorkForGladiator(gladiator);
+            SpendGoldAllowDebt(GetWeatherAdjustedCost(TreatmentGoldCostPerGladiator, weatherEffects));
+            ExecuteTreatmentPhaseWorkForGladiator(gladiator, weatherEffects);
         }
     }
 
-    private void ExecuteTreatmentPhaseWorkForGladiator(GladiatorData gladiator)
+    private void ExecuteTreatmentPhaseWorkForGladiator(GladiatorData gladiator, WeatherEffectConfig weatherEffects)
     {
         if (gladiator == null)
             return;
 
         if (CurrentTreatmentFocus == TreatmentFocus.Exhaustion)
         {
-            gladiator.SetExhaustion(gladiator.Exhaustion + TreatmentExhaustionRecovery);
+            gladiator.SetExhaustion(gladiator.Exhaustion + (TreatmentExhaustionRecovery * weatherEffects.RecoveryMultiplier));
             return;
         }
 
-        gladiator.RestoreHealth(GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio));
+        gladiator.RestoreHealth(GetHealthRecoveryAmount(gladiator, TreatmentHealthRecoveryRatio, weatherEffects.RecoveryMultiplier));
     }
 
-    private int GetTreatmentPhaseGoldCost()
+    private int GetTreatmentPhaseGoldCost(WeatherState weatherState = null)
     {
-        return GetTreatmentPhaseGoldCost(TownAssignments.HealerGladiators);
+        return GetTreatmentPhaseGoldCost(TownAssignments.HealerGladiators, GetWeatherEffects(weatherState));
     }
 
-    private int GetTreatmentPhaseGoldCost(IEnumerable<GladiatorData> gladiators)
+    private int GetTreatmentPhaseGoldCost(IEnumerable<GladiatorData> gladiators, WeatherEffectConfig weatherEffects)
     {
         var total = 0;
         foreach (var gladiator in gladiators)
@@ -1353,41 +1357,42 @@ public partial class CompanyRunData : Resource
             if (!CanExecuteTreatmentPhaseWork(gladiator))
                 continue;
 
-            total += TreatmentGoldCostPerGladiator;
+            total += GetWeatherAdjustedCost(TreatmentGoldCostPerGladiator, weatherEffects);
         }
 
         return total;
     }
 
-    private static int GetHealthRecoveryAmount(GladiatorData gladiator, float maxHealthRatio)
+    private static int GetHealthRecoveryAmount(GladiatorData gladiator, float maxHealthRatio, float recoveryMultiplier = 1f)
     {
         return gladiator?.MaxHealth > 0
-            ? Mathf.Max(1, Mathf.RoundToInt(gladiator.MaxHealth * maxHealthRatio))
+            ? Mathf.Max(1, Mathf.RoundToInt(gladiator.MaxHealth * maxHealthRatio * recoveryMultiplier))
             : 0;
     }
 
-    private void ExecuteTrainingPhaseWork()
+    private void ExecuteTrainingPhaseWork(WeatherEffectConfig weatherEffects)
     {
         foreach (var gladiator in TownAssignments.TrainingHallGladiators)
         {
             if (!CanExecuteTrainingPhaseWork(gladiator))
                 continue;
 
-            SpendGoldAllowDebt(TrainingGoldCostPerGladiator);
+            SpendGoldAllowDebt(GetWeatherAdjustedCost(TrainingGoldCostPerGladiator, weatherEffects));
             gladiator.SpendStamina(TrainingStaminaCost);
             gladiator.SetExhaustion(gladiator.Exhaustion - TrainingExhaustionCost);
-            ApplyTrainingFocus(gladiator);
+            ApplyTrainingFocus(gladiator, weatherEffects);
         }
     }
 
-    private void ApplyTrainingFocus(GladiatorData gladiator)
+    private void ApplyTrainingFocus(GladiatorData gladiator, WeatherEffectConfig weatherEffects)
     {
         if (gladiator?.Level == null)
             return;
 
+        var trainingExp = TrainingAttributeExp * weatherEffects.TrainingMultiplier;
         if (CurrentTrainingFocus == TrainingFocus.Overall)
         {
-            var splitExp = TrainingAttributeExp / 4f;
+            var splitExp = trainingExp / 4f;
             gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Strength, splitExp);
             gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Agility, splitExp);
             gladiator.Level.AddAttributeExp(GladiatorLevelData.AttributeKind.Vitality, splitExp);
@@ -1395,7 +1400,7 @@ public partial class CompanyRunData : Resource
             return;
         }
 
-        gladiator.Level.AddAttributeExp(GetFocusedTrainingAttribute(CurrentTrainingFocus), TrainingAttributeExp);
+        gladiator.Level.AddAttributeExp(GetFocusedTrainingAttribute(CurrentTrainingFocus), trainingExp);
     }
 
     private static GladiatorLevelData.AttributeKind GetFocusedTrainingAttribute(TrainingFocus trainingFocus)
@@ -1409,12 +1414,12 @@ public partial class CompanyRunData : Resource
         };
     }
 
-    private int GetTrainingPhaseGoldCost()
+    private int GetTrainingPhaseGoldCost(WeatherState weatherState = null)
     {
-        return GetTrainingPhaseGoldCost(TownAssignments.TrainingHallGladiators);
+        return GetTrainingPhaseGoldCost(TownAssignments.TrainingHallGladiators, GetWeatherEffects(weatherState));
     }
 
-    private int GetTrainingPhaseGoldCost(IEnumerable<GladiatorData> gladiators)
+    private int GetTrainingPhaseGoldCost(IEnumerable<GladiatorData> gladiators, WeatherEffectConfig weatherEffects)
     {
         var total = 0;
         foreach (var gladiator in gladiators)
@@ -1422,10 +1427,22 @@ public partial class CompanyRunData : Resource
             if (!CanExecuteTrainingPhaseWork(gladiator))
                 continue;
 
-            total += TrainingGoldCostPerGladiator;
+            total += GetWeatherAdjustedCost(TrainingGoldCostPerGladiator, weatherEffects);
         }
 
         return total;
+    }
+
+    private static int GetWeatherAdjustedCost(int baseCost, WeatherEffectConfig weatherEffects)
+    {
+        return Mathf.Max(0, Mathf.CeilToInt(baseCost * (weatherEffects?.CostMultiplier ?? 1f)));
+    }
+
+    private static WeatherEffectConfig GetWeatherEffects(WeatherState weatherState = null)
+    {
+        return weatherState?.GetCurrentEffectConfig()
+            ?? SaveNode.Get()?.WeatherState?.GetCurrentEffectConfig()
+            ?? NeutralWeatherEffects;
     }
 
     public Array<GladiatorData> ConsumePendingGladiatorDeathNotifications()

@@ -1,0 +1,256 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/WeatherChampionInfoOverlay.cs" id="1_script"]
+[ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/clear.svg" id="3_weather_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/champion.svg" id="4_champion_icon"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="5_body_font"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_weather_champion_blur"]
+shader = ExtResource("2_blur_shader")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_section_panel"]
+bg_color = Color(0.08, 0.075, 0.065, 0.78)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.48, 0.39, 0.24, 0.78)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_champion_progress_bg"]
+bg_color = Color(0.09, 0.065, 0.045, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.44, 0.31, 0.16, 0.9)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_champion_progress_fill"]
+bg_color = Color(0.95, 0.62, 0.18, 0.95)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="WeatherChampionInfoOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="BlurBackdrop" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_weather_champion_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(660, 520)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Layout" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Weather & Champion"
+horizontal_alignment = 1
+
+[node name="WeatherSection" type="PanelContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_panel")
+
+[node name="WeatherMargin" type="MarginContainer" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 14
+
+[node name="WeatherLayout" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="WeatherHeader" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="WeatherIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherHeader"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture = ExtResource("3_weather_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="WeatherNameLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Cloudy"
+vertical_alignment = 1
+
+[node name="WeatherEffects" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="NoChangesLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 18
+text = "No significant changes. Recovery, training, and town service costs are normal."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="RecoveryRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Bullet" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects/RecoveryRow"]
+layout_mode = 2
+text = "-"
+
+[node name="Label" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects/RecoveryRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Recovery"
+
+[node name="ValueLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects/RecoveryRow"]
+custom_minimum_size = Vector2(86, 0)
+layout_mode = 2
+text = "-25%"
+horizontal_alignment = 2
+
+[node name="TrainingRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Bullet" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects/TrainingRow"]
+layout_mode = 2
+text = "-"
+
+[node name="Label" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects/TrainingRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Training"
+
+[node name="ValueLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects/TrainingRow"]
+custom_minimum_size = Vector2(86, 0)
+layout_mode = 2
+text = "-25%"
+horizontal_alignment = 2
+
+[node name="CostRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Bullet" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects/CostRow"]
+layout_mode = 2
+text = "-"
+
+[node name="Label" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects/CostRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Town service cost"
+
+[node name="ValueLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/WeatherSection/WeatherMargin/WeatherLayout/WeatherEffects/CostRow"]
+custom_minimum_size = Vector2(86, 0)
+layout_mode = 2
+text = "+25%"
+horizontal_alignment = 2
+
+[node name="ChampionSection" type="PanelContainer" parent="CenterContainer/Panel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_panel")
+
+[node name="ChampionMargin" type="MarginContainer" parent="CenterContainer/Panel/MarginContainer/Layout/ChampionSection"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 14
+
+[node name="ChampionLayout" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/ChampionSection/ChampionMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ChampionHeader" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/ChampionSection/ChampionMargin/ChampionLayout"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="ChampionIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/ChampionSection/ChampionMargin/ChampionLayout/ChampionHeader"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture = ExtResource("4_champion_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ChampionDueLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/ChampionSection/ChampionMargin/ChampionLayout/ChampionHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Champion in 6 days"
+vertical_alignment = 1
+
+[node name="ChampionProgressBar" type="ProgressBar" parent="CenterContainer/Panel/MarginContainer/Layout/ChampionSection/ChampionMargin/ChampionLayout"]
+custom_minimum_size = Vector2(420, 12)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 7.0
+value = 1.0
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_champion_progress_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_champion_progress_fill")
+
+[node name="ChampionDescription" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/ChampionSection/ChampionMargin/ChampionLayout"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 18
+text = "Champion Day is mandatory. You must complete a champion contract to keep playing this company. Losing a champion contract force-retires the company."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+text = "Close"

@@ -12,7 +12,7 @@ public static class PhaseTransitionController
             return false;
         }
 
-        ExecuteBuildingWork(companyRunData);
+        ExecuteBuildingWork(companyRunData, weatherState);
         companyRunData?.CompleteArenaContractAssignments();
         phaseState.MoveToNight();
         weatherState?.ChooseRandomWeather(phaseState);
@@ -29,7 +29,7 @@ public static class PhaseTransitionController
             return false;
         }
 
-        ExecuteBuildingWork(companyRunData);
+        ExecuteBuildingWork(companyRunData, weatherState);
         companyRunData?.CompleteArenaContractAssignments();
         phaseState.MoveToNight();
         weatherState?.ChooseRandomWeather(phaseState);
@@ -46,7 +46,7 @@ public static class PhaseTransitionController
             return false;
         }
 
-        ExecuteBuildingWork(companyRunData);
+        ExecuteBuildingWork(companyRunData, weatherState);
         companyRunData?.SkipArenaContractAssignments();
         companyRunData?.ClearActiveArenaContract();
         phaseState.MoveToNight();
@@ -64,7 +64,7 @@ public static class PhaseTransitionController
             return false;
         }
 
-		ExecuteBuildingWork(companyRunData);
+		ExecuteBuildingWork(companyRunData, weatherState);
 		companyRunData?.PayNightSalary();
         companyRunData?.Market?.ExecuteNewDay();
         phaseState.MoveToNextDay();
@@ -74,9 +74,9 @@ public static class PhaseTransitionController
         return true;
     }
 
-    private static void ExecuteBuildingWork(CompanyRunData companyRunData)
+    private static void ExecuteBuildingWork(CompanyRunData companyRunData, WeatherState weatherState)
     {
-        companyRunData?.ExecutePhaseBuildingWork();
+        companyRunData?.ExecutePhaseBuildingWork(weatherState);
     }
 
     private static string DescribeContext(TownPhaseState phaseState, CompanyRunData companyRunData)

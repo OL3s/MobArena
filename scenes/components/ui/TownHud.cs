@@ -26,12 +26,11 @@ public partial class TownHud : CanvasLayer
 	private const string NextDaySummaryOverlayScenePath = "res://scenes/town_overlays/next_day_summary_overlay.tscn";
 	private const string EquipmentVisualTestOverlayScenePath = "res://scenes/ui/EquipmentVisualTestOverlay.tscn";
 	private const string TownHoverInfoPanelScenePath = "res://scenes/components/ui/TownHoverInfoPanel.tscn";
+	private const string WeatherChampionInfoOverlayScenePath = "res://scenes/ui/WeatherChampionInfoOverlay.tscn";
 	private const string CloudyWeatherIconPath = "res://assets/ui/icons/clear.svg";
 	private const string RainWeatherIconPath = "res://assets/ui/icons/rain.svg";
 	private const string SunWeatherIconPath = "res://assets/ui/icons/sun.svg";
 	private const string ChampionIconPath = "res://assets/ui/icons/champion.svg";
-	private const string CalendarInfoPopupTitle = "Weather & Champion";
-	private const string CalendarInfoPopupText = "todo: implement weather condition effects and champion explanation here";
 	private const string ChampionDayPopupTitle = "Champion Day";
 	private const string ChampionDayPopupText = "A champion contract is mandatory today. Win to continue the company. Lose, and the company is force-retired.";
 	private const string NextDayUpkeepPopupTitle = "Night Upkeep";
@@ -59,6 +58,10 @@ public partial class TownHud : CanvasLayer
 	private Label _championsWonCountLabel;
 	private Label _goldLabel;
 	private Label _fameLabel;
+	private Control _criticalRiskRow;
+	private Control _idleRow;
+	private Control _exhaustionRow;
+	private Control _lowHealthRow;
 	private Label _criticalRiskLabel;
 	private Label _idleLabel;
 	private Label _exhaustedLabel;
@@ -92,6 +95,10 @@ public partial class TownHud : CanvasLayer
 		_goldLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/GoldRow/GoldLabel");
 		_fameLabel = GetNode<Label>("TopPanel/Row/WealthPanel/WealthColumn/FameRow/FameLabel");
 		_conditionPanel = GetNode<Control>("TopPanel/Row/ConditionPanel");
+		_criticalRiskRow = GetNode<Control>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/CriticalRiskRow");
+		_idleRow = GetNode<Control>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/IdleRow");
+		_exhaustionRow = GetNode<Control>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/ExhaustionRow");
+		_lowHealthRow = GetNode<Control>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/LowHealthRow");
 		_criticalRiskLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/CriticalRiskRow/CriticalRiskLabel");
 		_idleLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/IdleRow/IdleLabel");
 		_exhaustedLabel = GetNode<Label>("TopPanel/Row/ConditionPanel/ConditionColumn/RiskGrid/ExhaustionRow/ExhaustedLabel");
@@ -521,7 +528,14 @@ public partial class TownHud : CanvasLayer
 			return;
 
 		GetViewport()?.SetInputAsHandled();
-		GlobalOverlay.Get()?.ShowBlurredPopup(CalendarInfoPopupTitle, CalendarInfoPopupText);
+		var overlayScene = ResourceLoader.Load<PackedScene>(WeatherChampionInfoOverlayScenePath);
+		if (overlayScene == null)
+		{
+			GD.PushError("Weather & Champion overlay scene is missing.");
+			return;
+		}
+
+		GlobalOverlay.Get()?.AddOverlay(overlayScene.Instantiate<WeatherChampionInfoOverlay>());
 	}
 
 	private void OnCompanyLogoMouseEntered()
@@ -634,6 +648,10 @@ public partial class TownHud : CanvasLayer
 		var exhaustedCount = runData.GetExhaustedGladiatorCount();
 		var lowHealthCount = runData.GetLowHealthGladiatorCount(lowHealthWarningRatio);
 		_conditionPanel.Visible = criticalRiskCount + idleCount + exhaustedCount + lowHealthCount > 0;
+		_criticalRiskRow.Visible = criticalRiskCount > 0;
+		_idleRow.Visible = idleCount > 0;
+		_exhaustionRow.Visible = exhaustedCount > 0;
+		_lowHealthRow.Visible = lowHealthCount > 0;
 		_criticalRiskLabel.Text = criticalRiskCount.ToString();
 		_idleLabel.Text = idleCount.ToString();
 		_exhaustedLabel.Text = exhaustedCount.ToString();

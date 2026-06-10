@@ -221,9 +221,12 @@ public partial class ArenaContractsOverlay : Control
 		var selectedContract = GetSelectedContractOrNull();
 		var hasContract = selectedContract != null;
 		var rerollCost = GetRerollGoldCost();
+		var isFirstContract = IsFirstContractOnboarding();
 
 		_startButton.Disabled = !hasContract || assignedCount <= 0;
-		_rerollButton.Disabled = assignedCount <= 0 || _runData == null || _runData.Gold < rerollCost;
+		_rerollButton.Visible = !isFirstContract;
+		_skipButton.Visible = !isFirstContract;
+		_rerollButton.Disabled = _runData == null || _runData.Gold < rerollCost;
 		_skipFameLossLabel.Text = GetSkipContractFameLoss().ToString();
 		_skipButton.Disabled = !CanSkipDailyContract();
 		_rerollButton.Text = $"Reroll {rerollCost}";
@@ -344,6 +347,11 @@ public partial class ArenaContractsOverlay : Control
             && (_careerData?.HasCompletedContracts == true || SaveNode.Get().SkipTutorial);
     }
 
+    private bool IsFirstContractOnboarding()
+    {
+        return _careerData?.HasCompletedContracts != true && SaveNode.Get().SkipTutorial != true;
+    }
+
     private int GetRerollGoldCost()
     {
         var cheapestGoldReward = int.MaxValue;
@@ -355,7 +363,7 @@ public partial class ArenaContractsOverlay : Control
             cheapestGoldReward = Mathf.Min(cheapestGoldReward, contract.GoldReward);
         }
 
-        return cheapestGoldReward == int.MaxValue ? 0 : cheapestGoldReward;
+        return cheapestGoldReward == int.MaxValue ? 0 : Mathf.Max(1, Mathf.CeilToInt(cheapestGoldReward / 2f));
     }
 
     private static void OnDonatePressed()
