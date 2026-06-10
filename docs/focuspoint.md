@@ -54,23 +54,23 @@ The current town-management foundation is in place.
 
 ## Next Focus
 
-Continue from the first resource-driven player combat path by making player block and ability work before building deeper mob AI.
+Continue from the reusable attack/effect executor foundation by adding authored items that use the new non-melee attack types. The project now has packed scenes and data resources for melee, linear projectile, thrown projectile, and area-of-effect attacks, but the real starter item set is still melee-only.
 
-1. Add player block activation from the existing block input path, using `ArenaCombatantState.Blocking` and data-driven block timing/cost where practical.
-2. Add player ability activation from the existing ability input path, keeping ability behavior authored through action/effect resources instead of hardcoded in `PlayerCombatant`.
-3. Make block and ability clearly visible in `tests/test_mob_fight.tscn`, including state/debug feedback and obvious failure cases such as missing stamina or missing authored action.
-4. Keep main-hand, off-hand, block, and ability actions initialized through shared action/effect infrastructure where possible.
-5. Add authored starter/test resources that exercise `ArenaAttackLinearProjectileData`, `ArenaAttackThrownProjectileData`, and `ArenaAttackAreaOfEffectData`.
-6. Keep all effect executors initialized from typed effect resources through `ArenaCombatEffectContext`; avoid hardcoding weapon or mob-specific behavior in executor scenes.
-7. After player action coverage and visible attack/effect scenes are usable, add the mob behavior-composition flow: optional movement, attack, and logic child components under `EnemyCombatant`-rooted mob scenes.
-8. Add a starter `SlimeEnemyCombatant.tscn` only when slime movement/attack behavior is ready, then assign slime mob `.tres` `Scene` fields to that scene.
-9. Add enemy death handling: hide/free dead enemies, emit an arena-level death event, and keep kill accounting outside hitbox scenes.
-10. Add player death handling from `ArenaCombatState.Died`, leaving permanent death/result mutation to arena result resolution.
-11. Add arena victory/defeat detection and a minimal arena HUD for player HP and enemies remaining once health changes during combat.
+1. Add new authored item resources that use `ArenaAttackLinearProjectileData`, starting with a simple bow/crossbow-style linear projectile item.
+2. Add a thrown item that uses `ArenaAttackThrownProjectileData` with buildup range scaling and an `OnExpireEffect` area-of-effect payload.
+3. Add at least one authored area-of-effect item or throwable payload that uses `ArenaAttackAreaOfEffectData` for ticking damage/status.
+4. Make the item store, codex, and item cards clearly show the new action-pattern icons for these non-melee items.
+5. Verify the new items in `tests/attack_effect_sandbox.tscn` and normal arena/player activation, not only through isolated test resources.
+6. Keep all item behavior authored through item `.tres` action/effect subresources; do not hardcode weapon behavior in `PlayerCombatant` or executor scenes.
+7. After non-melee starter items are playable, add player block activation from the existing block input path, using `ArenaCombatantState.Blocking` and data-driven block timing/cost where practical.
+8. Add player ability activation from the existing ability input path, keeping ability behavior authored through action/effect resources instead of hardcoded in `PlayerCombatant`.
+9. After player action/item coverage and visible attack/effect scenes are usable, add the mob behavior-composition flow: optional movement, attack, and logic child components under `EnemyCombatant`-rooted mob scenes.
+10. Add enemy death handling, player death handling from `ArenaCombatState.Died`, arena victory/defeat detection, and a minimal arena HUD for player HP and enemies remaining once health changes during combat.
 
 ## Immediate Direction
 
 - Keep item behavior authored in item `.tres` files through action/effect subresources. Do not hardcode weapon behavior in `PlayerCombatant` beyond selecting the equipped item and triggering its action.
+- Prioritize real item coverage for the new packed attack scenes. The code/test foundation exists, but starter gameplay items currently only prove melee.
 - Keep effect scene configuration in typed `.tres` resources, not scattered exported fields on every spawned scene. The `.tscn` should be a reusable executor initialized from config.
 - Use `CombatDamageData` from the effect config by default. Item-driven attacks are the special case: set `UseSourceItemDamage` so the effect uses the source item's `DamageItemData.Damage`. Damage can be null for future pure-spawner effects such as poison clouds or thrown vials.
 - All effect scenes should target `ArenaCombatant.ApplyDamage(...)`, never mutate `GladiatorData`, `EnemyMobData`, or `CompanyRunData` directly.
@@ -83,8 +83,8 @@ Continue from the first resource-driven player combat path by making player bloc
 
 ## Short-Term Direction
 
-- Make player block and ability work from existing keyboard/mouse/gamepad input paths.
-- Then add authored starter/test resources and feedback for linear projectile, thrown projectile, and area-of-effect executors.
+- Add real authored linear projectile, thrown projectile, and area-of-effect items so the new attack executors are used by normal item resources, not only sandbox tests.
+- Then make player block and ability work from existing keyboard/mouse/gamepad input paths.
 - Then add mob behavior-composition scenes, starting with slime movement/chase and a starter slime attack.
 - Add enemy death cleanup and mob-kill tracking through arena-level result handling, not directly from hitboxes.
 - Add victory detection when all contract enemies are dead.
