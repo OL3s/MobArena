@@ -940,6 +940,23 @@ public partial class CompanyRunData : Resource
         EmitSignal(SignalName.RunChanged);
     }
 
+    public void SkipArenaContractAssignments()
+    {
+        EnsureResources();
+        if (TownAssignments.ArenaGladiators.Count <= 0 && ArenaControlAssignments.Count <= 0)
+            return;
+
+        var assignedGladiators = new Array<GladiatorData>(TownAssignments.ArenaGladiators);
+        foreach (var gladiator in assignedGladiators)
+        {
+            if (HasGladiator(gladiator))
+                TownAssignments.MoveToCourtyard(gladiator);
+        }
+
+        ArenaControlAssignments.Clear();
+        EmitSignal(SignalName.RunChanged);
+    }
+
     public bool SyncArenaControlAssignments(Array<LocalInputControllerConfig> controllerSetups)
     {
         EnsureResources();

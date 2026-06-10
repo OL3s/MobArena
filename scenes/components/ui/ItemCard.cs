@@ -20,6 +20,7 @@ public partial class ItemCard : PanelContainer
     private const string TwoHandedTypeIconPath = "res://assets/ui/items/type_two_handed.svg";
     private const string OffHandTypeIconPath = "res://assets/ui/items/type_off_hand.svg";
     private const string UnknownIconPath = "res://assets/ui/icons/question_mark.svg";
+    private const string ItemActionIconStackScenePath = "res://scenes/components/ui/ItemActionIconStack.tscn";
     private const int MaxAttackTypeIcons = 5;
 
     [Signal]
@@ -40,6 +41,7 @@ public partial class ItemCard : PanelContainer
     private Label _goldLabel;
     private Button _buyButton;
     private Button _dragButton;
+    private PackedScene _itemActionIconStackScene;
 
     public override void _Ready()
     {
@@ -55,6 +57,7 @@ public partial class ItemCard : PanelContainer
 
         _conditionIcon.Texture = ResourceLoader.Load<Texture2D>(ConditionIconPath);
         _dragButton.Icon = ResourceLoader.Load<Texture2D>(DragIconPath);
+        _itemActionIconStackScene = ResourceLoader.Load<PackedScene>(ItemActionIconStackScenePath);
         _buyButton.Pressed += OnBuyPressed;
         _dragButton.ButtonDown += OnDragButtonDown;
 
@@ -145,17 +148,17 @@ public partial class ItemCard : PanelContainer
         }
 
         _attackTypeRow.Show();
-        foreach (var effect in effects)
+        var stack = _itemActionIconStackScene?.Instantiate<ItemActionIconStack>();
+        if (stack == null)
         {
-            var icon = new TextureRect
-            {
-                Texture = ResourceLoader.Load<Texture2D>(effect.AttackTypeIconPath),
-                CustomMinimumSize = new Vector2(22f, 22f),
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-                TooltipText = effect.AttackTypeLabel
-            };
-            _attackTypeRow.AddChild(icon);
+            GD.PushError("Item action icon stack scene is missing or has the wrong root script.");
+            return;
         }
+
+        foreach (var effect in effects)
+            stack.AddIcon(ResourceLoader.Load<Texture2D>(effect.AttackTypeIconPath), effect.AttackTypeLabel);
+
+        _attackTypeRow.AddChild(stack);
     }
 
     private static void CollectAttackTypes(ArenaCombatEffectData effect, List<ArenaCombatEffectData> effects, HashSet<ArenaCombatEffectData> visited)

@@ -11,6 +11,9 @@ namespace MobArena.Scenes.TownOverlays;
 public partial class ArenaContractsOverlay : Control
 {
     private const string ArenaDonationOverlayScenePath = "res://scenes/town_overlays/arena_donation_overlay.tscn";
+    private const string FameIconPath = "res://assets/ui/icons/fame.svg";
+    private const float SkipContractFameMultiplier = 0.9f;
+
     [Export]
     public PackedScene ArenaScene { get; set; }
 
@@ -19,6 +22,9 @@ public partial class ArenaContractsOverlay : Control
 
     [Export]
     public PackedScene ControlConfigOverlayScene { get; set; }
+
+    [Export]
+    public PackedScene AssignedGladiatorButtonScene { get; set; }
 
     [Export]
     public Array<ArenaContractData> Contracts { get; private set; } = new();
@@ -30,6 +36,8 @@ public partial class ArenaContractsOverlay : Control
     private HBoxContainer _assignedGladiators;
     private Button _startButton;
     private Button _rerollButton;
+    private Button _skipButton;
+    private Label _skipFameLossLabel;
     private Button _closeButton;
     private CompanyCareerData _careerData;
     private TownPhaseState _phaseState;
@@ -51,6 +59,8 @@ public partial class ArenaContractsOverlay : Control
         _assignedGladiators = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow/Gladiators");
         _startButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/StartButton");
         _rerollButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Header/RerollButton");
+        _skipButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Header/SkipButton");
+        _skipFameLossLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/Header/SkipButton/CenterContainer/Row/FameLossLabel");
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
         var saveNode = SaveNode.Get();
         _runData = saveNode?.CompanyRunData;
@@ -59,6 +69,7 @@ public partial class ArenaContractsOverlay : Control
 
         _startButton.Pressed += OnStartPressed;
         _rerollButton.Pressed += OnRerollPressed;
+        _skipButton.Pressed += OnSkipPressed;
         GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Header/DonateButton").Pressed += OnDonatePressed;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
@@ -186,22 +197,22 @@ public partial class ArenaContractsOverlay : Control
         foreach (var gladiator in assigned)
         {
             if (gladiator != null)
-                _assignedGladiators.AddChild(CreateAssignedGladiatorButton(gladiator));
+                AddAssignedGladiatorButton(gladiator);
         }
     }
 
-    private Button CreateAssignedGladiatorButton(GladiatorData gladiator)
+    private void AddAssignedGladiatorButton(GladiatorData gladiator)
     {
-        var button = new Button
+        var button = AssignedGladiatorButtonScene?.Instantiate<AssignedArenaGladiatorButton>();
+        if (button == null)
         {
-            CustomMinimumSize = new Vector2(48, 48),
-            Icon = gladiator.GetUiIconTexture(),
-            TooltipText = $"Drag {gladiator.GladiatorName}",
-            ExpandIcon = true
-        };
+            GD.PushError("Assigned arena gladiator button scene is missing or has the wrong root script.");
+            return;
+        }
 
-        button.ButtonDown += () => StartGladiatorDrag(gladiator);
-        return button;
+        button.Configure(gladiator);
+        button.DragRequested += StartGladiatorDrag;
+        _assignedGladiators.AddChild(button);
     }
 
     private void RefreshActions()
@@ -213,8 +224,11 @@ public partial class ArenaContractsOverlay : Control
 
 		_startButton.Disabled = !hasContract || assignedCount <= 0;
 		_rerollButton.Disabled = assignedCount <= 0 || _runData == null || _runData.Gold < rerollCost;
+		_skipFameLossLabel.Text = GetSkipContractFameLoss().ToString();
+		_skipButton.Disabled = !CanSkipDailyContract();
 		_rerollButton.Text = $"Reroll {rerollCost}";
 		_rerollButton.TooltipText = $"Spend {rerollCost} gold to reroll all contracts.";
+		_skipButton.TooltipText = GetSkipContractTooltip();
 
 		if (assignedCount <= 0)
 		{
@@ -263,6 +277,71 @@ public partial class ArenaContractsOverlay : Control
 
         BuildContracts();
         RefreshUi();
+    }
+
+    private void OnSkipPressed()
+    {
+        if (!CanSkipDailyContract())
+            return;
+
+        var fameLoss = GetSkipContractFameLoss();
+        var message = $"You will lose\n[img width=30 height=30]{FameIconPath}[/img] {fameLoss}\nfame if you skip the contract.";
+
+        GlobalOverlay.Get()?.ShowGoCancelPopup(
+            "Skip Daily Contract?",
+            message,
+            SkipDailyContract,
+            "Continue",
+            "Cancel",
+            pauseGameUntilClosed: true);
+    }
+
+    private void SkipDailyContract()
+    {
+        if (!CanSkipDailyContract())
+            return;
+
+        var previousFame = _runData.Fame;
+        var fameLoss = GetSkipContractFameLoss();
+        if (!PhaseTransitionController.SkipArenaContract(_phaseState, _runData, SaveNode.Get()?.WeatherState))
+            return;
+
+        if (fameLoss > 0)
+            _runData.LoseFame(fameLoss);
+
+        SaveNode.Get()?.Save();
+        GD.Print($"ArenaContractsOverlay: Skipped daily contract. Fame {previousFame} -> {_runData.Fame}.");
+        QueueFree();
+    }
+
+    private int GetSkipContractFameLoss()
+    {
+        var currentFame = Mathf.Max(0, _runData?.Fame ?? 0);
+        var nextFame = Mathf.FloorToInt(currentFame * SkipContractFameMultiplier);
+        return Mathf.Max(0, currentFame - nextFame);
+    }
+
+    private string GetSkipContractTooltip()
+    {
+        if (_phaseState?.IsChampionDay == true)
+            return "Champion Day contracts cannot be skipped.";
+        if (_careerData?.HasCompletedContracts != true && SaveNode.Get().SkipTutorial != true)
+            return "Complete your first contract before skipping daily contracts.";
+        if (_phaseState?.IsDay() != true)
+            return "Daily contracts can only be skipped during the day.";
+
+        var fameLoss = GetSkipContractFameLoss();
+        return fameLoss > 0
+            ? $"Skip today's arena contract and lose {fameLoss} fame."
+            : "Skip today's arena contract.";
+    }
+
+    private bool CanSkipDailyContract()
+    {
+        return _runData != null
+            && _phaseState?.IsDay() == true
+            && _phaseState.IsChampionDay != true
+            && (_careerData?.HasCompletedContracts == true || SaveNode.Get().SkipTutorial);
     }
 
     private int GetRerollGoldCost()

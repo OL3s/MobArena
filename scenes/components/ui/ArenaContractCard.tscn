@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/ui/ArenaContractCard.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/DifficultyStars.tscn" id="2_difficulty_stars"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/ContractRewardRow.tscn" id="3_reward_row"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mob_panel"]
 bg_color = Color(0.08, 0.075, 0.065, 0.78)
@@ -22,6 +24,7 @@ toggle_mode = true
 alignment = 1
 vertical_icon_alignment = 1
 script = ExtResource("1_script")
+RewardRowScene = ExtResource("3_reward_row")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -40,10 +43,8 @@ mouse_filter = 2
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="DifficultyStars" type="HBoxContainer" parent="MarginContainer/Layout"]
+[node name="DifficultyStars" parent="MarginContainer/Layout" instance=ExtResource("2_difficulty_stars")]
 layout_mode = 2
-theme_override_constants/separation = 2
-alignment = 1
 
 [node name="MobPanel" type="PanelContainer" parent="MarginContainer/Layout"]
 custom_minimum_size = Vector2(0, 132)

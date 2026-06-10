@@ -38,6 +38,24 @@ public static class PhaseTransitionController
         return true;
     }
 
+    public static bool SkipArenaContract(TownPhaseState phaseState, CompanyRunData companyRunData, WeatherState weatherState = null)
+    {
+        if (phaseState == null || !phaseState.IsDay() || phaseState.IsChampionDay)
+        {
+            GD.Print($"PhaseTransitionController: Skip arena contract failed; {DescribeContext(phaseState, companyRunData)}.");
+            return false;
+        }
+
+        ExecuteBuildingWork(companyRunData);
+        companyRunData?.SkipArenaContractAssignments();
+        companyRunData?.ClearActiveArenaContract();
+        phaseState.MoveToNight();
+        weatherState?.ChooseRandomWeather(phaseState);
+        companyRunData?.NotifyRunChanged();
+        GD.Print($"PhaseTransitionController: Skipped arena contract. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
+        return true;
+    }
+
     public static bool AdvanceToNextDay(TownPhaseState phaseState, CompanyRunData companyRunData, WeatherState weatherState = null)
     {
         if (phaseState == null || !phaseState.CanAdvanceToNextDay)

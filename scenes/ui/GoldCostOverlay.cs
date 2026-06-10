@@ -8,6 +8,8 @@ namespace MobArena.Scenes.UI;
 
 public partial class GoldCostOverlay : Control
 {
+    private const string GoldCostLineScenePath = "res://scenes/ui/GoldCostLine.tscn";
+
     private SaveNode _saveNode;
     private CompanyRunData _runData;
     private TownPhaseState _phaseState;
@@ -18,6 +20,7 @@ public partial class GoldCostOverlay : Control
     private VBoxContainer _buildingRows;
     private VBoxContainer _resultRows;
     private Texture2D _goldIcon;
+    private PackedScene _goldCostLineScene;
 
     public override void _Ready()
     {
@@ -32,6 +35,7 @@ public partial class GoldCostOverlay : Control
         _buildingRows = GetNode<VBoxContainer>("CenterContainer/PopupPanel/MarginContainer/Content/CostColumns/BuildingPanel/BuildingRows");
         _resultRows = GetNode<VBoxContainer>("CenterContainer/PopupPanel/MarginContainer/Content/CostColumns/ResultPanel/ResultRows");
         _goldIcon = GetNode<TextureRect>("CenterContainer/PopupPanel/MarginContainer/Content/Header/GoldIcon").Texture;
+        _goldCostLineScene = ResourceLoader.Load<PackedScene>(GoldCostLineScenePath);
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/CloseButton").Pressed += QueueFree;
 
         RefreshUi();
@@ -156,54 +160,28 @@ public partial class GoldCostOverlay : Control
 
     private void AddGoldCostRow(VBoxContainer rows, string label, int cost, Color valueColor)
     {
-        var row = CreateCostRow(label);
-        var valueBox = new HBoxContainer
+        var row = _goldCostLineScene?.Instantiate<GoldCostLine>();
+        if (row == null)
         {
-            CustomMinimumSize = new Vector2(92, 0),
-            Alignment = BoxContainer.AlignmentMode.End
-        };
-        valueBox.AddThemeConstantOverride("separation", 4);
-        valueBox.AddChild(new TextureRect
-        {
-            CustomMinimumSize = new Vector2(20, 20),
-            Texture = _goldIcon,
-            ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-        });
-        valueBox.AddChild(new Label
-        {
-            Text = cost.ToString(),
-            HorizontalAlignment = HorizontalAlignment.Right,
-            Modulate = valueColor
-        });
-        row.AddChild(valueBox);
+            GD.PushError("Gold cost line scene is missing or has the wrong root script.");
+            return;
+        }
+
         rows.AddChild(row);
+        row.Configure(label, cost.ToString(), _goldIcon, valueColor);
     }
 
     private void AddCostRow(VBoxContainer rows, string label, int cost)
     {
-        var row = CreateCostRow(label);
-        row.AddChild(new Label
+        var row = _goldCostLineScene?.Instantiate<GoldCostLine>();
+        if (row == null)
         {
-            Text = cost.ToString(),
-            CustomMinimumSize = new Vector2(80, 0),
-            HorizontalAlignment = HorizontalAlignment.Right
-        });
+            GD.PushError("Gold cost line scene is missing or has the wrong root script.");
+            return;
+        }
+
         rows.AddChild(row);
-    }
-
-    private static HBoxContainer CreateCostRow(string label)
-    {
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", 12);
-
-        row.AddChild(new Label
-        {
-            Text = label,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        });
-
-        return row;
+        row.Configure(label, cost.ToString());
     }
 
     private static void ClearRows(VBoxContainer rows)

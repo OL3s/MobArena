@@ -437,20 +437,19 @@ public partial class RosterYard : Node2D, IPhaseGoldCostSource
 
     private void StartItemDragToken(Texture2D texture, Vector2 viewportPosition)
     {
-        _dragToken = new Sprite2D
+        var scene = ResourceLoader.Load<PackedScene>("res://scenes/components/town/TownDragToken.tscn");
+        var token = scene?.Instantiate<TownDragToken>();
+        if (token == null)
         {
-            Name = "DragToken",
-            Texture = texture,
-            Centered = true,
-            Position = GetDragTokenPosition(viewportPosition),
-            Modulate = new Color(1f, 1f, 1f, 0.82f)
-        };
+            GD.PushError("Town drag token scene is missing or has the wrong root script.");
+            return;
+        }
 
+        token.Name = "DragToken";
+        token.Position = GetDragTokenPosition(viewportPosition);
+        token.Configure(texture, DragTokenHeight);
+        _dragToken = token;
         _lastDragViewportPosition = viewportPosition;
-
-        if (texture != null && texture.GetHeight() > 0)
-            _dragToken.Scale = Vector2.One * (DragTokenHeight / texture.GetHeight());
-
         AddChild(_dragToken);
     }
 

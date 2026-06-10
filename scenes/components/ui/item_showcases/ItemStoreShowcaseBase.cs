@@ -14,11 +14,13 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
     private const string ItemStoreStatRowScenePath = "res://scenes/components/ui/ItemStoreStatRow.tscn";
     private const string ItemStoreStatSectionScenePath = "res://scenes/components/ui/ItemStoreStatSection.tscn";
     private const string ItemStoreDamagePillScenePath = "res://scenes/components/ui/ItemStoreDamagePill.tscn";
+    private const string ItemShowcaseBadgeScenePath = "res://scenes/components/ui/item_showcases/ItemShowcaseBadge.tscn";
     private const int MaxActionPatternIcons = 12;
 
     private PackedScene _itemStoreStatRowScene;
     private PackedScene _itemStoreStatSectionScene;
     private PackedScene _itemStoreDamagePillScene;
+    private PackedScene _itemShowcaseBadgeScene;
     private ItemStoreStatSection _activeStatSection;
 
     public override void _Ready()
@@ -26,6 +28,7 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
         _itemStoreStatRowScene = ResourceLoader.Load<PackedScene>(ItemStoreStatRowScenePath);
         _itemStoreStatSectionScene = ResourceLoader.Load<PackedScene>(ItemStoreStatSectionScenePath);
         _itemStoreDamagePillScene = ResourceLoader.Load<PackedScene>(ItemStoreDamagePillScenePath);
+        _itemShowcaseBadgeScene = ResourceLoader.Load<PackedScene>(ItemShowcaseBadgeScenePath);
     }
 
     public abstract void Configure(ItemData item);
@@ -210,32 +213,19 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
         CollectActionPattern(effect.OnExpireEffect, "On expire", entries, visited);
     }
 
-    private static Control CreateAttackTypeBadge(ArenaCombatEffectData effect, string source)
+    private Control CreateAttackTypeBadge(ArenaCombatEffectData effect, string source)
     {
-        var badge = new VBoxContainer
+        var badge = _itemShowcaseBadgeScene?.Instantiate<ItemShowcaseBadge>();
+        if (badge == null)
         {
-            CustomMinimumSize = new Vector2(48f, 62f),
-            TooltipText = $"{source}: {effect.AttackTypeLabel}"
-        };
-        badge.AddThemeConstantOverride("separation", 2);
+            GD.PushError("Item showcase badge scene is missing or has the wrong root script.");
+            return new Control();
+        }
 
         var texture = string.IsNullOrWhiteSpace(effect.AttackTypeIconPath)
             ? null
             : ResourceLoader.Load<Texture2D>(effect.AttackTypeIconPath);
-        badge.AddChild(new TextureRect
-        {
-            Texture = texture,
-            CustomMinimumSize = new Vector2(34f, 34f),
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            TooltipText = badge.TooltipText
-        });
-        badge.AddChild(new Label
-        {
-            Text = AbbreviateAttackType(effect.AttackTypeLabel),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            ThemeTypeVariation = "HeaderSmall",
-            TooltipText = badge.TooltipText
-        });
+        badge.Configure(texture, AbbreviateAttackType(effect.AttackTypeLabel), $"{source}: {effect.AttackTypeLabel}");
 
         return badge;
     }

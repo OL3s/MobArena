@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/town_overlays/GladiatorMarketCard.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/GladiatorCard.tscn" id="2_gladiator_card"]
+
+[node name="GladiatorMarketCard" type="VBoxContainer"]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+theme_override_constants/separation = 6
+script = ExtResource("1_script")
+GladiatorCardScene = ExtResource("2_gladiator_card")
+
+[node name="ActionRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="GoldIcon" type="TextureRect" parent="ActionRow"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="PriceLabel" type="Label" parent="ActionRow"]
+layout_mode = 2
+vertical_alignment = 1
+
+[node name="HireButton" type="Button" parent="ActionRow"]
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Hire"

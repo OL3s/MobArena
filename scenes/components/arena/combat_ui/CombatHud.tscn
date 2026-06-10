@@ -1,9 +1,11 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/arena/combat_ui/CombatHud.cs" id="1_combat_hud"]
+[ext_resource type="PackedScene" path="res://scenes/components/arena/combat_ui/CombatPlayerCard.tscn" id="2_player_card"]
 
 [node name="CombatHud" type="CanvasLayer"]
 script = ExtResource("1_combat_hud")
+PlayerCardScene = ExtResource("2_player_card")
 
 [node name="TopMargin" type="MarginContainer" parent="."]
 anchors_preset = 10

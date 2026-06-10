@@ -24,10 +24,15 @@ public partial class CodexOverlay : Control
 
     private const string ItemResourceDirectory = "res://resources/items";
     private const string ChampionIconPath = "res://assets/ui/icons/champion.svg";
-    private static readonly Color ExpandedFamilyHeaderColor = new(0.86f, 1f, 0.86f);
-    private static readonly Color CollapsedFamilyHeaderColor = new(0.78f, 0.78f, 0.78f);
-    private static readonly Color EntryGroupPanelColor = new(0.08f, 0.09f, 0.1f, 0.55f);
-    private static readonly Color EntryGroupPanelBorderColor = new(0.3f, 0.34f, 0.32f, 0.85f);
+
+    [Export]
+    public PackedScene GroupPanelScene { get; set; }
+
+    [Export]
+    public PackedScene EntryRowScene { get; set; }
+
+    [Export]
+    public PackedScene StatRowScene { get; set; }
 
     private Button _enemiesButton;
     private Button _itemsButton;
@@ -37,7 +42,7 @@ public partial class CodexOverlay : Control
     private TextureRect _icon;
     private Label _titleLabel;
     private Label _descriptionLabel;
-    private GridContainer _stats;
+    private VBoxContainer _stats;
     private Texture2D _championIcon;
     private Texture2D _twoHandedIcon;
     private readonly Dictionary<ItemTypeCategory, Texture2D> _itemTypeIcons = new();
@@ -57,7 +62,7 @@ public partial class CodexOverlay : Control
         _icon = GetNode<TextureRect>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Icon");
         _titleLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Title");
         _descriptionLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Description");
-        _stats = GetNode<GridContainer>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats");
+        _stats = GetNode<VBoxContainer>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats");
         _championIcon = ResourceLoader.Load<Texture2D>(ChampionIconPath);
         _twoHandedIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/items/type_two_handed.svg");
         LoadItemTypeIcons();
@@ -112,22 +117,6 @@ public partial class CodexOverlay : Control
             AddItemGroup(itemGroup.Key, itemGroup);
     }
 
-    private Button CreateEntryButton(string title, Texture2D icon, System.Action pressedAction)
-    {
-        var button = new Button
-        {
-            CustomMinimumSize = new Vector2(280, 54),
-            Text = title,
-            Icon = icon,
-            ExpandIcon = true,
-            FocusMode = FocusModeEnum.All,
-            Alignment = HorizontalAlignment.Left
-        };
-
-        button.Pressed += pressedAction;
-        return button;
-    }
-
     private IEnumerable<EnemyMobFamilyData> GetSortedEnemyFamilies()
     {
         return _enemyFamilies
@@ -148,57 +137,19 @@ public partial class CodexOverlay : Control
             .ThenBy(enemy => enemy.DisplayName)
             .ToList();
 
-        var groupPanel = new PanelContainer
+        var groupPanel = GroupPanelScene?.Instantiate<CodexGroupPanel>();
+        if (groupPanel == null)
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        var panelStyle = new StyleBoxFlat
-        {
-            BgColor = EntryGroupPanelColor,
-            BorderColor = EntryGroupPanelBorderColor,
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = 8,
-            CornerRadiusTopRight = 8,
-            CornerRadiusBottomRight = 8,
-            CornerRadiusBottomLeft = 8,
-            ContentMarginLeft = 8,
-            ContentMarginTop = 8,
-            ContentMarginRight = 8,
-            ContentMarginBottom = 8
-        };
-        groupPanel.AddThemeStyleboxOverride("panel", panelStyle);
+            GD.PushError("Codex group panel scene is missing or has the wrong root script.");
+            return;
+        }
 
-        var groupContent = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        groupContent.AddThemeConstantOverride("separation", 6);
-        groupPanel.AddChild(groupContent);
-
-        var headerButton = new Button
-        {
-            CustomMinimumSize = new Vector2(280, 46),
-            Text = family.DisplayName,
-            Icon = family.UiIcon,
-            ExpandIcon = true,
-            FocusMode = FocusModeEnum.All,
-            Alignment = HorizontalAlignment.Left
-        };
-        headerButton.AddThemeColorOverride("font_color", isExpanded ? ExpandedFamilyHeaderColor : CollapsedFamilyHeaderColor);
-        headerButton.AddThemeColorOverride("font_hover_color", ExpandedFamilyHeaderColor);
-        headerButton.AddThemeColorOverride("font_focus_color", ExpandedFamilyHeaderColor);
-        headerButton.AddThemeColorOverride("icon_normal_color", isExpanded ? ExpandedFamilyHeaderColor : CollapsedFamilyHeaderColor);
-        headerButton.AddThemeColorOverride("icon_hover_color", ExpandedFamilyHeaderColor);
-        headerButton.AddThemeColorOverride("icon_focus_color", ExpandedFamilyHeaderColor);
-        headerButton.Pressed += () =>
+        groupPanel.Configure(family.DisplayName, family.UiIcon, isExpanded);
+        groupPanel.HeaderPressed += () =>
         {
             _expandedEnemyFamilies[family] = !_expandedEnemyFamilies[family];
             RefreshEntryList();
         };
-        groupContent.AddChild(headerButton);
 
         if (!isExpanded)
         {
@@ -207,38 +158,22 @@ public partial class CodexOverlay : Control
         }
 
         foreach (var enemy in groupEnemies)
-            groupContent.AddChild(CreateEnemyEntryRow(enemy));
+            groupPanel.Content.AddChild(CreateEnemyEntryRow(enemy));
 
         _entryList.AddChild(groupPanel);
     }
 
     private Control CreateEnemyEntryRow(EnemyMobData enemy)
     {
-        var row = new HBoxContainer
+        var row = EntryRowScene?.Instantiate<CodexEntryRow>();
+        if (row == null)
         {
-            CustomMinimumSize = new Vector2(280, 54),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        row.AddThemeConstantOverride("separation", 8);
-
-        var button = CreateEntryButton(enemy.DisplayName, enemy.GetUiIconTexture(), () => ShowEnemy(enemy));
-        button.CustomMinimumSize = new Vector2(0, 54);
-        button.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        row.AddChild(button);
-
-        if (enemy is ChampionMobData)
-        {
-            var championIcon = new TextureRect
-            {
-                CustomMinimumSize = new Vector2(28, 28),
-                Texture = _championIcon,
-                MouseFilter = MouseFilterEnum.Ignore,
-                ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-            };
-            row.AddChild(championIcon);
+            GD.PushError("Codex entry row scene is missing or has the wrong root script.");
+            return new Control();
         }
 
+        row.Configure(enemy.DisplayName, enemy.GetUiIconTexture(), enemy is ChampionMobData ? _championIcon : null);
+        row.EntryPressed += () => ShowEnemy(enemy);
         return row;
     }
 
@@ -261,17 +196,19 @@ public partial class CodexOverlay : Control
             .ThenBy(item => item.DisplayName)
             .ToList();
 
-        var groupPanel = CreateEntryGroupPanel();
-        var groupContent = CreateEntryGroupContent();
-        groupPanel.AddChild(groupContent);
+        var groupPanel = GroupPanelScene?.Instantiate<CodexGroupPanel>();
+        if (groupPanel == null)
+        {
+            GD.PushError("Codex group panel scene is missing or has the wrong root script.");
+            return;
+        }
 
-        var headerButton = CreateGroupHeaderButton(GetItemTypeLabel(itemType), GetItemTypeIcon(itemType), isExpanded);
-        headerButton.Pressed += () =>
+        groupPanel.Configure(GetItemTypeLabel(itemType), GetItemTypeIcon(itemType), isExpanded);
+        groupPanel.HeaderPressed += () =>
         {
             _expandedItemTypes[itemType] = !_expandedItemTypes[itemType];
             RefreshEntryList();
         };
-        groupContent.AddChild(headerButton);
 
         if (!isExpanded)
         {
@@ -280,95 +217,23 @@ public partial class CodexOverlay : Control
         }
 
         foreach (var item in groupItems)
-            groupContent.AddChild(CreateItemEntryRow(item));
+            groupPanel.Content.AddChild(CreateItemEntryRow(item));
 
         _entryList.AddChild(groupPanel);
     }
 
     private Control CreateItemEntryRow(ItemData item)
     {
-        var row = new HBoxContainer
+        var row = EntryRowScene?.Instantiate<CodexEntryRow>();
+        if (row == null)
         {
-            CustomMinimumSize = new Vector2(280, 54),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        row.AddThemeConstantOverride("separation", 8);
-
-        var button = CreateEntryButton(item.DisplayName, item.UiIcon, () => ShowItem(item));
-        button.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        row.AddChild(button);
-
-        if (item is MainHandItemData { IsTwoHanded: true })
-        {
-            var twoHandedIcon = new TextureRect
-            {
-                CustomMinimumSize = new Vector2(28, 28),
-                Texture = _twoHandedIcon,
-                MouseFilter = MouseFilterEnum.Ignore,
-                ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-            };
-            row.AddChild(twoHandedIcon);
+            GD.PushError("Codex entry row scene is missing or has the wrong root script.");
+            return new Control();
         }
 
+        row.Configure(item.DisplayName, item.UiIcon, item is MainHandItemData { IsTwoHanded: true } ? _twoHandedIcon : null);
+        row.EntryPressed += () => ShowItem(item);
         return row;
-    }
-
-    private PanelContainer CreateEntryGroupPanel()
-    {
-        var groupPanel = new PanelContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        var panelStyle = new StyleBoxFlat
-        {
-            BgColor = EntryGroupPanelColor,
-            BorderColor = EntryGroupPanelBorderColor,
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = 8,
-            CornerRadiusTopRight = 8,
-            CornerRadiusBottomRight = 8,
-            CornerRadiusBottomLeft = 8,
-            ContentMarginLeft = 8,
-            ContentMarginTop = 8,
-            ContentMarginRight = 8,
-            ContentMarginBottom = 8
-        };
-        groupPanel.AddThemeStyleboxOverride("panel", panelStyle);
-        return groupPanel;
-    }
-
-    private VBoxContainer CreateEntryGroupContent()
-    {
-        var groupContent = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        groupContent.AddThemeConstantOverride("separation", 6);
-        return groupContent;
-    }
-
-    private Button CreateGroupHeaderButton(string title, Texture2D icon, bool isExpanded)
-    {
-        var headerButton = new Button
-        {
-            CustomMinimumSize = new Vector2(280, 46),
-            Text = title,
-            Icon = icon,
-            ExpandIcon = true,
-            FocusMode = FocusModeEnum.All,
-            Alignment = HorizontalAlignment.Left
-        };
-        headerButton.AddThemeColorOverride("font_color", isExpanded ? ExpandedFamilyHeaderColor : CollapsedFamilyHeaderColor);
-        headerButton.AddThemeColorOverride("font_hover_color", ExpandedFamilyHeaderColor);
-        headerButton.AddThemeColorOverride("font_focus_color", ExpandedFamilyHeaderColor);
-        headerButton.AddThemeColorOverride("icon_normal_color", isExpanded ? ExpandedFamilyHeaderColor : CollapsedFamilyHeaderColor);
-        headerButton.AddThemeColorOverride("icon_hover_color", ExpandedFamilyHeaderColor);
-        headerButton.AddThemeColorOverride("icon_focus_color", ExpandedFamilyHeaderColor);
-        return headerButton;
     }
 
     private void LoadItemTypeIcons()
@@ -472,8 +337,15 @@ public partial class CodexOverlay : Control
 
     private void AddStat(string label, string value)
     {
-        _stats.AddChild(new Label { Text = label });
-        _stats.AddChild(new Label { Text = value, HorizontalAlignment = HorizontalAlignment.Right });
+        var row = StatRowScene?.Instantiate<CodexStatRow>();
+        if (row == null)
+        {
+            GD.PushError("Codex stat row scene is missing or has the wrong root script.");
+            return;
+        }
+
+        row.Configure(label, value);
+        _stats.AddChild(row);
     }
 
     private static IEnumerable<string> GetTresPaths(string directoryPath)

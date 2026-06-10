@@ -7,6 +7,8 @@ namespace MobArena.Scenes.UI;
 
 public partial class CompletedCompaniesOverlay : Control
 {
+    private const string CompletedCompanyRecordButtonScenePath = "res://scenes/ui/CompletedCompanyRecordButton.tscn";
+
     private SaveNode _saveNode;
     private Control _body;
     private Label _noRecordsLabel;
@@ -22,6 +24,7 @@ public partial class CompletedCompaniesOverlay : Control
     private Label _contractsValue;
     private Label _mobsValue;
     private Label _championsValue;
+    private PackedScene _recordButtonScene;
     private int _selectedIndex = -1;
 
     public override void _Ready()
@@ -41,6 +44,7 @@ public partial class CompletedCompaniesOverlay : Control
         _contractsValue = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats/ContractsValue");
         _mobsValue = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats/MobsValue");
         _championsValue = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/Body/DetailsPanel/Details/Stats/ChampionsValue");
+        _recordButtonScene = ResourceLoader.Load<PackedScene>(CompletedCompanyRecordButtonScenePath);
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/CloseButton").Pressed += QueueFree;
 
         RefreshList();
@@ -60,16 +64,15 @@ public partial class CompletedCompaniesOverlay : Control
         for (var index = 0; index < records.Count; index++)
         {
             var record = records[index];
-            var button = new Button
+            var button = _recordButtonScene?.Instantiate<CompletedCompanyRecordButton>();
+            if (button == null)
             {
-                CustomMinimumSize = new Vector2(260, 52),
-                Text = $"{index + 1}. {record.CompanyName}\nFame {record.FinalFame}",
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-                FocusMode = FocusModeEnum.All
-            };
+                GD.PushError("Completed company record button scene is missing or has the wrong root script.");
+                continue;
+            }
 
-            var capturedIndex = index;
-            button.Pressed += () => SelectRecord(capturedIndex);
+            button.Configure(index, record.CompanyName, record.FinalFame);
+            button.RecordPressed += SelectRecord;
             _recordList.AddChild(button);
         }
     }

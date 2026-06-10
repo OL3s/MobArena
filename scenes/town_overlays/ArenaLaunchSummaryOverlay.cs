@@ -3,7 +3,6 @@ using System;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Contracts;
-using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scenes.TownOverlays;
 
@@ -25,6 +24,12 @@ public partial class ArenaLaunchSummaryOverlay : Control
     private Texture2D _touchDeviceIcon;
     private Texture2D _gamepadDeviceIcon;
     private Texture2D _goldIcon;
+
+    [Export]
+    public PackedScene PlayerSummaryScene { get; set; }
+
+    [Export]
+    public PackedScene CostRowScene { get; set; }
 
     public void Configure(ArenaContractData contract, Action startAction, Action resetAction)
     {
@@ -81,82 +86,22 @@ public partial class ArenaLaunchSummaryOverlay : Control
         {
             var gladiator = arenaGladiators[index];
             if (gladiator != null)
-                _playerList.AddChild(CreatePlayerRow(gladiator, index));
+                AddPlayerRow(gladiator, index);
         }
     }
 
-    private Control CreatePlayerRow(GladiatorData gladiator, int index)
+    private void AddPlayerRow(GladiatorData gladiator, int index)
     {
-        var panel = new PanelContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 10);
-        margin.AddThemeConstantOverride("margin_top", 8);
-        margin.AddThemeConstantOverride("margin_right", 10);
-        margin.AddThemeConstantOverride("margin_bottom", 8);
-        panel.AddChild(margin);
-
-        var row = new HBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        row.AddThemeConstantOverride("separation", 6);
-        margin.AddChild(row);
-
-        row.AddChild(CreateIcon(gladiator.GetUiIconTexture(), 38f, gladiator.GladiatorName));
-        row.AddChild(new Label
-        {
-            CustomMinimumSize = new Vector2(110f, 0f),
-            Text = $"P{index + 1} {gladiator.GladiatorName}",
-            VerticalAlignment = VerticalAlignment.Center,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart
-        });
-
-        var equipment = gladiator.Equipment;
-        row.AddChild(CreateItemSlot(equipment?.MainHand, "Main hand"));
-        row.AddChild(CreateItemSlot(equipment?.Armor, "Armor"));
-        row.AddChild(CreateItemSlot(equipment?.OffHand, "Off hand"));
-
         var assignment = _runData?.GetArenaControlAssignment(gladiator);
-        var controllerIcon = GetControllerIcon(assignment);
-        row.AddChild(CreateIcon(controllerIcon, 34f, GetControllerLabel(assignment)));
-
-        return panel;
-    }
-
-    private static Control CreateItemSlot(ItemData item, string slotName)
-    {
-        var slot = new PanelContainer
+        var row = PlayerSummaryScene?.Instantiate<ArenaLaunchPlayerSummary>();
+        if (row == null)
         {
-            CustomMinimumSize = new Vector2(36f, 36f),
-            TooltipText = item == null ? $"{slotName}: Empty" : $"{slotName}: {item.DisplayName}"
-        };
-
-        if (item?.UiIcon != null)
-        {
-            slot.AddChild(CreateIcon(item.UiIcon, 30f, slot.TooltipText));
-        }
-        else
-        {
-            slot.Modulate = new Color(0.65f, 0.65f, 0.65f, 0.85f);
+            GD.PushError("Arena launch player summary scene is missing or has the wrong root script.");
+            return;
         }
 
-        return slot;
-    }
-
-    private static TextureRect CreateIcon(Texture2D texture, float size, string tooltip)
-    {
-        return new TextureRect
-        {
-            CustomMinimumSize = new Vector2(size, size),
-            Texture = texture,
-            TooltipText = tooltip,
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-        };
+        row.Configure(gladiator, index, GetControllerIcon(assignment), GetControllerLabel(assignment));
+        _playerList.AddChild(row);
     }
 
     private Texture2D GetControllerIcon(ArenaControlAssignmentData assignment)
@@ -200,38 +145,14 @@ public partial class ArenaLaunchSummaryOverlay : Control
 
     private void AddCostDetail(string label, string value, bool highlightRed)
     {
-        var row = new HBoxContainer
+        var row = CostRowScene?.Instantiate<PhaseCostRow>();
+        if (row == null)
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        row.AddThemeConstantOverride("separation", 8);
+            GD.PushError("Phase cost row scene is missing or has the wrong root script.");
+            return;
+        }
 
-        row.AddChild(new TextureRect
-        {
-            CustomMinimumSize = new Vector2(24f, 24f),
-            Texture = _goldIcon,
-            MouseFilter = MouseFilterEnum.Ignore,
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-        });
-
-        row.AddChild(new Label
-        {
-            Text = label,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            VerticalAlignment = VerticalAlignment.Center
-        });
-
-        var valueLabel = new Label
-        {
-            Text = value,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        if (highlightRed)
-            valueLabel.AddThemeColorOverride("font_color", new Color(1f, 0.28f, 0.22f));
-
-        row.AddChild(valueLabel);
+        row.Configure(_goldIcon, label, value, highlightRed);
         _costDetails.AddChild(row);
     }
 
