@@ -10,8 +10,6 @@ public partial class ArenaAttackAreaOfEffect : Area2D, IArenaCombatEffect
     private const uint CombatantCollisionMask = 2u;
 
     private readonly Dictionary<ulong, float> _targetTickCooldowns = new();
-    private readonly HashSet<ulong> _hitTargets = new();
-
     private ArenaCombatEffectContext _context;
     private ArenaAttackAreaOfEffectData _effectData;
     private CollisionShape2D _collisionShape;
@@ -137,17 +135,12 @@ public partial class ArenaAttackAreaOfEffect : Area2D, IArenaCombatEffect
         if (!_effectData.UnlimitedHits && _hitsApplied >= _effectData.MaxHits)
             return;
 
-        var targetId = target.GetInstanceId();
-        if (!_effectData.CanHitSameTargetMultipleTimes && _hitTargets.Contains(targetId))
-            return;
-
         var applied = ApplyToTarget(target);
         if (_effectData.Apply?.ResolveDamage(_context.ItemDamage) != null && applied <= 0)
             return;
 
-        _hitTargets.Add(targetId);
         _hitsApplied++;
-        _targetTickCooldowns[targetId] = Mathf.Max(0.01f, _effectData.TickSeconds);
+        _targetTickCooldowns[target.GetInstanceId()] = Mathf.Max(0.01f, _effectData.TickSeconds);
         PrintHitDebug(target, applied);
         ArenaCombatEffectSpawner.TrySpawn(GetParent(), target.GlobalPosition, GlobalRotation, _context, _effectData.OnHitEffect);
         ArenaCombatEffectSpawner.TrySpawnScene(GetParent(), target.GlobalPosition, GlobalRotation, _effectData.OnHitScene);
