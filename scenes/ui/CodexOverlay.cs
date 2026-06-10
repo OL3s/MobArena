@@ -54,6 +54,7 @@ public partial class CodexOverlay : Control
 
     public override void _Ready()
     {
+        GD.Print("CodexOverlay: Opened.");
         _enemiesButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/CategoryRow/EnemiesButton");
         _itemsButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/CategoryRow/ItemsButton");
         _entryList = GetNode<VBoxContainer>("CenterContainer/PopupPanel/MarginContainer/Content/Body/ListPanel/ScrollContainer/EntryList");
@@ -88,11 +89,14 @@ public partial class CodexOverlay : Control
             if (item != null)
                 _items.Add(item);
         }
+
+        GD.Print($"CodexOverlay: Loaded {_enemyFamilies.Count} enemy families and {_items.Count} items.");
     }
 
     private void SelectCategory(CodexCategory category)
     {
         _category = category;
+        GD.Print($"CodexOverlay: Selected {category} category.");
         _enemiesButton.ButtonPressed = category == CodexCategory.Enemies;
         _itemsButton.ButtonPressed = category == CodexCategory.Items;
         RefreshEntryList();
@@ -107,12 +111,14 @@ public partial class CodexOverlay : Control
         if (_category == CodexCategory.Enemies)
         {
             _emptyListLabel.Visible = _enemyFamilies.Count <= 0;
+            GD.Print($"CodexOverlay: Refreshing enemies list with {_enemyFamilies.Count} families.");
             foreach (var enemyFamily in GetSortedEnemyFamilies())
                 AddEnemyGroup(enemyFamily);
             return;
         }
 
         _emptyListLabel.Visible = _items.Count <= 0;
+        GD.Print($"CodexOverlay: Refreshing items list with {_items.Count} items.");
         foreach (var itemGroup in GetSortedItemGroups())
             AddItemGroup(itemGroup.Key, itemGroup);
     }
@@ -148,6 +154,7 @@ public partial class CodexOverlay : Control
         groupPanel.HeaderPressed += () =>
         {
             _expandedEnemyFamilies[family] = !_expandedEnemyFamilies[family];
+            GD.Print($"CodexOverlay: {(_expandedEnemyFamilies[family] ? "Expanded" : "Collapsed")} enemy group '{family.DisplayName}' ({groupEnemies.Count} entries).");
             RefreshEntryList();
         };
 
@@ -158,7 +165,7 @@ public partial class CodexOverlay : Control
         }
 
         foreach (var enemy in groupEnemies)
-            groupPanel.Content.AddChild(CreateEnemyEntryRow(enemy));
+            groupPanel.Content?.AddChild(CreateEnemyEntryRow(enemy));
 
         _entryList.AddChild(groupPanel);
     }
@@ -207,6 +214,7 @@ public partial class CodexOverlay : Control
         groupPanel.HeaderPressed += () =>
         {
             _expandedItemTypes[itemType] = !_expandedItemTypes[itemType];
+            GD.Print($"CodexOverlay: {(_expandedItemTypes[itemType] ? "Expanded" : "Collapsed")} item group '{GetItemTypeLabel(itemType)}' ({groupItems.Count} entries).");
             RefreshEntryList();
         };
 
@@ -217,7 +225,7 @@ public partial class CodexOverlay : Control
         }
 
         foreach (var item in groupItems)
-            groupPanel.Content.AddChild(CreateItemEntryRow(item));
+            groupPanel.Content?.AddChild(CreateItemEntryRow(item));
 
         _entryList.AddChild(groupPanel);
     }
@@ -272,6 +280,7 @@ public partial class CodexOverlay : Control
 
     private void ShowEnemy(MobData enemy)
     {
+        GD.Print($"CodexOverlay: Showing enemy '{enemy.DisplayName}'.");
         SetDetailsVisible(true);
         _icon.Texture = enemy.GetUiIconTexture();
         _titleLabel.Text = enemy.DisplayName;
@@ -295,6 +304,7 @@ public partial class CodexOverlay : Control
 
     private void ShowItem(ItemData item)
     {
+        GD.Print($"CodexOverlay: Showing item '{item.DisplayName}'.");
         SetDetailsVisible(true);
         _icon.Texture = item.UiIcon;
         _titleLabel.Text = item.DisplayName;

@@ -211,11 +211,7 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
         else
         {
             _modeButtons.AddChild(CreateModeHeader("Training Focus"));
-            AddTrainingModeButton("Overall", CompanyRunData.TrainingFocus.Overall);
-            AddTrainingModeButton("Strength", CompanyRunData.TrainingFocus.Strength);
-            AddTrainingModeButton("Agility", CompanyRunData.TrainingFocus.Agility);
-            AddTrainingModeButton("Vitality", CompanyRunData.TrainingFocus.Vitality);
-            AddTrainingModeButton("Endurance", CompanyRunData.TrainingFocus.Endurance);
+            AddTrainingFocusDropdown();
         }
 
         _refreshingModeButtons = false;
@@ -243,16 +239,44 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
         _modeButtons.AddChild(button);
     }
 
-    private void AddTrainingModeButton(string label, CompanyRunData.TrainingFocus focus)
+    private void AddTrainingFocusDropdown()
     {
-        var isSelected = (_runData?.CurrentTrainingFocus ?? CompanyRunData.TrainingFocus.Overall) == focus;
-        var button = CreateModeButton(label, isSelected);
-        button.Pressed += () =>
+        var dropdown = new OptionButton
         {
-            if (!_refreshingModeButtons)
-                _runData?.SetTrainingFocus(focus);
+            CustomMinimumSize = new Vector2(0f, 44f),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            FocusMode = FocusModeEnum.None
         };
-        _modeButtons.AddChild(button);
+
+        AddTrainingFocusOption(dropdown, "Overall", CompanyRunData.TrainingFocus.Overall);
+        AddTrainingFocusOption(dropdown, "Strength", CompanyRunData.TrainingFocus.Strength);
+        AddTrainingFocusOption(dropdown, "Agility", CompanyRunData.TrainingFocus.Agility);
+        AddTrainingFocusOption(dropdown, "Vitality", CompanyRunData.TrainingFocus.Vitality);
+        AddTrainingFocusOption(dropdown, "Endurance", CompanyRunData.TrainingFocus.Endurance);
+
+        var selectedFocus = _runData?.CurrentTrainingFocus ?? CompanyRunData.TrainingFocus.Overall;
+        for (var index = 0; index < dropdown.ItemCount; index++)
+        {
+            if (dropdown.GetItemId(index) == (int)selectedFocus)
+            {
+                dropdown.Select(index);
+                break;
+            }
+        }
+
+        dropdown.ItemSelected += index =>
+        {
+            if (_refreshingModeButtons)
+                return;
+
+            _runData?.SetTrainingFocus((CompanyRunData.TrainingFocus)dropdown.GetItemId((int)index));
+        };
+        _modeButtons.AddChild(dropdown);
+    }
+
+    private static void AddTrainingFocusOption(OptionButton dropdown, string label, CompanyRunData.TrainingFocus focus)
+    {
+        dropdown.AddItem(label, (int)focus);
     }
 
     private static Button CreateModeButton(string label, bool selected)
@@ -390,6 +414,12 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
 
     private void AddAttributeRow(Container parent, GladiatorData gladiator, GladiatorLevelData.AttributeKind attribute, bool useDefaultFontSize = false)
     {
+        if (parent == null)
+        {
+            GD.PushError("Building overlay attribute row parent is missing.");
+            return;
+        }
+
         var scene = ResourceLoader.Load<PackedScene>(AttributeProgressScenePath);
         if (scene?.Instantiate() is not AttributeProgressDisplay display)
             return;
@@ -431,6 +461,12 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
 
     private static void AddValueRow(Container parent, string label, float value, float maxValue, string text, float gainValue = 0f)
     {
+        if (parent == null)
+        {
+            GD.PushError("Building overlay value row parent is missing.");
+            return;
+        }
+
         var scene = ResourceLoader.Load<PackedScene>("res://scenes/components/panels/BuildingAttributeBar.tscn");
         var row = scene?.Instantiate<BuildingAttributeBar>();
         if (row == null)

@@ -150,6 +150,7 @@ public partial class PlayerCombatant : ArenaCombatant
     protected override void OnCombatantStateChanged(ArenaCombatantState state)
     {
         RefreshStateLabel();
+        RefreshDebugStateModulate();
     }
 
     private void ApplySettingsDeadzone()
@@ -662,6 +663,12 @@ public partial class PlayerCombatant : ArenaCombatant
         ApplyArmorVisual();
         ApplyHandVisuals();
         ApplyHeldItemVisuals();
+        RefreshDebugStateModulate();
+    }
+
+    private void RefreshDebugStateModulate()
+    {
+        ApplyDebugStateModulate(_body, _armor, _leftHand, _rightHand, _mainHandItem, _offHandItem);
     }
 
     private void ApplyArmorVisual()

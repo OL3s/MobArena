@@ -13,7 +13,7 @@ public partial class BuildingGladiatorRow : PanelContainer
     private VBoxContainer _details;
     private GladiatorData _gladiator;
 
-    public VBoxContainer Details => _details;
+    public VBoxContainer Details => _details ??= GetNodeOrNull<VBoxContainer>("MarginContainer/Row/Content/Details");
 
     public override void _Ready()
     {

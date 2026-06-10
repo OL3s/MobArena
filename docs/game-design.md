@@ -42,7 +42,7 @@ Outside combat, the player makes business decisions: who to recruit, who to trai
 
 The player must balance upkeep costs against income from arena fights. A larger roster gives more backup options, but too many gladiators increase ongoing costs and can drain gold between fights.
 
-Gladiators recover through explicit Day/Night phase transitions instead of continuous time. The Thermae can speed up health or exhaustion recovery for gold, but stamina cannot be restored by treatment buildings.
+Gladiators recover through explicit Day/Night phase transitions instead of continuous time. The Recovery Bay can speed up health or exhaustion recovery for gold, but stamina cannot be restored by treatment buildings.
 
 Gladiators have one management condition value from 0-10: exhaustion. Exhaustion represents readiness after accumulated fatigue from repeated use and training; it should drop when a gladiator is used too often and recover through phase transitions, encouraging roster rotation. Values at 5 or above apply no cap penalty; below 5, the cap multiplier scales from 1 down to 0 as exhaustion approaches 0. Health still cannot exceed the gladiator's base max health.
 

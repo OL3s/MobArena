@@ -11,18 +11,23 @@ public partial class SettingsOverlay : Control
 	private const int SoundCategory = 1;
 	private const int GameplayCategory = 2;
 	private const int ControlsCategory = 3;
-	private const int SaveDataCategory = 4;
+	private const int DevCategory = 4;
+	private const int SaveDataCategory = 5;
 
 	private Button _videoButton;
 	private Button _soundButton;
 	private Button _gameplayButton;
 	private Button _controlsButton;
+	private Button _devButton;
 	private Button _saveDataButton;
 	private Label _categoryTitle;
 	private Control _gameplaySettings;
 	private Control _controlsSettings;
+	private Control _devSettings;
 	private Control _saveDataSettings;
 	private CheckBox _debugCheckBox;
+	private CheckBox _isDemoCheckBox;
+	private CheckBox _showRuntimeTagsCheckBox;
 	private CheckBox _skipTutorialCheckBox;
 	private Label _lowHealthValueLabel;
 	private SpinBox _lowHealthSpinBox;
@@ -37,13 +42,17 @@ public partial class SettingsOverlay : Control
 		_soundButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/SoundButton");
 		_gameplayButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/GameplayButton");
 		_controlsButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/ControlsButton");
+		_devButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/DevButton");
 		_saveDataButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList/SaveDataButton");
 		_categoryTitle = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/CategoryTitle");
 		_gameplaySettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings");
 		_controlsSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/ControlsSettings");
+		_devSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings");
 		_saveDataSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings");
 		_placeholderLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/PlaceholderLabel");
-		_debugCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/DebugCheckBox");
+		_debugCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings/DebugCheckBox");
+		_isDemoCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings/IsDemoCheckBox");
+		_showRuntimeTagsCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings/ShowRuntimeTagsCheckBox");
 		_skipTutorialCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/SkipTutorialCheckBox");
 		_lowHealthValueLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthValueLabel");
 		_lowHealthSpinBox = GetNode<SpinBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/LowHealthRow/LowHealthSpinBox");
@@ -54,8 +63,11 @@ public partial class SettingsOverlay : Control
 		_soundButton.Pressed += () => ShowCategory(SoundCategory);
 		_gameplayButton.Pressed += () => ShowCategory(GameplayCategory);
 		_controlsButton.Pressed += () => ShowCategory(ControlsCategory);
+		_devButton.Pressed += () => ShowCategory(DevCategory);
 		_saveDataButton.Pressed += () => ShowCategory(SaveDataCategory);
 		_debugCheckBox.Toggled += OnDebugToggled;
+		_isDemoCheckBox.Toggled += OnIsDemoToggled;
+		_showRuntimeTagsCheckBox.Toggled += OnShowRuntimeTagsToggled;
 		_skipTutorialCheckBox.Toggled += OnSkipTutorialToggled;
 		_lowHealthSpinBox.ValueChanged += OnLowHealthWarningChanged;
 		_arenaMoveDeadzoneSpinBox.ValueChanged += OnArenaMoveDeadzoneChanged;
@@ -74,8 +86,9 @@ public partial class SettingsOverlay : Control
 	{
 		_gameplaySettings.Visible = category == GameplayCategory;
 		_controlsSettings.Visible = category == ControlsCategory;
+		_devSettings.Visible = category == DevCategory;
 		_saveDataSettings.Visible = category == SaveDataCategory;
-		_placeholderLabel.Visible = category != GameplayCategory && category != ControlsCategory && category != SaveDataCategory;
+		_placeholderLabel.Visible = category != GameplayCategory && category != ControlsCategory && category != DevCategory && category != SaveDataCategory;
 
 		_categoryTitle.Text = category switch
 		{
@@ -83,6 +96,7 @@ public partial class SettingsOverlay : Control
 			SoundCategory => "Sound",
 			GameplayCategory => "Gameplay",
 			ControlsCategory => "Controls",
+			DevCategory => "Dev",
 			SaveDataCategory => "Save Data",
 			_ => "Video"
 		};
@@ -98,6 +112,7 @@ public partial class SettingsOverlay : Control
 		_soundButton.Disabled = category == SoundCategory;
 		_gameplayButton.Disabled = category == GameplayCategory;
 		_controlsButton.Disabled = category == ControlsCategory;
+		_devButton.Disabled = category == DevCategory;
 		_saveDataButton.Disabled = category == SaveDataCategory;
 	}
 
@@ -106,6 +121,8 @@ public partial class SettingsOverlay : Control
 		_refreshingUi = true;
 		var settingsConfig = SaveNode.Get().SettingsConfig;
 		_debugCheckBox.ButtonPressed = settingsConfig.DebugEnabled;
+		_isDemoCheckBox.ButtonPressed = settingsConfig.IsDemo;
+		_showRuntimeTagsCheckBox.ButtonPressed = settingsConfig.ShowRuntimeTags;
 		_skipTutorialCheckBox.ButtonPressed = settingsConfig.SkipTutorial;
 		_lowHealthSpinBox.Value = Mathf.RoundToInt(settingsConfig.LowHealthWarningRatio * 100f);
 		_lowHealthValueLabel.Text = $"{_lowHealthSpinBox.Value:0}%";
@@ -124,6 +141,32 @@ public partial class SettingsOverlay : Control
 			return;
 
 		settingsConfig.DebugEnabled = enabled;
+		RefreshSettingsUi();
+	}
+
+	private void OnIsDemoToggled(bool enabled)
+	{
+		if (_refreshingUi)
+			return;
+
+		var settingsConfig = SaveNode.Get().SettingsConfig;
+		if (settingsConfig == null)
+			return;
+
+		settingsConfig.IsDemo = enabled;
+		RefreshSettingsUi();
+	}
+
+	private void OnShowRuntimeTagsToggled(bool enabled)
+	{
+		if (_refreshingUi)
+			return;
+
+		var settingsConfig = SaveNode.Get().SettingsConfig;
+		if (settingsConfig == null)
+			return;
+
+		settingsConfig.ShowRuntimeTags = enabled;
 		RefreshSettingsUi();
 	}
 

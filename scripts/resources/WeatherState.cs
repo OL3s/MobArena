@@ -77,7 +77,7 @@ public partial class WeatherState : Resource
         return CurrentWeather switch
         {
             WeatherVisual.Sun => "Sun: recovery -25%",
-            WeatherVisual.Rain => "Rain: training -25%, Thermae/Training Hall costs +25%",
+            WeatherVisual.Rain => "Rain: training -25%, Recovery Bay/Training Hall costs +25%",
             _ => "Cloudy: normal recovery, training, and costs"
         };
     }

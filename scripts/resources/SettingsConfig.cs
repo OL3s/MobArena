@@ -8,6 +8,12 @@ public partial class SettingsConfig : Resource
     public bool DebugEnabled { get; set; } = true;
 
 	[Export]
+	public bool IsDemo { get; set; } = false;
+
+	[Export]
+	public bool ShowRuntimeTags { get; set; } = false;
+
+	[Export]
 	public bool SkipTutorial { get; set; }
 
 	[Export(PropertyHint.Range, "0.1,1,0.05")]

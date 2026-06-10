@@ -83,6 +83,7 @@ public partial class EnemyCombatant : ArenaCombatant
     protected override void OnCombatantStateChanged(ArenaCombatantState state)
     {
         RefreshStateLabel();
+        RefreshDebugStateModulate();
     }
 
     private void Refresh()
@@ -92,6 +93,7 @@ public partial class EnemyCombatant : ArenaCombatant
 
         ApplyLookVisual(_body, MobData?.GetBodyForwardTexture(), MobData?.GetBodyBackTexture(), DisplayHeight);
         ApplyHandVisuals();
+        RefreshDebugStateModulate();
 
         _nameLabel.Text = MobData?.DisplayName ?? "Enemy";
         RefreshHealthLabel();
@@ -133,6 +135,11 @@ public partial class EnemyCombatant : ArenaCombatant
         ApplyDirectionalVisual(_leftHand, handTexture, HandDisplayHeight, new Vector2(-24f, -16f));
         ApplyDirectionalVisual(_rightHand, handTexture, HandDisplayHeight, new Vector2(24f, -16f));
         ApplyHandDrawOrder();
+    }
+
+    private void RefreshDebugStateModulate()
+    {
+        ApplyDebugStateModulate(_body, _leftHand, _rightHand);
     }
 
     private void ApplyHandDrawOrder()
