@@ -2,6 +2,8 @@
 
 This document explains the current resource-driven arena combat action system.
 
+For practical authoring steps, see `docs/authoring-attacks.md` and `docs/authoring-player-items.md`. This file focuses on architecture and runtime behavior.
+
 ## Goal
 
 Arena combat should avoid hardcoding weapon, mob, projectile, thrown-item, or AoE behavior directly in `PlayerCombatant` or `EnemyCombatant`.
@@ -111,9 +113,11 @@ Current fields:
 
 - `DisplayName`
 - `Effect`
+- `Buildup`
 - `WindupSeconds`
 - `StaminaCost`
 - `SpawnDistance`
+- `MaxChainDepth`
 
 It answers:
 
@@ -166,6 +170,8 @@ Current exported fields:
 
 - `ScenePath`
 - `Apply`
+- `OnHitEffect`
+- `OnExpireEffect`
 - `OnHitScenePath`
 - `OnExpireScenePath`
 - `LifetimeSeconds`
