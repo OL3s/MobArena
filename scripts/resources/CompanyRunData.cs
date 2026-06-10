@@ -36,8 +36,7 @@ public partial class CompanyRunData : Resource
     private const float TrainingAttributeExp = 40f;
     private const float PhaseRestExhaustionRecovery = 2f;
     private const float ArenaFightExhaustionCost = 3f;
-    private const int FameDonationBaseGoldCost = 20;
-    private const int FameDonationCostGrowthPerFame = 5;
+    private const int FameDonationGoldCostPerFame = 20;
     private const int BuildingUpgradeBaseGoldCost = 50;
     private const int BuildingUpgradeCostGrowth = 50;
     private static readonly WeatherEffectConfig NeutralWeatherEffects = WeatherEffectConfig.Create(1f, 1f, 1f);
@@ -343,11 +342,7 @@ public partial class CompanyRunData : Resource
         if (fameAmount <= 0)
             return 0;
 
-        var cost = 0;
-        for (var index = 0; index < fameAmount; index++)
-            cost += FameDonationBaseGoldCost + ((Fame + index) * FameDonationCostGrowthPerFame);
-
-        return cost;
+        return fameAmount * FameDonationGoldCostPerFame;
     }
 
     public bool CanDonateForFame(int fameAmount)

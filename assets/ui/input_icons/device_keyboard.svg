@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Keyboard device icon</title>
+  <rect x="13" y="33" width="102" height="62" rx="9" fill="#1F2937" stroke="#E8EDF2" stroke-width="7"/>
+  <rect x="24" y="45" width="10" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="39" y="45" width="10" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="54" y="45" width="10" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="69" y="45" width="10" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="84" y="45" width="10" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="99" y="45" width="7" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="24" y="61" width="10" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="39" y="61" width="10" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="54" y="61" width="10" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="69" y="61" width="10" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="84" y="61" width="10" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="99" y="61" width="7" height="9" rx="2" fill="#E8EDF2"/>
+  <rect x="24" y="77" width="15" height="8" rx="2" fill="#94A3B8"/>
+  <rect x="44" y="77" width="40" height="8" rx="2" fill="#94A3B8"/>
+  <rect x="89" y="77" width="17" height="8" rx="2" fill="#94A3B8"/>
+</svg>

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://blcqpdm6gdv33"
-path="res://.godot/imported/device_pc.png-4d716946e765139b2c566cad6fc518d5.ctex"
+uid="uid://d05obsaxr82c1"
+path="res://.godot/imported/device_mouse.svg-4bf0343e81af08864b80355aae2e77bf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/input_icons/device_pc.png"
-dest_files=["res://.godot/imported/device_pc.png-4d716946e765139b2c566cad6fc518d5.ctex"]
+source_file="res://assets/ui/input_icons/device_mouse.svg"
+dest_files=["res://.godot/imported/device_mouse.svg-4bf0343e81af08864b80355aae2e77bf.ctex"]
 
 [params]
 
@@ -38,3 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

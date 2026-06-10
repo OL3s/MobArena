@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://o4di2nmng7ro"
-path="res://.godot/imported/device_phone.png-9bd7d0045871aa2f93e7b891350df80a.ctex"
+uid="uid://boxl4yjyb154v"
+path="res://.godot/imported/device_keyboard.svg-10e0177409a4e984c8fba85008b64b36.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/input_icons/device_phone.png"
-dest_files=["res://.godot/imported/device_phone.png-9bd7d0045871aa2f93e7b891350df80a.ctex"]
+source_file="res://assets/ui/input_icons/device_keyboard.svg"
+dest_files=["res://.godot/imported/device_keyboard.svg-10e0177409a4e984c8fba85008b64b36.ctex"]
 
 [params]
 
@@ -38,3 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

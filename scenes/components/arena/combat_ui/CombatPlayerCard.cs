@@ -146,13 +146,12 @@ public partial class CombatPlayerCard : PanelContainer
 
     private static Texture2D GetControllerIcon(ArenaControlAssignmentData assignment)
     {
-        var inputConfig = LocalInputConfig.Get();
         return assignment?.ControllerKind switch
         {
-            LocalInputControllerConfig.ControllerKind.Keyboard => inputConfig?.EnterIcon,
-            LocalInputControllerConfig.ControllerKind.Mouse => inputConfig?.MouseIcon,
-            LocalInputControllerConfig.ControllerKind.Touch => inputConfig?.PhoneIcon,
-            LocalInputControllerConfig.ControllerKind.Gamepad => inputConfig?.XboxAIcon,
+            LocalInputControllerConfig.ControllerKind.Keyboard => ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_keyboard.svg"),
+            LocalInputControllerConfig.ControllerKind.Mouse => ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_mouse.svg"),
+            LocalInputControllerConfig.ControllerKind.Touch => ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_phone.svg"),
+            LocalInputControllerConfig.ControllerKind.Gamepad => ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_console.svg"),
             _ => null
         };
     }

@@ -290,7 +290,6 @@ public partial class ArenaContractsOverlay : Control
         if (settings != null)
             settings.ArenaAutoAssignCount = Mathf.Clamp(selectedId, 1, LocalInputConfig.MaxLocalPlayers);
 
-        SaveNode.Get()?.Save();
         RefreshActions();
     }
 

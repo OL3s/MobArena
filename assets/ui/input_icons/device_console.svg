@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Console device icon</title>
+  <path d="M28 45c5-11 15-15 29-10l14 5 14-5c14-5 24-1 29 10 5 12 8 32 4 44-3 9-10 14-18 13-9-1-15-12-23-17H51c-8 5-14 16-23 17-8 1-15-4-18-13-4-12-1-32 4-44z" fill="#1F2937" stroke="#E8EDF2" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M37 58v18M28 67h18" stroke="#E8EDF2" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="88" cy="62" r="5" fill="#E8EDF2"/>
+  <circle cx="102" cy="72" r="5" fill="#E8EDF2"/>
+  <circle cx="82" cy="78" r="4" fill="#94A3B8"/>
+  <circle cx="96" cy="88" r="4" fill="#94A3B8"/>
+  <path d="M57 54h18" stroke="#94A3B8" stroke-width="5" stroke-linecap="round"/>
+</svg>

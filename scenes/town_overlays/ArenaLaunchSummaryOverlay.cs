@@ -49,10 +49,10 @@ public partial class ArenaLaunchSummaryOverlay : Control
         _runData = saveNode?.CompanyRunData;
         _phaseState = saveNode?.TownPhaseState;
         _localInputConfig = LocalInputConfig.Get();
-        _keyboardDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_pc.png");
-        _mouseDeviceIcon = _localInputConfig?.MouseIcon;
-        _touchDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_phone.png");
-        _gamepadDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_console.png");
+        _keyboardDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_keyboard.svg");
+        _mouseDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_mouse.svg");
+        _touchDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_phone.svg");
+        _gamepadDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_console.svg");
         _goldIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/gold.svg");
 
         _startButton.Pressed += OnStartPressed;
