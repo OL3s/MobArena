@@ -35,6 +35,8 @@ public partial class ArenaCombatState : Resource
 
     private readonly Dictionary<StatusEffectType, float> _statusValues = new();
     private float _poisonTickAccumulator;
+    private int _minimumHealthFloor;
+    private bool _damageLocked;
 
     public bool IsDead => CurrentHealth <= 0;
 
@@ -48,6 +50,8 @@ public partial class ArenaCombatState : Resource
         StatusProfile = statusProfile ?? new CombatantStatusProfileData();
         _statusValues.Clear();
         _poisonTickAccumulator = 0f;
+        _minimumHealthFloor = 0;
+        _damageLocked = false;
         EmitSignal(SignalName.HealthChanged, CurrentHealth, MaxHealth);
     }
 
@@ -58,17 +62,27 @@ public partial class ArenaCombatState : Resource
 
     public int ApplyRawDamage(int amount)
     {
-        if (IsDead || amount <= 0)
+        if (_damageLocked || IsDead || amount <= 0)
             return 0;
 
         var previousHealth = CurrentHealth;
-        CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
+        CurrentHealth = Mathf.Max(_minimumHealthFloor, CurrentHealth - amount);
         EmitHealthChangedIfNeeded(previousHealth);
 
         if (CurrentHealth <= 0 && previousHealth > 0)
             EmitSignal(SignalName.Died);
 
         return previousHealth - CurrentHealth;
+    }
+
+    public void SetDamageLocked(bool locked)
+    {
+        _damageLocked = locked;
+    }
+
+    public void SetDeathPreventionEnabled(bool enabled)
+    {
+        _minimumHealthFloor = enabled && CurrentHealth > 0 ? 1 : 0;
     }
 
     public int GetMitigatedDamage(CombatDamageData damage)

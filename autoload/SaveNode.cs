@@ -29,6 +29,9 @@ public partial class SaveNode : Node
 	private string _pendingCompanyLossText;
 
 	public event Action RuntimeStateResetting;
+	public event Action DevModeChanged;
+	public event Action RuntimeTagsChanged;
+	public event Action TutorialModeChanged;
 
     [Export]
     public bool HasCompany { get; set; }
@@ -54,16 +57,63 @@ public partial class SaveNode : Node
 	[Export]
 	public SettingsConfig SettingsConfig { get; private set; } = new();
 
-	public bool DebugEnabled => SettingsConfig?.DebugEnabled == true;
+	public bool DevEnabled => SettingsConfig?.DevEnabled == true;
 	public bool IsDemo => SettingsConfig?.IsDemo == true;
 	public bool IsDemoComplete => IsDemo && (CompanyCareerData?.ChampionsDefeated ?? 0) > 0;
 	public bool SkipTutorial => SettingsConfig?.SkipTutorial == true;
 	public bool HasCompletedContractsForProgression => SkipTutorial || CompanyCareerData?.HasCompletedContracts == true;
+	public bool HasUnlockedRecoveryBayForProgression => SkipTutorial || (CompanyCareerData?.ContractsCompleted ?? 0) >= 2;
+	public bool HasUnlockedTrainingHallForProgression => SkipTutorial || (CompanyCareerData?.ContractsCompleted ?? 0) >= 3;
 	public bool HasReachedSpecialtyBuildingsForProgression => SkipTutorial || CompanyCareerData?.HasReachedSpecialtyBuildings == true;
 
 	public bool CanStartArenaContract()
 	{
 		return !IsDemoComplete;
+	}
+
+	public void SetDevEnabled(bool devEnabled)
+	{
+		SettingsConfig ??= new SettingsConfig();
+		if (SettingsConfig.DevEnabled == devEnabled)
+			return;
+
+		SettingsConfig.DevEnabled = devEnabled;
+		GD.Print($"SaveNode: Dev mode {(devEnabled ? "enabled" : "disabled")}.");
+		DevModeChanged?.Invoke();
+		RuntimeTagsChanged?.Invoke();
+	}
+
+	public void SetIsDemo(bool isDemo)
+	{
+		SettingsConfig ??= new SettingsConfig();
+		if (SettingsConfig.IsDemo == isDemo)
+			return;
+
+		SettingsConfig.IsDemo = isDemo;
+		GD.Print($"SaveNode: Demo mode {(isDemo ? "enabled" : "disabled")}.");
+		RuntimeTagsChanged?.Invoke();
+	}
+
+	public void SetShowRuntimeTags(bool showRuntimeTags)
+	{
+		SettingsConfig ??= new SettingsConfig();
+		if (SettingsConfig.ShowRuntimeTags == showRuntimeTags)
+			return;
+
+		SettingsConfig.ShowRuntimeTags = showRuntimeTags;
+		GD.Print($"SaveNode: Runtime tags {(showRuntimeTags ? "shown" : "hidden")}.");
+		RuntimeTagsChanged?.Invoke();
+	}
+
+	public void SetSkipTutorial(bool skipTutorial)
+	{
+		SettingsConfig ??= new SettingsConfig();
+		if (SettingsConfig.SkipTutorial == skipTutorial)
+			return;
+
+		SettingsConfig.SkipTutorial = skipTutorial;
+		GD.Print($"SaveNode: Tutorial mode {(skipTutorial ? "disabled" : "enabled")}.");
+		TutorialModeChanged?.Invoke();
 	}
 
 	public void QueueCompanyLossNotification(string title, string text)
@@ -94,7 +144,7 @@ public partial class SaveNode : Node
 
 	private void ApplyDebugStartingCondition()
 	{
-		if (!DebugEnabled || CompanyRunData?.Gladiators == null || CompanyRunData.Gladiators.Count <= 0)
+		if (!DevEnabled || CompanyRunData?.Gladiators == null || CompanyRunData.Gladiators.Count <= 0)
 			return;
 
 		var gladiator = CompanyRunData.Gladiators[0];
@@ -431,9 +481,15 @@ public partial class SaveNode : Node
 
 	private Error RetireCompanyCore()
 	{
-		GD.Print("SaveNode: Retiring current company.");
 		if (HasCompany)
+		{
+			GD.Print("SaveNode: Retiring current company.");
 			TryAddCurrentCompanyToCompletedHistory();
+		}
+		else
+		{
+			GD.Print("SaveNode: Retire company requested, but no active company exists in save data.");
+		}
 
 		var error = DeleteFileIfExists(CompanyLogoPath);
 		if (error != Error.Ok)
@@ -478,9 +534,15 @@ public partial class SaveNode : Node
 
 	public Error ForceRetireCurrentCompany()
 	{
-		GD.Print("SaveNode: Force-retiring current company.");
 		if (HasCompany)
+		{
+			GD.Print("SaveNode: Force-retiring current company.");
 			TryAddCurrentCompanyToCompletedHistory();
+		}
+		else
+		{
+			GD.Print("SaveNode: Force-retire requested, but no active company exists in save data.");
+		}
 
 		PrepareRuntimeStateReset();
 		LocalInputConfig.Get()?.ClearControllerSetups();

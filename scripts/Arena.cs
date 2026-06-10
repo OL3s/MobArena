@@ -13,6 +13,10 @@ public partial class Arena : Node
 	private const string MainMenuScene = "res://scenes/main_menu.tscn";
 	private const string DemoCompletePopupTitle = "Thanks for Playing";
 	private const string DemoCompletePopupText = "Thanks for playing the demo. You defeated the first champion and reached the end of this demo build.";
+	private const string VictoryPopupTitle = "Victory";
+	private const string GoldIconPath = "res://assets/ui/icons/gold.svg";
+	private const string FameIconPath = "res://assets/ui/icons/fame.svg";
+	private const double VictoryPopupDelaySeconds = 3.0;
 
 	private SaveNode _saveNode;
 	private EnvironmentVisualOverlay _environmentOverlay;
@@ -22,14 +26,19 @@ public partial class Arena : Node
 	private ArenaPlayerSpawner _playerSpawner;
 	private ArenaEnemySpawner _enemySpawner;
 	private CombatHud _combatHud;
+	private Control _devStatusPanel;
 	private Label _statusLabel;
-	private Button _debugWinButton;
-	private Button _debugLoseButton;
+	private Button _devWinButton;
+	private Button _devLoseButton;
 	private bool _isResolvingContract;
+	private bool _victoryRequested;
+	private int _pendingVictoryGoldReward;
+	private int _pendingVictoryFameReward;
 
 	public override void _Ready()
 	{
 		_saveNode = SaveNode.Get();
+		_saveNode.DevModeChanged += RefreshDevControls;
 		if (_saveNode?.CanStartArenaContract() != true)
 		{
 			CallDeferred(MethodName.ShowDemoCompleteAndReturnToMainMenu);
@@ -47,13 +56,14 @@ public partial class Arena : Node
 		if (_weatherState != null)
 			_weatherState.WeatherChanged += RefreshWeatherVisuals;
 
+		_devStatusPanel = GetNodeOrNull<Control>("ControllerUi/StatusPanel");
 		_statusLabel = GetNodeOrNull<Label>("ControllerUi/StatusPanel/Row/Status");
-		_debugWinButton = GetNode<Button>("ControllerUi/StatusPanel/Row/DebugWinButton");
-		_debugLoseButton = GetNode<Button>("ControllerUi/StatusPanel/Row/DebugLoseButton");
-		_debugWinButton.Pressed += ResolveContractWin;
-		_debugLoseButton.Pressed += ResolveContractLoss;
+		_devWinButton = GetNode<Button>("ControllerUi/StatusPanel/Row/DevWinButton");
+		_devLoseButton = GetNode<Button>("ControllerUi/StatusPanel/Row/DevLoseButton");
+		_devWinButton.Pressed += RequestArenaVictory;
+		_devLoseButton.Pressed += ResolveContractLoss;
 
-		RefreshDebugButtons();
+		RefreshDevControls();
 		RefreshWeatherVisuals();
 		SpawnContractActors();
 		RefreshStatus();
@@ -68,19 +78,37 @@ public partial class Arena : Node
 	{
 		if (_weatherState != null)
 			_weatherState.WeatherChanged -= RefreshWeatherVisuals;
+		if (_saveNode != null)
+			_saveNode.DevModeChanged -= RefreshDevControls;
 
-		if (_debugWinButton != null)
-			_debugWinButton.Pressed -= ResolveContractWin;
-		if (_debugLoseButton != null)
-			_debugLoseButton.Pressed -= ResolveContractLoss;
+		if (_devWinButton != null)
+			_devWinButton.Pressed -= RequestArenaVictory;
+		if (_devLoseButton != null)
+			_devLoseButton.Pressed -= ResolveContractLoss;
 	}
 
-	public void ResolveContractWin()
+	public async void RequestArenaVictory()
 	{
-		if (_isResolvingContract)
+		if (_victoryRequested || _isResolvingContract)
 			return;
 
+		_victoryRequested = true;
 		_isResolvingContract = true;
+		StorePendingVictoryRewards();
+		SetPlayerDeathPreventionEnabled(true);
+		GD.Print($"Arena: victory requested; popup in {VictoryPopupDelaySeconds:0.#} seconds, gold={_pendingVictoryGoldReward}, fame={_pendingVictoryFameReward}.");
+
+		await ToSignal(GetTree().CreateTimer(VictoryPopupDelaySeconds), Timer.SignalName.Timeout);
+		if (!IsInsideTree())
+			return;
+
+		SnapshotPlayerRuntimeHealthToRunData();
+		SetPlayerDamageLocked(true);
+		ShowVictoryPopup();
+	}
+
+	private void ResolveVictoryAndReturn()
+	{
 		var result = ArenaContractResultResolver.ResolveWin(_saveNode);
 		if (result == ArenaContractResultResolver.ContractResult.DemoComplete)
 		{
@@ -166,7 +194,7 @@ public partial class Arena : Node
 
 	private void TryResolveAllPlayersDefeated()
 	{
-		if (_isResolvingContract || _playerSpawner == null || _runData?.ActiveArenaContract == null)
+		if (_victoryRequested || _isResolvingContract || _playerSpawner == null || _runData?.ActiveArenaContract == null)
 			return;
 
 		var playerCount = 0;
@@ -200,14 +228,16 @@ public partial class Arena : Node
 		_isResolvingContract = false;
 	}
 
-	private void RefreshDebugButtons()
+	private void RefreshDevControls()
 	{
-		var visible = _saveNode?.DebugEnabled == true;
-		_debugWinButton.Visible = visible;
-		_debugLoseButton.Visible = visible;
-		_debugLoseButton.Text = _runData?.ActiveArenaContract?.IsChampionContract() == true
-			? "Debug Lose"
-			: "Debug Forfeit";
+		var visible = _saveNode?.DevEnabled == true;
+		if (_devStatusPanel != null)
+			_devStatusPanel.Visible = visible;
+		_devWinButton.Visible = visible;
+		_devLoseButton.Visible = visible;
+		_devLoseButton.Text = _runData?.ActiveArenaContract?.IsChampionContract() == true
+			? "Dev Lose"
+			: "Dev Forfeit";
 	}
 
 	private void SpawnContractActors()
@@ -219,8 +249,113 @@ public partial class Arena : Node
 		GD.Print($"Arena: setup start; contract='{contract?.DisplayName ?? "none"}', assignedPlayers={assignedPlayers}, expectedEnemies={expectedEnemies}, day={_phaseState?.CurrentDay.ToString() ?? "unknown"}, phase={_phaseState?.CurrentPhase.ToString() ?? "unknown"}.");
 		_playerSpawner?.SpawnFromRunData(_runData);
 		_enemySpawner?.SpawnMobs(contract?.GetEnemyMobs());
+		ConnectEnemyDeathChecks();
 		_combatHud?.SetPlayers(_playerSpawner?.GetSpawnedPlayerCombatants());
 		GD.Print($"Arena: setup complete; spawnedPlayers={_playerSpawner?.SpawnedPlayerCount ?? 0}/{assignedPlayers}, spawnedEnemies={_enemySpawner?.SpawnedEnemyCount ?? 0}/{expectedEnemies}.");
+	}
+
+	private void ConnectEnemyDeathChecks()
+	{
+		if (_enemySpawner == null)
+			return;
+
+		foreach (var enemy in _enemySpawner.GetSpawnedEnemyCombatants())
+			enemy.CombatantStateChanged += OnEnemyCombatantStateChanged;
+	}
+
+	private void OnEnemyCombatantStateChanged(ArenaCombatantState state)
+	{
+		if (state == ArenaCombatantState.Dead)
+			TryRequestVictoryIfAllEnemiesDefeated();
+	}
+
+	private void TryRequestVictoryIfAllEnemiesDefeated()
+	{
+		if (_victoryRequested || _isResolvingContract || _enemySpawner == null)
+			return;
+
+		var enemyCount = 0;
+		var deadCount = 0;
+		foreach (var enemy in _enemySpawner.GetSpawnedEnemyCombatants())
+		{
+			enemyCount++;
+			if (enemy.IsDead)
+				deadCount++;
+		}
+
+		if (enemyCount <= 0 || deadCount < enemyCount)
+			return;
+
+		GD.Print($"Arena: all spawned enemies defeated ({deadCount}/{enemyCount}).");
+		RequestArenaVictory();
+	}
+
+	private void StorePendingVictoryRewards()
+	{
+		var contract = _runData?.ActiveArenaContract;
+		_pendingVictoryGoldReward = contract?.GoldReward ?? 0;
+		_pendingVictoryFameReward = contract?.GetNetFameReward(_runData?.Fame ?? 0) ?? 0;
+	}
+
+	private void SetPlayerDeathPreventionEnabled(bool enabled)
+	{
+		if (_playerSpawner == null)
+			return;
+
+		foreach (var player in _playerSpawner.GetSpawnedPlayerCombatants())
+			player.SetDeathPreventionEnabled(enabled);
+	}
+
+	private void SetPlayerDamageLocked(bool locked)
+	{
+		if (_playerSpawner == null)
+			return;
+
+		foreach (var player in _playerSpawner.GetSpawnedPlayerCombatants())
+			player.SetDamageLocked(locked);
+	}
+
+	private void SnapshotPlayerRuntimeHealthToRunData()
+	{
+		if (_playerSpawner == null)
+			return;
+
+		foreach (var player in _playerSpawner.GetSpawnedPlayerCombatants())
+			player.SnapshotRuntimeHealthToGladiator();
+	}
+
+	private void ShowVictoryPopup()
+	{
+		var globalOverlay = GlobalOverlay.Get();
+		if (globalOverlay == null)
+		{
+			GD.PushError("Arena: victory popup could not open because GlobalOverlay is missing. Resolving victory immediately.");
+			ResolveVictoryAndReturn();
+			return;
+		}
+
+		globalOverlay.ShowBlurredPopup(
+			VictoryPopupTitle,
+			BuildVictoryPopupText(),
+			closedAction: ResolveVictoryAndReturn,
+			pauseGameUntilClosed: true,
+			okText: "To Town");
+	}
+
+	private string BuildVictoryPopupText()
+	{
+		return "[center]"
+			+ "[font_size=18]Your contract is complete.[/font_size]\n\n"
+			+ $"[img=42x42]{GoldIconPath}[/img] {FormatRewardValue(_pendingVictoryGoldReward)}\n\n"
+			+ $"[img=42x42]{FameIconPath}[/img] {FormatRewardValue(_pendingVictoryFameReward)}"
+			+ "[/center]";
+	}
+
+	private static string FormatRewardValue(int value)
+	{
+		var text = value >= 0 ? $"+{value}" : value.ToString();
+		var color = value >= 0 ? "#8EE68E" : "#FF8A80";
+		return $"[font_size=34][color={color}]{text}[/color][/font_size]";
 	}
 
 	private void RefreshStatus()

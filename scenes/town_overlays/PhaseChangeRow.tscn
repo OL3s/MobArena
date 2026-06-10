@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/town_overlays/PhaseChangeRow.cs" id="1_script"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="2_body_font"]
 
 [node name="PhaseChangeRow" type="PanelContainer"]
 layout_mode = 2
@@ -28,6 +29,8 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="MarginContainer/Row"]
 custom_minimum_size = Vector2(115, 0)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_body_font")
+theme_override_font_sizes/font_size = 18
 text = "Gladiator"
 vertical_alignment = 1
 autowrap_mode = 3
@@ -35,5 +38,7 @@ autowrap_mode = 3
 [node name="DetailLabel" type="Label" parent="MarginContainer/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_body_font")
+theme_override_font_sizes/font_size = 18
 vertical_alignment = 1
 autowrap_mode = 3

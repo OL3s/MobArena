@@ -13,23 +13,28 @@ public partial class CompanyLogoEditorOverlay : Control
     private bool _canCancel;
     private CompanyLogo _preview;
     private LineEdit _companyNameEdit;
+    private Label _companyNameCharacterCountLabel;
     private OptionButton _shieldOptions;
     private OptionButton _shieldColorOptions;
     private OptionButton _logoOptions;
     private OptionButton _logoSizeOptions;
+    private Button _applyButton;
     private Button _cancelButton;
 
     public override void _Ready()
     {
         _preview = GetNode<CompanyLogo>("CenterContainer/PopupPanel/MarginContainer/Content/Preview");
         _companyNameEdit = GetNode<LineEdit>("CenterContainer/PopupPanel/MarginContainer/Content/CompanyNameRow/CompanyNameEdit");
+        _companyNameCharacterCountLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Content/CompanyNameCharacterCountLabel");
         _shieldOptions = GetNode<OptionButton>("CenterContainer/PopupPanel/MarginContainer/Content/ShieldRow/ShieldOptions");
         _shieldColorOptions = GetNode<OptionButton>("CenterContainer/PopupPanel/MarginContainer/Content/ShieldColorRow/ShieldColorOptions");
         _logoOptions = GetNode<OptionButton>("CenterContainer/PopupPanel/MarginContainer/Content/LogoRow/LogoOptions");
         _logoSizeOptions = GetNode<OptionButton>("CenterContainer/PopupPanel/MarginContainer/Content/LogoSizeRow/LogoSizeOptions");
-        GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/ApplyButton").Pressed += OnApplyPressed;
+        _applyButton = GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/ApplyButton");
+        _applyButton.Pressed += OnApplyPressed;
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/CompanyNameRow/RandomNameButton").Pressed += OnRandomNamePressed;
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/Actions/RandomizeButton").Pressed += OnRandomizePressed;
+        _companyNameEdit.TextChanged += OnCompanyNameTextChanged;
         _shieldOptions.ItemSelected += OnShieldSelected;
         _logoOptions.ItemSelected += OnLogoSelected;
         _shieldColorOptions.ItemSelected += OnShieldColorSelected;
@@ -65,6 +70,7 @@ public partial class CompanyLogoEditorOverlay : Control
         _companyNameEdit.Text = _workingData.CompanyName;
         _cancelButton.Visible = _canCancel;
         PopulateOptions();
+        RefreshCompanyNameValidationUi();
     }
 
     private void PopulateOptions()
@@ -113,7 +119,13 @@ public partial class CompanyLogoEditorOverlay : Control
 
     private void OnApplyPressed()
     {
-        _workingData.SetCompanyName(_companyNameEdit.Text);
+        if (!_workingData.TrySetCompanyName(_companyNameEdit.Text, out var errorMessage))
+        {
+            GD.PushError($"CompanyLogoEditorOverlay: Cannot apply company logo. {errorMessage}");
+            RefreshCompanyNameValidationUi();
+            return;
+        }
+
         _sourceData.CopyFrom(_workingData);
         _onApplied?.Invoke(_sourceData);
         QueueFree();
@@ -123,11 +135,30 @@ public partial class CompanyLogoEditorOverlay : Control
     {
         _workingData.RandomizeName();
         _companyNameEdit.Text = _workingData.CompanyName;
+        RefreshCompanyNameValidationUi();
     }
 
     private void OnRandomizePressed()
     {
-        _workingData.RandomizeAll();
-        ApplyConfigurationToUi();
+        _workingData.RandomizeVisuals();
+        PopulateOptions();
+        RefreshCompanyNameValidationUi();
+    }
+
+    private void OnCompanyNameTextChanged(string newText)
+    {
+        RefreshCompanyNameValidationUi();
+    }
+
+    private void RefreshCompanyNameValidationUi()
+    {
+        if (_companyNameEdit == null || _companyNameCharacterCountLabel == null || _applyButton == null)
+            return;
+
+        var characterCount = _companyNameEdit.Text.Length;
+        var isLengthValid = CompanyLogoData.IsCompanyNameLengthValid(_companyNameEdit.Text);
+        _companyNameCharacterCountLabel.Text = $"{characterCount} / {CompanyLogoData.MaxCompanyNameLength} characters";
+        _companyNameCharacterCountLabel.AddThemeColorOverride("font_color", isLengthValid ? Colors.White : Colors.OrangeRed);
+        _applyButton.Disabled = !isLengthValid;
     }
 }

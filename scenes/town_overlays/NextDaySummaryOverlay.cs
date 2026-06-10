@@ -58,16 +58,23 @@ public partial class NextDaySummaryOverlay : Control
             child.QueueFree();
 
         var currentGold = _runData?.Gold ?? 0;
-		var cityCost = _runData?.GetCurrentPhaseGoldCost(_phaseState) ?? 0;
-		var nextGold = currentGold - cityCost;
-		_costLineLabel.Text = "City & Salary cost";
-		_nextDayButton.Disabled = _runData == null;
-		_nextDayButton.TooltipText = nextGold < 0 ? "Apply these changes and go into debt." : "Apply these changes and advance to the next day.";
+        var recoveryCost = _runData?.GetPhaseBuildingGoldCost(TownAssignmentData.AssignmentLocation.Healer) ?? 0;
+        var trainingCost = _runData?.GetPhaseBuildingGoldCost(TownAssignmentData.AssignmentLocation.TrainingHall) ?? 0;
+        var salaryCost = _runData?.GetCurrentPhaseSalaryGoldCost(_phaseState) ?? 0;
+        var cityCost = recoveryCost + trainingCost + salaryCost;
+        var nextGold = currentGold - cityCost;
+        _costLineLabel.Text = "City costs";
+        _nextDayButton.Disabled = _runData == null;
+        _nextDayButton.TooltipText = nextGold < 0 ? "Apply these costs and go into debt." : "Apply these costs and start the next day.";
 
-        if (cityCost > 0)
-            AddCostDetail("Total", FormatSignedGold(-cityCost), nextGold < 0);
-        else
-            AddCostDetail("Total", "0 gold", false);
+        if (recoveryCost > 0)
+            AddCostDetail("Recovery Bay", FormatSignedGold(-recoveryCost), false);
+        if (trainingCost > 0)
+            AddCostDetail("Training Hall", FormatSignedGold(-trainingCost), false);
+        if (salaryCost > 0)
+            AddCostDetail("Salaries", FormatSignedGold(-salaryCost), false);
+
+        AddCostDetail("Total", cityCost > 0 ? FormatSignedGold(-cityCost) : "0 gold", nextGold < 0);
     }
 
     private void RefreshChanges()
@@ -79,15 +86,7 @@ public partial class NextDaySummaryOverlay : Control
         addedAny |= AddTreatmentRows();
         addedAny |= AddTrainingRows();
 
-        if (!addedAny)
-        {
-            _changeList.AddChild(new Label
-            {
-                Text = "No Recovery Bay or Training Hall changes queued.",
-                HorizontalAlignment = HorizontalAlignment.Center,
-                AutowrapMode = TextServer.AutowrapMode.WordSmart
-            });
-        }
+        _changeList.Visible = addedAny;
     }
 
     private bool AddTreatmentRows()

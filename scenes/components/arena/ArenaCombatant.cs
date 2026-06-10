@@ -191,6 +191,16 @@ public abstract partial class ArenaCombatant : CharacterBody2D
         return CombatState?.ApplyRawDamage(amount) ?? 0;
     }
 
+    public void SetDamageLocked(bool locked)
+    {
+        CombatState?.SetDamageLocked(locked);
+    }
+
+    public void SetDeathPreventionEnabled(bool enabled)
+    {
+        CombatState?.SetDeathPreventionEnabled(enabled);
+    }
+
     protected virtual void OnCombatStateHealthChanged(int currentHealth, int maxHealth)
     {
     }
@@ -206,7 +216,7 @@ public abstract partial class ArenaCombatant : CharacterBody2D
 
     protected void ApplyDebugStateModulate(params CanvasItem[] visuals)
     {
-        var color = SaveNode.Get()?.DebugEnabled == true
+        var color = SaveNode.Get()?.DevEnabled == true
             ? GetDebugStateColor(CombatantState)
             : Colors.White;
 

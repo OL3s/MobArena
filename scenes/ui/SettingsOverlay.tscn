@@ -155,15 +155,15 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="DebugCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
+[node name="DevModeCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
 layout_mode = 2
-text = "Enable debug mode"
+text = "Enable dev mode"
 
-[node name="DebugHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
+[node name="DevModeHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("3_body_font")
 theme_override_font_sizes/font_size = 20
-text = "Temporary project-wide debug flag for development-only behavior."
+text = "Temporary project-wide dev flag for development-only behavior."
 autowrap_mode = 3
 
 [node name="IsDemoCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
@@ -185,7 +185,7 @@ text = "Show runtime tags"
 layout_mode = 2
 theme_override_fonts/font = ExtResource("3_body_font")
 theme_override_font_sizes/font_size = 20
-text = "Shows the top-right Demo, Debug, and dev-build tag overlay when those states are active."
+text = "Shows the top-right Demo, Dev, and debug-build tag overlay when those states are active."
 autowrap_mode = 3
 
 [node name="SaveDataSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]

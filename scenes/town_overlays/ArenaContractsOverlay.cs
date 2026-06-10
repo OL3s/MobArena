@@ -285,8 +285,8 @@ public partial class ArenaContractsOverlay : Control
         var healthyCount = GetHealthyArenaAvailableGladiatorCount();
         _autoAssignButton.Disabled = _runData == null || healthyCount < requestedCount;
         _autoAssignButton.TooltipText = _autoAssignButton.Disabled
-            ? $"Need {requestedCount} healthy gladiator(s). {healthyCount} available above the low-health warning threshold."
-            : $"Assign {requestedCount} healthy gladiator(s) to the Arena.";
+            ? $"Need {requestedCount} idle healthy gladiator(s). {healthyCount} idle gladiator(s) are above the low-health warning threshold."
+            : $"Assign {requestedCount} idle healthy gladiator(s) to the Arena.";
     }
 
     private void OnAutoAssignCountSelected(long index)
@@ -302,8 +302,7 @@ public partial class ArenaContractsOverlay : Control
     private void OnAutoAssignPressed()
     {
         var requestedCount = GetAutoAssignCount();
-        var healthyGladiators = GetHealthyArenaAvailableGladiators();
-        if (_runData == null || healthyGladiators.Count < requestedCount)
+        if (_runData == null)
             return;
 
         var previousArenaGladiators = new Array<GladiatorData>(_runData.TownAssignments.ArenaGladiators);
@@ -312,6 +311,10 @@ public partial class ArenaContractsOverlay : Control
             if (gladiator != null)
                 _runData.TryMoveGladiatorToCourtyard(gladiator);
         }
+
+        var healthyGladiators = GetHealthyArenaAvailableGladiators();
+        if (healthyGladiators.Count < requestedCount)
+            return;
 
         _runData.ClearArenaControlAssignments();
         for (var index = 0; index < requestedCount; index++)
@@ -353,7 +356,8 @@ public partial class ArenaContractsOverlay : Control
     {
         var healthyGladiators = new Array<GladiatorData>();
         var warningRatio = SaveNode.Get()?.SettingsConfig?.LowHealthWarningRatio ?? 0.6f;
-        var gladiators = _runData?.Gladiators;
+        _runData?.EnsureResources();
+        var gladiators = _runData?.TownAssignments?.CourtyardGladiators;
         if (gladiators == null)
             return healthyGladiators;
 

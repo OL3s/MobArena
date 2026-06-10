@@ -98,6 +98,7 @@ position = Vector2(946, 324)
 [node name="ControllerUi" type="CanvasLayer" parent="." unique_id=913489465]
 
 [node name="StatusPanel" type="PanelContainer" parent="ControllerUi" unique_id=1841787377]
+visible = false
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 820.0
@@ -110,14 +111,14 @@ grow_horizontal = 2
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="DebugWinButton" type="Button" parent="ControllerUi/StatusPanel/Row" unique_id=116829263]
+[node name="DevWinButton" type="Button" parent="ControllerUi/StatusPanel/Row" unique_id=116829263]
 visible = false
 custom_minimum_size = Vector2(150, 52)
 layout_mode = 2
-text = "Debug Win"
+text = "Dev Win"
 
-[node name="DebugLoseButton" type="Button" parent="ControllerUi/StatusPanel/Row" unique_id=1278857220]
+[node name="DevLoseButton" type="Button" parent="ControllerUi/StatusPanel/Row" unique_id=1278857220]
 visible = false
 custom_minimum_size = Vector2(150, 52)
 layout_mode = 2
-text = "Debug Forfeit"
+text = "Dev Forfeit"

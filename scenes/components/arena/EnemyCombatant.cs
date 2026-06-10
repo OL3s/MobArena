@@ -115,7 +115,7 @@ public partial class EnemyCombatant : ArenaCombatant
         if (_stateLabel == null)
             return;
 
-        _stateLabel.Visible = MobArena.Scripts.SaveNode.Get().DebugEnabled;
+        _stateLabel.Visible = MobArena.Scripts.SaveNode.Get().DevEnabled;
         _stateLabel.Text = CombatantState.ToString();
         _stateLabel.Modulate = CombatantState == ArenaCombatantState.Windup
             ? new Color(1f, 0.72f, 0.35f)

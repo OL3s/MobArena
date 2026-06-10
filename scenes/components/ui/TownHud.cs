@@ -23,21 +23,14 @@ public partial class TownHud : CanvasLayer
 	private const string GladiatorDeathOverlayScenePath = "res://scenes/ui/GladiatorDeathOverlay.tscn";
 	private const string ArenaScenePath = "res://scenes/arena.tscn";
 	private const string StarterSlimePitContractPath = "res://resources/contracts/starter_slime_pit.tres";
-	private const string NextDaySummaryOverlayScenePath = "res://scenes/town_overlays/next_day_summary_overlay.tscn";
 	private const string EquipmentVisualTestOverlayScenePath = "res://scenes/ui/EquipmentVisualTestOverlay.tscn";
 	private const string TownHoverInfoPanelScenePath = "res://scenes/components/ui/TownHoverInfoPanel.tscn";
-	private const string WeatherChampionInfoOverlayScenePath = "res://scenes/ui/WeatherChampionInfoOverlay.tscn";
-	private const string CloudyWeatherIconPath = "res://assets/ui/icons/clear.svg";
-	private const string RainWeatherIconPath = "res://assets/ui/icons/rain.svg";
-	private const string SunWeatherIconPath = "res://assets/ui/icons/sun.svg";
-	private const string ChampionIconPath = "res://assets/ui/icons/champion.svg";
 	private const string ChampionDayPopupTitle = "Champion Day";
 	private const string ChampionDayPopupText = "A champion contract is mandatory today. Win to continue the company. Lose, and the company is force-retired.";
 	private const string NextDayUpkeepPopupTitle = "Night Upkeep";
 	private const string NextDayUpkeepPopupText = "Advancing to the next day resolves all Night costs. Assigned buildings may charge for treatment or training, and every active gladiator is paid salary. These costs can put the company into debt, so use the summary to plan your next contract.";
 	private const string FirstNextDayPopupTitle = "The City Opens Up";
 	private const string FirstNextDayPopupText = "After a fight, Night is when your company pays salaries and resolves any queued town costs. Use the summary to understand what will happen before starting the next Day.";
-	private const string GoldIconPath = "res://assets/ui/icons/gold.svg";
 
 	[Signal]
 	public delegate void BackPressedEventHandler();
@@ -47,6 +40,27 @@ public partial class TownHud : CanvasLayer
 
 	[Signal]
 	public delegate void BuyGladiatorPressedEventHandler();
+
+	[Export]
+	public Texture2D CloudyWeatherIcon { get; set; }
+
+	[Export]
+	public Texture2D RainWeatherIcon { get; set; }
+
+	[Export]
+	public Texture2D SunWeatherIcon { get; set; }
+
+	[Export]
+	public Texture2D GoldIcon { get; set; }
+
+	[Export]
+	public Texture2D ChampionIcon { get; set; }
+
+	[Export]
+	public PackedScene NextDaySummaryOverlayScene { get; set; }
+
+	[Export]
+	public PackedScene WeatherChampionInfoOverlayScene { get; set; }
 
 	private SaveNode _saveNode;
 	private TownPhaseState _phaseState;
@@ -74,9 +88,6 @@ public partial class TownHud : CanvasLayer
 	private ProgressBar _championProgressBar;
 	private TextureRect _weatherIcon;
 	private TextureRect _moonIcon;
-	private Texture2D _cloudyWeatherIcon;
-	private Texture2D _rainWeatherIcon;
-	private Texture2D _sunWeatherIcon;
 	private MenuButton _devButton;
 	private PopupMenu _devWeatherSubmenu;
 	private TownHoverInfoPanel _hoverInfoPanel;
@@ -86,6 +97,7 @@ public partial class TownHud : CanvasLayer
 	{
 		_saveNode = SaveNode.Get();
 		_saveNode.RuntimeStateResetting += OnRuntimeStateResetting;
+		_saveNode.DevModeChanged += RefreshDevMenu;
 		_phaseState = _saveNode?.TownPhaseState ?? new TownPhaseState();
 
 		_companyLogo = GetNode<CompanyLogo>("TopPanel/Row/CompanyStatus/Shield");
@@ -111,9 +123,6 @@ public partial class TownHud : CanvasLayer
 		_championProgressBar = GetNode<ProgressBar>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/ChampionProgressBar");
 		_weatherIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/IconRow/WeatherIcon");
 		_moonIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/IconRow/MoonIcon");
-		_cloudyWeatherIcon = ResourceLoader.Load<Texture2D>(CloudyWeatherIconPath);
-		_rainWeatherIcon = ResourceLoader.Load<Texture2D>(RainWeatherIconPath);
-		_sunWeatherIcon = ResourceLoader.Load<Texture2D>(SunWeatherIconPath);
 		_devButton = GetNode<MenuButton>("TopPanel/Row/DevButton");
 		GetNodeOrNull<Control>("TopPanel/Row/SupplyPanel")?.Hide();
 		CreateHoverInfoPanel(GetNode<HBoxContainer>("BottomPanel/TimeRow"));
@@ -152,7 +161,10 @@ public partial class TownHud : CanvasLayer
 	public override void _ExitTree()
 	{
 		if (_saveNode != null)
+		{
 			_saveNode.RuntimeStateResetting -= OnRuntimeStateResetting;
+			_saveNode.DevModeChanged -= RefreshDevMenu;
+		}
 
 		UnsubscribeResourceSignals();
 
@@ -221,7 +233,7 @@ public partial class TownHud : CanvasLayer
 			GlobalOverlay.Get()?.ShowBlurredPopup(
 				FirstNextDayPopupTitle,
 				FirstNextDayPopupText,
-				ResourceLoader.Load<Texture2D>(GoldIconPath),
+				GoldIcon,
 				ShowNextDaySummaryOverlay);
 			return;
 		}
@@ -233,7 +245,7 @@ public partial class TownHud : CanvasLayer
 			GlobalOverlay.Get()?.ShowBlurredPopup(
 				NextDayUpkeepPopupTitle,
 				NextDayUpkeepPopupText,
-				ResourceLoader.Load<Texture2D>(GoldIconPath),
+				GoldIcon,
 				ShowNextDaySummaryOverlay);
 			return;
 		}
@@ -250,8 +262,7 @@ public partial class TownHud : CanvasLayer
 
 	private void ShowNextDaySummaryOverlay()
 	{
-		var overlayScene = ResourceLoader.Load<PackedScene>(NextDaySummaryOverlayScenePath);
-		var overlay = overlayScene?.Instantiate<NextDaySummaryOverlay>();
+		var overlay = NextDaySummaryOverlayScene?.Instantiate<NextDaySummaryOverlay>();
 		if (overlay == null)
 		{
 			GD.PushError("Next day summary overlay scene is missing or has the wrong root script.");
@@ -275,17 +286,17 @@ public partial class TownHud : CanvasLayer
 			ShowChampionDayPopup();
 	}
 
-	private static void ShowChampionDayPopup()
+	private void ShowChampionDayPopup()
 	{
 		GlobalOverlay.Get()?.ShowBlurredPopup(
 			ChampionDayPopupTitle,
 			ChampionDayPopupText,
-			ResourceLoader.Load<Texture2D>(ChampionIconPath));
+			ChampionIcon);
 	}
 
 	private void SetupDevMenu()
 	{
-		_devButton.Visible = _saveNode?.DebugEnabled == true;
+		_devButton.Visible = _saveNode?.DevEnabled == true;
 		var popup = _devButton.GetPopup();
 		popup.Clear();
 		popup.AddItem("Win arena", DevActionWinArena);
@@ -317,7 +328,7 @@ public partial class TownHud : CanvasLayer
 
 	private void OnDevMenuIdPressed(long id)
 	{
-		if (_saveNode?.DebugEnabled != true)
+		if (_saveNode?.DevEnabled != true)
 			return;
 
 		switch (id)
@@ -495,7 +506,7 @@ public partial class TownHud : CanvasLayer
 
 	private void OnDevWeatherMenuIdPressed(long id)
 	{
-		if (_saveNode?.DebugEnabled != true || _saveNode.WeatherState == null)
+		if (_saveNode?.DevEnabled != true || _saveNode.WeatherState == null)
 			return;
 
 		var weather = id switch
@@ -528,14 +539,13 @@ public partial class TownHud : CanvasLayer
 			return;
 
 		GetViewport()?.SetInputAsHandled();
-		var overlayScene = ResourceLoader.Load<PackedScene>(WeatherChampionInfoOverlayScenePath);
-		if (overlayScene == null)
+		if (WeatherChampionInfoOverlayScene == null)
 		{
 			GD.PushError("Weather & Champion overlay scene is missing.");
 			return;
 		}
 
-		GlobalOverlay.Get()?.AddOverlay(overlayScene.Instantiate<WeatherChampionInfoOverlay>());
+		GlobalOverlay.Get()?.AddOverlay(WeatherChampionInfoOverlayScene.Instantiate<WeatherChampionInfoOverlay>());
 	}
 
 	private void OnCompanyLogoMouseEntered()
@@ -686,9 +696,9 @@ public partial class TownHud : CanvasLayer
 
 		_weatherIcon.Texture = weather switch
 		{
-			WeatherState.WeatherVisual.Rain => _rainWeatherIcon,
-			WeatherState.WeatherVisual.Sun => _sunWeatherIcon,
-			_ => _cloudyWeatherIcon ?? _sunWeatherIcon
+			WeatherState.WeatherVisual.Rain => RainWeatherIcon,
+			WeatherState.WeatherVisual.Sun => SunWeatherIcon,
+			_ => CloudyWeatherIcon ?? SunWeatherIcon
 		};
 	}
 
@@ -697,7 +707,7 @@ public partial class TownHud : CanvasLayer
 		if (_devButton == null)
 			return;
 
-		_devButton.Visible = _saveNode?.DebugEnabled == true;
+		_devButton.Visible = _saveNode?.DevEnabled == true;
 		var popup = _devButton.GetPopup();
 		popup.SetItemDisabled(0, !_phaseState.IsDay());
 

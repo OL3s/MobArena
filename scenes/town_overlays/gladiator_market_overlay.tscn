@@ -95,7 +95,7 @@ theme_override_fonts/bold_font = ExtResource("5_body_font")
 theme_override_font_sizes/normal_font_size = 20
 theme_override_font_sizes/bold_font_size = 20
 bbcode_enabled = true
-text = "Hire available recruits into the active company roster. Market recruits refresh with the daily market stock."
+text = "Hire recruits into the active company roster."
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
@@ -118,7 +118,7 @@ vertical_scroll_mode = 0
 [node name="GladiatorRow" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
 
 [node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout"]
 custom_minimum_size = Vector2(0, 44)

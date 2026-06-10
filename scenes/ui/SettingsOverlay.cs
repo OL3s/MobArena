@@ -25,7 +25,7 @@ public partial class SettingsOverlay : Control
 	private Control _controlsSettings;
 	private Control _devSettings;
 	private Control _saveDataSettings;
-	private CheckBox _debugCheckBox;
+	private CheckBox _devModeCheckBox;
 	private CheckBox _isDemoCheckBox;
 	private CheckBox _showRuntimeTagsCheckBox;
 	private CheckBox _skipTutorialCheckBox;
@@ -50,7 +50,7 @@ public partial class SettingsOverlay : Control
 		_devSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings");
 		_saveDataSettings = GetNode<Control>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/SaveDataSettings");
 		_placeholderLabel = GetNode<Label>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/PlaceholderLabel");
-		_debugCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings/DebugCheckBox");
+		_devModeCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings/DevModeCheckBox");
 		_isDemoCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings/IsDemoCheckBox");
 		_showRuntimeTagsCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings/ShowRuntimeTagsCheckBox");
 		_skipTutorialCheckBox = GetNode<CheckBox>("CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings/SkipTutorialCheckBox");
@@ -65,7 +65,7 @@ public partial class SettingsOverlay : Control
 		_controlsButton.Pressed += () => ShowCategory(ControlsCategory);
 		_devButton.Pressed += () => ShowCategory(DevCategory);
 		_saveDataButton.Pressed += () => ShowCategory(SaveDataCategory);
-		_debugCheckBox.Toggled += OnDebugToggled;
+		_devModeCheckBox.Toggled += OnDevModeToggled;
 		_isDemoCheckBox.Toggled += OnIsDemoToggled;
 		_showRuntimeTagsCheckBox.Toggled += OnShowRuntimeTagsToggled;
 		_skipTutorialCheckBox.Toggled += OnSkipTutorialToggled;
@@ -120,7 +120,7 @@ public partial class SettingsOverlay : Control
 	{
 		_refreshingUi = true;
 		var settingsConfig = SaveNode.Get().SettingsConfig;
-		_debugCheckBox.ButtonPressed = settingsConfig.DebugEnabled;
+		_devModeCheckBox.ButtonPressed = settingsConfig.DevEnabled;
 		_isDemoCheckBox.ButtonPressed = settingsConfig.IsDemo;
 		_showRuntimeTagsCheckBox.ButtonPressed = settingsConfig.ShowRuntimeTags;
 		_skipTutorialCheckBox.ButtonPressed = settingsConfig.SkipTutorial;
@@ -131,7 +131,7 @@ public partial class SettingsOverlay : Control
 		_refreshingUi = false;
 	}
 
-	private void OnDebugToggled(bool enabled)
+	private void OnDevModeToggled(bool enabled)
 	{
 		if (_refreshingUi)
 			return;
@@ -140,7 +140,7 @@ public partial class SettingsOverlay : Control
 		if (settingsConfig == null)
 			return;
 
-		settingsConfig.DebugEnabled = enabled;
+		SaveNode.Get().SetDevEnabled(enabled);
 		RefreshSettingsUi();
 	}
 
@@ -149,11 +149,7 @@ public partial class SettingsOverlay : Control
 		if (_refreshingUi)
 			return;
 
-		var settingsConfig = SaveNode.Get().SettingsConfig;
-		if (settingsConfig == null)
-			return;
-
-		settingsConfig.IsDemo = enabled;
+		SaveNode.Get().SetIsDemo(enabled);
 		RefreshSettingsUi();
 	}
 
@@ -162,11 +158,7 @@ public partial class SettingsOverlay : Control
 		if (_refreshingUi)
 			return;
 
-		var settingsConfig = SaveNode.Get().SettingsConfig;
-		if (settingsConfig == null)
-			return;
-
-		settingsConfig.ShowRuntimeTags = enabled;
+		SaveNode.Get().SetShowRuntimeTags(enabled);
 		RefreshSettingsUi();
 	}
 
@@ -179,7 +171,7 @@ public partial class SettingsOverlay : Control
 		if (settingsConfig == null)
 			return;
 
-		settingsConfig.SkipTutorial = enabled;
+		SaveNode.Get().SetSkipTutorial(enabled);
 		RefreshSettingsUi();
 	}
 

@@ -147,6 +147,14 @@ public partial class PlayerCombatant : ArenaCombatant
         RefreshHealthLabel();
     }
 
+    public void SnapshotRuntimeHealthToGladiator()
+    {
+        if (GladiatorData == null || CombatState == null)
+            return;
+
+        GladiatorData.SetHealth(CombatState.CurrentHealth);
+    }
+
     protected override void OnCombatantStateChanged(ArenaCombatantState state)
     {
         RefreshStateLabel();
@@ -340,7 +348,7 @@ public partial class PlayerCombatant : ArenaCombatant
 
     private void LogActionPresses(bool mainHandPressed, bool offHandPressed, bool abilityPressed, bool blockPressed)
     {
-        if (SaveNode.Get()?.DebugEnabled != true)
+        if (SaveNode.Get()?.DevEnabled != true)
             return;
 
         if (mainHandPressed && !_wasMainHandPressed)
@@ -645,7 +653,7 @@ public partial class PlayerCombatant : ArenaCombatant
         if (_stateLabel == null)
             return;
 
-        _stateLabel.Visible = SaveNode.Get().DebugEnabled;
+        _stateLabel.Visible = SaveNode.Get().DevEnabled;
         _stateLabel.Text = _buildupAction?.Buildup == null
             ? CombatantState.ToString()
             : $"Buildup {_buildupAction.Buildup.GetScalar(_buildupElapsed):0.00}";

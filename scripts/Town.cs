@@ -15,34 +15,38 @@ public partial class Town : Node
     private const string FirstTownEntryPopupTitle = "Tutorial";
     private const string FirstTownEntryPopupText = "Todo, add tutorial with tscn animation popups here";
     private const string ReturningPlayerTutorialPopupTitle = "Tutorial Mode";
-    private const string ReturningPlayerTutorialPopupText = "You have completed company records from a previous run. Do you want to disable tutorial mode for this run?";
+    private const string ReturningPlayerTutorialPopupText = "You have completed company records from a previous run.\n\nDo you want to disable tutorial mode for this run?";
     private const string FirstContractCompletedPopupTitle = "Company Ambition";
-    private const string FirstContractCompletedPopupText = "Your first contract is complete. From here, build the strongest gladiator company you can: win contracts, earn gold, grow your fame, recruit better fighters, and prepare for Champion Day.";
-    private const string SpecialtyBuildingsUnlockedPopupTitle = "Recovery & Training Unlocked";
-    private const string SpecialtyBuildingsUnlockedPopupText = "Your second contract is complete. The company now has enough momentum to use specialty buildings between fights: heal wounded gladiators, manage exhaustion, and train stronger fighters before harder contracts.";
+    private const string FirstContractCompletedPopupText = "Your first contract is complete.\n\nKeep building your gladiator company.\n\nWin contracts, earn gold, grow your fame, recruit better fighters, and prepare for Champion Day.";
     private const string RecoveryBayTutorialPopupTitle = "Recovery Bay";
-    private const string RecoveryBayTutorialPopupText = "Recovery Bay is your recovery building. Drag gladiators here at Night to spend gold on healing or exhaustion recovery before the next Day.";
+    private const string RecoveryBayTutorialPopupText = "[center]Your second contract is complete.\n\nRecovery Bay is now available.\n\nDrag gladiators here to spend gold on healing or exhaustion recovery.[/center]";
     private const string TrainingHallTutorialPopupTitle = "Training Hall";
-    private const string TrainingHallTutorialPopupText = "Training Hall turns downtime into progress. Drag gladiators here at Night to spend gold, stamina, and exhaustion on attribute training.";
+    private const string TrainingHallTutorialPopupText = "[center]Your third contract is complete.\n\nTraining Hall is now available.\n\nDrag gladiators here to spend gold and exhaustion on training.[/center]";
+    private const string ConditionRiskTutorialPopupTitle = "Recovery Matters";
+    private const string ConditionRiskTutorialPopupText = "[center]Gladiators can return from fights hurt or exhausted.\n\nExhaustion lowers their max usable health and stamina until they recover. Low-health gladiators are risky to send back into the arena.\n\nRegular rest helps only a little. Use Recovery Bay when someone needs proper care.[/center]";
     private const string DemoCompletePopupTitle = "Thanks for Playing";
-    private const string DemoCompletePopupText = "Thanks for playing the demo. You defeated the first champion and reached the end of this demo build.";
+    private const string DemoCompletePopupText = "Thanks for playing the demo.\n\nYou defeated the first champion and reached the end of this demo build.";
     private const string RecoveryBayBuildingPath = "res://assets/town/buildings/healer.svg";
     private const string TrainingHallBuildingPath = "res://assets/town/buildings/training_hall.svg";
+    private const string ExhaustionIconPath = "res://assets/ui/gladiator_icons/exhaustion.svg";
 
     private TownBuilding _contractBoard;
     private EnvironmentVisualOverlay _environmentOverlay;
     private TownHud _townHud;
     private TownPhaseState _phaseState;
     private WeatherState _weatherState;
+    private SaveNode _saveNode;
     private bool _demoCompleteLocked;
 
     public override void _Ready()
     {
         _contractBoard = GetNode<TownBuilding>("World/ContractBoard");
         _environmentOverlay = GetNode<EnvironmentVisualOverlay>("EnvironmentOverlay");
-        var saveNode = SaveNode.Get();
-        _phaseState = saveNode?.TownPhaseState;
-        _weatherState = saveNode?.WeatherState;
+        _saveNode = SaveNode.Get();
+        _phaseState = _saveNode?.TownPhaseState;
+        _weatherState = _saveNode?.WeatherState;
+        if (_saveNode != null)
+            _saveNode.TutorialModeChanged += RefreshTutorialProgressionState;
         if (_phaseState != null)
             _phaseState.PhaseChanged += OnPhaseChanged;
 
@@ -57,12 +61,13 @@ public partial class Town : Node
         GetNode<Button>("World/RosterYard/ButtonRow/EquipmentButton").Pressed += OnEquipmentPressed;
         RefreshEnvironmentVisuals();
         RefreshWeatherVisuals();
-        LockTownIfDemoComplete(saveNode);
+        LockTownIfDemoComplete(_saveNode);
         CallDeferred(MethodName.ShowDemoCompletePopupIfNeeded);
         CallDeferred(MethodName.ShowReturningPlayerTutorialPromptIfNeeded);
         CallDeferred(MethodName.ShowFirstTownEntryPopupIfNeeded);
         CallDeferred(MethodName.ShowFirstContractCompletedPopupIfNeeded);
         CallDeferred(MethodName.ShowRecoveryBuildingTutorialsIfNeeded);
+        CallDeferred(MethodName.ShowConditionRiskTutorialPopupIfNeeded);
     }
 
     public override void _ExitTree()
@@ -72,6 +77,8 @@ public partial class Town : Node
 
         if (_weatherState != null)
             _weatherState.WeatherChanged -= RefreshWeatherVisuals;
+        if (_saveNode != null)
+            _saveNode.TutorialModeChanged -= RefreshTutorialProgressionState;
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
@@ -164,11 +171,9 @@ public partial class Town : Node
             ReturningPlayerTutorialPopupText,
             goAction: () =>
             {
-                var settings = SaveNode.Get()?.SettingsConfig;
-                if (settings != null)
-                    settings.SkipTutorial = true;
-
-                SaveNode.Get()?.Save();
+                var saveNode = SaveNode.Get();
+                saveNode.SetSkipTutorial(true);
+                saveNode.Save();
             },
             goText: "Disable",
             cancelText: "Keep",
@@ -207,18 +212,10 @@ public partial class Town : Node
 
         var runData = saveNode.CompanyRunData;
         var globalOverlay = GlobalOverlay.Get();
-        if (saveNode.SkipTutorial || runData == null || globalOverlay == null || !saveNode.HasReachedSpecialtyBuildingsForProgression)
+        if (saveNode.SkipTutorial || runData == null || globalOverlay == null)
             return;
 
-        if (!runData.HasUnlockedSpecialtyBuildings)
-        {
-            runData.MarkSpecialtyBuildingsUnlocked();
-            globalOverlay.ShowBlurredPopup(
-                SpecialtyBuildingsUnlockedPopupTitle,
-                SpecialtyBuildingsUnlockedPopupText);
-        }
-
-        if (!runData.HasShownThermaeTutorialPopup)
+        if (saveNode.HasUnlockedRecoveryBayForProgression && !runData.HasShownThermaeTutorialPopup)
         {
             runData.MarkThermaeTutorialPopupShown();
             globalOverlay.ShowBlurredPopup(
@@ -227,8 +224,9 @@ public partial class Town : Node
                 ResourceLoader.Load<Texture2D>(RecoveryBayBuildingPath));
         }
 
-        if (!runData.HasShownTrainingHallTutorialPopup)
+        if (saveNode.HasUnlockedTrainingHallForProgression && !runData.HasShownTrainingHallTutorialPopup)
         {
+            runData.MarkSpecialtyBuildingsUnlocked();
             runData.MarkTrainingHallTutorialPopupShown();
             globalOverlay.ShowBlurredPopup(
                 TrainingHallTutorialPopupTitle,
@@ -237,6 +235,40 @@ public partial class Town : Node
         }
 
         saveNode.Save();
+    }
+
+    private static void ShowConditionRiskTutorialPopupIfNeeded()
+    {
+        var saveNode = SaveNode.Get();
+        if (saveNode.IsDemoComplete)
+            return;
+
+        var runData = saveNode.CompanyRunData;
+        if (saveNode.SkipTutorial || runData == null || runData.HasShownConditionRiskTutorialPopup || !saveNode.HasUnlockedRecoveryBayForProgression)
+            return;
+
+        var lowHealthWarningRatio = saveNode.SettingsConfig?.LowHealthWarningRatio ?? 0.6f;
+        if (!HasConditionRiskGladiator(runData, lowHealthWarningRatio))
+            return;
+
+        runData.MarkConditionRiskTutorialPopupShown();
+        saveNode.Save();
+        GlobalOverlay.Get()?.ShowBlurredPopup(
+            ConditionRiskTutorialPopupTitle,
+            ConditionRiskTutorialPopupText,
+            ResourceLoader.Load<Texture2D>(ExhaustionIconPath));
+    }
+
+    private static bool HasConditionRiskGladiator(CompanyRunData runData, float lowHealthWarningRatio)
+    {
+        foreach (var gladiator in runData.Gladiators)
+        {
+            var riskStatus = gladiator?.GetRiskStatus(5f, lowHealthWarningRatio) ?? GladiatorRiskStatus.None;
+            if (riskStatus is GladiatorRiskStatus.Exhausted or GladiatorRiskStatus.LowHealth or GladiatorRiskStatus.Critical)
+                return true;
+        }
+
+        return false;
     }
 
     private void LockTownIfDemoComplete(SaveNode saveNode)
@@ -275,6 +307,7 @@ public partial class Town : Node
     {
         RefreshEnvironmentVisuals();
         RefreshWeatherVisuals();
+        CallDeferred(MethodName.ShowConditionRiskTutorialPopupIfNeeded);
     }
 
     private void RefreshWeatherVisuals()
@@ -282,5 +315,14 @@ public partial class Town : Node
         var weather = _weatherState?.CurrentWeather ?? WeatherState.WeatherVisual.Cloudy;
         _environmentOverlay?.SetWeather(weather);
         _townHud?.SetWeatherVisual(weather);
+    }
+
+    private void RefreshTutorialProgressionState()
+    {
+        foreach (var node in GetTree().GetNodesInGroup(RosterYard.DragDropTargetGroup))
+        {
+            if (node is TownBuilding building)
+                building.RefreshProgressionState();
+        }
     }
 }

@@ -4,8 +4,8 @@ namespace MobArena.Scripts.Resources;
 
 public partial class SettingsConfig : Resource
 {
-    [Export]
-    public bool DebugEnabled { get; set; } = true;
+	[Export]
+	public bool DevEnabled { get; set; } = true;
 
 	[Export]
 	public bool IsDemo { get; set; } = false;

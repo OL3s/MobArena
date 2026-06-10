@@ -6,30 +6,37 @@ namespace MobArena.Scripts;
 public partial class RuntimeTagOverlay : CanvasLayer
 {
     private Label _tagLabel;
+    private SaveNode _saveNode;
     private string _lastTagText = string.Empty;
 
     public string TagText => _lastTagText;
 
     public override void _Ready()
     {
+        _saveNode = SaveNode.Get();
+        if (_saveNode != null)
+            _saveNode.RuntimeTagsChanged += RefreshTags;
+
         _tagLabel = GetNode<Label>("Panel/MarginContainer/TagLabel");
         ProcessMode = ProcessModeEnum.Always;
         RefreshTags();
     }
 
-    public override void _Process(double delta)
+    public override void _ExitTree()
     {
-        RefreshTags();
+        if (_saveNode != null)
+            _saveNode.RuntimeTagsChanged -= RefreshTags;
     }
 
     private void RefreshTags()
     {
         var tagText = BuildTagText();
+        Visible = !string.IsNullOrWhiteSpace(tagText);
+
         if (_lastTagText == tagText)
             return;
 
         _lastTagText = tagText;
-        Visible = !string.IsNullOrWhiteSpace(tagText);
         if (_tagLabel != null)
             _tagLabel.Text = tagText;
     }
@@ -45,10 +52,10 @@ public partial class RuntimeTagOverlay : CanvasLayer
 
         if (settings?.IsDemo == true)
             tags.Add("Demo");
-        if (settings?.DebugEnabled == true)
-            tags.Add("Debug");
+        if (settings?.DevEnabled == true)
+            tags.Add("Dev");
         if (OS.IsDebugBuild())
-            tags.Add("(dev)");
+            tags.Add("(debug build)");
 
         return string.Join("\n", tags);
     }

@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://dviqtv7j1hgpg"]
+[gd_scene load_steps=19 format=3 uid="uid://dviqtv7j1hgpg"]
 
 [ext_resource type="Script" uid="uid://n8gksqgankej" path="res://scenes/components/ui/TownHud.cs" id="1_town_hud"]
 [ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_company_logo"]
@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" path="res://scenes/components/ui/SettingsButton.tscn" id="4_settings_button"]
 [ext_resource type="Texture2D" uid="uid://budosbjkhbjtt" path="res://assets/ui/icons/gold.svg" id="5_gold_icon"]
 [ext_resource type="Texture2D" uid="uid://ouifl3o34tw2" path="res://assets/ui/icons/back.svg" id="6_back_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/clear.svg" id="7_clear_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/rain.svg" id="8_rain_icon"]
 [ext_resource type="Texture2D" uid="uid://71u2e2ca07pv" path="res://assets/ui/icons/sun.svg" id="9_sun_icon"]
 [ext_resource type="Texture2D" uid="uid://bxdsorjywjjot" path="res://assets/ui/icons/moon.svg" id="10_moon_icon"]
 [ext_resource type="Texture2D" uid="uid://cf7aixee5gvkk" path="res://assets/ui/gladiator_icons/exhaustion.svg" id="14_exhaustion_icon"]
@@ -13,6 +15,8 @@
 [ext_resource type="Texture2D" uid="uid://bvgxuygtyooc0" path="res://assets/ui/gladiator_icons/health.svg" id="19_health_icon"]
 [ext_resource type="Texture2D" uid="uid://0c5jjlvt76rv" path="res://assets/ui/gladiator_icons/critical_risk.svg" id="20_critical_risk_icon"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/idle.svg" id="21_idle_icon"]
+[ext_resource type="PackedScene" path="res://scenes/town_overlays/next_day_summary_overlay.tscn" id="22_next_day_summary"]
+[ext_resource type="PackedScene" path="res://scenes/ui/WeatherChampionInfoOverlay.tscn" id="23_weather_champion"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_champion_progress_bg"]
 bg_color = Color(0.09, 0.065, 0.045, 0.88)
@@ -35,6 +39,13 @@ corner_radius_bottom_left = 3
 
 [node name="TownHud" type="CanvasLayer" unique_id=1424046690]
 script = ExtResource("1_town_hud")
+CloudyWeatherIcon = ExtResource("7_clear_icon")
+RainWeatherIcon = ExtResource("8_rain_icon")
+SunWeatherIcon = ExtResource("9_sun_icon")
+GoldIcon = ExtResource("5_gold_icon")
+ChampionIcon = ExtResource("3_champion_icon")
+NextDaySummaryOverlayScene = ExtResource("22_next_day_summary")
+WeatherChampionInfoOverlayScene = ExtResource("23_weather_champion")
 
 [node name="TopPanel" type="PanelContainer" parent="." unique_id=2037451129]
 anchors_preset = 10

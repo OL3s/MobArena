@@ -434,7 +434,21 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
         var attributeLevel = level?.GetAttributeLevel(attribute) ?? 1;
         var progress = level?.GetAttributeLevelProgress(attribute) ?? 0f;
         var gainProgress = GetTrainingGainProgress(gladiator, attribute);
-        display.Configure(GetAttributeAbbreviation(attribute), attributeLevel, progress, gainProgress);
+        display.Configure(GetAttributeAbbreviation(attribute), attributeLevel, progress, gainProgress, WillTrainingLevelUpAttribute(gladiator, attribute));
+    }
+
+    private bool WillTrainingLevelUpAttribute(GladiatorData gladiator, GladiatorLevelData.AttributeKind attribute)
+    {
+        if (gladiator?.Level == null || _runData?.IsGladiatorIdleInTownLocation(gladiator, AssignmentLocation) == true)
+            return false;
+
+        var expGain = _runData.GetTrainingAttributeExpPreview(_runData.CurrentTrainingFocus, attribute);
+        if (expGain <= 0f)
+            return false;
+
+        var currentExp = gladiator.Level.GetAttributeExp(attribute);
+        var currentLevel = gladiator.Level.GetAttributeLevel(attribute);
+        return GladiatorLevelData.GetAttributeLevel(currentExp + expGain) > currentLevel;
     }
 
     private float GetTrainingGainProgress(GladiatorData gladiator, GladiatorLevelData.AttributeKind attribute)

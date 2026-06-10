@@ -34,7 +34,7 @@ public partial class CompanyRunData : Resource
     private const int TrainingStaminaCost = 20;
     private const float TrainingExhaustionCost = 1f;
     private const float TrainingAttributeExp = 40f;
-    private const float PhaseRestExhaustionRecovery = 2f;
+    private const float PhaseRestExhaustionRecovery = 1f;
     private const float ArenaFightExhaustionCost = 4f;
     private const int FameDonationGoldCostPerFame = 20;
     private const int BuildingUpgradeBaseGoldCost = 50;
@@ -110,6 +110,9 @@ public partial class CompanyRunData : Resource
 
     [Export]
     public bool HasAskedReturningPlayerTutorialSkipPopup { get; private set; }
+
+    [Export]
+    public bool HasShownConditionRiskTutorialPopup { get; private set; }
 
     [Export]
     public TreatmentFocus CurrentTreatmentFocus { get; private set; } = TreatmentFocus.Health;
@@ -249,6 +252,15 @@ public partial class CompanyRunData : Resource
             return;
 
         HasAskedReturningPlayerTutorialSkipPopup = true;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void MarkConditionRiskTutorialPopupShown()
+    {
+        if (HasShownConditionRiskTutorialPopup)
+            return;
+
+        HasShownConditionRiskTutorialPopup = true;
         EmitSignal(SignalName.RunChanged);
     }
 
