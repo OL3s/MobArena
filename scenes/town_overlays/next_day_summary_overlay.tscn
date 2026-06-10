@@ -66,7 +66,7 @@ horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
-text = "Confirm city costs and queued Thermae or Training Hall changes before advancing."
+text = "Confirm city costs and queued Recovery Bay or Training Hall changes before advancing."
 horizontal_alignment = 1
 autowrap_mode = 3
 

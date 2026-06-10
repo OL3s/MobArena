@@ -29,13 +29,14 @@ public partial class InfoPopupPanel : Control
             UpdatePanelWidth();
     }
 
-    public void ShowContent(string title, string richText, Texture2D image = null)
+    public void ShowContent(string title, string richText, Texture2D image = null, string okText = "OK")
     {
         EnsureNodes();
         _titleLabel.Text = string.IsNullOrWhiteSpace(title) ? "Info" : title;
         _bodyText.Text = richText ?? string.Empty;
         _image.Texture = image;
         _image.Visible = image != null;
+        _okButton.Text = string.IsNullOrWhiteSpace(okText) ? "OK" : okText;
         UpdatePanelWidth();
     }
 

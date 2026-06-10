@@ -1,4 +1,5 @@
 using Godot;
+using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Combat;
 using MobArena.Scripts.Resources.Combat.Effects;
@@ -201,6 +202,35 @@ public abstract partial class ArenaCombatant : CharacterBody2D
 
     protected virtual void OnCombatantStateChanged(ArenaCombatantState state)
     {
+    }
+
+    protected void ApplyDebugStateModulate(params CanvasItem[] visuals)
+    {
+        var color = SaveNode.Get()?.DebugEnabled == true
+            ? GetDebugStateColor(CombatantState)
+            : Colors.White;
+
+        foreach (var visual in visuals)
+        {
+            if (visual != null)
+                visual.Modulate = color;
+        }
+    }
+
+    private static Color GetDebugStateColor(ArenaCombatantState state)
+    {
+        return state switch
+        {
+            ArenaCombatantState.Default => Colors.White,
+            ArenaCombatantState.Windup => new Color(1f, 0.72f, 0.35f),
+            ArenaCombatantState.Release => new Color(1f, 0.9f, 0.35f),
+            ArenaCombatantState.Stunned => new Color(1f, 0.35f, 0.35f),
+            ArenaCombatantState.Dead => new Color(0.45f, 0.45f, 0.45f),
+            ArenaCombatantState.Dodging => new Color(0.55f, 1f, 0.65f),
+            ArenaCombatantState.Blocking => new Color(0.65f, 0.8f, 1f),
+            ArenaCombatantState.Exhausted => new Color(0.7f, 0.85f, 1f),
+            _ => Colors.White
+        };
     }
 
     protected void MoveWithDirection(Vector2 direction)

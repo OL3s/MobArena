@@ -55,9 +55,16 @@ public partial class SaveNode : Node
 	public SettingsConfig SettingsConfig { get; private set; } = new();
 
 	public bool DebugEnabled => SettingsConfig?.DebugEnabled == true;
+	public bool IsDemo => SettingsConfig?.IsDemo == true;
+	public bool IsDemoComplete => IsDemo && (CompanyCareerData?.ChampionsDefeated ?? 0) > 0;
 	public bool SkipTutorial => SettingsConfig?.SkipTutorial == true;
 	public bool HasCompletedContractsForProgression => SkipTutorial || CompanyCareerData?.HasCompletedContracts == true;
 	public bool HasReachedSpecialtyBuildingsForProgression => SkipTutorial || CompanyCareerData?.HasReachedSpecialtyBuildings == true;
+
+	public bool CanStartArenaContract()
+	{
+		return !IsDemoComplete;
+	}
 
 	public void QueueCompanyLossNotification(string title, string text)
 	{

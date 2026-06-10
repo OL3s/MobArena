@@ -83,7 +83,7 @@ public partial class NextDaySummaryOverlay : Control
         {
             _changeList.AddChild(new Label
             {
-                Text = "No Thermae or Training Hall changes queued.",
+                Text = "No Recovery Bay or Training Hall changes queued.",
                 HorizontalAlignment = HorizontalAlignment.Center,
                 AutowrapMode = TextServer.AutowrapMode.WordSmart
             });
@@ -96,7 +96,7 @@ public partial class NextDaySummaryOverlay : Control
         if (gladiators == null || gladiators.Count <= 0)
             return false;
 
-        AddSectionHeader($"Thermae - {GetTreatmentFocusLabel()}");
+        AddSectionHeader($"Recovery Bay - {GetTreatmentFocusLabel()}");
         foreach (var gladiator in gladiators)
             AddAssignedGladiatorRow(gladiator, TownAssignmentData.AssignmentLocation.Healer);
 

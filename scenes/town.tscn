@@ -96,9 +96,9 @@ TownDragDropPriority = 5
 SellDroppedPayloads = true
 MaxAssignedGladiators = 0
 
-[node name="Thermae" parent="World" unique_id=668293402 instance=ExtResource("2_townbuilding")]
+[node name="RecoveryBay" parent="World" unique_id=668293402 instance=ExtResource("2_townbuilding")]
 position = Vector2(1008, 464)
-BuildingName = "Thermae"
+BuildingName = "Recovery Bay"
 BuildingTexture = ExtResource("11_healer_building")
 IconTexture = ExtResource("12_healer_icon")
 HoverDescription = "Assign gladiators here for paid Roman bathhouse care. Choose health treatment or faster exhaustion recovery; work resolves on phase changes."

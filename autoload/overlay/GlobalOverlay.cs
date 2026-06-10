@@ -25,6 +25,7 @@ public partial class GlobalOverlay : CanvasLayer
         public Action CancelAction { get; init; }
         public Action ClosedAction { get; init; }
         public bool PauseGameUntilClosed { get; init; }
+        public string OkText { get; init; }
         public string GoText { get; init; }
         public string CancelText { get; init; }
     }
@@ -118,7 +119,7 @@ public partial class GlobalOverlay : CanvasLayer
             && control.IsVisibleInTree();
     }
 
-	public void ShowBlurredPopup(string title, string richText, Texture2D image = null, Action closedAction = null, bool pauseGameUntilClosed = false)
+	public void ShowBlurredPopup(string title, string richText, Texture2D image = null, Action closedAction = null, bool pauseGameUntilClosed = false, string okText = "OK")
 	{
         EnqueueOrShowPopup(new PopupRequest
         {
@@ -127,7 +128,8 @@ public partial class GlobalOverlay : CanvasLayer
             RichText = richText,
             Image = image,
             ClosedAction = closedAction,
-            PauseGameUntilClosed = pauseGameUntilClosed
+            PauseGameUntilClosed = pauseGameUntilClosed,
+            OkText = okText
         });
     }
 
@@ -309,7 +311,7 @@ public partial class GlobalOverlay : CanvasLayer
         _activePopupClosedAction = request.ClosedAction;
         _activePopupPausesGame = request.PauseGameUntilClosed;
         AddChild(_activeInfoPopup);
-        _activeInfoPopup.ShowContent(request.Title, request.RichText, request.Image);
+        _activeInfoPopup.ShowContent(request.Title, request.RichText, request.Image, request.OkText);
         _activeInfoPopup.Closed += OnInfoPopupClosed;
         CallDeferred(MethodName.GrabFirstOverlayFocus, _activeInfoPopup);
         RefreshPopupGamePauseState();

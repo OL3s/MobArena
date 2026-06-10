@@ -35,7 +35,7 @@ public partial class CompanyRunData : Resource
     private const float TrainingExhaustionCost = 1f;
     private const float TrainingAttributeExp = 40f;
     private const float PhaseRestExhaustionRecovery = 2f;
-    private const float ArenaFightExhaustionCost = 3f;
+    private const float ArenaFightExhaustionCost = 4f;
     private const int FameDonationGoldCostPerFame = 20;
     private const int BuildingUpgradeBaseGoldCost = 50;
     private const int BuildingUpgradeCostGrowth = 50;
@@ -107,6 +107,9 @@ public partial class CompanyRunData : Resource
 
     [Export]
     public bool HasShownTrainingHallTutorialPopup { get; private set; }
+
+    [Export]
+    public bool HasAskedReturningPlayerTutorialSkipPopup { get; private set; }
 
     [Export]
     public TreatmentFocus CurrentTreatmentFocus { get; private set; } = TreatmentFocus.Health;
@@ -237,6 +240,15 @@ public partial class CompanyRunData : Resource
             return;
 
         HasShownTrainingHallTutorialPopup = true;
+        EmitSignal(SignalName.RunChanged);
+    }
+
+    public void MarkReturningPlayerTutorialSkipPopupAsked()
+    {
+        if (HasAskedReturningPlayerTutorialSkipPopup)
+            return;
+
+        HasAskedReturningPlayerTutorialSkipPopup = true;
         EmitSignal(SignalName.RunChanged);
     }
 
@@ -672,6 +684,7 @@ public partial class CompanyRunData : Resource
     public bool TryBuyMarketGladiator(int gladiatorIndex, CompanyCareerData careerData)
     {
         EnsureResources();
+        EnsureFirstContractMarketReadiness(careerData);
         var stock = Market?.GladiatorStock;
         if (stock == null || stock.Count <= 0)
         {
@@ -709,6 +722,7 @@ public partial class CompanyRunData : Resource
     public bool TryBuyMarketGladiator(GladiatorData gladiatorData, CompanyCareerData careerData)
     {
         EnsureResources();
+        EnsureFirstContractMarketReadiness(careerData);
         var gladiatorIndex = Market?.GladiatorStock?.IndexOf(gladiatorData) ?? -1;
         if (gladiatorIndex < 0)
         {
@@ -1014,6 +1028,21 @@ public partial class CompanyRunData : Resource
         PruneArenaControlAssignments(null);
     }
 
+    public void EnsureFirstContractMarketReadiness(CompanyCareerData careerData)
+    {
+        if (careerData?.HasCompletedContracts == true || Market?.GladiatorStock == null)
+            return;
+
+        foreach (var gladiator in Market.GladiatorStock)
+        {
+            if (gladiator == null)
+                continue;
+
+            gladiator.SetExhaustion(GladiatorData.MaxConditionValue);
+            gladiator.SetHealth(gladiator.MaxHealth);
+        }
+    }
+
     private bool PruneArenaControlAssignments(Array<LocalInputControllerConfig> controllerSetups)
     {
         var changed = false;
@@ -1258,7 +1287,7 @@ public partial class CompanyRunData : Resource
 
     public IEnumerable<PhaseGoldCostLine> GetPhaseBuildingGoldCostLines()
     {
-        yield return new PhaseGoldCostLine("Thermae", GetTreatmentPhaseGoldCost(), PhaseGoldCostTiming.Both);
+        yield return new PhaseGoldCostLine("Recovery Bay", GetTreatmentPhaseGoldCost(), PhaseGoldCostTiming.Both);
         yield return new PhaseGoldCostLine("Training Hall", GetTrainingPhaseGoldCost(), PhaseGoldCostTiming.Both);
     }
 

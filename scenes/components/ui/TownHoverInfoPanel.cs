@@ -114,7 +114,7 @@ public partial class TownHoverInfoPanel : PanelContainer
         _agilityDisplay.Configure(levelData, GladiatorLevelData.AttributeKind.Agility);
         _vitalityDisplay.Configure(levelData, GladiatorLevelData.AttributeKind.Vitality);
         _enduranceDisplay.Configure(levelData, GladiatorLevelData.AttributeKind.Endurance);
-        _totalLevelDisplay.Configure("TOT", levelData?.TotalLevel ?? 4, 1f);
+        _totalLevelDisplay.Configure("Level", levelData?.TotalLevel ?? 4, 1f);
     }
 
     private static string GetSkillIconPath(GladiatorEquipmentData.SignatureSkill skill)

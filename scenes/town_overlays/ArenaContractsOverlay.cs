@@ -233,10 +233,11 @@ public partial class ArenaContractsOverlay : Control
 		var assignedCount = _runData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
 		var selectedContract = GetSelectedContractOrNull();
 		var hasContract = selectedContract != null;
+		var canStartArena = SaveNode.Get()?.CanStartArenaContract() == true;
 		var rerollCost = GetRerollGoldCost();
 		var isFirstContract = IsFirstContractOnboarding();
 
-		_startButton.Disabled = !hasContract || assignedCount <= 0;
+		_startButton.Disabled = !canStartArena || !hasContract || assignedCount <= 0;
 		_rerollButton.Visible = !isFirstContract;
 		_skipButton.Visible = !isFirstContract;
 		_rerollButton.Disabled = _runData == null || _runData.Gold < rerollCost;
@@ -247,7 +248,12 @@ public partial class ArenaContractsOverlay : Control
 		_rerollButton.TooltipText = $"Spend {rerollCost} gold to reroll all contracts.";
 		_skipButton.TooltipText = GetSkipContractTooltip();
 
-		if (assignedCount <= 0)
+		if (!canStartArena)
+		{
+			_startButton.Text = "Demo Complete";
+			_startButton.TooltipText = "The demo is complete for this company.";
+        }
+		else if (assignedCount <= 0)
 		{
 			_startButton.Text = "Missing Gladiator";
 			_startButton.TooltipText = "Assign at least one gladiator to the Arena building before starting.";
@@ -379,6 +385,9 @@ public partial class ArenaContractsOverlay : Control
 
 	private void OnStartPressed()
 	{
+		if (SaveNode.Get()?.CanStartArenaContract() != true)
+			return;
+
 		if (GetSelectedContractOrNull() == null
 			|| (_runData?.TownAssignments?.ArenaGladiators?.Count ?? 0) <= 0)
 			return;
@@ -494,6 +503,12 @@ public partial class ArenaContractsOverlay : Control
 
     private void StartArenaScene()
     {
+        if (SaveNode.Get()?.CanStartArenaContract() != true)
+        {
+            GD.Print("Arena launch blocked: demo is complete.");
+            return;
+        }
+
         var selectedContract = GetSelectedContractOrNull();
         if (selectedContract == null)
         {

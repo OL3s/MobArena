@@ -20,6 +20,7 @@ config/icon="uid://rth45ova1lyc"
 
 GlobalOverlay="*res://autoload/overlay/GlobalOverlay.tscn"
 SaveNode="*res://autoload/SaveNode.tscn"
+RuntimeTagOverlay="*res://autoload/RuntimeTagOverlay.tscn"
 LocalInputConfig="*res://autoload/LocalInputConfig.tscn"
 
 [display]

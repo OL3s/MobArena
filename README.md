@@ -84,7 +84,7 @@ godot --headless --import
 | --- | --- |
 | `project.godot` | Godot project settings and autoload registration. |
 | `MobArena.csproj` | Godot C# project file. |
-| `autoload/` | Global overlay, save node, and local input config autoloads. |
+| `autoload/` | Global overlay, save node, runtime tag overlay, and local input config autoloads. |
 | `scenes/` | Main scenes and reusable scene components. |
 | `scripts/` | C# gameplay, UI, and resource scripts. |
 | `resources/` | Authored `.tres` gameplay resources for mobs, contracts, items, and appearances. |

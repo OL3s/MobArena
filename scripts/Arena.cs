@@ -11,6 +11,8 @@ public partial class Arena : Node
 {
 	private const string TownScene = "res://scenes/town.tscn";
 	private const string MainMenuScene = "res://scenes/main_menu.tscn";
+	private const string DemoCompletePopupTitle = "Thanks for Playing";
+	private const string DemoCompletePopupText = "Thanks for playing the demo. You defeated the first champion and reached the end of this demo build.";
 
 	private SaveNode _saveNode;
 	private EnvironmentVisualOverlay _environmentOverlay;
@@ -28,6 +30,12 @@ public partial class Arena : Node
 	public override void _Ready()
 	{
 		_saveNode = SaveNode.Get();
+		if (_saveNode?.CanStartArenaContract() != true)
+		{
+			CallDeferred(MethodName.ShowDemoCompleteAndReturnToMainMenu);
+			return;
+		}
+
 		_environmentOverlay = GetNodeOrNull<EnvironmentVisualOverlay>("EnvironmentOverlay");
 		_weatherState = _saveNode?.WeatherState;
 		_runData = _saveNode?.CompanyRunData;
@@ -73,7 +81,14 @@ public partial class Arena : Node
 			return;
 
 		_isResolvingContract = true;
-		if (ArenaContractResultResolver.ResolveWin(_saveNode) != ArenaContractResultResolver.ContractResult.Completed)
+		var result = ArenaContractResultResolver.ResolveWin(_saveNode);
+		if (result == ArenaContractResultResolver.ContractResult.DemoComplete)
+		{
+			SaveAndReturnToMainMenuAfterDemo();
+			return;
+		}
+
+		if (result != ArenaContractResultResolver.ContractResult.Completed)
 		{
 			_isResolvingContract = false;
 			return;
@@ -126,6 +141,27 @@ public partial class Arena : Node
 		GD.Print($"Arena: Save before town transition returned {saveError}.");
 		SceneTransitionLogger.LogChange(GetTree(), TownScene, reason);
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, TownScene);
+	}
+
+	private void SaveAndReturnToMainMenuAfterDemo()
+	{
+		var saveError = _saveNode?.Save() ?? Error.Unavailable;
+		GD.Print($"Arena: Save before demo completion transition returned {saveError}.");
+		ShowDemoCompleteAndReturnToMainMenu();
+	}
+
+	private void ShowDemoCompleteAndReturnToMainMenu()
+	{
+		GlobalOverlay.Get()?.ShowBlurredPopup(
+			DemoCompletePopupTitle,
+			DemoCompletePopupText,
+			closedAction: () =>
+			{
+				SceneTransitionLogger.LogChange(GetTree(), MainMenuScene, "demo complete");
+				GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScene);
+			},
+			pauseGameUntilClosed: true,
+			okText: "Menu");
 	}
 
 	private void TryResolveAllPlayersDefeated()

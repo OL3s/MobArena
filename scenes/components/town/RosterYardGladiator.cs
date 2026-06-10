@@ -332,7 +332,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
             return;
 
         _nameLabel.Text = _gladiatorData.GladiatorName;
-        _totalLevelLabel.Text = $"TOT {_gladiatorData.Level?.TotalLevel ?? 4}";
+        _totalLevelLabel.Text = $"Level {_gladiatorData.Level?.TotalLevel ?? 4}";
         RefreshRiskWarnings();
         RefreshDetails();
         RefreshCompactStatus();

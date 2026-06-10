@@ -10,6 +10,7 @@ public static class ArenaContractResultResolver
     {
         None,
         Completed,
+        DemoComplete,
         ForceRetired
     }
 
@@ -18,6 +19,12 @@ public static class ArenaContractResultResolver
         var runData = saveNode?.CompanyRunData;
         var phaseState = saveNode?.TownPhaseState;
         var contract = runData?.ActiveArenaContract;
+        if (saveNode?.IsDemoComplete == true)
+        {
+            GD.Print($"Arena result: win ignored because demo is complete; {DescribeContext(saveNode)}.");
+            return ContractResult.None;
+        }
+
         if (saveNode == null || runData == null || phaseState == null || (requireActiveContract && contract == null))
         {
             GD.Print($"Arena result: win ignored; {DescribeContext(saveNode)}.");
@@ -50,11 +57,17 @@ public static class ArenaContractResultResolver
 
         CompleteArenaDay(saveNode);
         GD.Print($"Arena result: win completed; {DescribeContext(saveNode)}.");
-        return ContractResult.Completed;
+        return saveNode.IsDemoComplete ? ContractResult.DemoComplete : ContractResult.Completed;
     }
 
     public static ContractResult ResolveVisibleContractWin(SaveNode saveNode, int contractIndex)
     {
+        if (saveNode?.CanStartArenaContract() != true)
+        {
+            GD.Print($"Arena result: visible contract win ignored because arena start is blocked; {DescribeContext(saveNode)}.");
+            return ContractResult.None;
+        }
+
         if (!ArenaContractSelection.TryGetVisibleContract(saveNode, contractIndex, out var contract))
             return ContractResult.None;
 

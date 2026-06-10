@@ -16,7 +16,7 @@ public partial class CodexGroupPanel : PanelContainer
     private Texture2D _icon;
     private bool _expanded;
 
-    public VBoxContainer Content => _content;
+    public VBoxContainer Content => _content ??= GetNodeOrNull<VBoxContainer>("MarginContainer/Content");
 
     public override void _Ready()
     {

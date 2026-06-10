@@ -23,6 +23,7 @@ public partial class GladiatorMarketOverlay : Control
         _saveNode = SaveNode.Get();
         _runData = _saveNode.CompanyRunData;
         _runData.EnsureResources();
+        _runData.EnsureFirstContractMarketReadiness(_saveNode.CompanyCareerData);
 
         _goldLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/Header/GoldLabel");
         _feedbackLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/FeedbackLabel");
@@ -44,6 +45,7 @@ public partial class GladiatorMarketOverlay : Control
     private void RefreshUi()
     {
         _runData.EnsureResources();
+        _runData.EnsureFirstContractMarketReadiness(_saveNode.CompanyCareerData);
         _goldLabel.Text = _runData.Gold.ToString();
 
         foreach (var child in _gladiatorRow.GetChildren())
