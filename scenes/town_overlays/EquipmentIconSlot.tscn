@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/town_overlays/EquipmentIconSlot.cs" id="1_script"]
+
+[node name="EquipmentIconSlot" type="PanelContainer"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+script = ExtResource("1_script")
+
+[node name="Icon" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5

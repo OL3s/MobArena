@@ -13,6 +13,7 @@ public partial class BlacksmithStoreOverlay : Control
     private const string ArmorItemShowcaseScenePath = "res://scenes/components/ui/item_showcases/ArmorItemShowcase.tscn";
     private const string MainHandItemShowcaseScenePath = "res://scenes/components/ui/item_showcases/MainHandItemShowcase.tscn";
     private const string OffHandItemShowcaseScenePath = "res://scenes/components/ui/item_showcases/OffHandItemShowcase.tscn";
+    private const string StoreDetailRowScenePath = "res://scenes/ui/StoreDetailRow.tscn";
 
     private CompanyRunData _runData;
     private Label _goldLabel;
@@ -28,6 +29,7 @@ public partial class BlacksmithStoreOverlay : Control
     private PackedScene _armorItemShowcaseScene;
     private PackedScene _mainHandItemShowcaseScene;
     private PackedScene _offHandItemShowcaseScene;
+    private PackedScene _storeDetailRowScene;
     private ItemData _selectedItem;
 
     public override void _Ready()
@@ -48,6 +50,7 @@ public partial class BlacksmithStoreOverlay : Control
         _armorItemShowcaseScene = ResourceLoader.Load<PackedScene>(ArmorItemShowcaseScenePath);
         _mainHandItemShowcaseScene = ResourceLoader.Load<PackedScene>(MainHandItemShowcaseScenePath);
         _offHandItemShowcaseScene = ResourceLoader.Load<PackedScene>(OffHandItemShowcaseScenePath);
+        _storeDetailRowScene = ResourceLoader.Load<PackedScene>(StoreDetailRowScenePath);
 
         GetNode<Button>("CenterContainer/PopupPanel/MarginContainer/Content/CloseButton").Pressed += QueueFree;
         _buyButton.Pressed += OnSelectedBuyPressed;
@@ -171,11 +174,15 @@ public partial class BlacksmithStoreOverlay : Control
 
     private void AddGenericStat(string label, string value)
     {
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", 10);
-        row.AddChild(new Label { Text = label, CustomMinimumSize = new Vector2(132, 0) });
-        row.AddChild(new Label { Text = value, AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = SizeFlags.ExpandFill });
+        var row = _storeDetailRowScene?.Instantiate<StoreDetailRow>();
+        if (row == null)
+        {
+            GD.PushError("Store detail row scene is missing or has the wrong root script.");
+            return;
+        }
+
         _showcaseHost.AddChild(row);
+        row.Configure(label, value);
     }
 
     private static string GetItemTypeLabel(ItemData item)

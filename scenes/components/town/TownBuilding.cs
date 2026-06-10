@@ -819,15 +819,17 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
     private void AddStatusWarningIcon(string texturePath, string tooltipText)
     {
-        _statusWarnings.AddChild(new TextureRect
+        var scene = ResourceLoader.Load<PackedScene>("res://scenes/components/town/TownBuildingWarningIcon.tscn");
+        var icon = scene?.Instantiate<TextureRect>();
+        if (icon == null)
         {
-            CustomMinimumSize = new Vector2(20, 20),
-            Texture = ResourceLoader.Load<Texture2D>(texturePath),
-            TooltipText = tooltipText,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-        });
+            GD.PushError("Town building warning icon scene is missing or has the wrong root type.");
+            return;
+        }
+
+        icon.Texture = ResourceLoader.Load<Texture2D>(texturePath);
+        icon.TooltipText = tooltipText;
+        _statusWarnings.AddChild(icon);
     }
 
     private static GladiatorRiskStatus GetRiskStatus(GladiatorData gladiator)

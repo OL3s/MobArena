@@ -21,9 +21,12 @@ public partial class ArenaContractCard : Button
     [Export]
     public ArenaContractData ContractData { get; set; }
 
+    [Export]
+    public PackedScene RewardRowScene { get; set; }
+
     public int CurrentCompanyFame { get; private set; }
 
-    private HBoxContainer _difficultyStars;
+    private DifficultyStars _difficultyStars;
     private TextureRect _familyIcon;
     private Label _familyNameLabel;
     private TextureRect _championIcon;
@@ -37,7 +40,7 @@ public partial class ArenaContractCard : Button
     public override void _Ready()
     {
         ToggleMode = true;
-        _difficultyStars = GetNode<HBoxContainer>("MarginContainer/Layout/DifficultyStars");
+        _difficultyStars = GetNode<DifficultyStars>("MarginContainer/Layout/DifficultyStars");
         _familyIcon = GetNode<TextureRect>("MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout/FamilyRow/FamilyIcon");
         _familyNameLabel = GetNode<Label>("MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout/FamilyRow/FamilyName");
         _championIcon = GetNode<TextureRect>("MarginContainer/Layout/MobPanel/MobPanelMargin/CenterContainer/MobPanelLayout/FamilyRow/ChampionIcon");
@@ -86,22 +89,8 @@ public partial class ArenaContractCard : Button
 
     private void RebuildDifficultyStars()
     {
-        foreach (var child in _difficultyStars.GetChildren())
-            child.QueueFree();
-
         var starCount = ContractData?.GetThreatStarCount() ?? 1;
-
-        for (var i = 0; i < starCount; i++)
-        {
-            _difficultyStars.AddChild(new TextureRect
-            {
-                CustomMinimumSize = new Vector2(22, 22),
-                Texture = _starIcon,
-                ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-                MouseFilter = MouseFilterEnum.Ignore
-            });
-        }
+        _difficultyStars.Configure(_starIcon, starCount);
     }
 
     private void RebuildMobsGrid()
@@ -141,31 +130,16 @@ public partial class ArenaContractCard : Button
             row.AddChild(child);
     }
 
-    private static HBoxContainer CreateIconValue(Texture2D icon, string text)
+    private ContractRewardRow CreateIconValue(Texture2D icon, string text)
     {
-        var row = new HBoxContainer
+        var row = RewardRowScene?.Instantiate<ContractRewardRow>();
+        if (row == null)
         {
-            CustomMinimumSize = new Vector2(0, 34),
-            Alignment = BoxContainer.AlignmentMode.Center
-        };
-        row.AddThemeConstantOverride("separation", 5);
+            GD.PushError("Contract reward row scene is missing or has the wrong root script.");
+            return new ContractRewardRow();
+        }
 
-        row.AddChild(new TextureRect
-        {
-            CustomMinimumSize = new Vector2(30, 30),
-            Texture = icon,
-            ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            MouseFilter = MouseFilterEnum.Ignore
-        });
-
-        row.AddChild(new Label
-        {
-            Text = text,
-            VerticalAlignment = VerticalAlignment.Center,
-            MouseFilter = MouseFilterEnum.Ignore
-        });
-
+        row.Configure(icon, text);
         return row;
     }
 

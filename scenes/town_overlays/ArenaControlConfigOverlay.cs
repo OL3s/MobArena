@@ -8,7 +8,6 @@ namespace MobArena.Scenes.TownOverlays;
 
 public partial class ArenaControlConfigOverlay : Control
 {
-    private const float CardWidth = 170f;
     private const double WaitingAnimationIntervalSeconds = 0.35;
     private const float PromptPulseAmplitude = 0.1f;
     private const float PromptPulseBaseScale = 1.0f;
@@ -16,6 +15,12 @@ public partial class ArenaControlConfigOverlay : Control
     private const float PromptPulseSpeed = 3.2f;
     private const float PromptPulsePhaseOffset = 0.75f;
     private const string LaunchSummaryOverlayScenePath = "res://scenes/town_overlays/arena_launch_summary_overlay.tscn";
+
+    [Export]
+    public PackedScene AssignmentCardScene { get; set; }
+
+    [Export]
+    public PackedScene JoinPromptScene { get; set; }
 
     private RichTextLabel _statusLabel;
     private HBoxContainer _promptRow;
@@ -254,69 +259,24 @@ public partial class ArenaControlConfigOverlay : Control
     {
         var assignment = _runData?.GetArenaControlAssignment(gladiator);
         var isCurrent = assignment == null && index == _nextGladiatorIndex;
-        var panel = new PanelContainer
+        var card = AssignmentCardScene?.Instantiate<ArenaControlAssignmentCard>();
+        if (card == null)
         {
-            CustomMinimumSize = new Vector2(CardWidth, 210f)
-        };
-        if (isCurrent)
-        {
-            panel.Modulate = new Color(1f, 0.92f, 0.55f);
-            panel.GuiInput += OnWaitingCardGuiInput;
+            GD.PushError("Arena control assignment card scene is missing or has the wrong root script.");
+            return new Control();
         }
 
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 10);
-        margin.AddThemeConstantOverride("margin_top", 10);
-        margin.AddThemeConstantOverride("margin_right", 10);
-        margin.AddThemeConstantOverride("margin_bottom", 10);
-        panel.AddChild(margin);
-
-        var layout = new VBoxContainer();
-        layout.AddThemeConstantOverride("separation", 8);
-        margin.AddChild(layout);
-
-        layout.AddChild(new TextureRect
-        {
-            CustomMinimumSize = new Vector2(76f, 76f),
-            Texture = gladiator.GetUiIconTexture(),
-            ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-        });
-
-        layout.AddChild(new Label
-        {
-            Text = gladiator.GladiatorName,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart
-        });
-
-        layout.AddChild(new Label
-        {
-            Text = assignment == null ? (isCurrent ? GetWaitingText() : "Unassigned") : GetControllerLabel(assignment),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart
-        });
-
-        return panel;
+        card.Configure(gladiator, assignment == null ? (isCurrent ? GetWaitingText() : "Unassigned") : GetControllerLabel(assignment), isCurrent);
+        card.PointerJoinRequested += OnPointerJoinRequested;
+        return card;
     }
 
-    private void OnWaitingCardGuiInput(InputEvent inputEvent)
+    private void OnPointerJoinRequested(int kind)
     {
         if (_readyPromptOpen || !IsVisibleInTree())
             return;
 
-        if (inputEvent is InputEventMouseButton { Pressed: true })
-        {
-            TryAssignPointerController(LocalInputControllerConfig.ControllerKind.Mouse);
-            GetViewport()?.SetInputAsHandled();
-            return;
-        }
-
-        if (inputEvent is InputEventScreenTouch { Pressed: true })
-        {
-            TryAssignPointerController(LocalInputControllerConfig.ControllerKind.Touch);
-            GetViewport()?.SetInputAsHandled();
-        }
+        TryAssignPointerController((LocalInputControllerConfig.ControllerKind)kind);
     }
 
     private void TryAssignPointerController(LocalInputControllerConfig.ControllerKind kind)
@@ -367,29 +327,15 @@ public partial class ArenaControlConfigOverlay : Control
 
     private void AddPrompt(Texture2D icon, string label)
     {
-        var row = new HBoxContainer
+        var prompt = JoinPromptScene?.Instantiate<ControllerJoinPrompt>();
+        if (prompt == null)
         {
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-        row.AddThemeConstantOverride("separation", 6);
-        _promptRow.AddChild(row);
+            GD.PushError("Controller join prompt scene is missing or has the wrong root script.");
+            return;
+        }
 
-        row.AddChild(new TextureRect
-        {
-            Name = "Icon",
-            CustomMinimumSize = new Vector2(30f, 30f),
-            Texture = icon,
-            ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            MouseFilter = MouseFilterEnum.Ignore
-        });
-
-        row.AddChild(new Label
-        {
-            Text = label,
-            VerticalAlignment = VerticalAlignment.Center,
-            MouseFilter = MouseFilterEnum.Ignore
-        });
+        prompt.Configure(icon, label);
+        _promptRow.AddChild(prompt);
     }
 
     private void ShowReadyPrompt()

@@ -34,7 +34,7 @@ public partial class TownPhaseState : Resource
 
     public string GetChampionLabel()
     {
-        return IsChampionDay ? "Champion Day!" : $"Champion in {DaysUntilChampion} days";
+        return IsChampionDay ? "Champion Day is today!" : $"Champion in {DaysUntilChampion} days";
     }
 
     public string GetDayLabel()

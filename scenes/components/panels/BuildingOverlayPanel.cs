@@ -18,7 +18,6 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
     private const string CriticalRiskIconPath = "res://assets/ui/gladiator_icons/critical_risk.svg";
     private const string AttributeProgressScenePath = "res://scenes/components/ui/AttributeProgressDisplay.tscn";
     private static readonly Vector2 AttributeProgressMinimumSize = new(120f, 32f);
-    private static readonly Color PreviewGainColor = new(0.22f, 0.82f, 0.28f, 0.9f);
 
     [Export]
     public string Title { get; set; } = "Building";
@@ -40,6 +39,15 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
 
     [Export]
     public int MaxUpgradeLevel { get; set; } = 3;
+
+    [Export]
+    public PackedScene GladiatorRowScene { get; set; }
+
+    [Export]
+    public PackedScene AttributeBarScene { get; set; }
+
+    [Export]
+    public PackedScene RiskIconScene { get; set; }
 
     public int UpgradeLevel => _runData?.GetBuildingUpgradeLevel(AssignmentLocation) ?? 0;
 
@@ -282,66 +290,28 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
 
     private Control CreateGladiatorDetailCard(GladiatorData gladiator)
     {
-        var panel = new PanelContainer
+        var row = GladiatorRowScene?.Instantiate<BuildingGladiatorRow>();
+        if (row == null)
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
+            GD.PushError("Building gladiator row scene is missing or has the wrong root script.");
+            return new Control();
+        }
 
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 10);
-        margin.AddThemeConstantOverride("margin_top", 10);
-        margin.AddThemeConstantOverride("margin_right", 10);
-        margin.AddThemeConstantOverride("margin_bottom", 10);
-        panel.AddChild(margin);
-
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", 10);
-        margin.AddChild(row);
-
-        var portrait = new Button
-        {
-            CustomMinimumSize = new Vector2(56f, 56f),
-            Icon = gladiator.GetUiIconTexture(),
-            ExpandIcon = true,
-            TooltipText = $"Drag {gladiator.GladiatorName}",
-            FocusMode = FocusModeEnum.None
-        };
-        portrait.ButtonDown += () => OnAssignedGladiatorDragRequested(gladiator);
-        row.AddChild(portrait);
+        row.Configure(gladiator, true);
+        row.DragRequested += OnAssignedGladiatorDragRequested;
 
         if (IsFocusedTrainingOverlay())
         {
-            row.AddChild(new Label
-            {
-                Text = gladiator.GladiatorName,
-                CustomMinimumSize = new Vector2(150f, 0f),
-                VerticalAlignment = VerticalAlignment.Center,
-                ClipText = true
-            });
-
-            AddAttributeRow(row, gladiator, GetTrainingAttribute(_runData?.CurrentTrainingFocus ?? CompanyRunData.TrainingFocus.Strength), useDefaultFontSize: true);
-            return panel;
+            AddAttributeRow(row.Details, gladiator, GetTrainingAttribute(_runData?.CurrentTrainingFocus ?? CompanyRunData.TrainingFocus.Strength), useDefaultFontSize: true);
+            return row;
         }
 
-        var details = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        details.AddThemeConstantOverride("separation", 4);
-        row.AddChild(details);
-
-        details.AddChild(new Label
-        {
-            Text = gladiator.GladiatorName,
-            ThemeTypeVariation = "HeaderSmall"
-        });
-
         if (AssignmentLocation == TownAssignmentData.AssignmentLocation.Healer)
-            AddTreatmentDetailRows(details, gladiator);
+            AddTreatmentDetailRows(row.Details, gladiator);
         else
-            AddTrainingDetailRows(details, gladiator);
+            AddTrainingDetailRows(row.Details, gladiator);
 
-        return panel;
+        return row;
     }
 
     private bool IsFocusedTrainingOverlay()
@@ -455,48 +425,16 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
 
     private static void AddValueRow(Container parent, string label, float value, float maxValue, string text, float gainValue = 0f)
     {
-        var row = new VBoxContainer
+        var scene = ResourceLoader.Load<PackedScene>("res://scenes/components/panels/BuildingAttributeBar.tscn");
+        var row = scene?.Instantiate<BuildingAttributeBar>();
+        if (row == null)
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        row.AddThemeConstantOverride("separation", 2);
+            GD.PushError("Building attribute bar scene is missing or has the wrong root script.");
+            return;
+        }
+
+        row.Configure(label, value, maxValue, text, gainValue);
         parent.AddChild(row);
-
-        row.AddChild(new Label
-        {
-            Text = text,
-            ClipText = true
-        });
-
-        var safeMax = Mathf.Max(1f, maxValue);
-        var currentRatio = Mathf.Clamp(value / safeMax, 0f, 1f);
-        var gainRatio = Mathf.Clamp(gainValue / safeMax, 0f, 1f - currentRatio);
-        var line = new ColorRect
-        {
-            CustomMinimumSize = new Vector2(0f, 12f),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            TooltipText = label,
-            Color = new Color(0.1f, 0.1f, 0.1f, 0.45f)
-        };
-        row.AddChild(line);
-
-        line.AddChild(new ColorRect
-        {
-            AnchorRight = currentRatio,
-            AnchorBottom = 1f,
-            MouseFilter = MouseFilterEnum.Ignore,
-            Color = new Color(0.32f, 0.32f, 0.32f, 1f)
-        });
-
-        line.AddChild(new ColorRect
-        {
-            Visible = gainRatio > 0f,
-            AnchorLeft = currentRatio,
-            AnchorRight = currentRatio + gainRatio,
-            AnchorBottom = 1f,
-            MouseFilter = MouseFilterEnum.Ignore,
-            Color = PreviewGainColor
-        });
     }
 
     private static string GetAttributeAbbreviation(GladiatorLevelData.AttributeKind attribute)
@@ -552,14 +490,14 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
         var riskIconPath = GetRiskIconPath(gladiator);
         if (!string.IsNullOrEmpty(riskIconPath))
         {
-            var riskIcon = new TextureRect
+            var riskIcon = RiskIconScene?.Instantiate<RiskIcon>();
+            if (riskIcon == null)
             {
-                Texture = ResourceLoader.Load<Texture2D>(riskIconPath),
-                MouseFilter = MouseFilterEnum.Ignore,
-                Modulate = new Color(1f, 1f, 1f, 0.8f),
-                ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-            };
+                GD.PushError("Risk icon scene is missing or has the wrong root script.");
+                return container;
+            }
+
+            riskIcon.Configure(ResourceLoader.Load<Texture2D>(riskIconPath));
             riskIcon.SetAnchorsPreset(LayoutPreset.FullRect);
             container.AddChild(riskIcon);
         }

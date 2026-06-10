@@ -68,6 +68,7 @@ public partial class TownHud : CanvasLayer
 	private Button _nextDayButton;
 	private Label _dayLabel;
 	private Label _championDueLabel;
+	private ProgressBar _championProgressBar;
 	private TextureRect _weatherIcon;
 	private TextureRect _moonIcon;
 	private Texture2D _cloudyWeatherIcon;
@@ -100,6 +101,7 @@ public partial class TownHud : CanvasLayer
 		_calendarPanel = GetNode<Control>("BottomPanel/TimeRow/CalendarPanel");
 		_dayLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/DayLabel");
 		_championDueLabel = GetNode<Label>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/ChampionRow/ChampionDueLabel");
+		_championProgressBar = GetNode<ProgressBar>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/ChampionProgressBar");
 		_weatherIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/IconRow/WeatherIcon");
 		_moonIcon = GetNode<TextureRect>("BottomPanel/TimeRow/CalendarPanel/CalendarColumn/CalendarRow/IconRow/MoonIcon");
 		_cloudyWeatherIcon = ResourceLoader.Load<Texture2D>(CloudyWeatherIconPath);
@@ -643,9 +645,20 @@ public partial class TownHud : CanvasLayer
 	{
 		_dayLabel.Text = _phaseState.GetDayLabel();
 		_championDueLabel.Text = _phaseState.GetChampionLabel();
+		RefreshChampionProgressBar();
 		_moonIcon.Visible = _phaseState.IsNight();
 		RefreshDevMenu();
 		RefreshNextDayButton();
+	}
+
+	private void RefreshChampionProgressBar()
+	{
+		if (_championProgressBar == null)
+			return;
+
+		_championProgressBar.Visible = !_phaseState.IsChampionDay;
+		_championProgressBar.MaxValue = 7;
+		_championProgressBar.Value = Mathf.Clamp(7 - _phaseState.DaysUntilChampion, 0, 7);
 	}
 
 	public void SetWeatherVisual(WeatherState.WeatherVisual weather)

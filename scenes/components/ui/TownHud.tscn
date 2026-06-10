@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://dviqtv7j1hgpg"]
+[gd_scene load_steps=15 format=3 uid="uid://dviqtv7j1hgpg"]
 
 [ext_resource type="Script" uid="uid://n8gksqgankej" path="res://scenes/components/ui/TownHud.cs" id="1_town_hud"]
 [ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_company_logo"]
@@ -13,6 +13,25 @@
 [ext_resource type="Texture2D" uid="uid://bvgxuygtyooc0" path="res://assets/ui/gladiator_icons/health.svg" id="19_health_icon"]
 [ext_resource type="Texture2D" uid="uid://0c5jjlvt76rv" path="res://assets/ui/gladiator_icons/critical_risk.svg" id="20_critical_risk_icon"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/idle.svg" id="21_idle_icon"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_champion_progress_bg"]
+bg_color = Color(0.09, 0.065, 0.045, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.44, 0.31, 0.16, 0.9)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_champion_progress_fill"]
+bg_color = Color(0.95, 0.62, 0.18, 0.95)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [node name="TownHud" type="CanvasLayer" unique_id=1424046690]
 script = ExtResource("1_town_hud")
@@ -298,3 +317,13 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Champion in 6 days"
 vertical_alignment = 1
+
+[node name="ChampionProgressBar" type="ProgressBar" parent="BottomPanel/TimeRow/CalendarPanel/CalendarColumn"]
+custom_minimum_size = Vector2(154, 8)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 7.0
+value = 1.0
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_champion_progress_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_champion_progress_fill")

@@ -1,18 +1,13 @@
 using Godot;
 using MobArena.Scenes.Components.Arena;
-using MobArena.Scripts;
-using MobArena.Scripts.Resources;
-using MobArena.Scripts.Resources.Combat;
-using MobArena.Scripts.Resources.Items;
 using System.Collections.Generic;
 
 namespace MobArena.Scenes.Components.Arena.CombatUi;
 
 public partial class CombatHud : CanvasLayer
 {
-    private const int PlayerCardWidth = 190;
-    private const int PlayerCardHeight = 95;
-    private const int EquipmentIconSize = 28;
+    [Export]
+    public PackedScene PlayerCardScene { get; set; }
 
     private HBoxContainer _playerCards;
     private PanelContainer _championPanel;
@@ -20,7 +15,7 @@ public partial class CombatHud : CanvasLayer
     private ProgressBar _championHealthBar;
     private Label _championHealthLabel;
     private EnemyCombatant _champion;
-    private readonly List<PlayerCardBinding> _playerBindings = new();
+    private readonly List<CombatPlayerCard> _playerBindings = new();
 
     public override void _Ready()
     {
@@ -43,7 +38,7 @@ public partial class CombatHud : CanvasLayer
     public override void _ExitTree()
     {
         foreach (var binding in _playerBindings)
-            binding.Dispose();
+            binding.DisposeBinding();
 
         if (_champion?.CombatState != null)
             _champion.CombatState.HealthChanged -= OnChampionHealthChanged;
@@ -52,7 +47,7 @@ public partial class CombatHud : CanvasLayer
     public void SetPlayers(IEnumerable<PlayerCombatant> players)
     {
         foreach (var binding in _playerBindings)
-            binding.Dispose();
+            binding.DisposeBinding();
         _playerBindings.Clear();
 
         foreach (var child in _playerCards.GetChildren())
@@ -66,10 +61,17 @@ public partial class CombatHud : CanvasLayer
             if (player == null)
                 continue;
 
-            var binding = CreatePlayerCard(player);
-            _playerCards.AddChild(binding.Panel);
-            _playerBindings.Add(binding);
-            binding.Refresh();
+            var card = PlayerCardScene?.Instantiate<CombatPlayerCard>();
+            if (card == null)
+            {
+                GD.PushError("Combat player card scene is missing or has the wrong root script.");
+                continue;
+            }
+
+            card.Configure(player);
+            _playerCards.AddChild(card);
+            _playerBindings.Add(card);
+            card.Refresh();
         }
     }
 
@@ -89,150 +91,6 @@ public partial class CombatHud : CanvasLayer
             _champion.CombatState.HealthChanged += OnChampionHealthChanged;
 
         RefreshChampionPanel();
-    }
-
-    private PlayerCardBinding CreatePlayerCard(PlayerCombatant player)
-    {
-        var panel = new PanelContainer
-        {
-            CustomMinimumSize = new Vector2(PlayerCardWidth, PlayerCardHeight),
-            SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter
-        };
-
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 8);
-        margin.AddThemeConstantOverride("margin_top", 6);
-        margin.AddThemeConstantOverride("margin_right", 8);
-        margin.AddThemeConstantOverride("margin_bottom", 6);
-        panel.AddChild(margin);
-
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", 4);
-        margin.AddChild(content);
-
-        var headerRow = new HBoxContainer();
-        headerRow.AddThemeConstantOverride("separation", 4);
-        content.AddChild(headerRow);
-
-        var (playerBadge, playerIdLabel, deviceIcon) = CreatePlayerBadge();
-        headerRow.AddChild(playerBadge);
-
-        var nameLabel = new Label
-        {
-            Text = "Gladiator",
-            HorizontalAlignment = HorizontalAlignment.Center,
-            ClipText = true,
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
-        };
-        nameLabel.AddThemeFontSizeOverride("font_size", 13);
-        headerRow.AddChild(nameLabel);
-
-        var healthBar = CreateProgressBar();
-        content.AddChild(healthBar);
-
-        var staminaBar = CreateProgressBar();
-        staminaBar.Modulate = new Color(0.55f, 0.85f, 1f);
-        content.AddChild(staminaBar);
-
-        var stateLabel = new Label
-        {
-            Text = "Default",
-            HorizontalAlignment = HorizontalAlignment.Center
-        };
-        stateLabel.AddThemeFontSizeOverride("font_size", 10);
-        content.AddChild(stateLabel);
-
-        var equipmentRow = new HBoxContainer
-        {
-            Alignment = BoxContainer.AlignmentMode.Center
-        };
-        equipmentRow.AddThemeConstantOverride("separation", 6);
-        content.AddChild(equipmentRow);
-
-        var armorIcon = CreateEquipmentIcon();
-        var mainHandIcon = CreateEquipmentIcon();
-        var offHandIcon = CreateEquipmentIcon();
-        equipmentRow.AddChild(armorIcon);
-        equipmentRow.AddChild(mainHandIcon);
-        equipmentRow.AddChild(offHandIcon);
-
-        return new PlayerCardBinding(player, panel, playerIdLabel, deviceIcon, nameLabel, healthBar, staminaBar, stateLabel, armorIcon, mainHandIcon, offHandIcon);
-    }
-
-    private static (HBoxContainer Badge, Label PlayerIdLabel, TextureRect DeviceIcon) CreatePlayerBadge()
-    {
-        var badge = new HBoxContainer
-        {
-        };
-        badge.AddThemeConstantOverride("separation", 4);
-
-        var playerCircle = new PanelContainer
-        {
-            CustomMinimumSize = new Vector2(22f, 22f)
-        };
-        var style = new StyleBoxFlat
-        {
-            BgColor = new Color(0.08f, 0.1f, 0.12f, 0.86f),
-            BorderColor = new Color(1f, 1f, 1f, 0.22f),
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = 11,
-            CornerRadiusTopRight = 11,
-            CornerRadiusBottomLeft = 11,
-            CornerRadiusBottomRight = 11
-        };
-        playerCircle.AddThemeStyleboxOverride("panel", style);
-        badge.AddChild(playerCircle);
-
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 2);
-        margin.AddThemeConstantOverride("margin_right", 2);
-        margin.AddThemeConstantOverride("margin_top", 2);
-        margin.AddThemeConstantOverride("margin_bottom", 2);
-        playerCircle.AddChild(margin);
-
-        var playerIdLabel = new Label
-        {
-            Text = "-1",
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        playerIdLabel.AddThemeFontSizeOverride("font_size", 11);
-        margin.AddChild(playerIdLabel);
-
-        var deviceIcon = new TextureRect
-        {
-            CustomMinimumSize = new Vector2(14f, 14f),
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize
-        };
-        badge.AddChild(deviceIcon);
-
-        return (badge, playerIdLabel, deviceIcon);
-    }
-
-    private static ProgressBar CreateProgressBar()
-    {
-        return new ProgressBar
-        {
-            CustomMinimumSize = new Vector2(0f, 16f),
-            MinValue = 0,
-            MaxValue = 1,
-            Value = 1,
-            ShowPercentage = false
-        };
-    }
-
-    private static TextureRect CreateEquipmentIcon()
-    {
-        return new TextureRect
-        {
-            CustomMinimumSize = new Vector2(EquipmentIconSize, EquipmentIconSize),
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize
-        };
     }
 
     private void OnChampionHealthChanged(int currentHealth, int maxHealth)
@@ -262,158 +120,5 @@ public partial class CombatHud : CanvasLayer
         _championHealthBar.MaxValue = state.MaxHealth;
         _championHealthBar.Value = state.CurrentHealth;
         _championHealthLabel.Text = $"{state.CurrentHealth}/{state.MaxHealth}";
-    }
-
-    private sealed class PlayerCardBinding
-    {
-        private readonly PlayerCombatant _player;
-        private readonly Label _playerIdLabel;
-        private readonly TextureRect _deviceIcon;
-        private readonly Label _nameLabel;
-        private readonly ProgressBar _healthBar;
-        private readonly ProgressBar _staminaBar;
-        private readonly Label _stateLabel;
-        private readonly TextureRect _armorIcon;
-        private readonly TextureRect _mainHandIcon;
-        private readonly TextureRect _offHandIcon;
-        private readonly ArenaCombatState _subscribedCombatState;
-        private readonly PlayerCombatant _subscribedPlayer;
-        private bool _disposed;
-
-        public PanelContainer Panel { get; }
-
-        public PlayerCardBinding(
-            PlayerCombatant player,
-            PanelContainer panel,
-            Label playerIdLabel,
-            TextureRect deviceIcon,
-            Label nameLabel,
-            ProgressBar healthBar,
-            ProgressBar staminaBar,
-            Label stateLabel,
-            TextureRect armorIcon,
-            TextureRect mainHandIcon,
-            TextureRect offHandIcon)
-        {
-            _player = player;
-            Panel = panel;
-            _playerIdLabel = playerIdLabel;
-            _deviceIcon = deviceIcon;
-            _nameLabel = nameLabel;
-            _healthBar = healthBar;
-            _staminaBar = staminaBar;
-            _stateLabel = stateLabel;
-            _armorIcon = armorIcon;
-            _mainHandIcon = mainHandIcon;
-            _offHandIcon = offHandIcon;
-
-            _subscribedCombatState = _player?.CombatState;
-            _subscribedPlayer = _player;
-
-            if (_subscribedCombatState != null)
-                _subscribedCombatState.HealthChanged += OnHealthChanged;
-            if (_subscribedPlayer != null)
-                _subscribedPlayer.CombatantStateChanged += OnCombatantStateChanged;
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-
-            _disposed = true;
-            if (_subscribedCombatState != null)
-                _subscribedCombatState.HealthChanged -= OnHealthChanged;
-            if (_subscribedPlayer != null && GodotObject.IsInstanceValid(_subscribedPlayer))
-                _subscribedPlayer.CombatantStateChanged -= OnCombatantStateChanged;
-        }
-
-        public void Refresh()
-        {
-            if (_disposed)
-                return;
-
-            var gladiator = _player?.GladiatorData;
-            RefreshPlayerBadge(_player?.ControlAssignment);
-            _nameLabel.Text = gladiator?.GladiatorName ?? "Gladiator";
-
-            if (_player?.CombatState != null)
-            {
-                _healthBar.MaxValue = _player.CombatState.MaxHealth;
-                _healthBar.Value = _player.CombatState.CurrentHealth;
-            }
-
-            var maxStamina = Mathf.Max(1, gladiator?.MaxStamina ?? 1);
-            _staminaBar.MaxValue = maxStamina;
-            _staminaBar.Value = Mathf.Clamp(gladiator?.Stamina ?? 0, 0, maxStamina);
-            RefreshStateLabel();
-
-            SetIcon(_armorIcon, gladiator?.Equipment?.Armor);
-            SetIcon(_mainHandIcon, gladiator?.Equipment?.MainHand);
-            SetIcon(_offHandIcon, gladiator?.Equipment?.OffHand);
-        }
-
-        private void OnHealthChanged(int currentHealth, int maxHealth)
-        {
-            if (_disposed)
-                return;
-
-            _healthBar.MaxValue = maxHealth;
-            _healthBar.Value = currentHealth;
-        }
-
-        private void OnCombatantStateChanged(ArenaCombatantState state)
-        {
-            if (_disposed)
-                return;
-
-            RefreshStateLabel();
-        }
-
-        private void RefreshStateLabel()
-        {
-            if (_stateLabel == null)
-                return;
-
-            var state = _player?.CombatantState ?? ArenaCombatantState.Default;
-            _stateLabel.Text = state == ArenaCombatantState.Default
-                ? "Default"
-                : state.ToString();
-            _stateLabel.Modulate = state switch
-            {
-                ArenaCombatantState.Windup => new Color(1f, 0.72f, 0.35f),
-                ArenaCombatantState.Exhausted => new Color(0.7f, 0.85f, 1f),
-                _ => Colors.White
-            };
-        }
-
-        private static void SetIcon(TextureRect icon, ItemData item)
-        {
-            if (icon == null)
-                return;
-
-            icon.Texture = item?.UiIcon;
-            icon.Modulate = item == null ? new Color(1f, 1f, 1f, 0.22f) : Colors.White;
-        }
-
-        private void RefreshPlayerBadge(ArenaControlAssignmentData assignment)
-        {
-            _playerIdLabel.Text = (assignment?.PlayerId ?? -1).ToString();
-            _deviceIcon.Texture = GetControllerIcon(assignment);
-            _deviceIcon.Modulate = _deviceIcon.Texture == null ? new Color(1f, 1f, 1f, 0.2f) : Colors.White;
-        }
-
-        private static Texture2D GetControllerIcon(ArenaControlAssignmentData assignment)
-        {
-            var inputConfig = LocalInputConfig.Get();
-            return assignment?.ControllerKind switch
-            {
-                LocalInputControllerConfig.ControllerKind.Keyboard => inputConfig?.EnterIcon,
-                LocalInputControllerConfig.ControllerKind.Mouse => inputConfig?.MouseIcon,
-                LocalInputControllerConfig.ControllerKind.Touch => inputConfig?.PhoneIcon,
-                LocalInputControllerConfig.ControllerKind.Gamepad => inputConfig?.XboxAIcon,
-                _ => null
-            };
-        }
     }
 }
