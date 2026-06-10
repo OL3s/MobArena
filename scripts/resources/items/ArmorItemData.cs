@@ -37,12 +37,12 @@ public partial class ArmorItemData : ItemData
         ArmorTextureOffset = textureOffset;
     }
 
-    public int GetArmorValue(ArmorDamageType type)
+    public int GetArmorValue(CombatDamageType type)
     {
         return ArmorProfile?.GetArmorValue(type) ?? 0;
     }
 
-    public int ApplyArmorToDamage(int damage, ArmorDamageType type)
+    public int ApplyArmorToDamage(int damage, CombatDamageType type)
     {
         return ArmorProfile?.ApplyArmorToDamage(damage, type) ?? ArmorData.ApplyArmorToDamage(damage, 0);
     }
@@ -60,10 +60,5 @@ public partial class ArmorItemData : ItemData
     public static int ApplyArmorToDamage(int damage, int armor)
     {
         return ArmorData.ApplyArmorToDamage(damage, armor);
-    }
-
-    public int GetSpecialtyValue(ArmorSpecialType type)
-    {
-        return ArmorProfile?.GetSpecialtyValue(type) ?? 0;
     }
 }

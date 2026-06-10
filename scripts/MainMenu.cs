@@ -21,6 +21,7 @@ public partial class MainMenu : Control
 	public override void _Ready()
 	{
 		_saveNode = SaveNode.Get();
+		_saveNode.Load();
 		_companyLogo = GetNode<CompanyLogo>("MenuRow/Shield");
 		_createCompanyButton = GetNode<Button>("MenuRow/CreateCompanyButton");
 		_enterTownButton = GetNode<Button>("MenuRow/Content/EnterTownButton");

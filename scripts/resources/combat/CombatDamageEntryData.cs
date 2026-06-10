@@ -7,7 +7,7 @@ namespace MobArena.Scripts.Resources.Combat;
 public partial class CombatDamageEntryData : Resource
 {
     [Export]
-    public ArmorDamageType Type { get; private set; } = ArmorDamageType.Slash;
+    public CombatDamageType Type { get; private set; } = CombatDamageType.Slash;
 
     [Export]
     public int Damage { get; private set; }
@@ -20,5 +20,10 @@ public partial class CombatDamageEntryData : Resource
     public int GetMitigatedDamage(ArmorItemData armor)
     {
         return armor?.ApplyArmorToDamage(this) ?? GetRawDamage();
+    }
+
+    public override string ToString()
+    {
+        return $"{Type}:{GetRawDamage()}";
     }
 }

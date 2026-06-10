@@ -25,7 +25,6 @@ public partial class SaveNode : Node
 	private const string WeatherPath = SaveDirectory + "/weather.tres";
 	private const string SettingsPath = SaveDirectory + "/settings.tres";
 
-	private bool _skipExitSave;
 	private string _pendingCompanyLossTitle;
 	private string _pendingCompanyLossText;
 
@@ -113,20 +112,11 @@ public partial class SaveNode : Node
 
 	public override void _Ready()
 	{
-		_skipExitSave = true;
-		if (SaveCommandLineController.TryHandle(this))
-			return;
-
-		_skipExitSave = false;
-		Load();
+		SaveCommandLineController.TryHandle(this);
 	}
 
 	public override void _ExitTree()
 	{
-		if (_skipExitSave)
-			return;
-
-		Save();
 	}
 
     public bool HasSave()

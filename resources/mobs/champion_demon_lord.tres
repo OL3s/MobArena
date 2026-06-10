@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="ChampionMobData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="ChampionMobData" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/mobs/ChampionMobData.cs" id="1_champion"]
 [ext_resource type="Texture2D" path="res://assets/ui/mobs/champion_demon_lord.svg" id="2_icon"]
 [ext_resource type="Resource" path="res://resources/mob_appearances/champion_demon_lord.tres" id="3_appearance"]
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="4_armor_data"]
+[ext_resource type="Resource" path="res://resources/combat/status_profiles/default_champion_status_profile.tres" id="5_status_profile"]
 
 [sub_resource type="Resource" id="Resource_champion_demon_lord_armor"]
 script = ExtResource("4_armor_data")
@@ -17,6 +18,7 @@ UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 3
-MaxHealth = 180
+MaxHealth = 1800
 ArmorProfile = SubResource("Resource_champion_demon_lord_armor")
+StatusProfile = ExtResource("5_status_profile")
 FameValue = 170

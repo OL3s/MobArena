@@ -31,7 +31,7 @@ public partial class CompanyRunData : Resource
     private const float TreatmentExhaustionRecovery = 3f;
     private const int TreatmentGoldCostPerGladiator = 3;
     private const int TrainingGoldCostPerGladiator = 2;
-    private const int TrainingStaminaCost = 2;
+    private const int TrainingStaminaCost = 20;
     private const float TrainingExhaustionCost = 1f;
     private const float TrainingAttributeExp = 40f;
     private const float PhaseRestExhaustionRecovery = 2f;

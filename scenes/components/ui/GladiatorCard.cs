@@ -31,6 +31,7 @@ public partial class GladiatorCard : PanelContainer
     private AttributeProgressDisplay _agilityDisplay;
     private AttributeProgressDisplay _vitalityDisplay;
     private AttributeProgressDisplay _enduranceDisplay;
+    private AttributeProgressDisplay _totalLevelDisplay;
     private GladiatorData _pendingGladiatorData;
 
     public override void _Ready()
@@ -54,6 +55,7 @@ public partial class GladiatorCard : PanelContainer
         _agilityDisplay = GetNode<AttributeProgressDisplay>("MarginContainer/Layout/Stats/PrimaryStats/Agility");
         _vitalityDisplay = GetNode<AttributeProgressDisplay>("MarginContainer/Layout/Stats/BodyStats/Vitality");
         _enduranceDisplay = GetNode<AttributeProgressDisplay>("MarginContainer/Layout/Stats/BodyStats/Endurance");
+        _totalLevelDisplay = GetNode<AttributeProgressDisplay>("MarginContainer/Layout/Stats/TotalStats/TotalLevel");
 
         _healthIcon.Texture = ResourceLoader.Load<Texture2D>(HealthIconPath);
         _staminaIcon.Texture = ResourceLoader.Load<Texture2D>(StaminaIconPath);
@@ -120,6 +122,7 @@ public partial class GladiatorCard : PanelContainer
         _agilityDisplay.Configure(levelData, GladiatorLevelData.AttributeKind.Agility);
         _vitalityDisplay.Configure(levelData, GladiatorLevelData.AttributeKind.Vitality);
         _enduranceDisplay.Configure(levelData, GladiatorLevelData.AttributeKind.Endurance);
+        _totalLevelDisplay.Configure("TOT", levelData?.TotalLevel ?? 4, 1f);
     }
 
     private static string GetSkillIconPath(GladiatorEquipmentData.SignatureSkill skill)

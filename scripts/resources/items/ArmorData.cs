@@ -14,9 +14,13 @@ public partial class ArmorData : Resource
     public Array<ArmorTypeOverrideData> TypeOverrides { get; private set; } = new();
 
     [Export]
-    public Array<ArmorSpecialModifierData> Specialties { get; private set; } = new();
+    public Array<CombatDamageType> ImmuneTypes { get; private set; } = new()
+    {
+        CombatDamageType.Silver,
+        CombatDamageType.Holy
+    };
 
-    public int GetArmorValue(ArmorDamageType type)
+    public int GetArmorValue(CombatDamageType type)
     {
         if (TypeOverrides == null)
             return BaseValue;
@@ -30,8 +34,25 @@ public partial class ArmorData : Resource
         return BaseValue;
     }
 
-    public int ApplyArmorToDamage(int damage, ArmorDamageType type)
+    public bool IsImmuneTo(CombatDamageType type)
     {
+        if (ImmuneTypes == null)
+            return false;
+
+        foreach (var immuneType in ImmuneTypes)
+        {
+            if (immuneType == type)
+                return true;
+        }
+
+        return false;
+    }
+
+    public int ApplyArmorToDamage(int damage, CombatDamageType type)
+    {
+        if (IsImmuneTo(type))
+            return 0;
+
         return ApplyArmorToDamage(damage, GetArmorValue(type));
     }
 
@@ -65,18 +86,4 @@ public partial class ArmorData : Resource
         return Mathf.Max(1, Mathf.RoundToInt(mitigatedDamage));
     }
 
-    public int GetSpecialtyValue(ArmorSpecialType type)
-    {
-        if (Specialties == null)
-            return 0;
-
-        var value = 0;
-        foreach (var modifier in Specialties)
-        {
-            if (modifier?.Type == type)
-                value += modifier.Value;
-        }
-
-        return value;
-    }
 }

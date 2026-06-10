@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/arena/combat/effects/ArenaAttackLinearProjectile.cs" id="1_linear_projectile"]
+[ext_resource type="Script" path="res://scenes/components/arena/combat/effects/ArenaAttackVisual.cs" id="2_attack_visual"]
+[ext_resource type="Texture2D" path="res://assets/ui/character_shadow.svg" id="3_shadow"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_linear_projectile"]
+size = Vector2(42, 12)
+
+[node name="ArenaAttackLinearProjectile" type="Area2D"]
+monitoring = true
+monitorable = false
+script = ExtResource("1_linear_projectile")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(21, 0)
+shape = SubResource("RectangleShape2D_linear_projectile")
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -2
+position = Vector2(21, 4)
+texture = ExtResource("3_shadow")
+scale = Vector2(0.48, 0.24)
+
+[node name="Visual" type="Node2D" parent="."]
+position = Vector2(0, -8)
+script = ExtResource("2_attack_visual")

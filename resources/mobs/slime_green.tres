@@ -17,6 +17,6 @@ UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 0
-MaxHealth = 12
+MaxHealth = 120
 ArmorProfile = SubResource("Resource_slime_green_armor")
 FameValue = 5

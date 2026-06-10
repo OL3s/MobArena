@@ -83,12 +83,14 @@ MobArena should be designed for phone, controller, and desktop compatibility fro
 Supported input styles:
 
 - Phone: touch controls with a virtual movement stick and touch-friendly combat buttons.
-- Controller: left stick movement with face buttons or triggers for attack, dodge, ability, and item use.
-- Desktop: keyboard and mouse support, with keyboard movement and mouse or key-driven attacks.
+- Controller: left stick movement, optional right stick or right mousepad-style aiming, and face buttons or triggers for attack, dodge, ability, and item use.
+- Desktop: keyboard and mouse support, with keyboard movement, optional mouse aiming, and mouse or key-driven attacks.
 
 Design requirements:
 
 - Core combat actions must map cleanly to all three input styles.
+- Independent aim must not be mandatory for core game logic. Movement-only control should remain a supported mode where movement direction also supplies facing/aim direction.
+- Mouse aiming should be exposed as a settings toggle that defaults on. Keyboard-only control should not require independent aim input.
 - Menus must be usable with touch, controller focus navigation, and mouse.
 - Avoid tiny UI targets because phone support is a first-class requirement.
 - Avoid mechanics that require precise mouse-only aiming unless an equivalent controller and touch solution exists.

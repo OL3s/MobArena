@@ -1,5 +1,5 @@
 using Godot;
-using MobArena.Scripts.Resources.Items;
+using MobArena.Scripts.Resources.Combat;
 
 namespace MobArena.Scenes.Components.UI;
 
@@ -15,7 +15,7 @@ public partial class ItemStoreDamagePill : PanelContainer
 
     private TextureRect _icon;
     private Label _valueLabel;
-    private ArmorDamageType _pendingType = ArmorDamageType.Slash;
+    private CombatDamageType _pendingType = CombatDamageType.Slash;
     private int _pendingValue;
 
     public override void _Ready()
@@ -25,7 +25,7 @@ public partial class ItemStoreDamagePill : PanelContainer
         RefreshUi();
     }
 
-    public void Configure(ArmorDamageType type, int value)
+    public void Configure(CombatDamageType type, int value)
     {
         _pendingType = type;
         _pendingValue = value;
@@ -42,16 +42,16 @@ public partial class ItemStoreDamagePill : PanelContainer
         TooltipText = $"{_pendingType} {_pendingValue}";
     }
 
-    private static string GetIconPath(ArmorDamageType type)
+    private static string GetIconPath(CombatDamageType type)
     {
         return type switch
         {
-            ArmorDamageType.Slash => SlashIconPath,
-            ArmorDamageType.Pierce => PierceIconPath,
-            ArmorDamageType.Crush => CrushIconPath,
-            ArmorDamageType.Heat => HeatIconPath,
-            ArmorDamageType.Cold => ColdIconPath,
-            ArmorDamageType.Acid => AcidIconPath,
+            CombatDamageType.Slash => SlashIconPath,
+            CombatDamageType.Pierce => PierceIconPath,
+            CombatDamageType.Crush => CrushIconPath,
+            CombatDamageType.Heat => HeatIconPath,
+            CombatDamageType.Cold => ColdIconPath,
+            CombatDamageType.Acid => AcidIconPath,
             _ => UnknownIconPath
         };
     }

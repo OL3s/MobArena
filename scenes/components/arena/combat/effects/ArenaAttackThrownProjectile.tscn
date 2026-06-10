@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/arena/combat/effects/ArenaAttackThrownProjectile.cs" id="1_thrown_projectile"]
+[ext_resource type="Script" path="res://scenes/components/arena/combat/effects/ArenaAttackVisual.cs" id="2_attack_visual"]
+[ext_resource type="Texture2D" path="res://assets/ui/character_shadow.svg" id="3_shadow"]
+
+[node name="ArenaAttackThrownProjectile" type="Node2D"]
+script = ExtResource("1_thrown_projectile")
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -2
+position = Vector2(0, 4)
+texture = ExtResource("3_shadow")
+scale = Vector2(0.42, 0.28)
+modulate = Color(1, 1, 1, 0.55)
+
+[node name="Visual" type="Node2D" parent="."]
+script = ExtResource("2_attack_visual")

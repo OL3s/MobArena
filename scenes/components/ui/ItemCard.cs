@@ -1,5 +1,7 @@
 using Godot;
+using MobArena.Scripts.Resources.Combat.Effects;
 using MobArena.Scripts.Resources.Items;
+using System.Collections.Generic;
 
 namespace MobArena.Scenes.Components.UI;
 
@@ -18,6 +20,7 @@ public partial class ItemCard : PanelContainer
     private const string TwoHandedTypeIconPath = "res://assets/ui/items/type_two_handed.svg";
     private const string OffHandTypeIconPath = "res://assets/ui/items/type_off_hand.svg";
     private const string UnknownIconPath = "res://assets/ui/icons/question_mark.svg";
+    private const int MaxAttackTypeIcons = 5;
 
     [Signal]
     public delegate void BuyPressedEventHandler(ItemData item);
@@ -32,6 +35,7 @@ public partial class ItemCard : PanelContainer
     private TextureRect _typeIcon;
     private Label _nameLabel;
     private TextureRect _conditionIcon;
+    private HBoxContainer _attackTypeRow;
     private ProgressBar _conditionBar;
     private Label _goldLabel;
     private Button _buyButton;
@@ -42,6 +46,7 @@ public partial class ItemCard : PanelContainer
         _itemIcon = GetNode<TextureRect>("MarginContainer/Layout/IconPanel/ItemIcon");
         _typeIcon = GetNode<TextureRect>("MarginContainer/Layout/IconPanel/TypeBadge/TypeIcon");
         _nameLabel = GetNode<Label>("MarginContainer/Layout/NameLabel");
+        _attackTypeRow = GetNode<HBoxContainer>("MarginContainer/Layout/AttackTypeRow");
         _conditionIcon = GetNode<TextureRect>("MarginContainer/Layout/ConditionRow/Icon");
         _conditionBar = GetNode<ProgressBar>("MarginContainer/Layout/ConditionRow/Bar");
         _goldLabel = GetNode<Label>("MarginContainer/Layout/GoldRow/GoldLabel");
@@ -82,6 +87,7 @@ public partial class ItemCard : PanelContainer
         _typeIcon.Texture = GetTypeIcon(_item);
         _nameLabel.Text = _item?.DisplayName ?? "Item";
         _goldLabel.Text = (_item?.Cost ?? 0).ToString();
+        RefreshAttackTypeRow();
 
         var condition = Mathf.Clamp(_item?.Condition ?? 0f, 0f, 1f);
         _conditionBar.MaxValue = 1.0;
@@ -117,6 +123,49 @@ public partial class ItemCard : PanelContainer
         };
 
         return ResourceLoader.Load<Texture2D>(iconPath);
+    }
+
+    private void RefreshAttackTypeRow()
+    {
+        foreach (var child in _attackTypeRow.GetChildren())
+            child.QueueFree();
+
+        if (_item is not DamageItemData damageItem || damageItem.MainAction?.Effect == null)
+        {
+            _attackTypeRow.Hide();
+            return;
+        }
+
+        var effects = new List<ArenaCombatEffectData>();
+        CollectAttackTypes(damageItem.MainAction.Effect, effects, new HashSet<ArenaCombatEffectData>());
+        if (effects.Count <= 0)
+        {
+            _attackTypeRow.Hide();
+            return;
+        }
+
+        _attackTypeRow.Show();
+        foreach (var effect in effects)
+        {
+            var icon = new TextureRect
+            {
+                Texture = ResourceLoader.Load<Texture2D>(effect.AttackTypeIconPath),
+                CustomMinimumSize = new Vector2(22f, 22f),
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                TooltipText = effect.AttackTypeLabel
+            };
+            _attackTypeRow.AddChild(icon);
+        }
+    }
+
+    private static void CollectAttackTypes(ArenaCombatEffectData effect, List<ArenaCombatEffectData> effects, HashSet<ArenaCombatEffectData> visited)
+    {
+        if (effect == null || effects.Count >= MaxAttackTypeIcons || !visited.Add(effect))
+            return;
+
+        effects.Add(effect);
+        CollectAttackTypes(effect.OnHitEffect, effects, visited);
+        CollectAttackTypes(effect.OnExpireEffect, effects, visited);
     }
 
     private static Color GetConditionColor(float condition)

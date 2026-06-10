@@ -191,8 +191,8 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
         if (AssignmentLocation == TownAssignmentData.AssignmentLocation.Healer)
         {
             _modeButtons.AddChild(CreateModeHeader("Treatment"));
-            AddTreatmentModeButton("Health care", CompanyRunData.TreatmentFocus.Health);
-            AddTreatmentModeButton("Exhaustion recovery", CompanyRunData.TreatmentFocus.Exhaustion);
+            AddTreatmentModeButton("Health", CompanyRunData.TreatmentFocus.Health);
+            AddTreatmentModeButton("Exhaustion", CompanyRunData.TreatmentFocus.Exhaustion);
         }
         else
         {
@@ -503,10 +503,10 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
     {
         return attribute switch
         {
-            GladiatorLevelData.AttributeKind.Agility => "Agi",
-            GladiatorLevelData.AttributeKind.Vitality => "Vit",
-            GladiatorLevelData.AttributeKind.Endurance => "End",
-            _ => "Str"
+            GladiatorLevelData.AttributeKind.Agility => "AGI",
+            GladiatorLevelData.AttributeKind.Vitality => "VIT",
+            GladiatorLevelData.AttributeKind.Endurance => "END",
+            _ => "STR"
         };
     }
 

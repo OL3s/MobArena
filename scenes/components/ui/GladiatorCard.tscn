@@ -34,7 +34,7 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [node name="GladiatorCard" type="PanelContainer"]
-custom_minimum_size = Vector2(190, 292)
+custom_minimum_size = Vector2(190, 316)
 script = ExtResource("1_card")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
@@ -235,4 +235,13 @@ alignment = 1
 layout_mode = 2
 
 [node name="Endurance" parent="MarginContainer/Layout/Stats/BodyStats" instance=ExtResource("5_attribute_progress")]
+layout_mode = 2
+
+[node name="TotalStats" type="HBoxContainer" parent="MarginContainer/Layout/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="TotalLevel" parent="MarginContainer/Layout/Stats/TotalStats" instance=ExtResource("5_attribute_progress")]
+custom_minimum_size = Vector2(108, 20)
 layout_mode = 2

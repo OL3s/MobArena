@@ -1,14 +1,28 @@
 using Godot;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Combat;
+using MobArena.Scripts.Resources.Combat.Effects;
+using System.Collections.Generic;
 
 namespace MobArena.Scenes.Components.Arena;
 
 public abstract partial class ArenaCombatant : CharacterBody2D
 {
+    [Signal]
+    public delegate void CombatantStateChangedEventHandler(ArenaCombatantState state);
+
     private const string ArenaCombatantGroup = "arena_combatants";
     private const uint WallCollisionMask = 1u;
     private const uint CombatantCollisionLayer = 2u;
+    private const float FallbackStateSpeedMultiplier = 0.5f;
+
+    private static readonly Dictionary<ArenaCombatantState, float> StateSpeedMultipliers = new()
+    {
+        { ArenaCombatantState.Default, 1f },
+        { ArenaCombatantState.Release, 0.2f },
+        { ArenaCombatantState.Windup, 0.1f },
+        { ArenaCombatantState.Stunned, 0f }
+    };
 
     [Export]
     public float MoveSpeed { get; protected set; } = 160f;
@@ -23,6 +37,9 @@ public abstract partial class ArenaCombatant : CharacterBody2D
     public float MaxSoftCollisionSpeed { get; protected set; } = 160f;
 
     [Export]
+    public float ExternalForceFriction { get; protected set; } = 900f;
+
+    [Export]
     public Vector2 LookDirection { get; private set; } = Vector2.Right;
 
     public ArenaCombatTeam Team { get; private set; } = ArenaCombatTeam.Neutral;
@@ -30,6 +47,12 @@ public abstract partial class ArenaCombatant : CharacterBody2D
     public ArenaCombatState CombatState { get; private set; }
 
     public bool IsDead => CombatState?.IsDead == true;
+
+    public ArenaCombatantState CombatantState { get; private set; } = ArenaCombatantState.Default;
+
+    public Vector2 ExternalForce { get; private set; } = Vector2.Zero;
+
+    private float _visualXSign = 1f;
 
     public override void _Process(double delta)
     {
@@ -74,6 +97,70 @@ public abstract partial class ArenaCombatant : CharacterBody2D
         return source.Team != Team;
     }
 
+    public bool CheckVulnerable()
+    {
+        return CombatantState == ArenaCombatantState.Windup;
+    }
+
+    public bool CanMove()
+    {
+        return CombatantState is ArenaCombatantState.Default
+            or ArenaCombatantState.Windup
+            or ArenaCombatantState.Release
+            or ArenaCombatantState.Blocking;
+    }
+
+    public bool CanReceiveInput()
+    {
+        return CombatantState is ArenaCombatantState.Default
+            or ArenaCombatantState.Windup
+            or ArenaCombatantState.Release
+            or ArenaCombatantState.Blocking;
+    }
+
+    public bool CanStartAction()
+    {
+        return CombatantState == ArenaCombatantState.Default;
+    }
+
+    public float GetSpeedMultiplier()
+    {
+        return StateSpeedMultipliers.GetValueOrDefault(CombatantState, FallbackStateSpeedMultiplier);
+    }
+
+    public void AddExternalForce(Vector2 force)
+    {
+        ExternalForce += force;
+    }
+
+    public void ClearExternalForce()
+    {
+        ExternalForce = Vector2.Zero;
+    }
+
+    public float ApplyStatusEffect(StatusEffectApplicationData application, int appliedDamage, ArenaCombatant source = null)
+    {
+        if (application == null || CombatState == null || IsDead)
+            return 0f;
+
+        var value = application.ResolveValue(appliedDamage);
+        var actualValue = CombatState.ApplyStatusEffect(application.Type, value, CombatantState);
+        if (application.Type == StatusEffectType.Stun && CombatState.HasActiveStatus(StatusEffectType.Stun))
+            SetCombatantState(ArenaCombatantState.Stunned);
+
+        return actualValue;
+    }
+
+    protected void SetCombatantState(ArenaCombatantState state)
+    {
+        if (CombatantState == state)
+            return;
+
+        CombatantState = state;
+        EmitSignal(SignalName.CombatantStateChanged, (int)CombatantState);
+        OnCombatantStateChanged(CombatantState);
+    }
+
     public int ApplyDamage(CombatDamageData damage, ArenaCombatant source = null)
     {
         if (!CanReceiveDamageFrom(source))
@@ -96,29 +183,49 @@ public abstract partial class ArenaCombatant : CharacterBody2D
 
     protected virtual void OnCombatStateDied()
     {
+        SetCombatantState(ArenaCombatantState.Dead);
+    }
+
+    protected virtual void OnCombatantStateChanged(ArenaCombatantState state)
+    {
     }
 
     protected void MoveWithDirection(Vector2 direction)
     {
-        Velocity = direction.Normalized() * MoveSpeed + GetSoftCollisionVelocity();
+        Velocity = direction.Normalized() * MoveSpeed * GetSpeedMultiplier() + GetSoftCollisionVelocity() + ExternalForce;
         SetLookDirectionFromInput(direction);
         MoveAndSlide();
+    }
+
+    protected void TickCombatantStatusEffects(float delta)
+    {
+        CombatState?.TickStatusEffects(delta);
+        if (CombatantState == ArenaCombatantState.Stunned && CombatState?.HasActiveStatus(StatusEffectType.Stun) != true)
+            SetCombatantState(ArenaCombatantState.Default);
     }
 
     protected void MoveWithInputState(ArenaCombatInputState inputState)
     {
         var desiredVelocity = inputState?.IsMoving == true
-            ? inputState.MoveDirection * inputState.MoveStrength * MoveSpeed
+            ? inputState.MoveDirection * inputState.MoveStrength * MoveSpeed * GetSpeedMultiplier()
             : Vector2.Zero;
 
-        Velocity = desiredVelocity + GetSoftCollisionVelocity();
+        Velocity = desiredVelocity + GetSoftCollisionVelocity() + ExternalForce;
         MoveAndSlide();
     }
 
     protected void MoveWithSoftCollisionOnly()
     {
-        Velocity = GetSoftCollisionVelocity();
+        Velocity = GetSoftCollisionVelocity() + ExternalForce;
         MoveAndSlide();
+    }
+
+    protected void DecayExternalForce(float delta)
+    {
+        if (delta <= 0f || ExternalForce == Vector2.Zero)
+            return;
+
+        ExternalForce = ExternalForce.MoveToward(Vector2.Zero, Mathf.Max(0f, ExternalForceFriction) * delta);
     }
 
     private Vector2 GetSoftCollisionVelocity()
@@ -160,6 +267,8 @@ public abstract partial class ArenaCombatant : CharacterBody2D
             return;
 
         LookDirection = lookDirection.Normalized();
+        if (!Mathf.IsZeroApprox(LookDirection.X))
+            _visualXSign = Mathf.Sign(LookDirection.X);
     }
 
     protected void SetLookDirectionFromInput(Vector2 lookDirection)
@@ -180,14 +289,7 @@ public abstract partial class ArenaCombatant : CharacterBody2D
         if (sprite == null)
             return;
 
-        var xSign = (float)Mathf.Sign(sprite.Scale.X);
-        if (LookDirection.X > 0f)
-            xSign = 1f;
-        else if (LookDirection.X < 0f)
-            xSign = -1f;
-
-        if (xSign == 0f)
-            xSign = 1f;
+        var xSign = GetVisualXSign();
 
         var texture = LookDirection.Y < 0f
             ? backTexture ?? frontTexture
@@ -226,12 +328,7 @@ public abstract partial class ArenaCombatant : CharacterBody2D
 
     protected float GetVisualXSign()
     {
-        if (LookDirection.X > 0f)
-            return 1f;
-        if (LookDirection.X < 0f)
-            return -1f;
-
-        return 1f;
+        return _visualXSign;
     }
 
     protected static void FitSpriteHeight(Sprite2D sprite, Texture2D texture, float displayHeight)

@@ -5,6 +5,10 @@ namespace MobArena.Scripts.Resources.Combat.Effects;
 [GlobalClass]
 public partial class ArenaMeleeEffectData : ArenaCombatEffectData
 {
+    public override string AttackTypeLabel => "Melee";
+
+    public override string AttackTypeIconPath => "res://assets/ui/attacks/type_melee.svg";
+
     [Export(PropertyHint.Range, "1,200,1")]
     public float HitboxRadius { get; private set; } = 28f;
 

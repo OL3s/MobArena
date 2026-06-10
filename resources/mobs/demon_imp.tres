@@ -17,6 +17,6 @@ UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 3
-MaxHealth = 40
+MaxHealth = 400
 ArmorProfile = SubResource("Resource_demon_imp_armor")
 FameValue = 60

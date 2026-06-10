@@ -21,7 +21,7 @@ public partial class GladiatorData : Resource
     private const float DefaultHealthMinRatio = 0.2f;
     private const float ConditionPenaltyThreshold = 0.5f;
     private const int AttributeValueGold = 2;
-    private const int VitalsValueDivisor = 4;
+    private const int VitalsValueDivisor = 40;
 
     private static readonly string[] DefaultNames =
     {
@@ -50,12 +50,12 @@ public partial class GladiatorData : Resource
     public GladiatorAppearanceData Appearance { get; private set; }
 
     [Export]
-    public int Health { get; private set; } = 35;
+    public int Health { get; private set; } = 350;
 
     public int MaxHealth => Level?.GetMaxHealth() ?? 0;
 
     [Export]
-    public int Stamina { get; private set; } = 22;
+    public int Stamina { get; private set; } = 220;
 
     public int MaxStamina => Level?.GetMaxStamina() ?? 0;
 
@@ -109,12 +109,12 @@ public partial class GladiatorData : Resource
         return isLowHealth ? GladiatorRiskStatus.LowHealth : GladiatorRiskStatus.None;
     }
 
-    public int GetArmorValue(ArmorDamageType damageType)
+    public int GetArmorValue(CombatDamageType damageType)
     {
         return Equipment?.Armor?.GetArmorValue(damageType) ?? 0;
     }
 
-    public int ApplyArmorToDamage(int damage, ArmorDamageType damageType)
+    public int ApplyArmorToDamage(int damage, CombatDamageType damageType)
     {
         return ArmorItemData.ApplyArmorToDamage(damage, GetArmorValue(damageType));
     }
@@ -122,11 +122,6 @@ public partial class GladiatorData : Resource
     public int ApplyArmorToDamage(CombatDamageData damageData)
     {
         return damageData?.GetMitigatedTotalDamage(this) ?? 0;
-    }
-
-    public int GetArmorSpecialtyValue(ArmorSpecialType specialType)
-    {
-        return Equipment?.Armor?.GetSpecialtyValue(specialType) ?? 0;
     }
 
     public static GladiatorData CreateDefault()

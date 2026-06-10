@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="MobAppearanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mobs/MobAppearanceData.cs" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/mobs/training_dummy.svg" id="2_dummy"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Training Dummy Appearance"
+UiIcon = ExtResource("2_dummy")
+BodyForward = ExtResource("2_dummy")
+BodyBack = ExtResource("2_dummy")
