@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="OffHandItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/OffHandItemData.cs" id="1_off"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="2_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="3_damage_entry"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="4_action"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="5_melee_effect"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="6_apply"]
+
+[sub_resource type="Resource" id="Resource_off_hand_punch_crush"]
+script = ExtResource("3_damage_entry")
+Type = 2
+Damage = 20
+
+[sub_resource type="Resource" id="Resource_off_hand_punch_damage"]
+script = ExtResource("2_damage")
+Entries = Array[ExtResource("3_damage_entry")]([SubResource("Resource_off_hand_punch_crush")])
+
+[sub_resource type="Resource" id="Resource_off_hand_punch_apply"]
+script = ExtResource("6_apply")
+ForceStrength = 25.0
+
+[sub_resource type="Resource" id="Resource_off_hand_punch_effect"]
+script = ExtResource("5_melee_effect")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
+Apply = SubResource("Resource_off_hand_punch_apply")
+LifetimeSeconds = 0.08
+MaxHits = 1
+HitboxRadius = 16.0
+ActiveSeconds = 0.06
+ForwardOffset = 2.0
+
+[sub_resource type="Resource" id="Resource_off_hand_punch_action"]
+script = ExtResource("4_action")
+DisplayName = "Off-Hand Punch"
+Effect = SubResource("Resource_off_hand_punch_effect")
+WindupSeconds = 0.02
+StaminaCost = 3
+SpawnDistance = 18.0
+
+[resource]
+script = ExtResource("1_off")
+Damage = SubResource("Resource_off_hand_punch_damage")
+MainAction = SubResource("Resource_off_hand_punch_action")
+DisplayName = "Unarmed Off-Hand Punch"
+Description = "A weaker punch used when no off-hand item is equipped."
+Cost = 0

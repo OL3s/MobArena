@@ -39,6 +39,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
     private Sprite2D _offHandItem;
     private Area2D _interactionArea;
     private Label _nameLabel;
+    private Label _totalLevelLabel;
     private HBoxContainer _riskWarnings;
     private TextureRect _exhaustionWarningIcon;
     private VBoxContainer _detailRows;
@@ -103,6 +104,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
         _offHandItem = GetNode<Sprite2D>("LeftHand/OffHandItem");
         _interactionArea = GetNode<Area2D>("InteractionArea");
         _nameLabel = GetNode<Label>("Name");
+        _totalLevelLabel = GetNode<Label>("TotalLevel");
         _riskWarnings = GetNode<HBoxContainer>("RiskWarnings");
         _exhaustionWarningIcon = GetNode<TextureRect>("RiskWarnings/ExhaustionIcon");
         _detailRows = GetNode<VBoxContainer>("Details");
@@ -166,6 +168,8 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
 
         if (_nameLabel != null)
             _nameLabel.Visible = !isDragPreview;
+        if (_totalLevelLabel != null)
+            _totalLevelLabel.Visible = !isDragPreview;
         if (_riskWarnings != null)
             _riskWarnings.Visible = false;
         if (_detailRows != null)
@@ -328,6 +332,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
             return;
 
         _nameLabel.Text = _gladiatorData.GladiatorName;
+        _totalLevelLabel.Text = $"TOT {_gladiatorData.Level?.TotalLevel ?? 4}";
         RefreshRiskWarnings();
         RefreshDetails();
         RefreshCompactStatus();

@@ -229,6 +229,8 @@ Use `TypeOverrides` to make armor distinct instead of only raising `BaseValue`. 
 
 Current player input supports both main-hand and off-hand action paths in `PlayerCombatant`.
 
+If a hand slot is empty, `PlayerCombatant` falls back to hidden unarmed default resources under `resources/combat/player_defaults/`: `main_hand_punch.tres` for main-hand input and weaker `off_hand_punch.tres` for off-hand input. These resources are not normal inventory/store/codex items.
+
 Design guidance:
 
 - Main-hand items should usually be the primary damage plan.

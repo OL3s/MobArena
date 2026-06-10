@@ -20,6 +20,8 @@ public partial class PlayerCombatant : ArenaCombatant
     private const float BaseMinimumExhaustedSeconds = 1f;
     private const float MinimumExhaustedSecondsFloor = 0.25f;
     private const float EnduranceExhaustedRecoveryCurve = 10f;
+    private const string DefaultMainHandPunchPath = "res://resources/combat/player_defaults/main_hand_punch.tres";
+    private const string DefaultOffHandPunchPath = "res://resources/combat/player_defaults/off_hand_punch.tres";
 
     private Sprite2D _body;
     private Sprite2D _armor;
@@ -368,7 +370,8 @@ public partial class PlayerCombatant : ArenaCombatant
         if (!mainHandPressed || _wasMainHandPressed || IsDead)
             return;
 
-        if (GladiatorData?.Equipment?.MainHand is not DamageItemData mainHand || mainHand.MainAction == null)
+        var mainHand = GetMainHandActionItem();
+        if (mainHand?.MainAction == null)
             return;
 
         HandleActionPress(mainHand, mainHand.MainAction);
@@ -379,10 +382,25 @@ public partial class PlayerCombatant : ArenaCombatant
         if (!offHandPressed || _wasOffHandPressed || IsDead)
             return;
 
-        if (GladiatorData?.Equipment?.OffHand is not DamageItemData offHand || offHand.MainAction == null)
+        var offHand = GetOffHandActionItem();
+        if (offHand?.MainAction == null)
             return;
 
         HandleActionPress(offHand, offHand.MainAction);
+    }
+
+    private DamageItemData GetMainHandActionItem()
+    {
+        return GladiatorData?.Equipment?.MainHand ?? ResourceLoader.Load<MainHandItemData>(DefaultMainHandPunchPath);
+    }
+
+    private DamageItemData GetOffHandActionItem()
+    {
+        var equipment = GladiatorData?.Equipment;
+        if (equipment?.MainHand?.IsTwoHanded == true)
+            return null;
+
+        return equipment?.OffHand ?? ResourceLoader.Load<OffHandItemData>(DefaultOffHandPunchPath);
     }
 
     private void HandleActionPress(DamageItemData item, ArenaCombatActionData action)

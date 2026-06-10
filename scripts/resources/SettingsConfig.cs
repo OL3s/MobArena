@@ -15,4 +15,7 @@ public partial class SettingsConfig : Resource
 
 	[Export(PropertyHint.Range, "0,0.95,0.01")]
 	public float ArenaMoveDeadzone { get; set; } = 0.3f;
+
+	[Export(PropertyHint.Range, "1,4,1")]
+	public int ArenaAutoAssignCount { get; set; } = 1;
 }

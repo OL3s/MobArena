@@ -60,6 +60,7 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
     private VBoxContainer _gladiatorDetails;
     private VBoxContainer _modeButtons;
     private HBoxContainer _assignedGladiatorsRow;
+    private Button _assignedGladiatorsGrabButton;
     private HBoxContainer _assignedGladiators;
     private Button _closeButton;
     private CompanyRunData _runData;
@@ -76,6 +77,7 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
         _gladiatorDetails = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/WorkRow/GladiatorDetails");
         _modeButtons = GetNode<VBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/WorkRow/ModeButtons");
         _assignedGladiatorsRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow");
+        _assignedGladiatorsGrabButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow/GrabIcon");
         _assignedGladiators = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow/Gladiators");
         _closeButton = GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/CloseButton");
         _runData = SaveNode.Get()?.CompanyRunData;
@@ -85,6 +87,7 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
         _icon.Texture = IconTexture;
         _icon.Visible = IconTexture != null;
         _upgradeButton.Pressed += OnUpgradePressed;
+        _assignedGladiatorsGrabButton.Pressed += OnAssignedGladiatorsGrabPressed;
         _closeButton.Pressed += QueueFree;
         if (_runData != null)
             _runData.RunChanged += RefreshOverlayState;
@@ -102,6 +105,9 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
 
         if (_upgradeButton != null)
             _upgradeButton.Pressed -= OnUpgradePressed;
+
+        if (_assignedGladiatorsGrabButton != null)
+            _assignedGladiatorsGrabButton.Pressed -= OnAssignedGladiatorsGrabPressed;
     }
 
     public override void _Notification(int what)
@@ -540,5 +546,21 @@ public partial class BuildingOverlayPanel : Control, IUpgradeable
         }
 
         GD.PushError($"Building overlay drag failed: roster yard missing for gladiator '{gladiator.GladiatorName}'.");
+    }
+
+    private void OnAssignedGladiatorsGrabPressed()
+    {
+        var assigned = _runData?.TownAssignments?.GetGladiators(AssignmentLocation);
+        if (assigned == null || assigned.Count <= 0)
+            return;
+
+        var assignedCopy = new Godot.Collections.Array<GladiatorData>(assigned);
+        foreach (var gladiator in assignedCopy)
+        {
+            if (gladiator != null)
+                _runData.TryMoveGladiatorToCourtyard(gladiator);
+        }
+
+        SaveNode.Get()?.Save();
     }
 }

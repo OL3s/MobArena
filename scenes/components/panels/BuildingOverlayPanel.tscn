@@ -130,13 +130,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="GrabIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow"]
+[node name="GrabIcon" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow"]
 custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
-mouse_filter = 2
-texture = ExtResource("3_drag_hand")
-expand_mode = 2
-stretch_mode = 5
+tooltip_text = "Move all assigned gladiators to the courtyard."
+focus_mode = 0
+icon = ExtResource("3_drag_hand")
+expand_icon = true
+flat = true
 
 [node name="Gladiators" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow"]
 layout_mode = 2

@@ -284,6 +284,8 @@ Additional first-pass action inputs exist but do not activate authored effects y
 
 The player path uses source item damage by default.
 
+When an equipped hand item is missing, `PlayerCombatant` uses hidden default punch resources from `resources/combat/player_defaults/`. The main-hand punch is stronger than the off-hand punch, and both still flow through `ArenaCombatActionData`/`ArenaMeleeEffectData` instead of hardcoded damage.
+
 Actions may optionally set `Buildup` to an `ArenaCombatBuildupData` resource. If `Buildup` is null, the action keeps the normal press-to-register behavior. If `Buildup` is present, the first press starts buildup and the second press releases the action with a scalar from `0.1` to `1.0` based on `BuildupSeconds`. The buildup config chooses which authored values use the scalar, such as range, speed, or damage. Current sandbox thrown attacks use buildup with range scaling only.
 
 `ArenaCombatActionData.MaxChainDepth` limits initialized effect chaining and defaults to 12. Set it lower for tests that should prove a chain stops quickly, or higher for deliberate multi-stage attacks. Runtime logs include action name, effect type, buildup scalar, chain depth, hits, target health, and chain-depth blocks.
