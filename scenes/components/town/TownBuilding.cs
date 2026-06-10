@@ -607,7 +607,8 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     private void OpenScene()
     {
         GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
-        GetTree().ChangeSceneToPacked(SceneToOpen);
+        SceneTransitionLogger.LogChange(GetTree(), SceneToOpen, $"town building: {BuildingName}");
+        GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToPacked, SceneToOpen);
     }
 
     private void ActivateIfInside(Vector2 viewportPosition, bool fromInput = false)

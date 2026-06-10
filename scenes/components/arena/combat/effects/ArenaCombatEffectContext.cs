@@ -76,6 +76,11 @@ public sealed class ArenaCombatEffectContext
 
     public override string ToString()
     {
+        return $"{ActionName} chain={ChainDepth}/{MaxChainDepth}";
+    }
+
+    public string ToStringExtended()
+    {
         var sourceName = Source?.Name ?? "NoSource";
         return $"Context[Action={ActionName}, Source={sourceName}, Team={SourceTeam}, Direction={Direction}, Buildup={BuildupScalar:0.##}, Chain={ChainDepth}/{MaxChainDepth}]";
     }

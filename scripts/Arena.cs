@@ -1,5 +1,6 @@
 using Godot;
 using MobArena.Scenes.Components.Arena;
+using MobArena.Scenes.Components.Arena.CombatUi;
 using MobArena.Scenes.Components.Environment;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Contracts;
@@ -18,6 +19,7 @@ public partial class Arena : Node
 	private TownPhaseState _phaseState;
 	private ArenaPlayerSpawner _playerSpawner;
 	private ArenaEnemySpawner _enemySpawner;
+	private CombatHud _combatHud;
 	private Label _statusLabel;
 	private Button _debugWinButton;
 	private Button _debugLoseButton;
@@ -31,6 +33,7 @@ public partial class Arena : Node
 		_phaseState = _saveNode?.TownPhaseState;
 		_playerSpawner = GetNodeOrNull<ArenaPlayerSpawner>("World/PlayerSpawner");
 		_enemySpawner = GetNodeOrNull<ArenaEnemySpawner>("World/EnemySpawner");
+		_combatHud = GetNodeOrNull<CombatHud>("CombatHud");
 
 		if (_weatherState != null)
 			_weatherState.WeatherChanged += RefreshWeatherVisuals;
@@ -66,6 +69,7 @@ public partial class Arena : Node
 		var result = ArenaContractResultResolver.ResolveLoss(_saveNode);
 		if (result == ArenaContractResultResolver.ContractResult.ForceRetired)
 		{
+			SceneTransitionLogger.LogChange(GetTree(), MainMenuScene, "arena loss force retired");
 			GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScene);
 			return;
 		}
@@ -83,6 +87,7 @@ public partial class Arena : Node
 	private void SaveAndReturnToTown()
 	{
 		_saveNode?.Save();
+		SceneTransitionLogger.LogChange(GetTree(), TownScene, "arena resolved");
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, TownScene);
 	}
 
@@ -101,6 +106,7 @@ public partial class Arena : Node
 		_runData?.EnsureResources();
 		_playerSpawner?.SpawnFromRunData(_runData);
 		_enemySpawner?.SpawnMobs(_runData?.ActiveArenaContract?.GetEnemyMobs());
+		_combatHud?.SetPlayers(_playerSpawner?.GetSpawnedPlayerCombatants());
 	}
 
 	private void RefreshStatus()

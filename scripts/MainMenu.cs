@@ -54,6 +54,7 @@ public partial class MainMenu : Control
 		if (_saveNode is not { HasCompany: true })
 			return;
 
+		SceneTransitionLogger.LogChange(GetTree(), TownScene, "enter town");
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, TownScene);
 	}
 

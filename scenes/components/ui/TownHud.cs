@@ -416,6 +416,7 @@ public partial class TownHud : CanvasLayer
 		runData.NotifyRunChanged();
 		_saveNode.Save();
 		GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
+		SceneTransitionLogger.LogChange(GetTree(), ArenaScenePath, "town quickstart arena");
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, ArenaScenePath);
 	}
 

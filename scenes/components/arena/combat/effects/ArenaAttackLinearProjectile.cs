@@ -159,7 +159,7 @@ public partial class ArenaAttackLinearProjectile : Area2D, IArenaCombatEffect
         var targetHealth = target?.CombatState == null
             ? "unknown HP"
             : $"{target.CombatState.CurrentHealth}/{target.CombatState.MaxHealth} HP";
-        GD.Print($"Combat hit: LinearProjectile -> {target?.Name ?? "UnknownTarget"}, action={_context.ActionName}, effect={_effectData}, damage={appliedDamage}, target={targetHealth}, penetrations={_penetrationsUsed}/{_effectData.MaxPenetrations}, chain={_context.ChainDepth}/{_context.MaxChainDepth}.");
+        GD.Print($"Combat hit: LinearProjectile -> {target?.Name ?? "UnknownTarget"}, action={_context.ActionName}, damage={appliedDamage}, target={targetHealth}.");
     }
 
     private void SpawnChainedHit()
@@ -176,7 +176,7 @@ public partial class ArenaAttackLinearProjectile : Area2D, IArenaCombatEffect
         _destroyed = true;
         if (expired)
         {
-            GD.Print($"Combat expire: LinearProjectile action={_context.ActionName}, distance={_distanceTraveled:0.#}/{_context.ScaleRange(_effectData.Range):0.#}, chain={_context.ChainDepth}/{_context.MaxChainDepth}.");
+            GD.Print($"Combat expire: LinearProjectile action={_context.ActionName}, distance={_distanceTraveled:0.#}/{_context.ScaleRange(_effectData.Range):0.#}.");
             ArenaCombatEffectSpawner.TrySpawn(GetParent(), GlobalPosition, GlobalRotation, _context, _effectData.OnExpireEffect);
             ArenaCombatEffectSpawner.TrySpawnScene(GetParent(), GlobalPosition, GlobalRotation, _effectData.OnExpireScene);
         }

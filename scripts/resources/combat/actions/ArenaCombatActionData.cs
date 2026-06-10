@@ -31,8 +31,13 @@ public partial class ArenaCombatActionData : Resource
 
     public override string ToString()
     {
-        var effectLabel = Effect == null ? "Effect=None" : Effect.ToString();
-        var buildupLabel = Buildup == null ? "Buildup=None" : Buildup.ToString();
+        return string.IsNullOrWhiteSpace(DisplayName) ? "Action" : DisplayName;
+    }
+
+    public string ToStringExtended()
+    {
+        var effectLabel = Effect == null ? "Effect=None" : Effect.ToStringExtended();
+        var buildupLabel = Buildup == null ? "Buildup=None" : Buildup.ToStringExtended();
         return $"Action[{DisplayName}, Windup={WindupSeconds:0.##}, Stamina={StaminaCost}, Spawn={SpawnDistance:0.#}, MaxChainDepth={MaxChainDepth}, {buildupLabel}, {effectLabel}]";
     }
 }

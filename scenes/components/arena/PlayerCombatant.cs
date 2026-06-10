@@ -17,6 +17,9 @@ public partial class PlayerCombatant : ArenaCombatant
     private const float HandDisplayHeight = 18f;
     private const float DefaultHeldItemDisplayHeight = 48f;
     private const float StaminaRegenPerMaxStaminaPerSecond = 0.2f;
+    private const float BaseMinimumExhaustedSeconds = 1f;
+    private const float MinimumExhaustedSecondsFloor = 0.25f;
+    private const float EnduranceExhaustedRecoveryCurve = 10f;
 
     private Sprite2D _body;
     private Sprite2D _armor;
@@ -46,6 +49,8 @@ public partial class PlayerCombatant : ArenaCombatant
     private ArenaCombatActionData _buildupAction;
     private float _buildupElapsed;
     private float _pendingBuildupScalar = 1f;
+    private int _exhaustedStaminaRecoveryThreshold;
+    private float _exhaustedRemainingSeconds;
 
     public override void _Ready()
     {
@@ -76,6 +81,7 @@ public partial class PlayerCombatant : ArenaCombatant
         ApplyCombatInput(ReadAssignedMoveInput(), ReadAssignedAimInput(), mainHandPressed, offHandPressed, abilityPressed, blockPressed);
         LogActionPresses(mainHandPressed, offHandPressed, abilityPressed, blockPressed);
         UpdateCombatantState(deltaSeconds);
+        UpdateExhaustedState(deltaSeconds);
         UpdateBuildup(deltaSeconds);
         TryActivateMainHand(mainHandPressed);
         TryActivateOffHand(offHandPressed);
@@ -109,6 +115,7 @@ public partial class PlayerCombatant : ArenaCombatant
         ResetActionPressTracking();
         ClearPendingAction();
         ClearBuildup();
+        ClearExhaustedRecoveryState();
         SetCombatantState(ArenaCombatantState.Default);
         _staminaRegenAccumulator = 0f;
         Name = string.IsNullOrWhiteSpace(gladiatorData?.GladiatorName)
@@ -411,11 +418,16 @@ public partial class PlayerCombatant : ArenaCombatant
             return false;
 
         var staminaCost = action.StaminaCost;
-        if (staminaCost > 0 && GladiatorData.Stamina < staminaCost)
-            return false;
-
         if (staminaCost > 0)
+        {
+            if (GladiatorData.Stamina < staminaCost)
+            {
+                ExhaustFromFailedAction(staminaCost);
+                return false;
+            }
+
             GladiatorData.SpendStamina(staminaCost);
+        }
 
         StartAction(item, action, buildupScalar);
         return true;
@@ -510,6 +522,33 @@ public partial class PlayerCombatant : ArenaCombatant
         RefreshStateLabel();
     }
 
+    private void ExhaustFromFailedAction(int staminaCost)
+    {
+        ClearPendingAction();
+        ClearBuildup();
+        var recoverableMax = Mathf.Max(1, GladiatorData?.RecoverableMaxStamina ?? staminaCost);
+        var recoveryThreshold = Mathf.Clamp(staminaCost, 1, recoverableMax);
+        _exhaustedStaminaRecoveryThreshold = Mathf.Max(_exhaustedStaminaRecoveryThreshold, recoveryThreshold);
+        _exhaustedRemainingSeconds = Mathf.Max(_exhaustedRemainingSeconds, GetMinimumExhaustedSeconds());
+        SetCombatantState(ArenaCombatantState.Exhausted);
+    }
+
+    private float GetMinimumExhaustedSeconds()
+    {
+        var endurance = Mathf.Max(0, GladiatorData?.Level?.Endurance ?? 0);
+        var reductionRatio = endurance / (endurance + EnduranceExhaustedRecoveryCurve);
+        return Mathf.Lerp(BaseMinimumExhaustedSeconds, MinimumExhaustedSecondsFloor, reductionRatio);
+    }
+
+    private void UpdateExhaustedState(float delta)
+    {
+        if (CombatantState != ArenaCombatantState.Exhausted || delta <= 0f)
+            return;
+
+        _exhaustedRemainingSeconds = Mathf.Max(0f, _exhaustedRemainingSeconds - delta);
+        TryClearExhaustedState();
+    }
+
     private void RegenerateStamina(float delta)
     {
         if (GladiatorData == null || IsDead || delta <= 0f)
@@ -529,6 +568,29 @@ public partial class PlayerCombatant : ArenaCombatant
 
         GladiatorData.RestoreStamina(restoreAmount);
         _staminaRegenAccumulator -= restoreAmount;
+
+        TryClearExhaustedState();
+    }
+
+    private void TryClearExhaustedState()
+    {
+        if (CombatantState == ArenaCombatantState.Exhausted && HasRecoveredFromExhausted())
+        {
+            ClearExhaustedRecoveryState();
+            SetCombatantState(ArenaCombatantState.Default);
+        }
+    }
+
+    private bool HasRecoveredFromExhausted()
+    {
+        var threshold = Mathf.Max(1, _exhaustedStaminaRecoveryThreshold);
+        return _exhaustedRemainingSeconds <= 0f && GladiatorData?.Stamina >= threshold;
+    }
+
+    private void ClearExhaustedRecoveryState()
+    {
+        _exhaustedStaminaRecoveryThreshold = 0;
+        _exhaustedRemainingSeconds = 0f;
     }
 
     private void Refresh()
@@ -565,9 +627,12 @@ public partial class PlayerCombatant : ArenaCombatant
         _stateLabel.Text = _buildupAction?.Buildup == null
             ? CombatantState.ToString()
             : $"Buildup {_buildupAction.Buildup.GetScalar(_buildupElapsed):0.00}";
-        _stateLabel.Modulate = CombatantState == ArenaCombatantState.Windup
-            ? new Color(1f, 0.72f, 0.35f)
-            : Colors.White;
+        _stateLabel.Modulate = CombatantState switch
+        {
+            ArenaCombatantState.Windup => new Color(1f, 0.72f, 0.35f),
+            ArenaCombatantState.Exhausted => new Color(0.7f, 0.85f, 1f),
+            _ => Colors.White
+        };
     }
 
     private void ApplyBodyVisual()

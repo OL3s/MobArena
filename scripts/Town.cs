@@ -81,6 +81,7 @@ public partial class Town : Node
     private void OnMainMenuPressed()
     {
         SaveNode.Get()?.Save();
+        SceneTransitionLogger.LogChange(GetTree(), MainMenuScene, "town back to main menu");
         GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScene);
     }
 

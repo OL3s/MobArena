@@ -308,8 +308,9 @@ public partial class ArenaContractsOverlay : Control
         }
 
         _runData?.SetActiveArenaContract(selectedContract);
-        GetTree().ChangeSceneToPacked(scene);
+        SceneTransitionLogger.LogChange(GetTree(), scene, $"contract selected: {selectedContract.DisplayName}");
         GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
+        GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToPacked, scene);
     }
 
     private void StartGladiatorDrag(GladiatorData gladiator)

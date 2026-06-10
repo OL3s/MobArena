@@ -50,7 +50,13 @@ public partial class ArenaCombatEffectData : Resource
     public override string ToString()
     {
         var sceneLabel = string.IsNullOrWhiteSpace(ScenePath) ? "Scene=None" : ScenePath.GetFile().GetBaseName();
-        var applyLabel = Apply == null ? "Apply=None" : Apply.ToString();
+        return $"{AttackTypeLabel}:{sceneLabel}";
+    }
+
+    public string ToStringExtended()
+    {
+        var sceneLabel = string.IsNullOrWhiteSpace(ScenePath) ? "Scene=None" : ScenePath.GetFile().GetBaseName();
+        var applyLabel = Apply == null ? "Apply=None" : Apply.ToStringExtended();
         return $"{GetType().Name}[{sceneLabel}, Lifetime={LifetimeSeconds:0.##}, MaxHits={MaxHits}, MultiHit={CanHitSameTargetMultipleTimes}, {applyLabel}, OnHitEffect={OnHitEffect != null}, OnExpireEffect={OnExpireEffect != null}, OnHitScene={!string.IsNullOrWhiteSpace(OnHitScenePath)}, OnExpireScene={!string.IsNullOrWhiteSpace(OnExpireScenePath)}]";
     }
 }

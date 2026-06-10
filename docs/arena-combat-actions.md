@@ -68,6 +68,24 @@ target.ApplyDamage(damage, source);
 
 They should not mutate `GladiatorData`, `EnemyMobData`, `CompanyRunData`, contract rewards, or arena results directly.
 
+## Combatant States
+
+Arena combatants use `ArenaCombatantState` for short-lived runtime behavior states. This is separate from the town-management `GladiatorData.Exhaustion` condition.
+
+Current movement multipliers:
+
+- `Default`: `1.0`
+- `Exhausted`: `0.5`
+- `Release`: `0.2`
+- `Windup`: `0.1`
+- `Stunned`: `0.0`
+
+Players enter `Exhausted` when they try to perform an action whose `StaminaCost` is higher than their current stamina. The action does not activate. Player exhaustion clears after stamina regenerates back to the failed action's stamina cost, capped by the player's recoverable max stamina, and after a minimum time window. That minimum starts at `1.0` second and is reduced by a non-linear diminishing-returns curve from the gladiator's Endurance level, approaching a `0.25` second floor.
+
+Player normal actions can start only from `Default`. `Exhausted` still allows movement and input reading, but it blocks starting another normal action until it clears.
+
+`Exhausted` is also available as a normal combatant state for future mob behavior and status/profile tuning.
+
 ## Damage And Immunity
 
 `CombatDamageData` has one damage array:

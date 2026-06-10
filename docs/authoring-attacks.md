@@ -91,6 +91,10 @@ Typed effect resources inherit shared fields from `ArenaCombatEffectData`, so th
 
 Use low windup for quick jabs and higher windup for heavy attacks. Leave `Buildup` null unless the action should use two presses. Do not use chained effects without considering `MaxChainDepth`.
 
+For players, `StaminaCost` is a mismanagement check. If current stamina is high enough, the action activates and spends stamina. If current stamina is too low, the action does not activate and the player enters `ArenaCombatantState.Exhausted`. Exhausted player movement uses a `0.5` speed multiplier until stamina regenerates back to the failed action's cost, capped by recoverable max stamina, and until the minimum exhausted window has passed. That minimum starts at `1.0` second and is reduced by a non-linear diminishing-returns curve from Endurance, approaching a `0.25` second floor.
+
+Player normal actions can start only from `Default`, so an exhausted player cannot immediately try another normal action until exhaustion clears.
+
 ## Apply Payload
 
 `ArenaCombatApplyData` describes what happens when an effect successfully hits a target.

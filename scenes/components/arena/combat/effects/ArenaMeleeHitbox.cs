@@ -177,8 +177,7 @@ public partial class ArenaMeleeHitbox : Area2D, IArenaCombatEffect
             ? "unknown HP"
             : $"{target.CombatState.CurrentHealth}/{target.CombatState.MaxHealth} HP";
 
-        var applyLabel = _effectData.Apply?.ToString() ?? "Apply=None";
-        GD.Print($"Combat hit: {sourceName} -> {targetName}, action={actionName}, effect={_effectData}, {applyLabel}, damage={appliedDamage}, target={targetHealth}, hits={_hitsApplied}/{_effectData.MaxHits}, chain={_context.ChainDepth}/{_context.MaxChainDepth}.");
+        GD.Print($"Combat hit: {sourceName} -> {targetName}, action={actionName}, effect={_effectData}, damage={appliedDamage}, target={targetHealth}.");
     }
 
     private void SpawnChained(ArenaCombatEffectData effect, PackedScene scene, Vector2 position)

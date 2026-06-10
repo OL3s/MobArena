@@ -242,6 +242,7 @@ public partial class SettingsOverlay : Control
 		}
 
 		GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
+		SceneTransitionLogger.LogChange(GetTree(), MainMenuScene, $"delete save data: {scope}");
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScene);
 	}
 }

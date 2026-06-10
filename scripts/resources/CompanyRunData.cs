@@ -562,8 +562,10 @@ public partial class CompanyRunData : Resource
     {
         if (!equipment.CanEquipOffHand())
         {
-            GD.PushError($"Equip failed: gladiator '{gladiatorData.GladiatorName}' cannot equip off-hand '{offHand.DisplayName}' while using two-handed main hand '{equipment.MainHand?.DisplayName ?? "null"}'.");
-            return false;
+            var replacedMainHand = equipment.MainHand;
+            ReturnEquippedItemToInventory(replacedMainHand, gladiatorData, "main hand");
+            equipment.UnequipMainHand();
+            GD.Print($"Equip: '{gladiatorData.GladiatorName}' unequipped two-handed main hand '{replacedMainHand?.DisplayName ?? "null"}' to equip off hand '{offHand.DisplayName}'.");
         }
 
         Inventory.Remove(offHand);

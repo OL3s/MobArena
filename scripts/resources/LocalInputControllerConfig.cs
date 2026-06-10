@@ -19,6 +19,9 @@ public partial class LocalInputControllerConfig : Resource
 	public int DeviceId { get; set; } = -1;
 
 	[Export]
+	public int PlayerId { get; set; } = -1;
+
+	[Export]
 	public Texture2D Icon { get; set; }
 
 	[Export]
@@ -26,12 +29,13 @@ public partial class LocalInputControllerConfig : Resource
 
 	public string DisplayName => GetDisplayName(Kind, DeviceId);
 
-	public static LocalInputControllerConfig Create(ControllerKind kind, int deviceId, Texture2D icon, bool isJoined = true)
+	public static LocalInputControllerConfig Create(ControllerKind kind, int deviceId, Texture2D icon, bool isJoined = true, int playerId = -1)
 	{
 		return new LocalInputControllerConfig
 		{
 			Kind = kind,
 			DeviceId = deviceId,
+			PlayerId = playerId,
 			Icon = icon,
 			IsJoined = isJoined
 		};

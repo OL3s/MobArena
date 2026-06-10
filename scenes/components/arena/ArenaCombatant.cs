@@ -19,6 +19,7 @@ public abstract partial class ArenaCombatant : CharacterBody2D
     private static readonly Dictionary<ArenaCombatantState, float> StateSpeedMultipliers = new()
     {
         { ArenaCombatantState.Default, 1f },
+        { ArenaCombatantState.Exhausted, 0.5f },
         { ArenaCombatantState.Release, 0.2f },
         { ArenaCombatantState.Windup, 0.1f },
         { ArenaCombatantState.Stunned, 0f }
@@ -105,6 +106,7 @@ public abstract partial class ArenaCombatant : CharacterBody2D
     public bool CanMove()
     {
         return CombatantState is ArenaCombatantState.Default
+            or ArenaCombatantState.Exhausted
             or ArenaCombatantState.Windup
             or ArenaCombatantState.Release
             or ArenaCombatantState.Blocking;
@@ -113,6 +115,7 @@ public abstract partial class ArenaCombatant : CharacterBody2D
     public bool CanReceiveInput()
     {
         return CombatantState is ArenaCombatantState.Default
+            or ArenaCombatantState.Exhausted
             or ArenaCombatantState.Windup
             or ArenaCombatantState.Release
             or ArenaCombatantState.Blocking;

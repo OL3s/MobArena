@@ -95,6 +95,7 @@ public partial class CompanyOverviewOverlay : Control
             "Company Retired",
             "You chose to retire the company. The run has ended, and any qualifying result was recorded.");
         GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
+        SceneTransitionLogger.LogChange(GetTree(), MainMenuScenePath, "company retired");
         GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MainMenuScenePath);
     }
 }

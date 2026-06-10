@@ -48,6 +48,15 @@ public partial class ArenaPlayerSpawner : Node2D
         }
     }
 
+    public IEnumerable<PlayerCombatant> GetSpawnedPlayerCombatants()
+    {
+        foreach (var player in _spawnedPlayers)
+        {
+            if (GodotObject.IsInstanceValid(player) && player is PlayerCombatant combatant)
+                yield return combatant;
+        }
+    }
+
     private Node2D InstantiatePlayer(GladiatorData gladiator, ArenaControlAssignmentData assignment)
     {
         if (PlayerScene == null)

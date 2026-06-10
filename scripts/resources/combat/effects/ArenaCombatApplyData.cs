@@ -47,6 +47,17 @@ public partial class ArenaCombatApplyData : Resource
 
     public override string ToString()
     {
+        if (UseSourceItemDamage)
+            return "SourceItemDamage";
+
+        if (Damage != null)
+            return Damage.ToString();
+
+        return StatusApplications == null || StatusApplications.Count <= 0 ? "NoApply" : "StatusApply";
+    }
+
+    public string ToStringExtended()
+    {
         var damageLabel = UseSourceItemDamage
             ? "SourceItemDamage"
             : Damage?.ToString() ?? "Damage=None";

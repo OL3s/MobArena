@@ -28,6 +28,11 @@ public partial class ArenaCombatBuildupData : Resource
 
     public override string ToString()
     {
+        return $"Buildup {BuildupSeconds:0.##}s";
+    }
+
+    public string ToStringExtended()
+    {
         return $"Buildup[Seconds={BuildupSeconds:0.##}, Damage={ScaleDamage}, Range={ScaleRange}, Speed={ScaleSpeed}]";
     }
 }

@@ -91,7 +91,7 @@ public partial class ArenaAttackThrownProjectile : Node2D, IArenaCombatEffect
             return;
 
         _landed = true;
-        GD.Print($"Combat land: ThrownProjectile action={_context.ActionName}, position={GlobalPosition}, range={_context.ScaleRange(_effectData.Range):0.#}, buildup={_context.BuildupScalar:0.##}, chain={_context.ChainDepth}/{_context.MaxChainDepth}.");
+        GD.Print($"Combat land: ThrownProjectile action={_context.ActionName}, position={GlobalPosition}, range={_context.ScaleRange(_effectData.Range):0.#}.");
         ArenaCombatEffectSpawner.TrySpawn(GetParent(), GlobalPosition, GlobalRotation, _context, _effectData.OnExpireEffect);
         ArenaCombatEffectSpawner.TrySpawnScene(GetParent(), GlobalPosition, GlobalRotation, _effectData.OnExpireScene);
         QueueFree();

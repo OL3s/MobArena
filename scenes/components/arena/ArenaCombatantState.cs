@@ -8,5 +8,6 @@ public enum ArenaCombatantState
     Stunned,
     Dead,
     Dodging,
-    Blocking
+    Blocking,
+    Exhausted
 }

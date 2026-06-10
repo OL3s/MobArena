@@ -13,11 +13,12 @@ public static class ArenaCombatEffectSpawner
 
         if (context.ChainDepth >= context.MaxChainDepth)
         {
-            GD.PushWarning($"Combat spawn blocked: chain depth limit reached for {effect}. {context}");
+            GD.PushWarning($"Combat spawn blocked: chain depth limit reached for {effect}. {context.ToStringExtended()}");
             return false;
         }
 
         var instance = scene.Instantiate<Node2D>();
+        instance.TopLevel = true;
         instance.GlobalPosition = position;
         instance.GlobalRotation = rotation;
 
@@ -30,7 +31,7 @@ public static class ArenaCombatEffectSpawner
 
         parent.CallDeferred(Node.MethodName.AddChild, instance);
         var childContext = context.WithEffect(effect);
-        GD.Print($"Combat spawn: {effect.GetType().Name} at {position} rot={rotation:0.##}. {childContext}");
+        GD.Print($"Combat spawn: {effect} action={childContext.ActionName} at {position}.");
         combatEffect.Initialize(childContext);
         return true;
     }
@@ -41,10 +42,11 @@ public static class ArenaCombatEffectSpawner
             return false;
 
         var instance = scene.Instantiate<Node2D>();
+        instance.TopLevel = true;
         instance.GlobalPosition = position;
         instance.GlobalRotation = rotation;
         parent.CallDeferred(Node.MethodName.AddChild, instance);
-        GD.Print($"Combat spawn scene: {scene.ResourcePath.GetFile().GetBaseName()} at {position} rot={rotation:0.##}.");
+        GD.Print($"Combat spawn scene: {scene.ResourcePath.GetFile().GetBaseName()} at {position}.");
         return true;
     }
 }
