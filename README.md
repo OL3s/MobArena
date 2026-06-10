@@ -36,14 +36,24 @@ godot --headless --quit
 Run only the preplaced combat test room from the project root with:
 
 ```bash
-godot scenes/test_mob_fight.tscn
+godot tests/test_mob_fight.tscn
 ```
 
 For a headless load check, use:
 
 ```bash
-godot --headless scenes/test_mob_fight.tscn --quit
+godot --headless tests/test_mob_fight.tscn --quit
 ```
+
+Run the attack/effect sandbox with 9 dummies and a dropdown loaded from `tests/attacks/**/*.tres` with:
+
+```bash
+godot tests/attack_effect_sandbox.tscn
+```
+
+Select an attack, move the mouse over the arena, then press `F` to spawn it at the mouse position facing right. Buildup attacks use `F` once to charge and `F` again to spawn.
+
+Arena combat input currently supports keyboard, mouse, and gamepad. Keyboard-only players use movement direction as facing/aim direction. Mouse-mode players may aim with the mouse cursor, and gamepad players may aim with the right stick or right mousepad-style input. Independent aim must stay optional in game logic: movement-only control should remain valid, using movement direction as both movement and facing/aim direction. This keeps combat usable with more gamepad/device types and for newer players who struggle to manage movement and aim at the same time. Mouse aiming should be controlled by a settings toggle that defaults on; keyboard-only control should not require any independent aim input.
 
 If `godot --headless --import` fails because it tries to open a deleted or renamed scene, reset Godot's local generated/editor cache and import again:
 

@@ -14,12 +14,7 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
     private const string ItemStoreStatRowScenePath = "res://scenes/components/ui/ItemStoreStatRow.tscn";
     private const string ItemStoreStatSectionScenePath = "res://scenes/components/ui/ItemStoreStatSection.tscn";
     private const string ItemStoreDamagePillScenePath = "res://scenes/components/ui/ItemStoreDamagePill.tscn";
-    private const string ArenaMeleeHitboxScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn";
-
-    private static readonly Dictionary<string, string> EffectSceneLabels = new()
-    {
-        [ArenaMeleeHitboxScenePath] = "Melee Hitbox"
-    };
+    private const int MaxActionPatternIcons = 12;
 
     private PackedScene _itemStoreStatRowScene;
     private PackedScene _itemStoreStatSectionScene;
@@ -69,14 +64,19 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
         AddStat("Windup", $"{action.WindupSeconds:0.##}s");
         AddStat("Stamina Cost", action.StaminaCost.ToString());
         AddStat("Spawn Distance", action.SpawnDistance.ToString("0.#"));
+        AddStat("Max Chain Depth", action.MaxChainDepth.ToString());
+        if (action.Buildup != null)
+            AddStat("Buildup", action.Buildup.ToString());
 
         if (action.Effect == null)
             return;
 
         BeginStatSection("Effect");
-		AddStat("Scene", GetEffectSceneLabel(action.Effect.ScenePath));
+        AddActionPatternStack(action.Effect);
+        AddStat("Primary Type", action.Effect.AttackTypeLabel);
         AddStat("Effect Lifetime", $"{action.Effect.LifetimeSeconds:0.##}s");
         AddStat("Max Hits", action.Effect.MaxHits.ToString());
+        AddStat("Can Multi-Hit", action.Effect.CanHitSameTargetMultipleTimes ? "Yes" : "No");
         var apply = action.Effect.Apply;
         AddStat("Uses Item Damage", apply?.UseSourceItemDamage == true ? "Yes" : "No");
 
@@ -94,6 +94,25 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
             AddStat("Hitbox Radius", melee.HitboxRadius.ToString("0.#"));
             AddStat("Active Time", $"{melee.ActiveSeconds:0.##}s");
             AddStat("Forward Offset", melee.ForwardOffset.ToString("0.#"));
+        }
+        else if (action.Effect is ArenaAttackLinearProjectileData linear)
+        {
+            AddStat("Speed", linear.Speed.ToString("0.#"));
+            AddStat("Range", linear.Range.ToString("0.#"));
+            AddStat("Hitbox", $"{linear.HitboxLength:0.#} x {linear.HitboxWidth:0.#}");
+            AddStat("Penetration", linear.MaxPenetrations.ToString());
+        }
+        else if (action.Effect is ArenaAttackThrownProjectileData thrown)
+        {
+            AddStat("Range", thrown.Range.ToString("0.#"));
+            AddStat("Travel Time", $"{thrown.TravelSeconds:0.##}s");
+            AddStat("Arc Height", thrown.ArcHeight.ToString("0.#"));
+        }
+        else if (action.Effect is ArenaAttackAreaOfEffectData area)
+        {
+            AddStat("Radius", area.Radius.ToString("0.#"));
+            AddStat("Tick Rate", $"{area.TickSeconds:0.##}s");
+            AddStat("Unlimited Hits", area.UnlimitedHits ? "Yes" : "No");
         }
     }
 
@@ -146,6 +165,90 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
         }
 
         _activeStatSection.AddRow(row);
+    }
+
+    private void AddActionPatternStack(ArenaCombatEffectData rootEffect)
+    {
+        var entries = new List<(ArenaCombatEffectData Effect, string Source)>();
+        CollectActionPattern(rootEffect, "Start", entries, new HashSet<ArenaCombatEffectData>());
+        if (entries.Count <= 0)
+            return;
+
+        _activeStatSection ??= CreateStatSection("Effect");
+
+        var wrapper = new VBoxContainer();
+        wrapper.AddThemeConstantOverride("separation", 4);
+        wrapper.AddChild(new Label
+        {
+            Text = "Attack Pattern",
+            ThemeTypeVariation = "HeaderSmall"
+        });
+
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", 8);
+        wrapper.AddChild(row);
+
+        foreach (var (effect, source) in entries)
+            row.AddChild(CreateAttackTypeBadge(effect, source));
+
+        _activeStatSection.AddRow(wrapper);
+    }
+
+    private static void CollectActionPattern(ArenaCombatEffectData effect, string source, List<(ArenaCombatEffectData Effect, string Source)> entries, HashSet<ArenaCombatEffectData> visited)
+    {
+        if (effect == null || entries.Count >= MaxActionPatternIcons)
+            return;
+
+        if (!visited.Add(effect))
+        {
+            entries.Add((effect, $"{source} loop"));
+            return;
+        }
+
+        entries.Add((effect, source));
+        CollectActionPattern(effect.OnHitEffect, "On hit", entries, visited);
+        CollectActionPattern(effect.OnExpireEffect, "On expire", entries, visited);
+    }
+
+    private static Control CreateAttackTypeBadge(ArenaCombatEffectData effect, string source)
+    {
+        var badge = new VBoxContainer
+        {
+            CustomMinimumSize = new Vector2(48f, 62f),
+            TooltipText = $"{source}: {effect.AttackTypeLabel}"
+        };
+        badge.AddThemeConstantOverride("separation", 2);
+
+        var texture = string.IsNullOrWhiteSpace(effect.AttackTypeIconPath)
+            ? null
+            : ResourceLoader.Load<Texture2D>(effect.AttackTypeIconPath);
+        badge.AddChild(new TextureRect
+        {
+            Texture = texture,
+            CustomMinimumSize = new Vector2(34f, 34f),
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TooltipText = badge.TooltipText
+        });
+        badge.AddChild(new Label
+        {
+            Text = AbbreviateAttackType(effect.AttackTypeLabel),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            ThemeTypeVariation = "HeaderSmall",
+            TooltipText = badge.TooltipText
+        });
+
+        return badge;
+    }
+
+    private static string AbbreviateAttackType(string label)
+    {
+        return label switch
+        {
+            "Linear Projectile" => "Linear",
+            "Thrown Projectile" => "Throw",
+            "Area Of Effect" => "AOE",
+            _ => label
+        };
     }
 
     private void AddArmorImmunityStats(ArmorData armor)
@@ -206,11 +309,4 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
         return section;
     }
 
-	private static string GetEffectSceneLabel(string scenePath)
-	{
-		if (string.IsNullOrWhiteSpace(scenePath))
-			return "None";
-
-		return EffectSceneLabels.TryGetValue(scenePath, out var label) ? label : scenePath;
-	}
 }

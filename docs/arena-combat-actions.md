@@ -250,10 +250,21 @@ Current first-pass input:
 - keyboard `Space`
 - mouse left
 - gamepad `X`
+- keyboard-only uses movement direction for facing/aim
+- optional aim with mouse cursor for mouse-mode players
+- optional aim with gamepad right stick or right mousepad-style input
+
+Independent aim must not be required by arena action logic. If no separate aim input is present, movement direction should continue to drive facing and action direction. This supports keyboard-only play, simpler movement-only controls, more gamepad/device layouts, and newer players who prefer not to manage movement and aim separately. Mouse aiming should be controlled by a settings toggle that defaults on.
 
 Additional first-pass action inputs exist but do not activate authored effects yet: keyboard `E`/mouse right/gamepad `A` for off-hand, keyboard `F`/mouse-mode `Q`/gamepad `B` for ability, and keyboard `Q`/mouse-mode `Space`/gamepad `Y` for block.
 
 The player path uses source item damage by default.
+
+Actions may optionally set `Buildup` to an `ArenaCombatBuildupData` resource. If `Buildup` is null, the action keeps the normal press-to-register behavior. If `Buildup` is present, the first press starts buildup and the second press releases the action with a scalar from `0.1` to `1.0` based on `BuildupSeconds`. The buildup config chooses which authored values use the scalar, such as range, speed, or damage. Current sandbox thrown attacks use buildup with range scaling only.
+
+`ArenaCombatActionData.MaxChainDepth` limits initialized effect chaining and defaults to 12. Set it lower for tests that should prove a chain stops quickly, or higher for deliberate multi-stage attacks. Runtime logs include action name, effect type, buildup scalar, chain depth, hits, target health, and chain-depth blocks.
+
+Each attack effect data subtype owns a type label and icon path. Current icons live under `assets/ui/attacks/` for melee, linear projectile, thrown projectile, and area-of-effect. Item cards and item store showcases traverse the root effect plus `OnHitEffect`/`OnExpireEffect` chains and stack those icons so the item preview shows the action pattern at a glance.
 
 Example item resource structure:
 
@@ -280,7 +291,7 @@ Resource_training_sword_melee_effect: ArenaMeleeEffectData
 
 ## Current Melee Hitbox
 
-`ArenaMeleeHitbox.tscn` is the first reusable effect executor. Runtime arena combat effect executors and helpers live under `scenes/components/arena/combat/effects/`; authored effect config resources live under `scripts/resources/combat/effects/`.
+`ArenaMeleeHitbox.tscn` is the starter reusable melee executor. Runtime arena combat effect executors and helpers live under `scenes/components/arena/combat/effects/`; authored effect config resources live under `scripts/resources/combat/effects/`.
 
 It:
 
@@ -292,10 +303,65 @@ It:
 - tracks hit targets
 - honors `MaxHits`
 - honors active time and lifetime
-- can spawn `OnHitScene`
-- can spawn `OnExpireScene`
+- can spawn initialized chained `OnHitEffect`/`OnExpireEffect` resources
+- can spawn raw `OnHitScene`/`OnExpireScene` scenes for visual-only followups
 
 The hitbox does not own rewards, victory checks, death cleanup, or save data.
+
+## Current Projectile And Area Executors
+
+The first reusable non-melee executors are present but are not yet wired into starter item resources. `tests/attack_effect_sandbox.tscn` loads every `ArenaCombatActionData` `.tres` under `tests/attacks/` into its dropdown for scenario testing, then spawns the selected attack at the mouse position when `F` is pressed.
+
+### ArenaAttackLinearProjectile
+
+`ArenaAttackLinearProjectile.tscn` initializes from `ArenaAttackLinearProjectileData`.
+
+It:
+
+- uses `Area2D` with a forward-offset `RectangleShape2D` hitbox
+- moves at constant `Speed` until `Range` is reached
+- keeps a prepacked scene shadow on the root ground path while the visual child is offset upward by `VisualHeight` for fake 2D height
+- exposes `ShadowScale` and `ShadowAlpha` so authored projectiles can tune the ground shadow without generating it in code
+- can use an authored `VisualTexture` and `VisualDisplayHeight`; otherwise it falls back to the procedural rectangular visual
+- applies optional `Apply` damage/status/force on collision
+- tracks targets already hit
+- uses `MaxPenetrations` before being destroyed by hits
+- can spawn initialized `OnHitEffect`/`OnExpireEffect` resources
+- can spawn raw `OnHitScene`/`OnExpireScene` scenes
+
+This is for arrows, bolts, spear-like shots, and magic shots that have an active hitbox during travel.
+
+### ArenaAttackThrownProjectile
+
+`ArenaAttackThrownProjectile.tscn` initializes from `ArenaAttackThrownProjectileData`.
+
+It:
+
+- travels over `TravelSeconds` toward `Range`
+- fakes height with `y_offset = -sin(progress * PI) * ArcHeight`
+- keeps a prepacked scene shadow on the root ground path and only moves the visual child on the fake height axis
+- lerps shadow scale/alpha from ground values to apex values based on arc height
+- can use an authored `VisualTexture` and `VisualDisplayHeight`; otherwise it falls back to the procedural circular visual
+- does not apply damage during flight
+- spawns optional initialized `OnExpireEffect` or raw `OnExpireScene` on landing
+
+This is for bottles, bombs, and vials where the landing/destruction scene owns damage or area behavior.
+
+### ArenaAttackAreaOfEffect
+
+`ArenaAttackAreaOfEffect.tscn` initializes from `ArenaAttackAreaOfEffectData`.
+
+It:
+
+- uses `Area2D` with a circular hit zone
+- has `LifetimeSeconds`, `Radius`, and `TickSeconds`
+- hits immediately when a target enters or is already inside
+- tracks per-target tick cooldowns while targets remain inside
+- can run with unlimited hits or honor `MaxHits`
+- uses distinct default green circle visual colors, separate from melee
+- can spawn initialized or raw chained followups on hit/expiry
+
+This is for poison clouds, fire patches, explosions, shockwaves, healing zones, and other area-of-effect attacks.
 
 ## Planned Mob Flow
 
@@ -383,89 +449,6 @@ Resource_slime_green_bump_effect: ArenaMeleeEffectData
   ForwardOffset = 4.0
 ```
 
-## Future Effect Types
-
-The current resources are designed to support more effect config subtypes later.
-
-### Projectile
-
-Likely future files:
-
-```text
-ArenaProjectileEffectData.cs
-ArenaProjectile.tscn
-```
-
-Expected config:
-
-- speed
-- max distance
-- pierce count
-- wall hit scene
-- expire scene
-- optional impact scene
-
-Example use cases:
-
-- arrows
-- magic bolts
-- poison globules
-- fireballs that spawn explosions
-
-### Thrown Projectile
-
-Likely future files:
-
-```text
-ArenaThrownEffectData.cs
-ArenaThrownProjectile.tscn
-```
-
-Expected config:
-
-- speed or duration
-- arc height
-- target distance
-- `IsBounceable`
-- max bounces
-- can hit during flight
-- can hit on landing
-- floor hit scene
-- wall hit scene
-
-The visual arc should be faked by moving a child visual along:
-
-```text
-y_offset = -sin(progress * PI) * ArcHeight
-```
-
-The root can stay on the ground path for collision and placement.
-
-### Area Effect
-
-Likely future files:
-
-```text
-ArenaAreaEffectData.cs
-ArenaAreaEffect.tscn
-```
-
-Expected config:
-
-- radius or shape
-- duration
-- tick interval
-- one-shot or ticking behavior
-- per-target repeat rules
-
-Example use cases:
-
-- poison cloud
-- fire patch
-- explosion
-- shockwave
-- healing zone
-
 ## Ownership Rules
 
 - Item `.tres` files own item activation through `DamageItemData.MainAction`.
@@ -481,11 +464,9 @@ Example use cases:
 
 ## Next Work
 
-1. Make the current melee effect scene visibly usable in arena with clear placement, timing, hit, and damage/debug feedback.
-2. Add reusable visible projectile effect data and `.tscn` executors.
-3. Add reusable visible thrown-projectile effect data and `.tscn` executors.
-4. Add reusable visible area-effect data and `.tscn` executors.
-5. After visible attack/effect scenes are in place, add optional enemy movement/attack/logic components under `EnemyCombatant`-rooted scenes.
-6. Add `EnemyMobData.MainAction` or a minimal enemy action component when the first mob attack needs authored tuning.
-7. Add `SlimeEnemyCombatant.tscn` and assign slime mob `Scene` fields once slime movement/attack behavior exists.
-8. Add enemy death cleanup, arena-level victory detection, and player defeat detection.
+1. Use `tests/attack_effect_sandbox.tscn` to exercise the `tests/attacks/**/*.tres` melee, linear projectile, thrown projectile, and area-of-effect scenarios against 9 training dummies.
+2. Add authored starter item resources that use `ArenaAttackLinearProjectileData`, `ArenaAttackThrownProjectileData`, and `ArenaAttackAreaOfEffectData` outside the sandbox.
+3. After visible attack/effect scenes are in place, add optional enemy movement/attack/logic components under `EnemyCombatant`-rooted scenes.
+4. Add `EnemyMobData.MainAction` or a minimal enemy action component when the first mob attack needs authored tuning.
+5. Add `SlimeEnemyCombatant.tscn` and assign slime mob `Scene` fields once slime movement/attack behavior exists.
+6. Add enemy death cleanup, arena-level victory detection, and player defeat detection.

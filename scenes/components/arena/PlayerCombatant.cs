@@ -42,6 +42,10 @@ public partial class PlayerCombatant : ArenaCombatant
     private ArenaCombatActionData _pendingAction;
     private float _windupRemaining;
     private float _releaseRemaining;
+    private DamageItemData _buildupItem;
+    private ArenaCombatActionData _buildupAction;
+    private float _buildupElapsed;
+    private float _pendingBuildupScalar = 1f;
 
     public override void _Ready()
     {
@@ -69,9 +73,10 @@ public partial class PlayerCombatant : ArenaCombatant
         var offHandPressed = ReadAssignedOffHandInput();
         var abilityPressed = ReadAssignedAbilityInput();
         var blockPressed = ReadAssignedBlockInput();
-        ApplyCombatInput(ReadAssignedMoveInput(), mainHandPressed, offHandPressed, abilityPressed, blockPressed);
+        ApplyCombatInput(ReadAssignedMoveInput(), ReadAssignedAimInput(), mainHandPressed, offHandPressed, abilityPressed, blockPressed);
         LogActionPresses(mainHandPressed, offHandPressed, abilityPressed, blockPressed);
         UpdateCombatantState(deltaSeconds);
+        UpdateBuildup(deltaSeconds);
         TryActivateMainHand(mainHandPressed);
         TryActivateOffHand(offHandPressed);
         RegenerateStamina(deltaSeconds);
@@ -80,7 +85,9 @@ public partial class PlayerCombatant : ArenaCombatant
         _wasAbilityPressed = abilityPressed;
         _wasBlockPressed = blockPressed;
 
-        if (InputState.IsMoving && CanMove())
+        if (InputState.IsAiming)
+            SetLookDirectionFromInput(InputState.AimDirection);
+        else if (InputState.IsMoving && CanMove())
             SetLookDirectionFromInput(InputState.MoveDirection);
 
         if (CanMove())
@@ -101,6 +108,7 @@ public partial class PlayerCombatant : ArenaCombatant
         InputState.Reset();
         ResetActionPressTracking();
         ClearPendingAction();
+        ClearBuildup();
         SetCombatantState(ArenaCombatantState.Default);
         _staminaRegenAccumulator = 0f;
         Name = string.IsNullOrWhiteSpace(gladiatorData?.GladiatorName)
@@ -114,10 +122,11 @@ public partial class PlayerCombatant : ArenaCombatant
 
     private static ArenaCombatState CreateCombatState(GladiatorData gladiatorData)
     {
+        var entryHealth = Mathf.Clamp(gladiatorData?.Health ?? 1, 0, gladiatorData?.MaxHealth ?? 1);
         var combatState = new ArenaCombatState();
         combatState.Configure(
-            Mathf.Max(1, gladiatorData?.MaxHealth ?? 1),
-            gladiatorData?.Health ?? 1,
+            Mathf.Max(1, entryHealth),
+            entryHealth,
             gladiatorData?.Equipment?.Armor?.ArmorProfile,
             ResourceLoader.Load<CombatantStatusProfileData>(DefaultStatusProfilePath));
         return combatState;
@@ -140,10 +149,11 @@ public partial class PlayerCombatant : ArenaCombatant
         InputState.SetMoveDeadzone(deadzone);
     }
 
-    public void ApplyCombatInput(Vector2 moveDirection, bool mainHandPressed, bool offHandPressed, bool abilityPressed, bool blockPressed)
+    public void ApplyCombatInput(Vector2 moveDirection, Vector2 aimDirection, bool mainHandPressed, bool offHandPressed, bool abilityPressed, bool blockPressed)
     {
         InputState ??= new ArenaCombatInputState();
         InputState.SetMoveDirection(moveDirection);
+        InputState.SetAimDirection(aimDirection);
         InputState.SetActionPressed(mainHandPressed, offHandPressed, abilityPressed, blockPressed);
     }
 
@@ -189,6 +199,29 @@ public partial class PlayerCombatant : ArenaCombatant
             direction.Y += 1f;
 
         return direction;
+    }
+
+    private Vector2 ReadAssignedAimInput()
+    {
+        return ControlAssignment?.ControllerKind switch
+        {
+            LocalInputControllerConfig.ControllerKind.Keyboard => Vector2.Zero,
+            LocalInputControllerConfig.ControllerKind.Mouse => ReadMouseAimInput(),
+            LocalInputControllerConfig.ControllerKind.Gamepad => ReadGamepadAimInput(ControlAssignment.DeviceId),
+            _ => Vector2.Zero
+        };
+    }
+
+    private Vector2 ReadMouseAimInput()
+    {
+        return GetGlobalMousePosition() - GlobalPosition;
+    }
+
+    private static Vector2 ReadGamepadAimInput(int deviceId)
+    {
+        return new Vector2(
+            Input.GetJoyAxis(deviceId, JoyAxis.RightX),
+            Input.GetJoyAxis(deviceId, JoyAxis.RightY));
     }
 
     private bool ReadAssignedMainHandInput()
@@ -322,44 +355,77 @@ public partial class PlayerCombatant : ArenaCombatant
 
     private void TryActivateMainHand(bool mainHandPressed)
     {
-        if (!mainHandPressed || _wasMainHandPressed || IsDead || !CanStartAction())
+        if (!mainHandPressed || _wasMainHandPressed || IsDead)
             return;
 
         if (GladiatorData?.Equipment?.MainHand is not DamageItemData mainHand || mainHand.MainAction == null)
             return;
 
-        var staminaCost = mainHand.MainAction.StaminaCost;
-        if (staminaCost > 0 && GladiatorData.Stamina < staminaCost)
-            return;
-
-        if (staminaCost > 0)
-            GladiatorData.SpendStamina(staminaCost);
-
-        StartAction(mainHand, mainHand.MainAction);
+        HandleActionPress(mainHand, mainHand.MainAction);
     }
 
     private void TryActivateOffHand(bool offHandPressed)
     {
-        if (!offHandPressed || _wasOffHandPressed || IsDead || !CanStartAction())
+        if (!offHandPressed || _wasOffHandPressed || IsDead)
             return;
 
         if (GladiatorData?.Equipment?.OffHand is not DamageItemData offHand || offHand.MainAction == null)
             return;
 
-        var staminaCost = offHand.MainAction.StaminaCost;
-        if (staminaCost > 0 && GladiatorData.Stamina < staminaCost)
+        HandleActionPress(offHand, offHand.MainAction);
+    }
+
+    private void HandleActionPress(DamageItemData item, ArenaCombatActionData action)
+    {
+        if (item == null || action == null)
             return;
+
+        if (action.Buildup != null)
+        {
+            if (_buildupAction == action && _buildupItem == item)
+            {
+                if (TrySpendStaminaAndStartAction(item, action, action.Buildup.GetScalar(_buildupElapsed)))
+                    ClearBuildup();
+                return;
+            }
+
+            if (_buildupAction != null || !CanStartAction())
+                return;
+
+            _buildupItem = item;
+            _buildupAction = action;
+            _buildupElapsed = 0f;
+            RefreshStateLabel();
+            return;
+        }
+
+        if (!CanStartAction())
+            return;
+
+        TrySpendStaminaAndStartAction(item, action, 1f);
+    }
+
+    private bool TrySpendStaminaAndStartAction(DamageItemData item, ArenaCombatActionData action, float buildupScalar)
+    {
+        if (!CanStartAction())
+            return false;
+
+        var staminaCost = action.StaminaCost;
+        if (staminaCost > 0 && GladiatorData.Stamina < staminaCost)
+            return false;
 
         if (staminaCost > 0)
             GladiatorData.SpendStamina(staminaCost);
 
-        StartAction(offHand, offHand.MainAction);
+        StartAction(item, action, buildupScalar);
+        return true;
     }
 
-    private void StartAction(DamageItemData item, ArenaCombatActionData action)
+    private void StartAction(DamageItemData item, ArenaCombatActionData action, float buildupScalar = 1f)
     {
         _pendingActionItem = item;
         _pendingAction = action;
+        _pendingBuildupScalar = Mathf.Clamp(buildupScalar, ArenaCombatBuildupData.MinScalar, ArenaCombatBuildupData.MaxScalar);
         _windupRemaining = Mathf.Max(0f, action.WindupSeconds);
 
         if (_windupRemaining <= 0f)
@@ -396,6 +462,15 @@ public partial class PlayerCombatant : ArenaCombatant
         }
     }
 
+    private void UpdateBuildup(float delta)
+    {
+        if (_buildupAction == null || delta <= 0f || IsDead)
+            return;
+
+        _buildupElapsed += delta;
+        RefreshStateLabel();
+    }
+
     private void ExecutePendingAction()
     {
         if (_pendingAction == null || _pendingActionItem == null)
@@ -407,7 +482,7 @@ public partial class PlayerCombatant : ArenaCombatant
 
         var action = _pendingAction;
         var item = _pendingActionItem;
-        var activated = ArenaCombatActionRunner.TryActivate(this, item, action);
+        var activated = ArenaCombatActionRunner.TryActivate(this, item, action, _pendingBuildupScalar);
         _releaseRemaining = Mathf.Max(0.05f, action.Effect?.LifetimeSeconds ?? 0.05f);
         SetCombatantState(ArenaCombatantState.Release);
 
@@ -424,6 +499,15 @@ public partial class PlayerCombatant : ArenaCombatant
         _pendingAction = null;
         _windupRemaining = 0f;
         _releaseRemaining = 0f;
+        _pendingBuildupScalar = 1f;
+    }
+
+    private void ClearBuildup()
+    {
+        _buildupItem = null;
+        _buildupAction = null;
+        _buildupElapsed = 0f;
+        RefreshStateLabel();
     }
 
     private void RegenerateStamina(float delta)
@@ -478,7 +562,9 @@ public partial class PlayerCombatant : ArenaCombatant
             return;
 
         _stateLabel.Visible = SaveNode.Get().DebugEnabled;
-        _stateLabel.Text = CombatantState.ToString();
+        _stateLabel.Text = _buildupAction?.Buildup == null
+            ? CombatantState.ToString()
+            : $"Buildup {_buildupAction.Buildup.GetScalar(_buildupElapsed):0.00}";
         _stateLabel.Modulate = CombatantState == ArenaCombatantState.Windup
             ? new Color(1f, 0.72f, 0.35f)
             : Colors.White;

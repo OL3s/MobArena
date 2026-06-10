@@ -44,7 +44,7 @@ public partial class ArenaMeleeHitbox : Area2D, IArenaCombatEffect
 
         if (_remainingLifetime <= 0f)
         {
-            SpawnChainedScene(_effectData.OnExpireScene);
+            SpawnChained(_effectData.OnExpireEffect, _effectData.OnExpireScene, GlobalPosition);
             QueueFree();
         }
     }
@@ -138,7 +138,7 @@ public partial class ArenaMeleeHitbox : Area2D, IArenaCombatEffect
         ApplyHitForce(target);
         ApplyStatus(target, applied);
         PrintHitDebug(target, applied);
-        SpawnChainedScene(_effectData.OnHitScene);
+        SpawnChained(_effectData.OnHitEffect, _effectData.OnHitScene, target.GlobalPosition);
 
         if (_hitsApplied >= _effectData.MaxHits)
             SetMonitoringDeferred(false);
@@ -151,7 +151,7 @@ public partial class ArenaMeleeHitbox : Area2D, IArenaCombatEffect
 
     private CombatDamageData ResolveDamage()
     {
-        return _effectData.Apply?.ResolveDamage(_context.ItemDamage);
+        return _context.ScaleDamage(_effectData.Apply?.ResolveDamage(_context.ItemDamage));
     }
 
     private void ApplyHitForce(ArenaCombatant target)
@@ -178,16 +178,12 @@ public partial class ArenaMeleeHitbox : Area2D, IArenaCombatEffect
             : $"{target.CombatState.CurrentHealth}/{target.CombatState.MaxHealth} HP";
 
         var applyLabel = _effectData.Apply?.ToString() ?? "Apply=None";
-        GD.Print($"Combat hit: {sourceName} -> {targetName}, action={actionName}, {applyLabel}, damage={appliedDamage}, target={targetHealth}, hits={_hitsApplied}/{_effectData.MaxHits}.");
+        GD.Print($"Combat hit: {sourceName} -> {targetName}, action={actionName}, effect={_effectData}, {applyLabel}, damage={appliedDamage}, target={targetHealth}, hits={_hitsApplied}/{_effectData.MaxHits}, chain={_context.ChainDepth}/{_context.MaxChainDepth}.");
     }
 
-    private void SpawnChainedScene(PackedScene scene)
+    private void SpawnChained(ArenaCombatEffectData effect, PackedScene scene, Vector2 position)
     {
-        if (scene == null)
-            return;
-
-        var instance = scene.Instantiate<Node2D>();
-        GetParent()?.AddChild(instance);
-        instance.GlobalPosition = GlobalPosition;
+        ArenaCombatEffectSpawner.TrySpawn(GetParent(), position, GlobalRotation, _context, effect);
+        ArenaCombatEffectSpawner.TrySpawnScene(GetParent(), position, GlobalRotation, scene);
     }
 }

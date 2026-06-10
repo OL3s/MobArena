@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="ArenaCombatActionData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackAreaOfEffectData.cs" id="aoe"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackLinearProjectileData.cs" id="linear"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="action"]
+
+[sub_resource type="Resource" id="aoe_1"]
+script = ExtResource("aoe")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaAttackAreaOfEffect.tscn"
+LifetimeSeconds = 0.45
+MaxHits = 100
+Radius = 52
+TickSeconds = 0.25
+UnlimitedHits = true
+
+[sub_resource type="Resource" id="linear_2"]
+script = ExtResource("linear")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaAttackLinearProjectile.tscn"
+OnExpireEffect = SubResource("aoe_1")
+LifetimeSeconds = 2.0
+MaxHits = 1
+Speed = 520
+Range = 520
+HitboxLength = 46
+HitboxWidth = 14
+VisualHeight = 10.0
+MaxPenetrations = 1
+
+[resource]
+script = ExtResource("action")
+DisplayName = "19 Linear end only"
+Effect = SubResource("linear_2")

@@ -73,6 +73,11 @@ text = "Item"
 horizontal_alignment = 1
 autowrap_mode = 3
 
+[node name="AttackTypeRow" type="HBoxContainer" parent="MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+
 [node name="ConditionRow" type="HBoxContainer" parent="MarginContainer/Layout"]
 layout_mode = 2
 theme_override_constants/separation = 6

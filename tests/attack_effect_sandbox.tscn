@@ -1,0 +1,121 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://tests/AttackEffectSandbox.cs" id="1_attack_effect_sandbox"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_horizontal_wall"]
+size = Vector2(1084, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_vertical_wall"]
+size = Vector2(32, 634)
+
+[node name="AttackEffectSandbox" type="Node"]
+script = ExtResource("1_attack_effect_sandbox")
+
+[node name="BackgroundLayer" type="CanvasLayer" parent="."]
+layer = -5
+
+[node name="ArenaFloor" type="ColorRect" parent="BackgroundLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.14, 0.12, 0.095, 1)
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="WorldCamera" type="Camera2D" parent="World"]
+position = Vector2(576, 324)
+enabled = true
+
+[node name="CombatRing" type="ColorRect" parent="World"]
+offset_left = 66.0
+offset_top = 39.0
+offset_right = 1086.0
+offset_bottom = 609.0
+color = Color(0.25, 0.19, 0.14, 1)
+
+[node name="Title" type="Label" parent="World"]
+offset_left = 66.0
+offset_top = 48.0
+offset_right = 1086.0
+offset_bottom = 88.0
+theme_override_font_sizes/font_size = 24
+text = "Attack Effect Sandbox"
+horizontal_alignment = 1
+
+[node name="Instructions" type="Label" parent="World"]
+offset_left = 80.0
+offset_top = 564.0
+offset_right = 1070.0
+offset_bottom = 594.0
+theme_override_font_sizes/font_size = 16
+text = "Choose an attack, move the mouse over the arena, then press F. Buildup attacks use F once to charge and F again to spawn."
+horizontal_alignment = 1
+
+[node name="ArenaWalls" type="Node2D" parent="World"]
+
+[node name="TopWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(576, 23)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/TopWall"]
+shape = SubResource("RectangleShape2D_arena_horizontal_wall")
+
+[node name="BottomWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(576, 625)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/BottomWall"]
+shape = SubResource("RectangleShape2D_arena_horizontal_wall")
+
+[node name="LeftWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(50, 324)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/LeftWall"]
+shape = SubResource("RectangleShape2D_arena_vertical_wall")
+
+[node name="RightWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(1102, 324)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/RightWall"]
+shape = SubResource("RectangleShape2D_arena_vertical_wall")
+
+[node name="Dummies" type="Node2D" parent="World"]
+
+[node name="ControllerUi" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="ControllerUi"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 430.0
+offset_bottom = 178.0
+
+[node name="MarginContainer" type="MarginContainer" parent="ControllerUi/Panel"]
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Layout" type="VBoxContainer" parent="ControllerUi/Panel/MarginContainer"]
+theme_override_constants/separation = 8
+
+[node name="Header" type="Label" parent="ControllerUi/Panel/MarginContainer/Layout"]
+theme_override_font_sizes/font_size = 18
+text = "Premade Attack Tests"
+
+[node name="AttackSelect" type="OptionButton" parent="ControllerUi/Panel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(380, 0)
+
+[node name="DetailsLabel" type="Label" parent="ControllerUi/Panel/MarginContainer/Layout"]
+custom_minimum_size = Vector2(380, 45)
+autowrap_mode = 3
+
+[node name="ResetDummiesButton" type="Button" parent="ControllerUi/Panel/MarginContainer/Layout"]
+text = "Reset Dummies"

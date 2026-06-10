@@ -1,0 +1,82 @@
+[gd_resource type="Resource" script_class="ArenaCombatActionData" load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="apply"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="damage_entry"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/StatusEffectApplicationData.cs" id="status"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackAreaOfEffectData.cs" id="aoe"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="melee"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="action"]
+
+[sub_resource type="Resource" id="entry_2"]
+script = ExtResource("damage_entry")
+Damage = 5
+
+[sub_resource type="Resource" id="damage_3"]
+script = ExtResource("damage")
+Entries = Array[ExtResource("damage_entry")]([SubResource("entry_2")])
+
+[sub_resource type="Resource" id="apply_1"]
+script = ExtResource("apply")
+UseSourceItemDamage = false
+Damage = SubResource("damage_3")
+
+[sub_resource type="Resource" id="status_5"]
+script = ExtResource("status")
+Type = 0
+Value = 10
+
+[sub_resource type="Resource" id="apply_4"]
+script = ExtResource("apply")
+UseSourceItemDamage = false
+StatusApplications = Array[ExtResource("status")]([SubResource("status_5")])
+
+[sub_resource type="Resource" id="aoe_6"]
+script = ExtResource("aoe")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaAttackAreaOfEffect.tscn"
+Apply = SubResource("apply_4")
+LifetimeSeconds = 3
+MaxHits = 100
+Radius = 72
+TickSeconds = 0.5
+UnlimitedHits = true
+
+[sub_resource type="Resource" id="entry_8"]
+script = ExtResource("damage_entry")
+Damage = 5
+
+[sub_resource type="Resource" id="damage_9"]
+script = ExtResource("damage")
+Entries = Array[ExtResource("damage_entry")]([SubResource("entry_8")])
+
+[sub_resource type="Resource" id="apply_7"]
+script = ExtResource("apply")
+UseSourceItemDamage = false
+Damage = SubResource("damage_9")
+
+[sub_resource type="Resource" id="aoe_10"]
+script = ExtResource("aoe")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaAttackAreaOfEffect.tscn"
+Apply = SubResource("apply_7")
+LifetimeSeconds = 3
+MaxHits = 100
+Radius = 72
+TickSeconds = 0.5
+UnlimitedHits = true
+
+[sub_resource type="Resource" id="melee_11"]
+script = ExtResource("melee")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
+Apply = SubResource("apply_1")
+OnHitEffect = SubResource("aoe_6")
+OnExpireEffect = SubResource("aoe_10")
+LifetimeSeconds = 0.28
+MaxHits = 9
+HitboxRadius = 34
+ActiveSeconds = 0.2
+ForwardOffset = 0.0
+
+[resource]
+script = ExtResource("action")
+DisplayName = "07 Melee hit + expire"
+Effect = SubResource("melee_11")
