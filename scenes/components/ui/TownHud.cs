@@ -4,6 +4,7 @@ using MobArena.Scenes.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Contracts;
+using MobArena.Scripts.Resources.Gladiators;
 
 namespace MobArena.Scenes.Components.UI;
 
@@ -279,7 +280,7 @@ public partial class TownHud : CanvasLayer
 		if (!PhaseTransitionController.AdvanceToNextDay(_phaseState, runData, _saveNode.WeatherState))
 			return;
 
-		GD.Print($"SaveNode: Autosaving at day {_phaseState.CurrentDay}.");
+		GameLogger.UI($"SaveNode: Autosaving at day {_phaseState.CurrentDay}.");
 		_saveNode.Save();
 
 		if (_phaseState.IsChampionDay)
@@ -338,7 +339,7 @@ public partial class TownHud : CanvasLayer
 					return;
 				break;
 			case DevActionAddDefaultGladiator:
-				_saveNode.CompanyRunData?.AddGladiator(GladiatorData.CreateDefault(), _saveNode.CompanyCareerData);
+				_saveNode.CompanyRunData?.AddGladiator(GladiatorGenerator.CreateDefault(), _saveNode.CompanyCareerData);
 				break;
 			case DevActionAddGold:
 				_saveNode.CompanyRunData?.AddGold(1000, _saveNode.CompanyCareerData);

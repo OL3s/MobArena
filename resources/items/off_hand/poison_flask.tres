@@ -94,6 +94,7 @@ StrengthTag = 7
 HeldTexture = ExtResource("2_icon")
 HeldDisplayHeight = 42.0
 HeldTextureOffset = Vector2(-14, -34)
+Weight = 1
 Cost = 46
 MaxDurability = 100
 Durability = 100

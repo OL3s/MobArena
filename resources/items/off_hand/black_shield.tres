@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="OffHandItemData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/items/OffHandItemData.cs" id="1_off"]
-[ext_resource type="Texture2D" path="res://assets/ui/items/kite_shield.svg" id="2_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/black_shield.svg" id="2_icon"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_damage_entry"]
 [ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="5_action"]

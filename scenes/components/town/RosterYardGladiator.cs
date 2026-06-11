@@ -443,7 +443,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
             return;
         }
 
-        GD.Print(TownDragDropRules.FormatDropMessage(payload, "gladiator", DropTargetName));
+        GameLogger.UI(TownDragDropRules.FormatDropMessage(payload, "gladiator", DropTargetName));
     }
 
     public void SetTownDragDropPreview(TownDragPayload? payload, Vector2 viewportPosition)
@@ -517,7 +517,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
         }
 
         if (payload.Item is EquipmentItemData equipmentItem && runData.TryEquipItemOnGladiator(_gladiatorData, equipmentItem))
-            GD.Print($"Drop equip: equipped item '{payload.Item?.DisplayName ?? "null"}' on gladiator '{DropTargetName}'.");
+            GameLogger.UI($"Drop equip: equipped item '{payload.Item?.DisplayName ?? "null"}' on gladiator '{DropTargetName}'.");
     }
 
     private void OpenCoatingApplyOverlay(ItemCoatingData coating)

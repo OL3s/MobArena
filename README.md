@@ -72,6 +72,7 @@ godot --headless --import
 | `docs/focuspoint.md` | Current state, active priority, immediate direction, and next work. |
 | `docs/project-overview.md` | Codebase structure, scene flow, resources, systems, and current implementation boundaries. |
 | `docs/arena-combat-actions.md` | Resource-driven arena action/effect architecture and planned executor types. |
+| `docs/game-logger.md` | How to use and extend the shared `GameLogger` diagnostic logging API. |
 | `docs/authoring-mobs.md` | How to create/tune mob resources, appearances, family registration, fame, armor, and status considerations. |
 | `docs/authoring-attacks.md` | How to structure `ArenaCombatActionData`, typed effects, apply payloads, chaining, buildup, and sandbox tests. |
 | `docs/authoring-player-items.md` | How to author weapons, off-hand items, armor, visuals, damage, and player item attack resources. |

@@ -44,6 +44,7 @@ UiIcon = ExtResource("2_icon")
 TypeTag = 12
 StrengthTag = 10
 HeldTexture = ExtResource("2_icon")
+Weight = 7
 Cost = 52
 MaxDurability = 100
 Durability = 100

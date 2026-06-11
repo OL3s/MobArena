@@ -96,7 +96,7 @@ public partial class Arena : Node
 		_isResolvingContract = true;
 		StorePendingVictoryRewards();
 		SetPlayerDeathPreventionEnabled(true);
-		GD.Print($"Arena: victory requested; popup in {VictoryPopupDelaySeconds:0.#} seconds, gold={_pendingVictoryGoldReward}, fame={_pendingVictoryFameReward}.");
+		GameLogger.Contract($"victory requested; popup in {VictoryPopupDelaySeconds:0.#} seconds, gold={_pendingVictoryGoldReward}, fame={_pendingVictoryFameReward}.");
 
 		await ToSignal(GetTree().CreateTimer(VictoryPopupDelaySeconds), Timer.SignalName.Timeout);
 		if (!IsInsideTree())
@@ -166,7 +166,7 @@ public partial class Arena : Node
 	private void SaveAndReturnToTown(string reason)
 	{
 		var saveError = _saveNode?.Save() ?? Error.Unavailable;
-		GD.Print($"Arena: Save before town transition returned {saveError}.");
+		GameLogger.Save($"Save before town transition returned {saveError}.");
 		SceneTransitionLogger.LogChange(GetTree(), TownScene, reason);
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, TownScene);
 	}
@@ -174,7 +174,7 @@ public partial class Arena : Node
 	private void SaveAndReturnToMainMenuAfterDemo()
 	{
 		var saveError = _saveNode?.Save() ?? Error.Unavailable;
-		GD.Print($"Arena: Save before demo completion transition returned {saveError}.");
+		GameLogger.Save($"Save before demo completion transition returned {saveError}.");
 		ShowDemoCompleteAndReturnToMainMenu();
 	}
 
@@ -210,7 +210,7 @@ public partial class Arena : Node
 			return;
 
 		_isResolvingContract = true;
-		GD.Print($"Arena: all spawned players defeated ({defeatedCount}/{playerCount}).");
+		GameLogger.Combat($"all spawned players defeated ({defeatedCount}/{playerCount}).");
 		var result = ArenaContractResultResolver.ResolveAllPlayersDefeated(_saveNode);
 		if (result == ArenaContractResultResolver.ContractResult.ForceRetired)
 		{
@@ -246,12 +246,12 @@ public partial class Arena : Node
 		var contract = _runData?.ActiveArenaContract;
 		var assignedPlayers = _runData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
 		var expectedEnemies = contract?.GetEnemyMobs()?.Count ?? 0;
-		GD.Print($"Arena: setup start; contract='{contract?.DisplayName ?? "none"}', assignedPlayers={assignedPlayers}, expectedEnemies={expectedEnemies}, day={_phaseState?.CurrentDay.ToString() ?? "unknown"}, phase={_phaseState?.CurrentPhase.ToString() ?? "unknown"}.");
+		GameLogger.Contract($"setup start; contract='{contract?.DisplayName ?? "none"}', assignedPlayers={assignedPlayers}, expectedEnemies={expectedEnemies}, day={_phaseState?.CurrentDay.ToString() ?? "unknown"}, phase={_phaseState?.CurrentPhase.ToString() ?? "unknown"}.");
 		_playerSpawner?.SpawnFromRunData(_runData);
 		_enemySpawner?.SpawnMobs(contract?.GetEnemyMobs());
 		ConnectEnemyDeathChecks();
 		_combatHud?.SetPlayers(_playerSpawner?.GetSpawnedPlayerCombatants());
-		GD.Print($"Arena: setup complete; spawnedPlayers={_playerSpawner?.SpawnedPlayerCount ?? 0}/{assignedPlayers}, spawnedEnemies={_enemySpawner?.SpawnedEnemyCount ?? 0}/{expectedEnemies}.");
+		GameLogger.Contract($"setup complete; spawnedPlayers={_playerSpawner?.SpawnedPlayerCount ?? 0}/{assignedPlayers}, spawnedEnemies={_enemySpawner?.SpawnedEnemyCount ?? 0}/{expectedEnemies}.");
 	}
 
 	private void ConnectEnemyDeathChecks()
@@ -286,7 +286,7 @@ public partial class Arena : Node
 		if (enemyCount <= 0 || deadCount < enemyCount)
 			return;
 
-		GD.Print($"Arena: all spawned enemies defeated ({deadCount}/{enemyCount}).");
+		GameLogger.Combat($"all spawned enemies defeated ({deadCount}/{enemyCount}).");
 		RequestArenaVictory();
 	}
 

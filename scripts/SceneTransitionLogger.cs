@@ -16,7 +16,7 @@ public static class SceneTransitionLogger
         if (string.IsNullOrWhiteSpace(reason))
             reason = "unspecified";
 
-        GD.Print($"Scene transition: {current} -> {target} ({reason}).");
+        GameLogger.SceneTransition($"{current} -> {target} ({reason}).");
     }
 
     public static void LogChange(SceneTree tree, PackedScene targetScene, string reason)

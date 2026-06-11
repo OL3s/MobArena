@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="MainHandItemData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
-[ext_resource type="Texture2D" path="res://assets/ui/items/greathammer.svg" id="2_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/black_greathammer.svg" id="2_icon"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
 

@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="MainHandItemData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
-[ext_resource type="Texture2D" path="res://assets/ui/items/crossbow.svg" id="2_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/iron_crossbow.svg" id="2_icon"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_damage_entry"]
 [ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="5_action"]
@@ -79,6 +79,7 @@ HeldTexture = ExtResource("2_icon")
 HeldDisplayHeight = 78.0
 HeldRotationDegrees = 0.0
 HeldTextureOffset = Vector2(-24, -48)
+Weight = 8
 Cost = 118
 MaxDurability = 100
 Durability = 100

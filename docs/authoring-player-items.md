@@ -141,11 +141,13 @@ Current intended tier language:
 - `Wooden`: cheap real equipment, still below metal gear.
 - `Bronze`: first dependable upgrade tier.
 - `Iron`: stronger mid-tier equipment.
-- `Blacksteel`: high-grade late-tier physical equipment.
+- `Black`: high-grade late-tier physical equipment.
 
 Armor materials should generally provide `Light`, `Medium`, and `Heavy` variants. Light armor is for agility-leaning builds with low weight, medium is balanced, and heavy is for strength-leaning builds with much higher weight and protection.
 
-Prefer names such as `Bronze Sword -> Iron Sword -> Blacksteel Sword`, `Bronze Greatsword -> Iron Greatsword -> Blacksteel Greatsword`, and matching shield/armor material names. Keep `Training Sword` and `Spear` as simple starter examples, but avoid making unrelated fantasy names the only clue that an item is better.
+Prefer names such as `Bronze Sword -> Iron Sword -> Black Sword`, `Bronze Greatsword -> Iron Greatsword -> Black Greatsword`, and matching shield/armor material names. Keep `Training Sword` and `Spear` as simple starter examples, but avoid making unrelated fantasy names the only clue that an item is better.
+
+Each authored item should use its own `UiIcon` SVG path, even when it is a tier variant of the same weapon or armor shape. Equippable items should also author a non-zero `Weight` value.
 
 Most normal player item baselines should use physical types such as `Slash`, `Pierce`, and `Crush`. Special types such as `Heat`, `Cold`, and `Acid` are valid when the item fantasy explicitly calls for them, especially explosives, coatings, monster parts, and future upgrades. Do not normalize every item into elemental damage just because the enum supports it.
 

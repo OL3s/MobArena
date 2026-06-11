@@ -363,7 +363,7 @@ public partial class PlayerCombatant : ArenaCombatant
 
     private void LogActionPressed(string actionName)
     {
-        GD.Print($"PlayerCombatant: {GladiatorData?.GladiatorName ?? Name} pressed {actionName} action ({ControlAssignment?.DisplayName ?? "Unassigned"}).");
+        GameLogger.Combat($"PlayerCombatant: {GladiatorData?.GladiatorName ?? Name} pressed {actionName} action ({ControlAssignment?.DisplayName ?? "Unassigned"}).");
     }
 
     private void ResetActionPressTracking()

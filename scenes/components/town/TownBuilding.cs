@@ -256,7 +256,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     public void Activate()
     {
         if (DebugInteraction)
-            GD.Print($"TownBuilding Activate: {BuildingName}, disabled={Disabled}, overlay={OverlayToOpen != null}, scene={SceneToOpen != null}");
+            GameLogger.UI($"TownBuilding Activate: {BuildingName}, disabled={Disabled}, overlay={OverlayToOpen != null}, scene={SceneToOpen != null}");
 
         if (Disabled)
         {
@@ -282,7 +282,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         var globalOverlay = GlobalOverlay.Get();
         if (globalOverlay == null)
         {
-            GD.Print("TownBuilding: GlobalOverlay missing while opening scene; opening scene directly.");
+            GameLogger.UI("TownBuilding: GlobalOverlay missing while opening scene; opening scene directly.");
             OpenScene();
             return;
         }
@@ -335,7 +335,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
             return;
         }
 
-        GD.Print(TownDragDropRules.FormatDropMessage(payload, "building", DropTargetName));
+        GameLogger.UI(TownDragDropRules.FormatDropMessage(payload, "building", DropTargetName));
     }
 
     public int GetAssignedGladiatorCapacity()
@@ -367,47 +367,47 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     {
         if (Disabled)
         {
-            GD.Print($"Building assignment failed: '{DropTargetName}' is disabled.");
+            GameLogger.UI($"Building assignment failed: '{DropTargetName}' is disabled.");
             return false;
         }
 
         if (!AssignDroppedGladiators)
         {
-            GD.Print($"Building assignment failed: '{DropTargetName}' does not assign dropped gladiators.");
+            GameLogger.UI($"Building assignment failed: '{DropTargetName}' does not assign dropped gladiators.");
             return false;
         }
 
         if (gladiatorData == null)
         {
-            GD.Print($"Building assignment failed: null gladiator dropped on '{DropTargetName}'.");
+            GameLogger.UI($"Building assignment failed: null gladiator dropped on '{DropTargetName}'.");
             return false;
         }
 
         var runData = SaveNode.Get()?.CompanyRunData;
         if (runData == null || !runData.HasGladiator(gladiatorData))
         {
-            GD.Print($"Building assignment failed: gladiator '{gladiatorData.GladiatorName}' is not in the active roster.");
+            GameLogger.UI($"Building assignment failed: gladiator '{gladiatorData.GladiatorName}' is not in the active roster.");
             return false;
         }
 
         var assignedGladiators = AssignedGladiators;
         if (assignedGladiators.Contains(gladiatorData))
         {
-            GD.Print($"Building assignment: gladiator '{gladiatorData.GladiatorName}' is already assigned to '{DropTargetName}'.");
+            GameLogger.UI($"Building assignment: gladiator '{gladiatorData.GladiatorName}' is already assigned to '{DropTargetName}'.");
             return true;
         }
 
         var capacity = GetAssignedGladiatorCapacity();
         if (assignedGladiators.Count >= capacity)
         {
-            GD.Print($"Building assignment failed: '{DropTargetName}' is full ({assignedGladiators.Count}/{capacity}).");
+            GameLogger.UI($"Building assignment failed: '{DropTargetName}' is full ({assignedGladiators.Count}/{capacity}).");
             return false;
         }
 
         if (!runData.TryAssignGladiatorToTownLocation(gladiatorData, AssignmentLocation, capacity))
             return false;
 
-        GD.Print($"Building assignment: gladiator '{gladiatorData.GladiatorName}' assigned to '{DropTargetName}' ({AssignedGladiators.Count}/{capacity}).");
+        GameLogger.UI($"Building assignment: gladiator '{gladiatorData.GladiatorName}' assigned to '{DropTargetName}' ({AssignedGladiators.Count}/{capacity}).");
         return true;
     }
 
@@ -519,7 +519,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
         var currentSaleValue = GetSaleValue(payload);
         if (currentSaleValue != expectedSaleValue)
-            GD.Print($"Market sale warning: {payload.Kind} '{payload.GetDebugName()}' sale value changed from {expectedSaleValue} to {currentSaleValue} before confirmation.");
+            GameLogger.UI($"Market sale warning: {payload.Kind} '{payload.GetDebugName()}' sale value changed from {expectedSaleValue} to {currentSaleValue} before confirmation.");
 
         var sold = payload.Kind switch
         {
@@ -529,7 +529,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         };
 
         if (sold)
-            GD.Print($"Market sale: sold {payload.Kind} '{payload.GetDebugName()}' for {currentSaleValue} gold.");
+            GameLogger.UI($"Market sale: sold {payload.Kind} '{payload.GetDebugName()}' for {currentSaleValue} gold.");
     }
 
     private static int GetSaleValue(TownDragPayload payload)
@@ -565,12 +565,12 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         var globalOverlay = GlobalOverlay.Get();
         if (globalOverlay == null)
         {
-            GD.Print($"TownBuilding overlay failed: GlobalOverlay missing for {BuildingName}.");
+            GameLogger.UI($"TownBuilding overlay failed: GlobalOverlay missing for {BuildingName}.");
             return;
         }
 
         if (DebugInteraction)
-            GD.Print($"TownBuilding opening overlay: {BuildingName}");
+            GameLogger.UI($"TownBuilding opening overlay: {BuildingName}");
 
         globalOverlay.AddOverlay(OverlayToOpen);
     }
@@ -591,7 +591,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         if (inputEvent is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
         {
             if (DebugInteraction)
-                GD.Print($"TownBuilding Area2D click: {BuildingName}");
+                GameLogger.UI($"TownBuilding Area2D click: {BuildingName}");
 
             GetViewport()?.SetInputAsHandled();
             ActivateFromInput();
@@ -601,7 +601,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         if (inputEvent is InputEventScreenTouch { Pressed: true })
         {
             if (DebugInteraction)
-                GD.Print($"TownBuilding Area2D touch: {BuildingName}");
+                GameLogger.UI($"TownBuilding Area2D touch: {BuildingName}");
 
             GetViewport()?.SetInputAsHandled();
             ActivateFromInput();
@@ -638,7 +638,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
             return;
 
         if (DebugInteraction)
-            GD.Print($"TownBuilding fallback hit: {BuildingName}, viewport={viewportPosition}, local={localPosition}");
+            GameLogger.UI($"TownBuilding fallback hit: {BuildingName}, viewport={viewportPosition}, local={localPosition}");
 
         GetViewport()?.SetInputAsHandled();
         if (fromInput)

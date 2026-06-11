@@ -36,7 +36,7 @@ public static class ArenaContractSelection
 		var contracts = GetVisibleContracts(saveNode);
 		if (contractIndex < 0 || contractIndex >= contracts.Count)
 		{
-			GD.Print($"ArenaContractSelection: Contract index {contractIndex} is outside available range 0..{contracts.Count - 1}.");
+			GameLogger.Contract($"ArenaContractSelection: Contract index {contractIndex} is outside available range 0..{contracts.Count - 1}.");
 			return false;
 		}
 
@@ -44,7 +44,7 @@ public static class ArenaContractSelection
 		if (contract != null)
 			return true;
 
-		GD.Print($"ArenaContractSelection: Contract index {contractIndex} is empty.");
+		GameLogger.Contract($"ArenaContractSelection: Contract index {contractIndex} is empty.");
 		return false;
 	}
 }

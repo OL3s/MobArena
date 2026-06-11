@@ -166,6 +166,6 @@ public partial class ArenaAttackAreaOfEffect : Area2D, IArenaCombatEffect
         var targetHealth = target?.CombatState == null
             ? "unknown HP"
             : $"{target.CombatState.CurrentHealth}/{target.CombatState.MaxHealth} HP";
-        GD.Print($"Combat hit: AreaOfEffect -> {target?.Name ?? "UnknownTarget"}, action={_context.ActionName}, damage={appliedDamage}, target={targetHealth}.");
+        GameLogger.Combat($"Combat hit: AreaOfEffect -> {target?.Name ?? "UnknownTarget"}, action={_context.ActionName}, damage={appliedDamage}, target={targetHealth}.");
     }
 }

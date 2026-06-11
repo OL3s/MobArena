@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ArmorItemData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorItemData.cs" id="1_armor"]
-[ext_resource type="Texture2D" path="res://assets/ui/items/iron_mail.svg" id="2_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/iron_heavy_armor.svg" id="2_icon"]
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="3_armor_data"]
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="4_armor_override"]
 
