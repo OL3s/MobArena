@@ -5,18 +5,18 @@
 [ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="3_body_font"]
 
 [node name="ItemStoreListRow" type="HBoxContainer"]
-custom_minimum_size = Vector2(0, 56)
-theme_override_constants/separation = 8
+custom_minimum_size = Vector2(0, 46)
+theme_override_constants/separation = 6
 script = ExtResource("1_row")
 
 [node name="ItemIcon" type="TextureRect" parent="."]
-custom_minimum_size = Vector2(44, 44)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
 [node name="TypeIcon" type="TextureRect" parent="."]
-custom_minimum_size = Vector2(24, 24)
+custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
@@ -26,6 +26,7 @@ custom_minimum_size = Vector2(118, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("3_body_font")
+theme_override_font_sizes/font_size = 14
 text = "Item"
 vertical_alignment = 1
 autowrap_mode = 3
@@ -37,7 +38,7 @@ theme_override_constants/separation = 3
 alignment = 2
 
 [node name="GoldIcon" type="TextureRect" parent="CostBox"]
-custom_minimum_size = Vector2(18, 18)
+custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 texture = ExtResource("2_gold")
 expand_mode = 1
@@ -46,11 +47,13 @@ stretch_mode = 5
 [node name="CostLabel" type="Label" parent="CostBox"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("3_body_font")
+theme_override_font_sizes/font_size = 14
 text = "0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="DetailsButton" type="Button" parent="."]
-custom_minimum_size = Vector2(86, 42)
+custom_minimum_size = Vector2(76, 34)
 layout_mode = 2
+theme_override_font_sizes/font_size = 14
 text = "Details"

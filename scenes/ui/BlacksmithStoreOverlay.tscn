@@ -48,14 +48,14 @@ layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 22
-theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 22
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 16
 
 [node name="Content" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="Header" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2
@@ -98,34 +98,35 @@ autowrap_mode = 3
 
 [node name="SortRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="SortLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/SortRow"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_body_font")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "Filter"
 vertical_alignment = 1
 
 [node name="FilterOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/SortRow"]
-custom_minimum_size = Vector2(240, 40)
+custom_minimum_size = Vector2(240, 34)
 layout_mode = 2
+theme_override_constants/icon_max_width = 20
 item_count = 0
 
 [node name="SortByLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/SortRow"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_body_font")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "Sort"
 vertical_alignment = 1
 
 [node name="SortOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/SortRow"]
-custom_minimum_size = Vector2(170, 40)
+custom_minimum_size = Vector2(170, 34)
 layout_mode = 2
 item_count = 0
 
 [node name="StoreBody" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
-custom_minimum_size = Vector2(0, 430)
+custom_minimum_size = Vector2(0, 340)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 16
