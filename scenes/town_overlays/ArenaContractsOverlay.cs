@@ -440,7 +440,7 @@ public partial class ArenaContractsOverlay : Control
             _runData.LoseFame(fameLoss);
 
         SaveNode.Get()?.Save();
-        GD.Print($"ArenaContractsOverlay: Skipped daily contract. Fame {previousFame} -> {_runData.Fame}.");
+        GameLogger.Contract($"ArenaContractsOverlay: Skipped daily contract. Fame {previousFame} -> {_runData.Fame}.");
         QueueFree();
     }
 
@@ -509,14 +509,14 @@ public partial class ArenaContractsOverlay : Control
     {
         if (SaveNode.Get()?.CanStartArenaContract() != true)
         {
-            GD.Print("Arena launch blocked: demo is complete.");
+            GameLogger.Contract("Arena launch blocked: demo is complete.");
             return;
         }
 
         var selectedContract = GetSelectedContractOrNull();
         if (selectedContract == null)
         {
-            GD.Print("Arena launch failed: no selected contract.");
+            GameLogger.Contract("Arena launch failed: no selected contract.");
             return;
         }
 

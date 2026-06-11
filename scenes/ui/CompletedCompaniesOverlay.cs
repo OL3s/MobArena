@@ -67,11 +67,11 @@ public partial class CompletedCompaniesOverlay : Control
             var button = _recordButtonScene?.Instantiate<CompletedCompanyRecordButton>();
             if (button == null)
             {
-                GD.PushError("Completed company record button scene is missing or has the wrong root script.");
+                GameLogger.Error(GameLogCategory.UI, "Completed company record button scene is missing or has the wrong root script.");
                 continue;
             }
 
-            button.Configure(index, record.CompanyName, record.FinalFame);
+            button.Configure(index, record.CompanyLogoData, record.CompanyName, record.FinalFame);
             button.RecordPressed += SelectRecord;
             _recordList.AddChild(button);
         }

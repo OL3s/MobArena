@@ -4,6 +4,7 @@ using MobArena.Scenes.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Contracts;
+using MobArena.Scripts.Resources.Gladiators;
 
 namespace MobArena.Scenes.Components.UI;
 
@@ -279,7 +280,7 @@ public partial class TownHud : CanvasLayer
 		if (!PhaseTransitionController.AdvanceToNextDay(_phaseState, runData, _saveNode.WeatherState))
 			return;
 
-		GD.Print($"SaveNode: Autosaving at day {_phaseState.CurrentDay}.");
+		GameLogger.UI($"SaveNode: Autosaving at day {_phaseState.CurrentDay}.");
 		_saveNode.Save();
 
 		if (_phaseState.IsChampionDay)
@@ -338,7 +339,7 @@ public partial class TownHud : CanvasLayer
 					return;
 				break;
 			case DevActionAddDefaultGladiator:
-				_saveNode.CompanyRunData?.AddGladiator(GladiatorData.CreateDefault(), _saveNode.CompanyCareerData);
+				_saveNode.CompanyRunData?.AddGladiator(GladiatorGenerator.CreateDefault(), _saveNode.CompanyCareerData);
 				break;
 			case DevActionAddGold:
 				_saveNode.CompanyRunData?.AddGold(1000, _saveNode.CompanyCareerData);
@@ -467,22 +468,22 @@ public partial class TownHud : CanvasLayer
 				case 0:
 					localInputConfig?.TryJoinKeyboard();
 					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Keyboard, -1)
-						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, null));
+						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, DeviceIconRegistry.LoadDeviceIcon(LocalInputControllerConfig.ControllerKind.Keyboard)));
 					break;
 				case 1:
 					localInputConfig?.TryJoinMouse();
 					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Mouse, -1)
-						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Mouse, -1, null));
+						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Mouse, -1, DeviceIconRegistry.LoadDeviceIcon(LocalInputControllerConfig.ControllerKind.Mouse)));
 					break;
 				case 2:
 					localInputConfig?.TryJoinGamepad(0);
 					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Gamepad, 0)
-						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 0, null));
+						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 0, DeviceIconRegistry.LoadDeviceIcon(LocalInputControllerConfig.ControllerKind.Gamepad)));
 					break;
 				case 3:
 					localInputConfig?.TryJoinGamepad(1);
 					controllerSetups.Add(GetControllerSetup(localInputConfig, LocalInputControllerConfig.ControllerKind.Gamepad, 1)
-						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 1, null));
+						?? LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, 1, DeviceIconRegistry.LoadDeviceIcon(LocalInputControllerConfig.ControllerKind.Gamepad)));
 					break;
 			}
 		}

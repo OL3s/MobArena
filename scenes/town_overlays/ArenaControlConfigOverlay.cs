@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Contracts;
@@ -316,13 +317,13 @@ public partial class ArenaControlConfigOverlay : Control
             return;
 
         if (!_localInputConfig.HasKeyboardPlayer)
-            AddPrompt(_localInputConfig.EnterIcon, LocalInputControllerConfig.ControllerKind.Keyboard.ToString());
+			AddPrompt(InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Keyboard), LocalInputControllerConfig.ControllerKind.Keyboard.ToString());
 		if (!_localInputConfig.HasMousePlayer)
-			AddPrompt(_localInputConfig.MouseIcon, LocalInputControllerConfig.ControllerKind.Mouse.ToString());
+			AddPrompt(InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Mouse), LocalInputControllerConfig.ControllerKind.Mouse.ToString());
 		if (!_localInputConfig.HasTouchPlayer)
-			AddPrompt(_localInputConfig.PhoneIcon, LocalInputControllerConfig.ControllerKind.Touch.ToString());
+			AddPrompt(InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Touch), LocalInputControllerConfig.ControllerKind.Touch.ToString());
         if (_localInputConfig.CanJoin)
-            AddPrompt(_localInputConfig.XboxAIcon, LocalInputControllerConfig.ControllerKind.Gamepad.ToString());
+			AddPrompt(InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Gamepad), LocalInputControllerConfig.ControllerKind.Gamepad.ToString());
     }
 
     private void AddPrompt(Texture2D icon, string label)

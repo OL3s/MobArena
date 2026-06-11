@@ -107,7 +107,7 @@ public partial class MainMenu : Control
 
 	private void OnCodexPressed()
 	{
-		GD.Print("MainMenu: Opening codex overlay.");
+		GameLogger.UI("MainMenu: Opening codex overlay.");
 		var globalOverlay = GlobalOverlay.Get();
 		var codexScene = ResourceLoader.Load<PackedScene>(CodexOverlayScenePath);
 		if (globalOverlay == null || codexScene == null)

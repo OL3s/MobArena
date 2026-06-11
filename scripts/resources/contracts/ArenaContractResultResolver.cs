@@ -21,17 +21,17 @@ public static class ArenaContractResultResolver
         var contract = runData?.ActiveArenaContract;
         if (saveNode?.IsDemoComplete == true)
         {
-            GD.Print($"Arena result: win ignored because demo is complete; {DescribeContext(saveNode)}.");
+            GameLogger.Contract($"Arena result: win ignored because demo is complete; {DescribeContext(saveNode)}.");
             return ContractResult.None;
         }
 
         if (saveNode == null || runData == null || phaseState == null || (requireActiveContract && contract == null))
         {
-            GD.Print($"Arena result: win ignored; {DescribeContext(saveNode)}.");
+            GameLogger.Contract($"Arena result: win ignored; {DescribeContext(saveNode)}.");
             return ContractResult.None;
         }
 
-        GD.Print($"Arena result: resolving win; {DescribeContext(saveNode)}.");
+        GameLogger.Contract($"Arena result: resolving win; {DescribeContext(saveNode)}.");
 
         KillDefeatedArenaGladiators(runData, saveNode.CompanyCareerData);
 
@@ -56,7 +56,7 @@ public static class ArenaContractResultResolver
         }
 
         CompleteArenaDay(saveNode);
-        GD.Print($"Arena result: win completed; {DescribeContext(saveNode)}.");
+        GameLogger.Contract($"Arena result: win completed; {DescribeContext(saveNode)}.");
         return saveNode.IsDemoComplete ? ContractResult.DemoComplete : ContractResult.Completed;
     }
 
@@ -64,7 +64,7 @@ public static class ArenaContractResultResolver
     {
         if (saveNode?.CanStartArenaContract() != true)
         {
-            GD.Print($"Arena result: visible contract win ignored because arena start is blocked; {DescribeContext(saveNode)}.");
+            GameLogger.Contract($"Arena result: visible contract win ignored because arena start is blocked; {DescribeContext(saveNode)}.");
             return ContractResult.None;
         }
 
@@ -81,11 +81,11 @@ public static class ArenaContractResultResolver
         var contract = runData?.ActiveArenaContract;
         if (saveNode == null || runData == null)
         {
-            GD.Print($"Arena result: loss ignored; {DescribeContext(saveNode)}.");
+            GameLogger.Contract($"Arena result: loss ignored; {DescribeContext(saveNode)}.");
             return ContractResult.None;
         }
 
-        GD.Print($"Arena result: resolving loss; {DescribeContext(saveNode)}.");
+        GameLogger.Contract($"Arena result: resolving loss; {DescribeContext(saveNode)}.");
 
         if (contract?.IsChampionContract() == true)
             return ResolveCompanyLoss(
@@ -98,7 +98,7 @@ public static class ArenaContractResultResolver
 
     public static ContractResult ResolveAllPlayersDefeated(SaveNode saveNode)
     {
-        GD.Print($"Arena result: all players defeated requested; {DescribeContext(saveNode)}.");
+        GameLogger.Contract($"Arena result: all players defeated requested; {DescribeContext(saveNode)}.");
         return ResolveLoss(saveNode);
     }
 
@@ -106,17 +106,17 @@ public static class ArenaContractResultResolver
     {
         if (saveNode == null)
         {
-            GD.Print("Arena result: company loss ignored; save node is null.");
+            GameLogger.Contract("Arena result: company loss ignored; save node is null.");
             return ContractResult.None;
         }
 
-        GD.Print($"Arena result: resolving company loss; {DescribeContext(saveNode)}.");
+        GameLogger.Contract($"Arena result: resolving company loss; {DescribeContext(saveNode)}.");
 
         saveNode.QueueCompanyLossNotification(
             notificationTitle ?? "Company Retired",
             notificationText ?? "The company has been retired and the run has ended. Any qualifying result was recorded.");
         saveNode.ForceRetireCurrentCompany();
-        GD.Print($"Arena result: company force-retired; {DescribeContext(saveNode)}.");
+        GameLogger.Contract($"Arena result: company force-retired; {DescribeContext(saveNode)}.");
         return ContractResult.ForceRetired;
     }
 
@@ -125,15 +125,15 @@ public static class ArenaContractResultResolver
         var runData = saveNode?.CompanyRunData;
         if (saveNode == null || runData == null)
         {
-            GD.Print($"Arena result: {source} ignored; {DescribeContext(saveNode)}.");
+            GameLogger.Contract($"Arena result: {source} ignored; {DescribeContext(saveNode)}.");
             return ContractResult.None;
         }
 
-        GD.Print($"Arena result: resolving {source}; {DescribeContext(saveNode)}.");
+        GameLogger.Contract($"Arena result: resolving {source}; {DescribeContext(saveNode)}.");
 
         KillDefeatedArenaGladiators(runData, saveNode.CompanyCareerData);
         CompleteArenaDay(saveNode);
-        GD.Print($"Arena result: {source} completed; {DescribeContext(saveNode)}.");
+        GameLogger.Contract($"Arena result: {source} completed; {DescribeContext(saveNode)}.");
         return ContractResult.Completed;
     }
 

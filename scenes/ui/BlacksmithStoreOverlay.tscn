@@ -72,7 +72,7 @@ stretch_mode = 5
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 28
-text = "Blacksmith"
+text = "Items"
 vertical_alignment = 1
 
 [node name="GoldIcon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/Header"]
@@ -93,8 +93,36 @@ vertical_alignment = 1
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_body_font")
 theme_override_font_sizes/font_size = 20
-text = "Buy equipment for the company inventory. Each item here is a runtime copy of an authored item template."
+text = "Buy equipment and coatings for the company inventory."
 autowrap_mode = 3
+
+[node name="SortRow" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SortLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/SortRow"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 18
+text = "Filter"
+vertical_alignment = 1
+
+[node name="FilterOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/SortRow"]
+custom_minimum_size = Vector2(240, 40)
+layout_mode = 2
+item_count = 0
+
+[node name="SortByLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/SortRow"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 18
+text = "Sort"
+vertical_alignment = 1
+
+[node name="SortOptions" type="OptionButton" parent="CenterContainer/PopupPanel/MarginContainer/Content/SortRow"]
+custom_minimum_size = Vector2(170, 40)
+layout_mode = 2
+item_count = 0
 
 [node name="StoreBody" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 custom_minimum_size = Vector2(0, 430)
@@ -121,6 +149,33 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
+
+[node name="CategoryDividerTemplate" type="HBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/ItemListPanel/ItemListMargin"]
+visible = false
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="LeftLine" type="HSeparator" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/ItemListPanel/ItemListMargin/CategoryDividerTemplate"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Icon" type="TextureRect" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/ItemListPanel/ItemListMargin/CategoryDividerTemplate"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/ItemListPanel/ItemListMargin/CategoryDividerTemplate"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 13
+text = "Category"
+vertical_alignment = 1
+
+[node name="RightLine" type="HSeparator" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody/ItemListPanel/ItemListMargin/CategoryDividerTemplate"]
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="DetailPanel" type="PanelContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content/StoreBody"]
 layout_mode = 2

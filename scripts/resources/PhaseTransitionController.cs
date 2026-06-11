@@ -8,7 +8,7 @@ public static class PhaseTransitionController
     {
         if (phaseState == null || !phaseState.IsDay())
         {
-            GD.Print($"PhaseTransitionController: Complete arena day failed; {DescribeContext(phaseState, companyRunData)}.");
+            GameLogger.State($"PhaseTransitionController: Complete arena day failed; {DescribeContext(phaseState, companyRunData)}.");
             return false;
         }
 
@@ -17,7 +17,7 @@ public static class PhaseTransitionController
         phaseState.MoveToNight();
         weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
-        GD.Print($"PhaseTransitionController: Completed arena day. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
+        GameLogger.State($"PhaseTransitionController: Completed arena day. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
         return true;
     }
 
@@ -25,7 +25,7 @@ public static class PhaseTransitionController
     {
         if (phaseState == null || !phaseState.IsDay())
         {
-            GD.Print($"PhaseTransitionController: Complete arena contract failed; {DescribeContext(phaseState, companyRunData)}.");
+            GameLogger.State($"PhaseTransitionController: Complete arena contract failed; {DescribeContext(phaseState, companyRunData)}.");
             return false;
         }
 
@@ -34,7 +34,7 @@ public static class PhaseTransitionController
         phaseState.MoveToNight();
         weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
-        GD.Print($"PhaseTransitionController: Completed arena contract. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
+        GameLogger.State($"PhaseTransitionController: Completed arena contract. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
         return true;
     }
 
@@ -42,7 +42,7 @@ public static class PhaseTransitionController
     {
         if (phaseState == null || !phaseState.IsDay() || phaseState.IsChampionDay)
         {
-            GD.Print($"PhaseTransitionController: Skip arena contract failed; {DescribeContext(phaseState, companyRunData)}.");
+            GameLogger.State($"PhaseTransitionController: Skip arena contract failed; {DescribeContext(phaseState, companyRunData)}.");
             return false;
         }
 
@@ -52,7 +52,7 @@ public static class PhaseTransitionController
         phaseState.MoveToNight();
         weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
-        GD.Print($"PhaseTransitionController: Skipped arena contract. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
+        GameLogger.State($"PhaseTransitionController: Skipped arena contract. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
         return true;
     }
 
@@ -60,7 +60,7 @@ public static class PhaseTransitionController
     {
         if (phaseState == null || !phaseState.CanAdvanceToNextDay)
         {
-            GD.Print($"PhaseTransitionController: Advance to next day failed; {DescribeContext(phaseState, companyRunData)}.");
+            GameLogger.State($"PhaseTransitionController: Advance to next day failed; {DescribeContext(phaseState, companyRunData)}.");
             return false;
         }
 
@@ -70,7 +70,7 @@ public static class PhaseTransitionController
         phaseState.MoveToNextDay();
         weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
-        GD.Print($"PhaseTransitionController: Advanced to next day. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
+        GameLogger.State($"PhaseTransitionController: Advanced to next day. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
         return true;
     }
 

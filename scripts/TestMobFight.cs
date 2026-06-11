@@ -2,6 +2,7 @@ using Godot;
 using MobArena.Scenes.Components.Arena;
 using MobArena.Scenes.Components.Arena.CombatUi;
 using MobArena.Scripts.Resources;
+using MobArena.Scripts.Resources.Gladiators;
 using MobArena.Scripts.Resources.Items;
 using MobArena.Scripts.Resources.Mobs;
 
@@ -26,7 +27,7 @@ public partial class TestMobFight : Node
         if (player == null)
             return null;
 
-        var gladiator = GladiatorData.CreateDefault();
+        var gladiator = GladiatorGenerator.CreateDefault();
         gladiator.SetGladiatorName("Keyboard Tester");
         gladiator.Equipment.EquipMainHand(ResourceLoader.Load<MainHandItemData>(TrainingSwordPath));
         gladiator.Equipment.TryEquipOffHand(ResourceLoader.Load<OffHandItemData>(PoisonDaggerPath));

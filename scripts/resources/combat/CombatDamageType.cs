@@ -9,10 +9,5 @@ public enum CombatDamageType
     Cold,
     Acid,
     Silver,
-    Holy,
-    Cursed,
-    Undead,
-    Demon,
-    Beast,
-    Champion
+    Holy
 }

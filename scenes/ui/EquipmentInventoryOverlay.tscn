@@ -8,7 +8,7 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
 shader = ExtResource("2_blur_shader")
 
-[node name="EquipmentInventoryOverlay" type="Control"]
+[node name="ItemsInventoryOverlay" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -73,14 +73,14 @@ stretch_mode = 5
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 28
-text = "Equipment Inventory"
+text = "Items"
 vertical_alignment = 1
 
 [node name="SummaryLabel" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Content"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("4_body_font")
 theme_override_font_sizes/font_size = 20
-text = "Unequipped items: 0"
+text = "Items: 0"
 horizontal_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/PopupPanel/MarginContainer/Content"]

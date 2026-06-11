@@ -36,7 +36,7 @@ public partial class WeatherState : Resource
 
         var previousWeather = CurrentWeather;
         CurrentWeather = weather;
-        GD.Print($"WeatherState: Weather changed from {previousWeather} to {CurrentWeather}.");
+        GameLogger.State($"WeatherState: Weather changed from {previousWeather} to {CurrentWeather}.");
         EmitSignal(SignalName.WeatherChanged);
     }
 

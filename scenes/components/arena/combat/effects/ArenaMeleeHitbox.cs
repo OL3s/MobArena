@@ -177,7 +177,7 @@ public partial class ArenaMeleeHitbox : Area2D, IArenaCombatEffect
             ? "unknown HP"
             : $"{target.CombatState.CurrentHealth}/{target.CombatState.MaxHealth} HP";
 
-        GD.Print($"Combat hit: {sourceName} -> {targetName}, action={actionName}, effect={_effectData}, damage={appliedDamage}, target={targetHealth}.");
+        GameLogger.Combat($"Combat hit: {sourceName} -> {targetName}, action={actionName}, effect={_effectData}, damage={appliedDamage}, target={targetHealth}.");
     }
 
     private void SpawnChained(ArenaCombatEffectData effect, PackedScene scene, Vector2 position)

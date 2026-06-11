@@ -1,5 +1,6 @@
 using Godot;
 using MobArena.Scripts.Resources.Combat;
+using MobArena.Scripts.Resources.Gladiators;
 using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scripts.Resources;
@@ -17,21 +18,9 @@ public partial class GladiatorData : Resource
 {
     public const float MaxConditionValue = 10f;
     private const float DefaultConditionValue = MaxConditionValue * 0.8f;
-    private const float DefaultConditionMin = 6f;
-    private const float DefaultHealthMinRatio = 0.2f;
     private const float ConditionPenaltyThreshold = 0.5f;
     private const int AttributeValueGold = 2;
     private const int VitalsValueDivisor = 40;
-
-    private static readonly string[] DefaultNames =
-    {
-        "Aulus",
-        "Cassia",
-        "Drusus",
-        "Livia",
-        "Maro",
-        "Sabina"
-    };
 
     private static readonly string[] AppearancePaths =
     {
@@ -126,26 +115,34 @@ public partial class GladiatorData : Resource
 
     public static GladiatorData CreateDefault()
     {
-        var random = new RandomNumberGenerator();
-        random.Randomize();
+        return GladiatorGenerator.CreateDefault();
+    }
 
-        var level = GladiatorLevelData.CreateDefault(random);
-        var maxHealth = level.GetMaxHealth();
-        var health = Mathf.Max(1, Mathf.RoundToInt(maxHealth * random.RandfRange(DefaultHealthMinRatio, 1f)));
-        var appearanceIndex = random.RandiRange(0, AppearancePaths.Length - 1);
+    internal static int AppearanceCount => AppearancePaths.Length;
 
+    internal static GladiatorData CreateGenerated(
+        string gladiatorName,
+        int portraitIndex,
+        GladiatorLevelData level,
+        int health,
+        int stamina,
+        float exhaustion,
+        GladiatorEquipmentData equipment,
+        GladiatorCareerData gladiatorCareer,
+        int initialCost)
+    {
         return new GladiatorData
         {
-            GladiatorName = DefaultNames[random.RandiRange(0, DefaultNames.Length - 1)],
-            PortraitIndex = appearanceIndex,
-            Appearance = LoadAppearance(appearanceIndex),
-            Level = level,
+            GladiatorName = string.IsNullOrWhiteSpace(gladiatorName) ? "Aulus" : gladiatorName.Trim(),
+            PortraitIndex = NormalizeIndex(portraitIndex, AppearancePaths.Length),
+            Appearance = LoadAppearance(portraitIndex),
+            Level = level ?? new GladiatorLevelData(),
             Health = health,
-            Stamina = level.GetMaxStamina(),
-            Exhaustion = random.RandfRange(DefaultConditionMin, MaxConditionValue),
-            Equipment = GladiatorEquipmentData.CreateDefault(random),
-            GladiatorCareer = new GladiatorCareerData(),
-            InitialCost = random.RandiRange(20, 45)
+            Stamina = stamina,
+            Exhaustion = Mathf.Clamp(exhaustion, 0f, MaxConditionValue),
+            Equipment = equipment ?? new GladiatorEquipmentData(),
+            GladiatorCareer = gladiatorCareer ?? new GladiatorCareerData(),
+            InitialCost = Mathf.Max(1, initialCost)
         };
     }
 

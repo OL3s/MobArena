@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="MainHandItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/training_hammer.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
+
+[sub_resource type="Resource" id="crush"]
+script = ExtResource("4_entry")
+Type = 2
+Damage = 95
+
+[sub_resource type="Resource" id="damage"]
+script = ExtResource("3_damage")
+Entries = Array[ExtResource("4_entry")]([SubResource("crush")])
+
+[resource]
+script = ExtResource("1_main")
+Damage = SubResource("damage")
+DisplayName = "Training Hammer"
+Description = "A basic training hammer."
+UiIcon = ExtResource("2_icon")
+TypeTag = 4
+StrengthTag = 1
+HeldTexture = ExtResource("2_icon")
+HeldDisplayHeight = 76.0
+HeldRotationDegrees = 10.0
+HeldTextureOffset = Vector2(-12, -54)
+Weight = 3
+Cost = 12
+MaxDurability = 100
+Durability = 100

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Godot;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Contracts;
+using MobArena.Scripts.Resources.Gladiators;
 
 namespace MobArena.Scripts;
 
@@ -45,7 +46,7 @@ Mob Arena runtime CLI commands:
   --generate-gladiator                        Add one default gladiator to the active company.
   --add-money[=amount]                        Add gold. Alias: --add-gold. Missing/invalid amount defaults to 0.
   --add-fame[=amount]                         Add fame. Missing/invalid amount defaults to 0.
-  --buy-equipment[=index]                     Buy blacksmith stock item by index. Default index: 0.
+  --buy-equipment[=index]                     Buy market item stock by index. Default index: 0.
   --buy-gladiator[=index]                     Buy gladiator market stock by index. Default index: 0.
   --contract[=index]                          Complete visible arena contract by index. Alias: --complete-contract. Default index: 0.
   --complete-day                              Complete current day phase. Alias: --complete-arena-day.
@@ -76,7 +77,8 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 				break;
 		}
 
-		GD.Print($"SaveNode: Command-line command sequence completed with exit code {exitCode}.");
+		GameLogger.CLI($"command sequence completed with exit code {exitCode}.");
+		saveNode.SuppressExitSaveForCommandLine();
 		saveNode.GetTree().Quit(exitCode);
 		return true;
 	}
@@ -110,7 +112,7 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 
 	private static int HandleHelp()
 	{
-		GD.Print(HelpText);
+		GameLogger.CLI(HelpText);
 		return 0;
 	}
 
@@ -118,7 +120,7 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 	{
 		var error = saveNode.DeleteSave();
 		var exitCode = error == Error.Ok ? 0 : 1;
-		GD.Print($"SaveNode: Command-line save data delete completed with exit code {exitCode}.");
+		GameLogger.CLI($"save data delete completed with exit code {exitCode}.");
 		return exitCode;
 	}
 
@@ -127,7 +129,7 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		var loadError = saveNode.Load();
 		if (loadError != Error.Ok && loadError != Error.FileNotFound)
 		{
-			GD.Print($"SaveNode: Command-line print save failed while loading existing data. Error: {loadError}.");
+			GameLogger.CLI($"print save failed while loading existing data. Error: {loadError}.");
 			return 1;
 		}
 
@@ -135,7 +137,7 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		var careerData = saveNode.CompanyCareerData;
 		var phaseState = saveNode.TownPhaseState;
 		var weatherState = saveNode.WeatherState;
-		GD.Print($"SaveNode: Save summary: hasCompany={saveNode.HasCompany}, company='{saveNode.CompanyLogoData?.CompanyName ?? "None"}', gold={runData?.Gold ?? 0}, fame={runData?.Fame ?? 0}, gladiators={runData?.Gladiators?.Count ?? 0}, inventory={runData?.Inventory?.Count ?? 0}, contractsCompleted={careerData?.ContractsCompleted ?? 0}, day={phaseState?.CurrentDay ?? 0}, phase={phaseState?.CurrentPhase.ToString() ?? "None"}, weather={weatherState?.CurrentWeather.ToString() ?? "None"}.");
+		GameLogger.CLI($"save summary: hasCompany={saveNode.HasCompany}, company='{saveNode.CompanyLogoData?.CompanyName ?? "None"}', gold={runData?.Gold ?? 0}, fame={runData?.Fame ?? 0}, gladiators={runData?.Gladiators?.Count ?? 0}, inventory={runData?.Inventory?.Count ?? 0}, contractsCompleted={careerData?.ContractsCompleted ?? 0}, day={phaseState?.CurrentDay ?? 0}, phase={phaseState?.CurrentPhase.ToString() ?? "None"}, weather={weatherState?.CurrentWeather.ToString() ?? "None"}.");
 		return 0;
 	}
 
@@ -144,20 +146,20 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		var loadError = saveNode.Load();
 		if (loadError != Error.Ok && loadError != Error.FileNotFound)
 		{
-			GD.Print($"SaveNode: Command-line company generation failed while loading existing data. Error: {loadError}.");
+			GameLogger.CLI($"company generation failed while loading existing data. Error: {loadError}.");
 			return 1;
 		}
 
 		if (saveNode.HasCompany && !overwrite)
 		{
-			GD.Print("SaveNode: Command-line company generation skipped; a company already exists.");
+			GameLogger.CLI($"company generation skipped; a company already exists.");
 			return 0;
 		}
 
 		GenerateCompany(saveNode);
 		var saveError = saveNode.Save();
 		var exitCode = saveError == Error.Ok ? 0 : 1;
-		GD.Print($"SaveNode: Command-line company generation completed with exit code {exitCode}.");
+		GameLogger.CLI($"company generation completed with exit code {exitCode}.");
 		return exitCode;
 	}
 
@@ -166,10 +168,10 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		if (!TryLoadCompany(saveNode, "generate gladiator"))
 			return 1;
 
-		saveNode.CompanyRunData.AddGladiator(GladiatorData.CreateDefault(), saveNode.CompanyCareerData);
+		saveNode.CompanyRunData.AddGladiator(GladiatorGenerator.CreateDefault(), saveNode.CompanyCareerData);
 		var saveError = saveNode.Save();
 		var exitCode = saveError == Error.Ok ? 0 : 1;
-		GD.Print($"SaveNode: Command-line generate gladiator completed with exit code {exitCode}.");
+		GameLogger.CLI($"generate gladiator completed with exit code {exitCode}.");
 		return exitCode;
 	}
 
@@ -181,13 +183,13 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		var result = ArenaContractResultResolver.ResolveVisibleContractWin(saveNode, GetOptionalIndex(command));
 		if (result != ArenaContractResultResolver.ContractResult.Completed)
 		{
-			GD.Print($"SaveNode: Command-line complete contract failed; resolver returned {result}.");
+			GameLogger.CLI($"complete contract failed; resolver returned {result}.");
 			return 1;
 		}
 
 		var saveError = saveNode.Save();
 		var exitCode = saveError == Error.Ok ? 0 : 1;
-		GD.Print($"SaveNode: Command-line complete contract completed with exit code {exitCode}.");
+		GameLogger.CLI($"complete contract completed with exit code {exitCode}.");
 		return exitCode;
 	}
 
@@ -240,7 +242,7 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 
 		if (!PhaseTransitionController.CompleteArenaDay(saveNode.TownPhaseState, saveNode.CompanyRunData, saveNode.WeatherState))
 		{
-			GD.Print("SaveNode: Command-line complete day failed; town is not in day phase.");
+			GameLogger.CLI($"complete day failed; town is not in day phase.");
 			return 1;
 		}
 
@@ -254,7 +256,7 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 
 		if (!PhaseTransitionController.AdvanceToNextDay(saveNode.TownPhaseState, saveNode.CompanyRunData, saveNode.WeatherState))
 		{
-			GD.Print("SaveNode: Command-line next day failed; town is not in night phase.");
+			GameLogger.CLI($"next day failed; town is not in night phase.");
 			return 1;
 		}
 
@@ -275,14 +277,14 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		var loadError = saveNode.Load();
 		if (loadError != Error.Ok && loadError != Error.FileNotFound)
 		{
-			GD.Print($"SaveNode: Command-line {actionName} failed while loading existing data. Error: {loadError}.");
+			GameLogger.CLI($"{actionName} failed while loading existing data. Error: {loadError}.");
 			return false;
 		}
 
 		if (saveNode.HasCompany)
 			return true;
 
-		GD.Print($"SaveNode: Command-line {actionName} failed; no active company exists.");
+		GameLogger.CLI($"{actionName} failed; no active company exists.");
 		return false;
 	}
 
@@ -291,7 +293,7 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		if (int.TryParse(command.Value, out var amount) && amount >= 0)
 			return amount;
 
-		GD.Print($"SaveNode: Command-line {command.Name} value missing or invalid; defaulting to 0.");
+		GameLogger.CLI($"{command.Name} value missing or invalid; defaulting to 0.");
 		return 0;
 	}
 
@@ -308,7 +310,7 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		if (!string.IsNullOrWhiteSpace(value) && Enum.TryParse<WeatherState.WeatherVisual>(value, true, out var weather))
 			return weather;
 
-		GD.Print("SaveNode: Command-line --weather value missing or invalid; defaulting to Cloudy.");
+		GameLogger.CLI($"--weather value missing or invalid; defaulting to Cloudy.");
 		return WeatherState.WeatherVisual.Cloudy;
 	}
 
@@ -316,7 +318,7 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 	{
 		var saveError = saveNode.Save();
 		var exitCode = saveError == Error.Ok ? 0 : 1;
-		GD.Print($"SaveNode: Command-line {actionName} completed with exit code {exitCode}.");
+		GameLogger.CLI($"{actionName} completed with exit code {exitCode}.");
 		return exitCode;
 	}
 
@@ -325,18 +327,18 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		var scenePath = GetScenePath(sceneName);
 		if (string.IsNullOrWhiteSpace(scenePath))
 		{
-			GD.Print($"SaveNode: Command-line goto scene failed; unknown scene '{sceneName}'. Expected main-menu, town, or arena.");
+			GameLogger.CLI($"goto scene failed; unknown scene '{sceneName}'. Expected main-menu, town, or arena.");
 			return 1;
 		}
 
 		var scene = ResourceLoader.Load<PackedScene>(scenePath);
 		if (scene == null)
 		{
-			GD.Print($"SaveNode: Command-line goto scene failed; could not load '{scenePath}'.");
+			GameLogger.CLI($"goto scene failed; could not load '{scenePath}'.");
 			return 1;
 		}
 
-		GD.Print($"SaveNode: Command-line loaded scene resource '{scenePath}'.");
+		GameLogger.CLI($"loaded scene resource '{scenePath}'.");
 		return 0;
 	}
 

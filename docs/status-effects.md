@@ -111,6 +111,8 @@ rawStunValue = appliedDamage * AppliedDamageMultiplier
 
 With the new scale, the default multiplier should generally be `1`, so `100` applied damage can represent about one second of stun before defense, state multipliers, min threshold, and cap.
 
+Do not treat Stun as a normal coating or generic status add-on. Stun is an impact/control result and should usually come from applied damage, force, weapon impact, or an explicitly authored stun attack. Only special stun fantasies such as a stun bomb, shock oil, or concussive plating should author direct Stun values.
+
 Windup stun vulnerability is data-driven through `CombatantStateStatusMultiplierData`:
 
 ```text

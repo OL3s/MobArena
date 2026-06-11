@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="MainHandItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/iron_bow.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
+
+[sub_resource type="Resource" id="pierce"]
+script = ExtResource("4_entry")
+Type = 1
+Damage = 180
+
+[sub_resource type="Resource" id="damage"]
+script = ExtResource("3_damage")
+Entries = Array[ExtResource("4_entry")]([SubResource("pierce")])
+
+[resource]
+script = ExtResource("1_main")
+IsTwoHanded = true
+Damage = SubResource("damage")
+DisplayName = "Iron Bow"
+Description = "A sturdy iron bow."
+UiIcon = ExtResource("2_icon")
+TypeTag = 8
+StrengthTag = 4
+HeldTexture = ExtResource("2_icon")
+HeldDisplayHeight = 90.0
+HeldRotationDegrees = -8.0
+HeldTextureOffset = Vector2(-20, -60)
+Weight = 4
+Cost = 96
+MaxDurability = 150
+Durability = 150

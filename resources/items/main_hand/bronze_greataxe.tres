@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="MainHandItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/bronze_greataxe.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
+
+[sub_resource type="Resource" id="slash"]
+script = ExtResource("4_entry")
+Damage = 250
+
+[sub_resource type="Resource" id="crush"]
+script = ExtResource("4_entry")
+Type = 2
+Damage = 65
+
+[sub_resource type="Resource" id="damage"]
+script = ExtResource("3_damage")
+Entries = Array[ExtResource("4_entry")]([SubResource("slash"), SubResource("crush")])
+
+[resource]
+script = ExtResource("1_main")
+IsTwoHanded = true
+Damage = SubResource("damage")
+DisplayName = "Bronze Greataxe"
+Description = "A two-handed bronze greataxe."
+UiIcon = ExtResource("2_icon")
+TypeTag = 7
+StrengthTag = 3
+HeldTexture = ExtResource("2_icon")
+HeldDisplayHeight = 100.0
+HeldRotationDegrees = 12.0
+HeldTextureOffset = Vector2(-14, -72)
+Weight = 8
+Cost = 62
+MaxDurability = 120
+Durability = 120

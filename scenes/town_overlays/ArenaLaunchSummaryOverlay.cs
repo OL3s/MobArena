@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Contracts;
@@ -19,10 +20,6 @@ public partial class ArenaLaunchSummaryOverlay : Control
     private ArenaContractData _contract;
     private Action _startAction;
     private Action _resetAction;
-    private Texture2D _keyboardDeviceIcon;
-    private Texture2D _mouseDeviceIcon;
-    private Texture2D _touchDeviceIcon;
-    private Texture2D _gamepadDeviceIcon;
     private Texture2D _goldIcon;
 
     [Export]
@@ -49,11 +46,7 @@ public partial class ArenaLaunchSummaryOverlay : Control
         _runData = saveNode?.CompanyRunData;
         _phaseState = saveNode?.TownPhaseState;
         _localInputConfig = LocalInputConfig.Get();
-        _keyboardDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_keyboard.svg");
-        _mouseDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_mouse.svg");
-        _touchDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_phone.svg");
-        _gamepadDeviceIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_console.svg");
-        _goldIcon = ResourceLoader.Load<Texture2D>("res://assets/ui/icons/gold.svg");
+        _goldIcon = UiIconLoader.LoadIcon("res://assets/ui/icons/gold.svg");
 
         _startButton.Pressed += OnStartPressed;
         _resetButton.Pressed += OnResetPressed;
@@ -109,14 +102,7 @@ public partial class ArenaLaunchSummaryOverlay : Control
         if (assignment == null)
             return null;
 
-        return assignment.ControllerKind switch
-        {
-            LocalInputControllerConfig.ControllerKind.Keyboard => _keyboardDeviceIcon,
-            LocalInputControllerConfig.ControllerKind.Mouse => _mouseDeviceIcon,
-            LocalInputControllerConfig.ControllerKind.Touch => _touchDeviceIcon,
-            LocalInputControllerConfig.ControllerKind.Gamepad => _gamepadDeviceIcon,
-            _ => null
-        };
+        return DeviceIconRegistry.LoadDeviceIcon(assignment.ControllerKind);
     }
 
     private void RefreshCostSummary()

@@ -1,17 +1,18 @@
 using Godot;
 using MobArena.Scripts;
+using MobArena.Scripts.Resources;
 
 namespace MobArena.Scenes.TownOverlays;
 
 public partial class MarketOverlay : Control
 {
     private const string GladiatorMarketOverlayScene = "res://scenes/town_overlays/gladiator_market_overlay.tscn";
-    private const string BlacksmithOverlayScene = "res://scenes/ui/BlacksmithStoreOverlay.tscn";
+    private const string ItemsOverlayScene = "res://scenes/ui/BlacksmithStoreOverlay.tscn";
 
     public override void _Ready()
     {
         GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/GladiatorsButton").Pressed += OnGladiatorsPressed;
-        GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/BlacksmithButton").Pressed += OnBlacksmithPressed;
+        GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/Actions/BlacksmithButton").Pressed += OnItemsPressed;
         GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/CloseButton").Pressed += QueueFree;
     }
 
@@ -20,9 +21,9 @@ public partial class MarketOverlay : Control
         OpenOverlay(GladiatorMarketOverlayScene);
     }
 
-    private void OnBlacksmithPressed()
+    private void OnItemsPressed()
     {
-        OpenOverlay(BlacksmithOverlayScene);
+        OpenOverlay(ItemsOverlayScene);
     }
 
     private void OpenOverlay(string scenePath)

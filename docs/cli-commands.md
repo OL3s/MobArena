@@ -26,7 +26,7 @@ godot --headless -- --delete --generate-company --add-money=250 --buy-equipment=
 
 ## Run Mutation
 
-- `--generate-gladiator`: add and save one `GladiatorData.CreateDefault()` gladiator to the active company, then exit. Fails if no active company exists.
+- `--generate-gladiator`: add and save one `GladiatorGenerator.CreateDefault()` gladiator to the active company, then exit. Fails if no active company exists.
 - `--add-money=<amount>`: add gold to the active company and career totals, then save. Alias: `--add-gold`.
 - `--add-fame=<amount>`: add fame to the active company, then save.
 - `--buy-equipment[=index]`: buy and save the generated blacksmith item stock entry at `index`. Defaults to `0`.

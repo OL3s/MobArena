@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AdditiveItemCoatingData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/AdditiveItemCoatingData.cs" id="1_coating"]
+[ext_resource type="Texture2D" path="res://assets/ui/coatings/strong_poison_oil.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/items/CoatingDamageEntryData.cs" id="3_damage_entry"]
+[ext_resource type="Script" path="res://scripts/resources/items/CoatingEffectEntryData.cs" id="4_effect_entry"]
+
+[sub_resource type="Resource" id="Resource_strong_poison_oil_acid"]
+script = ExtResource("3_damage_entry")
+Type = 5
+Value = 8
+
+[sub_resource type="Resource" id="Resource_strong_poison_oil_poison"]
+script = ExtResource("4_effect_entry")
+Value = 320.0
+
+[resource]
+script = ExtResource("1_coating")
+DisplayName = "Strong Poison Oil"
+Description = "A stronger poison oil with a small acid bite. On weapons it adds acid damage and poison buildup; on armor it adds acid defense and poison effect defense."
+UiIcon = ExtResource("2_icon")
+TypeTag = 14
+StrengthTag = 8
+Cost = 56
+MaxDurability = 35
+Durability = 35
+DamageEntries = Array[ExtResource("3_damage_entry")]([SubResource("Resource_strong_poison_oil_acid")])
+EffectEntries = Array[ExtResource("4_effect_entry")]([SubResource("Resource_strong_poison_oil_poison")])
