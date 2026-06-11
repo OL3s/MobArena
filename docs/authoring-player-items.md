@@ -122,7 +122,7 @@ ArmorItemData
 - `Description`: Short codex/store text.
 - `UiIcon`: Icon used by cards, codex, inventory, and store UI.
 - `TypeTag`: Generic store/codex sorting family, such as `Sword`, `Armor`, `Honing`, or `Poison`. Use `Other` only when no existing family fits.
-- `StrengthTag`: Generic store/codex sorting tier or intensity, such as `Training`, `Wood`, `Bronze`, `Iron`, `Black`, `Weak`, `Standard`, `Strong`, `Light`, `Medium`, or `Heavy`. Use `Other` only when no existing tier fits.
+- `StrengthTag`: Generic store/codex sorting tier or intensity, such as `Training`, `Stone`, `Wood`, `Bronze`, `Iron`, `Black`, `Weak`, `Standard`, `Strong`, `Light`, `Medium`, or `Heavy`. Use `Other` only when no existing tier fits.
 - `Cost`: Base buy/sell/economy value.
 - `MaxDurability`: Maximum number of durability uses.
 - `Durability`: Current remaining durability uses.
@@ -131,6 +131,8 @@ Condition is not authored directly. Use `GetCondition()` to derive the normalize
 
 Do not change `Cost` at purchase time. Runtime item copies preserve original authored cost, and resale logic depends on that base value.
 
+Treat authored `Cost` as progression pacing, not a tiny stat adjustment. Training, Stone, and Wood gear should be affordable early purchases; Bronze should cost hundreds of gold; Iron should cost thousands; Black should feel late-game and can sit in five-figure prices. The jumps do not need to be exact multipliers, but the gap between Wood, Bronze, Iron, and Black should be large enough that each material tier changes the economy plan.
+
 ## Material And Tier Naming
 
 Use material names as the main player-facing convention for item quality. This lets players learn the economy without memorizing every individual stat line.
@@ -138,6 +140,7 @@ Use material names as the main player-facing convention for item quality. This l
 Current intended tier language:
 
 - `Training`: cheapest and weakest baseline, safe for starter loops and tutorials.
+- `Stone`: crude early weapons between training gear and proper wooden/metal equipment.
 - `Wooden`: cheap real equipment, still below metal gear.
 - `Bronze`: first dependable upgrade tier.
 - `Iron`: stronger mid-tier equipment.
@@ -145,7 +148,7 @@ Current intended tier language:
 
 Armor materials should generally provide `Light`, `Medium`, and `Heavy` variants. Light armor is for agility-leaning builds with low weight, medium is balanced, and heavy is for strength-leaning builds with much higher weight and protection.
 
-Prefer names such as `Bronze Sword -> Iron Sword -> Black Sword`, `Bronze Greatsword -> Iron Greatsword -> Black Greatsword`, and matching shield/armor material names. Keep `Training Sword` and `Spear` as simple starter examples, but avoid making unrelated fantasy names the only clue that an item is better.
+Prefer names such as `Stone Spear -> Wood Spear -> Bronze Spear`, `Bronze Sword -> Iron Sword -> Black Sword`, `Bronze Greatsword -> Iron Greatsword -> Black Greatsword`, and matching shield/armor material names. Keep training weapons as simple tutorial baselines, but avoid making unrelated fantasy names the only clue that an item is better.
 
 Each authored item should use its own `UiIcon` SVG path, even when it is a tier variant of the same weapon or armor shape. Equippable items should also author a non-zero `Weight` value.
 

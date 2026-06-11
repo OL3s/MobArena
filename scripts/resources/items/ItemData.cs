@@ -35,7 +35,8 @@ public enum ItemStrengthTag
     Strong,
     Light,
     Medium,
-    Heavy
+    Heavy,
+    Stone
 }
 
 [GlobalClass]

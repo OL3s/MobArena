@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="MainHandItemData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/wood_club.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="5_action"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="6_melee_effect"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="7_apply"]
+
+[sub_resource type="Resource" id="crush"]
+script = ExtResource("4_entry")
+Type = 2
+Damage = 120
+
+[sub_resource type="Resource" id="damage"]
+script = ExtResource("3_damage")
+Entries = Array[ExtResource("4_entry")]([SubResource("crush")])
+
+[sub_resource type="Resource" id="apply"]
+script = ExtResource("7_apply")
+ForceStrength = 135.0
+
+[sub_resource type="Resource" id="melee_effect"]
+script = ExtResource("6_melee_effect")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
+Apply = SubResource("apply")
+LifetimeSeconds = 0.16
+MaxHits = 1
+HitboxRadius = 30.0
+ActiveSeconds = 0.12
+ForwardOffset = 8.0
+
+[sub_resource type="Resource" id="main_action"]
+script = ExtResource("5_action")
+DisplayName = "Club Swing"
+Effect = SubResource("melee_effect")
+WindupSeconds = 0.08
+StaminaCost = 24
+SpawnDistance = 32.0
+
+[resource]
+script = ExtResource("1_main")
+Damage = SubResource("damage")
+MainAction = SubResource("main_action")
+DisplayName = "Wood Club"
+Description = "A dense wooden club for simple blunt work."
+UiIcon = ExtResource("2_icon")
+TypeTag = 4
+StrengthTag = 2
+HeldTexture = ExtResource("2_icon")
+HeldDisplayHeight = 78.0
+HeldRotationDegrees = 10.0
+HeldTextureOffset = Vector2(-12, -56)
+Weight = 3
+Cost = 40
+MaxDurability = 100
+Durability = 100

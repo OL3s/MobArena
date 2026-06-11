@@ -28,6 +28,6 @@ HeldDisplayHeight = 92.0
 HeldRotationDegrees = -8.0
 HeldTextureOffset = Vector2(-20, -62)
 Weight = 5
-Cost = 172
+Cost = 12000
 MaxDurability = 180
 Durability = 180

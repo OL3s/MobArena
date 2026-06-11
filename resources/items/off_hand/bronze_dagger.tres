@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="OffHandItemData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/OffHandItemData.cs" id="1_off"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/bronze_dagger.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="5_action"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="6_melee_effect"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="7_apply"]
+
+[sub_resource type="Resource" id="pierce"]
+script = ExtResource("4_entry")
+Type = 1
+Damage = 115
+
+[sub_resource type="Resource" id="slash"]
+script = ExtResource("4_entry")
+Damage = 55
+
+[sub_resource type="Resource" id="damage"]
+script = ExtResource("3_damage")
+Entries = Array[ExtResource("4_entry")]([SubResource("pierce"), SubResource("slash")])
+
+[sub_resource type="Resource" id="apply"]
+script = ExtResource("7_apply")
+ForceStrength = 75.0
+
+[sub_resource type="Resource" id="melee_effect"]
+script = ExtResource("6_melee_effect")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
+Apply = SubResource("apply")
+LifetimeSeconds = 0.12
+MaxHits = 1
+HitboxRadius = 22.0
+ActiveSeconds = 0.1
+ForwardOffset = 6.0
+
+[sub_resource type="Resource" id="main_action"]
+script = ExtResource("5_action")
+DisplayName = "Bronze Dagger Jab"
+Effect = SubResource("melee_effect")
+WindupSeconds = 0.02
+StaminaCost = 10
+SpawnDistance = 26.0
+
+[resource]
+script = ExtResource("1_off")
+Damage = SubResource("damage")
+MainAction = SubResource("main_action")
+DisplayName = "Bronze Dagger"
+Description = "A dependable bronze off-hand blade."
+UiIcon = ExtResource("2_icon")
+TypeTag = 10
+StrengthTag = 3
+HeldTexture = ExtResource("2_icon")
+HeldDisplayHeight = 47.0
+HeldRotationDegrees = -5.0
+HeldTextureOffset = Vector2(-11, -44)
+Weight = 1
+Cost = 275
+MaxDurability = 100
+Durability = 100

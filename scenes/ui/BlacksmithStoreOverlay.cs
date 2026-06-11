@@ -251,7 +251,27 @@ public partial class BlacksmithStoreOverlay : Control
 
     private IComparable GetDefaultStrengthSortValue(ItemData item)
     {
-        return _selectedSortMode == StoreSortMode.Default ? item.StrengthTag : 0;
+        return _selectedSortMode == StoreSortMode.Default ? GetStrengthSortOrder(item.StrengthTag) : 0;
+    }
+
+    private static int GetStrengthSortOrder(ItemStrengthTag strengthTag)
+    {
+        return strengthTag switch
+        {
+            ItemStrengthTag.Training => 1,
+            ItemStrengthTag.Stone => 2,
+            ItemStrengthTag.Wood => 3,
+            ItemStrengthTag.Bronze => 4,
+            ItemStrengthTag.Iron => 5,
+            ItemStrengthTag.Black => 6,
+            ItemStrengthTag.Weak => 7,
+            ItemStrengthTag.Standard => 8,
+            ItemStrengthTag.Strong => 9,
+            ItemStrengthTag.Light => 10,
+            ItemStrengthTag.Medium => 11,
+            ItemStrengthTag.Heavy => 12,
+            _ => 0
+        };
     }
 
     private void SelectItem(ItemData item)

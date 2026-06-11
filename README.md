@@ -19,7 +19,7 @@ If you are an AI agent, you must read `docs/ai-agent.md` and `docs/focuspoint.md
 - Physics: Jolt Physics
 - .NET assembly: `MobArena`
 - Main flow: `Main Menu -> Town -> Arena`
-- Current focus: visible, reusable arena combat effects before deeper mob AI
+- Current focus: visible, reusable arena combat effects and early crude weapon coverage before deeper mob AI
 
 ## Validation
 
