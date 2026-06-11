@@ -1,0 +1,37 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/town_overlays/ArenaControlAssignmentCard.cs" id="1_script"]
+
+[node name="ArenaControlAssignmentCard" type="PanelContainer"]
+custom_minimum_size = Vector2(170, 210)
+layout_mode = 2
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Layout" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Portrait" type="TextureRect" parent="MarginContainer/Layout"]
+custom_minimum_size = Vector2(76, 76)
+layout_mode = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="MarginContainer/Layout"]
+layout_mode = 2
+text = "Gladiator"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="AssignmentLabel" type="Label" parent="MarginContainer/Layout"]
+layout_mode = 2
+text = "Unassigned"
+horizontal_alignment = 1
+autowrap_mode = 3

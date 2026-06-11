@@ -1,9 +1,12 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/panels/BuildingOverlayPanel.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
 [ext_resource type="Texture2D" path="res://assets/ui/items/drag_hand.svg" id="3_drag_hand"]
 [ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="4_body_font"]
+[ext_resource type="PackedScene" path="res://scenes/components/panels/BuildingGladiatorRow.tscn" id="5_gladiator_row"]
+[ext_resource type="PackedScene" path="res://scenes/components/panels/BuildingAttributeBar.tscn" id="6_attribute_bar"]
+[ext_resource type="PackedScene" path="res://scenes/components/panels/RiskIcon.tscn" id="7_risk_icon"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_popup_blur"]
 shader = ExtResource("2_blur_shader")
@@ -17,6 +20,9 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
 script = ExtResource("1_script")
+GladiatorRowScene = ExtResource("5_gladiator_row")
+AttributeBarScene = ExtResource("6_attribute_bar")
+RiskIconScene = ExtResource("7_risk_icon")
 
 [node name="BlurBackdrop" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_popup_blur")
@@ -124,13 +130,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="GrabIcon" type="TextureRect" parent="CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow"]
+[node name="GrabIcon" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow"]
 custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
-mouse_filter = 2
-texture = ExtResource("3_drag_hand")
-expand_mode = 2
-stretch_mode = 5
+tooltip_text = "Move all assigned gladiators to the courtyard."
+focus_mode = 0
+icon = ExtResource("3_drag_hand")
+expand_icon = true
+flat = true
 
 [node name="Gladiators" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/Actions/AssignedGladiatorsRow"]
 layout_mode = 2

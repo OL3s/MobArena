@@ -16,6 +16,17 @@ public partial class ArenaEnemySpawner : Node2D
     [Export]
     public PackedScene FallbackEnemyScene { get; private set; }
 
+    public int SpawnedEnemyCount => _spawnedEnemies.Count;
+
+    public IEnumerable<EnemyCombatant> GetSpawnedEnemyCombatants()
+    {
+        foreach (var enemy in _spawnedEnemies)
+        {
+            if (GodotObject.IsInstanceValid(enemy) && enemy is EnemyCombatant combatant)
+                yield return combatant;
+        }
+    }
+
     public void SpawnMobs(Array<EnemyMobData> mobs)
     {
         ClearSpawned();

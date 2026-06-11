@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="ArenaCombatActionData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="apply"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/StatusEffectApplicationData.cs" id="status"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackLinearProjectileData.cs" id="linear"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="action"]
+
+[sub_resource type="Resource" id="status_2"]
+script = ExtResource("status")
+Type = 0
+Value = 14
+
+[sub_resource type="Resource" id="apply_1"]
+script = ExtResource("apply")
+UseSourceItemDamage = false
+StatusApplications = Array[ExtResource("status")]([SubResource("status_2")])
+
+[sub_resource type="Resource" id="linear_3"]
+script = ExtResource("linear")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaAttackLinearProjectile.tscn"
+Apply = SubResource("apply_1")
+LifetimeSeconds = 2.0
+MaxHits = 1
+Speed = 520
+Range = 520
+HitboxLength = 46
+HitboxWidth = 14
+VisualHeight = 10.0
+MaxPenetrations = 1
+
+[resource]
+script = ExtResource("action")
+DisplayName = "23 Linear effect"
+Effect = SubResource("linear_3")

@@ -1,5 +1,6 @@
 using Godot;
 using Godot.Collections;
+using MobArena.Scenes.Components.UI;
 using MobArena.Scripts.Resources;
 
 namespace MobArena.Scripts;
@@ -28,6 +29,14 @@ public partial class LocalInputConfig : Node
 	public bool HasTouchPlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Touch);
 	public bool CanJoin => ControllerSetups.Count < MaxLocalPlayers;
 
+	public override void _Ready()
+	{
+		XboxAIcon ??= InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Gamepad);
+		MouseIcon ??= InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Mouse);
+		EnterIcon ??= InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Keyboard);
+		PhoneIcon ??= InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Touch);
+	}
+
 	public static LocalInputConfig Get()
 	{
 		var sceneTree = Engine.GetMainLoop() as SceneTree;
@@ -49,7 +58,7 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasGamepadPlayer(deviceId))
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, deviceId, XboxAIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Gamepad, deviceId, XboxAIcon, playerId: GetNextPlayerId()));
 		return true;
 	}
 
@@ -58,7 +67,7 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasKeyboardPlayer)
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, EnterIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, EnterIcon, playerId: GetNextPlayerId()));
 		return true;
 	}
 
@@ -67,7 +76,7 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasMousePlayer)
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Mouse, -1, MouseIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Mouse, -1, MouseIcon, playerId: GetNextPlayerId()));
 		return true;
 	}
 
@@ -76,8 +85,13 @@ public partial class LocalInputConfig : Node
 		if (!CanJoin || HasTouchPlayer)
 			return false;
 
-		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Touch, -1, PhoneIcon));
+		ControllerSetups.Add(LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Touch, -1, PhoneIcon, playerId: GetNextPlayerId()));
 		return true;
+	}
+
+	private int GetNextPlayerId()
+	{
+		return ControllerSetups.Count + 1;
 	}
 
 	public bool HasGamepadPlayer()

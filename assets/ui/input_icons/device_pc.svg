@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>PC device icon</title>
+  <rect x="18" y="18" width="92" height="58" rx="8" fill="#1F2937" stroke="#E8EDF2" stroke-width="7"/>
+  <rect x="28" y="28" width="72" height="38" rx="3" fill="#334155"/>
+  <path d="M50 82h28l5 16H45z" fill="#1F2937" stroke="#E8EDF2" stroke-width="6" stroke-linejoin="round"/>
+  <rect x="28" y="99" width="72" height="11" rx="5" fill="#1F2937" stroke="#E8EDF2" stroke-width="6"/>
+  <rect x="32" y="86" width="28" height="7" rx="3" fill="#E8EDF2"/>
+  <rect x="66" y="86" width="8" height="7" rx="3" fill="#E8EDF2"/>
+  <path d="M92 83c9 3 15 11 15 20v5H84v-5c0-9 3-17 8-20z" fill="#1F2937" stroke="#E8EDF2" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M96 87v12" stroke="#E8EDF2" stroke-width="4" stroke-linecap="round"/>
+</svg>

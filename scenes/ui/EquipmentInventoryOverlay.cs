@@ -39,7 +39,7 @@ public partial class EquipmentInventoryOverlay : Control
     private void RefreshUi()
     {
         _runData.EnsureResources();
-        _summaryLabel.Text = $"Unequipped items: {_runData.Inventory.Count}";
+        _summaryLabel.Text = $"Items: {_runData.Inventory.Count}";
 
         foreach (var child in _itemGrid.GetChildren())
             child.QueueFree();

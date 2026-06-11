@@ -3,8 +3,8 @@
 [ext_resource type="PackedScene" path="res://scenes/components/panels/BuildingOverlayPanel.tscn" id="1_panel"]
 [ext_resource type="Texture2D" path="res://assets/town/icons/healer_icon.svg" id="2_icon"]
 
-[node name="ThermaeOverlay" instance=ExtResource("1_panel")]
-Title = "Thermae"
+[node name="RecoveryBayOverlay" instance=ExtResource("1_panel")]
+Title = "Recovery Bay"
 Body = "Pay for Roman bathhouse care. Health care restores recoverable health, while exhaustion recovery improves condition faster. Stamina recovery remains time-based and is not treated here."
 IconTexture = ExtResource("2_icon")
 ShowAssignedGladiators = true

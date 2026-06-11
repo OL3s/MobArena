@@ -21,6 +21,7 @@ public partial class MainMenu : Control
 	public override void _Ready()
 	{
 		_saveNode = SaveNode.Get();
+		_saveNode.Load();
 		_companyLogo = GetNode<CompanyLogo>("MenuRow/Shield");
 		_createCompanyButton = GetNode<Button>("MenuRow/CreateCompanyButton");
 		_enterTownButton = GetNode<Button>("MenuRow/Content/EnterTownButton");
@@ -53,6 +54,7 @@ public partial class MainMenu : Control
 		if (_saveNode is not { HasCompany: true })
 			return;
 
+		SceneTransitionLogger.LogChange(GetTree(), TownScene, "enter town");
 		GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, TownScene);
 	}
 
@@ -105,10 +107,14 @@ public partial class MainMenu : Control
 
 	private void OnCodexPressed()
 	{
+		GameLogger.UI("MainMenu: Opening codex overlay.");
 		var globalOverlay = GlobalOverlay.Get();
 		var codexScene = ResourceLoader.Load<PackedScene>(CodexOverlayScenePath);
 		if (globalOverlay == null || codexScene == null)
+		{
+			GD.PushError($"MainMenu: Failed to open codex overlay. GlobalOverlay null: {globalOverlay == null}, scene null: {codexScene == null}.");
 			return;
+		}
 
 		globalOverlay.AddOverlay(codexScene.Instantiate<CodexOverlay>());
 	}

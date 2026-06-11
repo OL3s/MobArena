@@ -7,19 +7,25 @@
 [ext_resource type="Texture2D" path="res://assets/ui/items/wooden_hammer_held.svg" id="5_held"]
 [ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="6_action"]
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="7_melee_effect"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="8_apply"]
 
 [sub_resource type="Resource" id="Resource_wooden_hammer_crush"]
 script = ExtResource("4_damage_entry")
 Type = 2
-Damage = 16
+Damage = 160
 
 [sub_resource type="Resource" id="Resource_wooden_hammer_damage"]
 script = ExtResource("3_damage")
 Entries = Array[ExtResource("4_damage_entry")]([SubResource("Resource_wooden_hammer_crush")])
 
+[sub_resource type="Resource" id="Resource_wooden_hammer_apply"]
+script = ExtResource("8_apply")
+ForceStrength = 220.0
+
 [sub_resource type="Resource" id="Resource_wooden_hammer_melee_effect"]
 script = ExtResource("7_melee_effect")
 ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
+Apply = SubResource("Resource_wooden_hammer_apply")
 LifetimeSeconds = 0.2
 MaxHits = 2
 HitboxRadius = 38.0
@@ -30,8 +36,8 @@ ForwardOffset = 10.0
 script = ExtResource("6_action")
 DisplayName = "Hammer Swing"
 Effect = SubResource("Resource_wooden_hammer_melee_effect")
-CooldownSeconds = 0.9
 WindupSeconds = 0.12
+StaminaCost = 40
 SpawnDistance = 38.0
 
 [resource]
@@ -40,10 +46,15 @@ IsTwoHanded = true
 Damage = SubResource("Resource_wooden_hammer_damage")
 MainAction = SubResource("Resource_wooden_hammer_main_action")
 DisplayName = "Wooden Hammer"
-Description = "A heavy two-handed practice hammer."
+Description = "A heavy wooden hammer."
 UiIcon = ExtResource("2_icon")
+TypeTag = 5
+StrengthTag = 2
 HeldTexture = ExtResource("5_held")
 HeldDisplayHeight = 88.0
 HeldRotationDegrees = 10.0
 HeldTextureOffset = Vector2(-14, -66)
+Weight = 4
 Cost = 16
+MaxDurability = 100
+Durability = 100

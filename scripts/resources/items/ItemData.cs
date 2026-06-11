@@ -3,6 +3,41 @@ using System.Collections.Generic;
 
 namespace MobArena.Scripts.Resources.Items;
 
+public enum ItemTypeTag
+{
+    Other,
+    Sword,
+    Greatsword,
+    Spear,
+    Hammer,
+    Greathammer,
+    Axe,
+    Greataxe,
+    Bow,
+    Crossbow,
+    Dagger,
+    Shield,
+    Armor,
+    Honing,
+    Poison
+}
+
+public enum ItemStrengthTag
+{
+    Other,
+    Training,
+    Wood,
+    Bronze,
+    Iron,
+    Black,
+    Weak,
+    Standard,
+    Strong,
+    Light,
+    Medium,
+    Heavy
+}
+
 [GlobalClass]
 public abstract partial class ItemData : Resource
 {
@@ -18,48 +53,23 @@ public abstract partial class ItemData : Resource
     public Texture2D UiIcon { get; private set; }
 
     [Export]
-    public Texture2D HeldTexture { get; private set; }
+    public ItemTypeTag TypeTag { get; private set; } = ItemTypeTag.Other;
 
     [Export]
-    public float HeldDisplayHeight { get; private set; } = 48f;
-
-    [Export]
-    public float HeldRotationDegrees { get; private set; }
-
-    [Export]
-    public Vector2 HeldTextureOffset { get; private set; } = Vector2.Zero;
+    public ItemStrengthTag StrengthTag { get; private set; } = ItemStrengthTag.Other;
 
     [Export]
     public int Cost { get; private set; } = 1;
 
-    [Export(PropertyHint.Range, "0,1,0.01")]
-    public float Condition { get; private set; } = 1f;
+    [Export]
+    public int MaxDurability { get; private set; } = 100;
 
-    public Texture2D GetHeldTexture()
-    {
-        return HeldTexture ?? UiIcon;
-    }
+    [Export]
+    public int Durability { get; private set; } = 100;
 
-    public float GetHeldDisplayHeight(float fallbackDisplayHeight = 48f)
+    public float GetCondition()
     {
-        return HeldDisplayHeight > 0f ? HeldDisplayHeight : fallbackDisplayHeight;
-    }
-
-    public float GetHeldRotationDegrees()
-    {
-        return HeldRotationDegrees;
-    }
-
-    public Vector2 GetHeldTextureOffset()
-    {
-        return HeldTextureOffset;
-    }
-
-    public void SetHeldVisualTuning(float displayHeight, float rotationDegrees, Vector2 textureOffset)
-    {
-        HeldDisplayHeight = Mathf.Max(1f, displayHeight);
-        HeldRotationDegrees = rotationDegrees;
-        HeldTextureOffset = textureOffset;
+        return MaxDurability <= 0 ? 0f : Mathf.Clamp((float)Durability / MaxDurability, 0f, 1f);
     }
 
     public T CreateRuntimeCopy<T>() where T : ItemData

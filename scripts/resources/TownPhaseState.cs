@@ -34,7 +34,7 @@ public partial class TownPhaseState : Resource
 
     public string GetChampionLabel()
     {
-        return IsChampionDay ? "Champion Day!" : $"Champion in {DaysUntilChampion} days";
+        return IsChampionDay ? "Champion Day is today!" : $"Champion in {DaysUntilChampion} days";
     }
 
     public string GetDayLabel()
@@ -73,7 +73,7 @@ public partial class TownPhaseState : Resource
             return;
 
         CurrentPhase = DayPhase.Night;
-        GD.Print($"TownPhaseState: Moved to night on day {CurrentDay}.");
+        GameLogger.State($"TownPhaseState: Moved to night on day {CurrentDay}.");
         EmitSignal(SignalName.PhaseChanged);
     }
 
@@ -81,7 +81,7 @@ public partial class TownPhaseState : Resource
     {
         CurrentDay++;
         CurrentPhase = DayPhase.Day;
-        GD.Print($"TownPhaseState: Moved to day {CurrentDay}.");
+        GameLogger.State($"TownPhaseState: Moved to day {CurrentDay}.");
         EmitSignal(SignalName.PhaseChanged);
     }
 }

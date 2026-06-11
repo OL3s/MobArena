@@ -1,4 +1,5 @@
 using Godot;
+using MobArena.Scripts.Resources.Combat.Effects;
 using MobArena.Scripts.Resources.Items;
 
 namespace MobArena.Scripts.Resources.Mobs;
@@ -10,10 +11,13 @@ public partial class EnemyMobData : MobData
     public MobFamily Family { get; private set; } = MobFamily.Slimes;
 
     [Export]
-    public int MaxHealth { get; private set; } = 10;
+    public int MaxHealth { get; private set; } = 100;
 
     [Export]
     public ArmorData ArmorProfile { get; private set; }
+
+    [Export]
+    public CombatantStatusProfileData StatusProfile { get; private set; }
 
     [Export]
     public int FameValue { get; private set; } = 1;

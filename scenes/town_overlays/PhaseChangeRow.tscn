@@ -1,0 +1,44 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/town_overlays/PhaseChangeRow.cs" id="1_script"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="2_body_font"]
+
+[node name="PhaseChangeRow" type="PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="Row" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Portrait" type="TextureRect" parent="MarginContainer/Row"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="MarginContainer/Row"]
+custom_minimum_size = Vector2(115, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_body_font")
+theme_override_font_sizes/font_size = 18
+text = "Gladiator"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="DetailLabel" type="Label" parent="MarginContainer/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_body_font")
+theme_override_font_sizes/font_size = 18
+vertical_alignment = 1
+autowrap_mode = 3

@@ -15,6 +15,9 @@ public partial class ArenaControlAssignmentData : Resource
     [Export]
     public int DeviceId { get; set; } = -1;
 
+    [Export]
+    public int PlayerId { get; set; } = -1;
+
     public ControllerIdentity ControllerKey => GetControllerKey(ControllerKind, DeviceId);
     public string DisplayName => LocalInputControllerConfig.GetDisplayName(ControllerKind, DeviceId);
 
@@ -29,7 +32,8 @@ public partial class ArenaControlAssignmentData : Resource
         {
             Gladiator = gladiator,
             ControllerKind = controllerSetup?.Kind ?? LocalInputControllerConfig.ControllerKind.Keyboard,
-            DeviceId = controllerSetup?.DeviceId ?? -1
+            DeviceId = controllerSetup?.DeviceId ?? -1,
+            PlayerId = controllerSetup?.PlayerId ?? -1
         };
     }
 

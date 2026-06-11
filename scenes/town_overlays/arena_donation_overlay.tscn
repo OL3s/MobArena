@@ -62,7 +62,7 @@ horizontal_alignment = 1
 
 [node name="Description" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
-text = "Sponsor the arena to gain fame faster. Each fame point costs more as your company becomes better known."
+text = "Sponsor the arena to gain fame faster. Fame has a fixed gold price."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -112,7 +112,7 @@ theme_override_constants/separation = 12
 [node name="CostLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/DonateFiveRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Cost: 150 gold"
+text = "Cost: 100 gold"
 vertical_alignment = 1
 
 [node name="DonateButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/DonateFiveRow"]

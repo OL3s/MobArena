@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="ArenaCombatActionData" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="apply"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="damage_entry"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackAreaOfEffectData.cs" id="aoe"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="action"]
+
+[sub_resource type="Resource" id="entry_2"]
+script = ExtResource("damage_entry")
+Damage = 7
+
+[sub_resource type="Resource" id="damage_3"]
+script = ExtResource("damage")
+Entries = Array[ExtResource("damage_entry")]([SubResource("entry_2")])
+
+[sub_resource type="Resource" id="apply_1"]
+script = ExtResource("apply")
+UseSourceItemDamage = false
+Damage = SubResource("damage_3")
+
+[sub_resource type="Resource" id="aoe_4"]
+script = ExtResource("aoe")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaAttackAreaOfEffect.tscn"
+Apply = SubResource("apply_1")
+LifetimeSeconds = 3
+MaxHits = 100
+Radius = 72
+TickSeconds = 0.5
+UnlimitedHits = true
+
+[resource]
+script = ExtResource("action")
+DisplayName = "09 AOE damage"
+Effect = SubResource("aoe_4")

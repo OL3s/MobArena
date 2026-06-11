@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Keyboard and mouse device icon</title>
+  <rect x="12" y="44" width="70" height="44" rx="8" fill="#1F2937" stroke="#E8EDF2" stroke-width="6"/>
+  <rect x="22" y="55" width="8" height="7" rx="2" fill="#E8EDF2"/>
+  <rect x="34" y="55" width="8" height="7" rx="2" fill="#E8EDF2"/>
+  <rect x="46" y="55" width="8" height="7" rx="2" fill="#E8EDF2"/>
+  <rect x="58" y="55" width="8" height="7" rx="2" fill="#E8EDF2"/>
+  <rect x="22" y="68" width="8" height="7" rx="2" fill="#E8EDF2"/>
+  <rect x="34" y="68" width="8" height="7" rx="2" fill="#E8EDF2"/>
+  <rect x="46" y="68" width="8" height="7" rx="2" fill="#E8EDF2"/>
+  <rect x="58" y="68" width="8" height="7" rx="2" fill="#E8EDF2"/>
+  <rect x="22" y="80" width="44" height="5" rx="2" fill="#94A3B8"/>
+  <path d="M93 28c13 0 23 11 23 25v26c0 14-10 25-23 25S70 93 70 79V53c0-14 10-25 23-25z" fill="#1F2937" stroke="#E8EDF2" stroke-width="7"/>
+  <path d="M93 32v25" stroke="#E8EDF2" stroke-width="5" stroke-linecap="round"/>
+  <path d="M82 53h22" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+</svg>

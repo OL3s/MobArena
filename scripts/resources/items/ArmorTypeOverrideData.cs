@@ -1,4 +1,5 @@
 using Godot;
+using MobArena.Scripts.Resources.Combat;
 
 namespace MobArena.Scripts.Resources.Items;
 
@@ -6,7 +7,7 @@ namespace MobArena.Scripts.Resources.Items;
 public partial class ArmorTypeOverrideData : Resource
 {
     [Export]
-    public ArmorDamageType Type { get; private set; } = ArmorDamageType.Slash;
+    public CombatDamageType Type { get; private set; } = CombatDamageType.Slash;
 
     [Export]
     public int Value { get; private set; }

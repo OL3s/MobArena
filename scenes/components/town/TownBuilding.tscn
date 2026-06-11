@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scenes/components/town/TownBuilding.cs" id="1_townbuilding"]
 [ext_resource type="Texture2D" path="res://assets/town/building.svg" id="2_building"]
@@ -7,6 +7,9 @@
 [ext_resource type="Texture2D" path="res://assets/town/icons/roster_icon.svg" id="5_roster"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/exhaustion.svg" id="6_exhaustion"]
 [ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/health.svg" id="7_health"]
+[ext_resource type="PackedScene" path="res://scenes/components/town/TownBuildingWarningIcon.tscn" id="8_warning_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/critical_risk.svg" id="9_critical_risk"]
+[ext_resource type="Texture2D" path="res://assets/ui/gladiator_icons/idle.svg" id="10_idle"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_interaction"]
 size = Vector2(150, 150)
@@ -37,6 +40,11 @@ corner_radius_bottom_left = 12
 
 [node name="TownBuilding" type="Node2D"]
 script = ExtResource("1_townbuilding")
+WarningIconScene = ExtResource("8_warning_icon")
+IdleWarningIcon = ExtResource("10_idle")
+ExhaustionWarningIcon = ExtResource("6_exhaustion")
+HealthWarningIcon = ExtResource("7_health")
+CriticalRiskWarningIcon = ExtResource("9_critical_risk")
 
 [node name="Visuals" type="Node2D" parent="."]
 

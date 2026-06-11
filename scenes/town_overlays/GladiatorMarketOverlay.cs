@@ -7,7 +7,7 @@ namespace MobArena.Scenes.TownOverlays;
 
 public partial class GladiatorMarketOverlay : Control
 {
-    private const string GladiatorCardScenePath = "res://scenes/components/ui/GladiatorCard.tscn";
+    private const string GladiatorMarketCardScenePath = "res://scenes/town_overlays/GladiatorMarketCard.tscn";
     private const string GoldIconPath = "res://assets/ui/icons/gold.svg";
 
     private SaveNode _saveNode;
@@ -15,7 +15,7 @@ public partial class GladiatorMarketOverlay : Control
     private Label _goldLabel;
     private Label _feedbackLabel;
     private HBoxContainer _gladiatorRow;
-    private PackedScene _gladiatorCardScene;
+    private PackedScene _gladiatorMarketCardScene;
     private Texture2D _goldIcon;
 
     public override void _Ready()
@@ -23,11 +23,12 @@ public partial class GladiatorMarketOverlay : Control
         _saveNode = SaveNode.Get();
         _runData = _saveNode.CompanyRunData;
         _runData.EnsureResources();
+        _runData.EnsureFirstContractMarketReadiness(_saveNode.CompanyCareerData);
 
         _goldLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/Header/GoldLabel");
         _feedbackLabel = GetNode<Label>("CenterContainer/Panel/MarginContainer/Layout/FeedbackLabel");
         _gladiatorRow = GetNode<HBoxContainer>("CenterContainer/Panel/MarginContainer/Layout/ScrollContainer/GladiatorRow");
-        _gladiatorCardScene = ResourceLoader.Load<PackedScene>(GladiatorCardScenePath);
+        _gladiatorMarketCardScene = ResourceLoader.Load<PackedScene>(GladiatorMarketCardScenePath);
         _goldIcon = ResourceLoader.Load<Texture2D>(GoldIconPath);
 
         GetNode<Button>("CenterContainer/Panel/MarginContainer/Layout/CloseButton").Pressed += QueueFree;
@@ -44,6 +45,7 @@ public partial class GladiatorMarketOverlay : Control
     private void RefreshUi()
     {
         _runData.EnsureResources();
+        _runData.EnsureFirstContractMarketReadiness(_saveNode.CompanyCareerData);
         _goldLabel.Text = _runData.Gold.ToString();
 
         foreach (var child in _gladiatorRow.GetChildren())
@@ -62,46 +64,16 @@ public partial class GladiatorMarketOverlay : Control
     private Control CreateRecruitCard(GladiatorData gladiator)
     {
         var price = gladiator.GetMarketValue();
-        var container = new VBoxContainer
+        var card = _gladiatorMarketCardScene?.Instantiate<GladiatorMarketCard>();
+        if (card == null)
         {
-            CustomMinimumSize = new Vector2(210, 0)
-        };
-        container.AddThemeConstantOverride("separation", 6);
+            GD.PushError("Gladiator market card scene is missing or has the wrong root script.");
+            return new Control();
+        }
 
-        var card = _gladiatorCardScene.Instantiate<GladiatorCard>();
-        container.AddChild(card);
-        card.Configure(gladiator);
-
-        var actionRow = new HBoxContainer
-        {
-            Alignment = BoxContainer.AlignmentMode.Center
-        };
-        actionRow.AddThemeConstantOverride("separation", 10);
-        actionRow.AddChild(new TextureRect
-        {
-            Texture = _goldIcon,
-            CustomMinimumSize = new Vector2(20, 20),
-            ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-        });
-        actionRow.AddChild(new Label
-        {
-            Text = price.ToString(),
-            VerticalAlignment = VerticalAlignment.Center
-        });
-
-        var hireButton = new Button
-        {
-            Text = "Hire",
-            CustomMinimumSize = new Vector2(160, 48),
-            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
-            Disabled = _runData.Gold < price || !_runData.CanAddGladiator()
-        };
-        hireButton.Pressed += () => OnHirePressed(gladiator);
-        actionRow.AddChild(hireButton);
-        container.AddChild(actionRow);
-
-        return container;
+        card.Configure(gladiator, _goldIcon, price, _runData.Gold >= price && _runData.CanAddGladiator());
+        card.HirePressed += OnHirePressed;
+        return card;
     }
 
     private void OnHirePressed(GladiatorData gladiator)

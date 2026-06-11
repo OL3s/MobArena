@@ -17,6 +17,12 @@ public partial class NextDaySummaryOverlay : Control
     private Action _nextDayAction;
     private Texture2D _goldIcon;
 
+    [Export]
+    public PackedScene CostRowScene { get; set; }
+
+    [Export]
+    public PackedScene ChangeRowScene { get; set; }
+
     public void Configure(Action nextDayAction)
     {
         _nextDayAction = nextDayAction;
@@ -52,16 +58,23 @@ public partial class NextDaySummaryOverlay : Control
             child.QueueFree();
 
         var currentGold = _runData?.Gold ?? 0;
-		var cityCost = _runData?.GetCurrentPhaseGoldCost(_phaseState) ?? 0;
-		var nextGold = currentGold - cityCost;
-		_costLineLabel.Text = "City & Salary cost";
-		_nextDayButton.Disabled = _runData == null;
-		_nextDayButton.TooltipText = nextGold < 0 ? "Apply these changes and go into debt." : "Apply these changes and advance to the next day.";
+        var recoveryCost = _runData?.GetPhaseBuildingGoldCost(TownAssignmentData.AssignmentLocation.Healer) ?? 0;
+        var trainingCost = _runData?.GetPhaseBuildingGoldCost(TownAssignmentData.AssignmentLocation.TrainingHall) ?? 0;
+        var salaryCost = _runData?.GetCurrentPhaseSalaryGoldCost(_phaseState) ?? 0;
+        var cityCost = recoveryCost + trainingCost + salaryCost;
+        var nextGold = currentGold - cityCost;
+        _costLineLabel.Text = "City costs";
+        _nextDayButton.Disabled = _runData == null;
+        _nextDayButton.TooltipText = nextGold < 0 ? "Apply these costs and go into debt." : "Apply these costs and start the next day.";
 
-        if (cityCost > 0)
-            AddCostDetail("Total", FormatSignedGold(-cityCost), nextGold < 0);
-        else
-            AddCostDetail("Total", "0 gold", false);
+        if (recoveryCost > 0)
+            AddCostDetail("Recovery Bay", FormatSignedGold(-recoveryCost), false);
+        if (trainingCost > 0)
+            AddCostDetail("Training Hall", FormatSignedGold(-trainingCost), false);
+        if (salaryCost > 0)
+            AddCostDetail("Salaries", FormatSignedGold(-salaryCost), false);
+
+        AddCostDetail("Total", cityCost > 0 ? FormatSignedGold(-cityCost) : "0 gold", nextGold < 0);
     }
 
     private void RefreshChanges()
@@ -73,15 +86,7 @@ public partial class NextDaySummaryOverlay : Control
         addedAny |= AddTreatmentRows();
         addedAny |= AddTrainingRows();
 
-        if (!addedAny)
-        {
-            _changeList.AddChild(new Label
-            {
-                Text = "No Thermae or Training Hall changes queued.",
-                HorizontalAlignment = HorizontalAlignment.Center,
-                AutowrapMode = TextServer.AutowrapMode.WordSmart
-            });
-        }
+        _changeList.Visible = addedAny;
     }
 
     private bool AddTreatmentRows()
@@ -90,7 +95,7 @@ public partial class NextDaySummaryOverlay : Control
         if (gladiators == null || gladiators.Count <= 0)
             return false;
 
-        AddSectionHeader($"Thermae - {GetTreatmentFocusLabel()}");
+        AddSectionHeader($"Recovery Bay - {GetTreatmentFocusLabel()}");
         foreach (var gladiator in gladiators)
             AddAssignedGladiatorRow(gladiator, TownAssignmentData.AssignmentLocation.Healer);
 
@@ -119,57 +124,20 @@ public partial class NextDaySummaryOverlay : Control
         var detail = idle
             ? location == TownAssignmentData.AssignmentLocation.Healer ? "No treatment needed" : "Too exhausted to train"
             : string.Empty;
-        _changeList.AddChild(CreateGladiatorChangeRow(gladiator, detail, idle));
+        AddGladiatorChangeRow(gladiator, detail, idle);
     }
 
-    private Control CreateGladiatorChangeRow(GladiatorData gladiator, string detail, bool muted)
+    private void AddGladiatorChangeRow(GladiatorData gladiator, string detail, bool muted)
     {
-        var panel = new PanelContainer
+        var row = ChangeRowScene?.Instantiate<PhaseChangeRow>();
+        if (row == null)
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        if (muted)
-            panel.Modulate = new Color(0.72f, 0.72f, 0.72f, 1f);
+            GD.PushError("Phase change row scene is missing or has the wrong root script.");
+            return;
+        }
 
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 10);
-        margin.AddThemeConstantOverride("margin_top", 8);
-        margin.AddThemeConstantOverride("margin_right", 10);
-        margin.AddThemeConstantOverride("margin_bottom", 8);
-        panel.AddChild(margin);
-
-        var row = new HBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        row.AddThemeConstantOverride("separation", 8);
-        margin.AddChild(row);
-
-        row.AddChild(new TextureRect
-        {
-            CustomMinimumSize = new Vector2(38f, 38f),
-            Texture = gladiator.GetUiIconTexture(),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-        });
-
-        row.AddChild(new Label
-        {
-            CustomMinimumSize = new Vector2(115f, 0f),
-            Text = gladiator.GladiatorName,
-            VerticalAlignment = VerticalAlignment.Center,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart
-        });
-
-        row.AddChild(new Label
-        {
-            Text = detail,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            VerticalAlignment = VerticalAlignment.Center,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart
-        });
-
-        return panel;
+        row.Configure(gladiator, detail, muted);
+        _changeList.AddChild(row);
     }
 
     private void AddSectionHeader(string title)
@@ -184,38 +152,14 @@ public partial class NextDaySummaryOverlay : Control
 
     private void AddCostDetail(string label, string value, bool highlightRed)
     {
-        var row = new HBoxContainer
+        var row = CostRowScene?.Instantiate<PhaseCostRow>();
+        if (row == null)
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        row.AddThemeConstantOverride("separation", 8);
+            GD.PushError("Phase cost row scene is missing or has the wrong root script.");
+            return;
+        }
 
-        row.AddChild(new TextureRect
-        {
-            CustomMinimumSize = new Vector2(24f, 24f),
-            Texture = _goldIcon,
-            MouseFilter = MouseFilterEnum.Ignore,
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-        });
-
-        row.AddChild(new Label
-        {
-            Text = label,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            VerticalAlignment = VerticalAlignment.Center
-        });
-
-        var valueLabel = new Label
-        {
-            Text = value,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        if (highlightRed)
-            valueLabel.AddThemeColorOverride("font_color", new Color(1f, 0.28f, 0.22f));
-
-        row.AddChild(valueLabel);
+        row.Configure(_goldIcon, label, value, highlightRed);
         _costDetails.AddChild(row);
     }
 

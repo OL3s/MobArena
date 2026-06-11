@@ -1,111 +1,143 @@
 # Status Effects
 
-This document records the planned status effect structure for future arena combat work. Status effects are not implemented yet.
+This document records the current status effect structure for arena combat.
 
 ## Goal
 
-Status effects should use buildup instead of simple on/off flags. A weak hit can add some buildup without immediately applying a full effect, while repeated exposure can stack enough buildup to cross the active threshold.
+Status values use the same rough number scale as combat damage. `100` status value represents about `1.0` second of active effect. Values tick downward at `100` value per second.
 
-This keeps effects like poison, burn, bleed, freeze, and stun from triggering too easily from one small hit.
+Repeated weak attacks do not stack into a strong status. When an attack applies a status value, runtime state uses `max(currentValue, actualHitValue)` rather than addition. Each individual hit must be strong enough to matter.
 
-## Core Model
+## Runtime Model
 
-Each combatant should track a floating-point buildup value per status effect type.
+Each combatant tracks a floating-point value per status effect type.
 
 ```text
-Combatant status state
-  Poison: 0.0
-  Burn: 0.0
-  Bleed: 0.0
-  Freeze: 0.0
-  Stun: 0.0
+ArenaCombatState
+  Poison: current value
+  Stun: current value
 ```
-
-Each status value ticks downward over time. The effect only applies while the value is at or above that status effect's activation threshold.
 
 Example:
 
 ```text
-Poison threshold: 60.0
+Poison value from hit: 300
 
-Poison value 59.9 -> not poisoned
-Poison value 60.0 -> poisoned
-Poison value 72.5 -> poisoned
+Current poison value 0 -> set to 300
+Current poison value 200, new weak hit 80 -> stays 200
+Current poison value 200, new strong hit 450 -> set to 450
 ```
 
-This means poison sources can stack buildup over multiple hits. The target only counts as poisoned once enough poison has accumulated.
+`100` value is about one second, so `300` poison lasts about three seconds before profile caps and normal decay.
 
-## Basic Status Effects
+## Combatant Status Profile
 
-Start with a small core set.
+Status tuning lives on `CombatantStatusProfileData`.
 
-| Status | Example Threshold | Decay Direction | Active Effect |
-| --- | ---: | --- | --- |
-| Poison | `60.0` | Slow | Deals steady damage over time. |
-| Burn | `50.0` | Fast | Deals faster damage over time, but falls off quickly. |
-| Bleed | `50.0` | Medium | Deals physical damage over time, best for blades, claws, and piercing hits. |
-| Freeze | `70.0` | Medium/Fast | Briefly immobilizes or heavily slows the target after enough cold buildup. |
-| Stun | `80.0` | Fast | Briefly prevents movement and actions, then clears or heavily decays. |
+```text
+CombatantStatusProfileData
+  EffectDefenseProfile: EffectDefenseData
+  StatusRules: StatusEffectRulesData
+  ImmuneStatuses: StatusEffectType[]
+  StateStatusMultipliers: CombatantStateStatusMultiplierData[]
+```
 
-Avoid adding more status types until these basic categories work and feel different in combat.
+Enemies store this through `EnemyMobData.StatusProfile`. If a mob does not explicitly set one, `EnemyCombatant` falls back to `default_mob_status_profile.tres` or `default_champion_status_profile.tres` for `ChampionMobData`.
 
-## Armor And Resistance
+Players currently use `default_player_status_profile.tres`.
 
-Status buildup should interact with defense. Armor should not only reduce direct damage; it should also reduce or increase status buildup where the defense type makes sense.
+## Min, Max, And Immunity
 
-Current combat already has armor mitigation for direct damage through `ArmorData`, `CombatDamageData`, and `CombatDamageEntryData`. Future status buildup should follow the same general idea: apply defense before adding buildup to the target.
+`StatusEffectRulesData` uses the same base plus override structure as armor and effect defense.
+
+```text
+StatusEffectRulesData
+  BaseMinValue
+  MinValueOverrides[]
+  BaseMaxValue
+  MaxValueOverrides[]
+```
+
+Min means the stored status value is not behaviorally active unless `currentValue > minValue`. Below-min values can still be stored for UI/debug visibility, but they do not affect the enemy.
+
+Max means the stored status value is capped.
+
+Runtime application:
+
+```text
+rawValue = authored value or appliedDamage * multiplier
+stateScaledValue = rawValue * state/status multiplier
+defendedValue = effectDefense.Apply(stateScaledValue)
+
+if status is immune:
+  ignore
+else:
+  currentStatus = min(maxValue, max(currentStatus, defendedValue))
+  active = currentStatus > minValue
+```
 
 Example:
 
 ```text
-Incoming burn buildup: 30.0
-Defense type: Heat
-Target has strong heat armor
-Actual burn buildup added: reduced amount, for example 18.0
+Stun min = 25
+Stun max = 100
+
+Incoming stun after defense = 20 -> stored but inactive
+Incoming stun after defense = 80 -> stored and active
+Incoming stun after defense = 140 -> stored as capped 100 and active
 ```
 
-Negative armor or vulnerability should be able to increase buildup, matching the current direct-damage armor direction.
+## Effect Defense
 
-Suggested defense mappings:
-
-| Status | Suggested Defense |
-| --- | --- |
-| Poison | Future poison/toxin defense, or generic status resistance until that exists. |
-| Burn | Heat armor. |
-| Bleed | Slash or pierce armor, depending on the source hit. |
-| Freeze | Cold armor. |
-| Stun | Crush armor, or generic status resistance if the source does not fit crush. |
-
-Use existing armor damage types where they fit. Add new defense types only when there is a clear gameplay need.
-
-## Future Data Shape
-
-Possible authored status application data:
+Status values interact with `EffectDefenseData`. Positive effect defense reduces status value with the same non-linear shape as armor. Zero defense leaves it unchanged. Negative defense is vulnerability and increases the value.
 
 ```text
-StatusEffectApplication
-  EffectType
-  BuildupAmount
-  DefenseType
+EffectDefenseData
+  BaseValue
+  EffectDefenseTypeOverrideData[]
 ```
 
-Possible runtime status state:
+Effect defense handles status values such as Poison and Stun. Damage immunity is handled separately by `ArmorData.ImmuneTypes`.
+
+## Stun
+
+Stun is both a status value and a combatant state. While active, it sets `ArenaCombatantState.Stunned` and prevents movement/actions.
+
+Stun usually derives from applied damage:
 
 ```text
-StatusEffectState
-  EffectType
-  CurrentValue
-  ActivationThreshold
-  DecayPerSecond
-  TickInterval
-  TickDamage
+rawStunValue = appliedDamage * AppliedDamageMultiplier
 ```
 
-Not every status needs every field. For example, stun may not need tick damage, while poison and burn do.
+With the new scale, the default multiplier should generally be `1`, so `100` applied damage can represent about one second of stun before defense, state multipliers, min threshold, and cap.
+
+Do not treat Stun as a normal coating or generic status add-on. Stun is an impact/control result and should usually come from applied damage, force, weapon impact, or an explicitly authored stun attack. Only special stun fantasies such as a stun bomb, shock oil, or concussive plating should author direct Stun values.
+
+Windup stun vulnerability is data-driven through `CombatantStateStatusMultiplierData`:
+
+```text
+State = Windup
+Type = Stun
+Multiplier = 2.0
+```
+
+Champions resist stun through their champion status profile: higher effect defense, higher stun min, lower stun max, or weaker windup multiplier.
+
+## Poison
+
+Poison is the normal authored status example.
+
+```text
+StatusEffectApplicationData
+  Type = Poison
+  Value = 300
+  UseAppliedDamage = false
+```
+
+Poison currently ticks `100` raw damage per second while active, matching the updated health/damage scale.
 
 ## Open Design Notes
 
-- Decide whether poison gets its own defense type or uses generic status resistance first.
-- Decide whether freeze is a full immobilize or a very heavy slow.
-- Decide whether stun clears immediately after triggering or decays sharply below its threshold.
-- Keep status buildup separate from direct damage so an attack can deal damage, add status buildup, or do both.
+- Decide whether freeze should be a full immobilize or a heavy slow when added.
+- Decide if future statuses need active thresholds separate from application min.
+- Keep status buildup separate from direct damage so an attack can deal damage, add status value, or do both.

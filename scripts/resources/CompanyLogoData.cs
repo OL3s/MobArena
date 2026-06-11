@@ -5,6 +5,9 @@ namespace MobArena.Scripts.Resources;
 
 public partial class CompanyLogoData : Resource
 {
+    public const int MaxCompanyNameLength = 32;
+    public const string DefaultCompanyName = "The Bronze Lions";
+
     public enum CompanyShieldColor
     {
         Red,
@@ -72,7 +75,7 @@ public partial class CompanyLogoData : Resource
     public CompanyLogoSize LogoSize { get; private set; } = CompanyLogoSize.Medium;
 
     [Export]
-    public string CompanyName { get; private set; } = "The Bronze Lions";
+    public string CompanyName { get; private set; } = DefaultCompanyName;
 
     public static CompanyLogoData CreateDefault()
     {
@@ -178,10 +181,32 @@ public partial class CompanyLogoData : Resource
 
     public void SetCompanyName(string companyName)
     {
-        CompanyName = string.IsNullOrWhiteSpace(companyName)
-            ? "The Bronze Lions"
-            : companyName.Trim();
+        if (!TrySetCompanyName(companyName, out var errorMessage))
+        {
+            GD.PushError(errorMessage);
+            return;
+        }
+
         EmitSignal(SignalName.LogoChanged);
+    }
+
+    public bool TrySetCompanyName(string companyName, out string errorMessage)
+    {
+        var normalizedName = NormalizeCompanyName(companyName);
+        if (normalizedName.Length > MaxCompanyNameLength)
+        {
+            errorMessage = $"Company name must be {MaxCompanyNameLength} characters or fewer.";
+            return false;
+        }
+
+        CompanyName = normalizedName;
+        errorMessage = string.Empty;
+        return true;
+    }
+
+    public static bool IsCompanyNameLengthValid(string companyName)
+    {
+        return NormalizeCompanyName(companyName).Length <= MaxCompanyNameLength;
     }
 
     public void RandomizeName()
@@ -197,6 +222,15 @@ public partial class CompanyLogoData : Resource
         SetShieldColor(GetShieldColorAt(rng.RandiRange(0, GetShieldColorCount() - 1)));
         SetLogoSize((CompanyLogoSize)NormalizeIndex(rng.RandiRange(0, GetLogoSizeCount() - 1), GetLogoSizeCount()));
         SetCompanyName(CompanyNameGenerator.CreateRandomName(rng));
+    }
+
+    public void RandomizeVisuals()
+    {
+        var rng = CreateRandomNumberGenerator();
+        SetShieldIndex(rng.RandiRange(0, GetShieldCount() - 1));
+        SetLogoIndex(rng.RandiRange(0, GetLogoCount() - 1));
+        SetShieldColor(GetShieldColorAt(rng.RandiRange(0, GetShieldColorCount() - 1)));
+        SetLogoSize((CompanyLogoSize)NormalizeIndex(rng.RandiRange(0, GetLogoSizeCount() - 1), GetLogoSizeCount()));
     }
 
     public CompanyLogoData CreateCopy()
@@ -219,10 +253,15 @@ public partial class CompanyLogoData : Resource
         SetLogoIndex(other.GetNormalizedLogoIndex());
         ShieldColor = GetShieldColorAt((int)other.ShieldColor);
         LogoSize = (CompanyLogoSize)NormalizeIndex((int)other.LogoSize, LogoSizeNames.Length);
-        CompanyName = string.IsNullOrWhiteSpace(other.CompanyName)
-            ? "The Bronze Lions"
-            : other.CompanyName.Trim();
+        CompanyName = NormalizeCompanyName(other.CompanyName);
         EmitSignal(SignalName.LogoChanged);
+    }
+
+    private static string NormalizeCompanyName(string companyName)
+    {
+        return string.IsNullOrWhiteSpace(companyName)
+            ? DefaultCompanyName
+            : companyName.Trim();
     }
 
     public void ApplyTo(TextureRect shield, TextureRect logo)

@@ -5,6 +5,8 @@ namespace MobArena.Scenes.Components.UI;
 
 public partial class AttributeProgressDisplay : Control
 {
+    private static readonly Color PreviewGainColor = new(0.22f, 0.82f, 0.28f, 0.9f);
+
     private Control _fill;
     private Control _gain;
     private Label _label;
@@ -13,6 +15,7 @@ public partial class AttributeProgressDisplay : Control
     private int _pendingLevel;
     private float _pendingProgress;
     private float _pendingGainProgress;
+    private bool _pendingHighlightLabel;
     private bool _hasPendingConfigure;
 
     public override void _Ready()
@@ -38,12 +41,18 @@ public partial class AttributeProgressDisplay : Control
 
     public void Configure(string attributeName, int level, float progress, float gainProgress)
     {
+        Configure(attributeName, level, progress, gainProgress, false);
+    }
+
+    public void Configure(string attributeName, int level, float progress, float gainProgress, bool highlightLabel)
+    {
         if (!IsNodeReady())
         {
             _pendingAttributeName = attributeName;
             _pendingLevel = level;
             _pendingProgress = progress;
             _pendingGainProgress = gainProgress;
+            _pendingHighlightLabel = highlightLabel;
             _hasPendingConfigure = true;
             return;
         }
@@ -58,6 +67,10 @@ public partial class AttributeProgressDisplay : Control
         _gain.AnchorRight = progress + gainProgress;
         _gain.OffsetLeft = 0f;
         _gain.OffsetRight = 0f;
+        if (highlightLabel)
+            _label.AddThemeColorOverride("font_color", PreviewGainColor);
+        else
+            _label.RemoveThemeColorOverride("font_color");
         _hasPendingConfigure = false;
     }
 
@@ -80,17 +93,17 @@ public partial class AttributeProgressDisplay : Control
         if (!_hasPendingConfigure)
             return;
 
-        Configure(_pendingAttributeName, _pendingLevel, _pendingProgress, _pendingGainProgress);
+        Configure(_pendingAttributeName, _pendingLevel, _pendingProgress, _pendingGainProgress, _pendingHighlightLabel);
     }
 
     private static string GetAttributeAbbreviation(GladiatorLevelData.AttributeKind attributeKind)
     {
         return attributeKind switch
         {
-            GladiatorLevelData.AttributeKind.Agility => "Agi",
-            GladiatorLevelData.AttributeKind.Vitality => "Vit",
-            GladiatorLevelData.AttributeKind.Endurance => "End",
-            _ => "Str"
+            GladiatorLevelData.AttributeKind.Agility => "AGI",
+            GladiatorLevelData.AttributeKind.Vitality => "VIT",
+            GladiatorLevelData.AttributeKind.Endurance => "END",
+            _ => "STR"
         };
     }
 }

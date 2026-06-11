@@ -44,3 +44,13 @@ offset_bottom = 72.0
 theme_override_font_sizes/font_size = 11
 text = "HP"
 horizontal_alignment = 1
+
+[node name="StateLabel" type="Label" parent="."]
+visible = false
+offset_left = -78.0
+offset_top = 68.0
+offset_right = 78.0
+offset_bottom = 88.0
+theme_override_font_sizes/font_size = 10
+text = "Default"
+horizontal_alignment = 1

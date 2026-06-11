@@ -1,5 +1,6 @@
 using Godot;
 using MobArena.Scenes.Components.UI;
+using MobArena.Scenes.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Items;
@@ -13,6 +14,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
     private const float TownHeldDisplayScale = DisplayHeight / 96f;
     private const float DefaultHeldItemDisplayHeight = 48f;
     private const float RiskWarningThreshold = 5f;
+    private const string CoatingApplyOverlayScenePath = "res://scenes/ui/CoatingApplyOverlay.tscn";
     private static readonly Vector2 BodyLocalPosition = new(0f, -21f);
     private static readonly Vector2 LeftHandLocalPosition = new(-20f, -15f);
     private static readonly Vector2 RightHandLocalPosition = new(20f, -15f);
@@ -39,6 +41,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
     private Sprite2D _offHandItem;
     private Area2D _interactionArea;
     private Label _nameLabel;
+    private Label _totalLevelLabel;
     private HBoxContainer _riskWarnings;
     private TextureRect _exhaustionWarningIcon;
     private VBoxContainer _detailRows;
@@ -103,6 +106,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
         _offHandItem = GetNode<Sprite2D>("LeftHand/OffHandItem");
         _interactionArea = GetNode<Area2D>("InteractionArea");
         _nameLabel = GetNode<Label>("Name");
+        _totalLevelLabel = GetNode<Label>("TotalLevel");
         _riskWarnings = GetNode<HBoxContainer>("RiskWarnings");
         _exhaustionWarningIcon = GetNode<TextureRect>("RiskWarnings/ExhaustionIcon");
         _detailRows = GetNode<VBoxContainer>("Details");
@@ -166,6 +170,8 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
 
         if (_nameLabel != null)
             _nameLabel.Visible = !isDragPreview;
+        if (_totalLevelLabel != null)
+            _totalLevelLabel.Visible = !isDragPreview;
         if (_riskWarnings != null)
             _riskWarnings.Visible = false;
         if (_detailRows != null)
@@ -244,7 +250,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
             _offHandItem.RotationDegrees = equipment.OffHand.GetHeldRotationDegrees();
     }
 
-    private static void ApplyHeldVisual(Sprite2D sprite, ItemData item, Vector2 localPosition)
+    private static void ApplyHeldVisual(Sprite2D sprite, EquipmentItemData item, Vector2 localPosition)
     {
         ApplyLocalVisual(
             sprite,
@@ -328,6 +334,7 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
             return;
 
         _nameLabel.Text = _gladiatorData.GladiatorName;
+        _totalLevelLabel.Text = $"Level {_gladiatorData.Level?.TotalLevel ?? 4}";
         RefreshRiskWarnings();
         RefreshDetails();
         RefreshCompactStatus();
@@ -429,11 +436,14 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
     {
         if (payload.Kind == TownDragPayloadKind.Item)
         {
-            TryEquipDroppedItem(payload);
+            if (payload.Item is ItemCoatingData coating)
+                OpenCoatingApplyOverlay(coating);
+            else
+                TryEquipDroppedItem(payload);
             return;
         }
 
-        GD.Print(TownDragDropRules.FormatDropMessage(payload, "gladiator", DropTargetName));
+        GameLogger.UI(TownDragDropRules.FormatDropMessage(payload, "gladiator", DropTargetName));
     }
 
     public void SetTownDragDropPreview(TownDragPayload? payload, Vector2 viewportPosition)
@@ -506,8 +516,25 @@ public partial class RosterYardGladiator : Node2D, ITownDragDropTarget, ITownHov
             return;
         }
 
-        if (runData.TryEquipItemOnGladiator(_gladiatorData, payload.Item))
-            GD.Print($"Drop equip: equipped item '{payload.Item?.DisplayName ?? "null"}' on gladiator '{DropTargetName}'.");
+        if (payload.Item is EquipmentItemData equipmentItem && runData.TryEquipItemOnGladiator(_gladiatorData, equipmentItem))
+            GameLogger.UI($"Drop equip: equipped item '{payload.Item?.DisplayName ?? "null"}' on gladiator '{DropTargetName}'.");
+    }
+
+    private void OpenCoatingApplyOverlay(ItemCoatingData coating)
+    {
+        if (_gladiatorData == null || coating == null)
+            return;
+
+        var overlayScene = ResourceLoader.Load<PackedScene>(CoatingApplyOverlayScenePath);
+        var overlay = overlayScene?.Instantiate<CoatingApplyOverlay>();
+        if (overlay == null)
+        {
+            GD.PushError("Coating apply overlay scene is missing or has the wrong root script.");
+            return;
+        }
+
+        overlay.Configure(_gladiatorData, coating);
+        GlobalOverlay.Get()?.AddOverlay(overlay);
     }
 
     private TownHud GetTownHud()

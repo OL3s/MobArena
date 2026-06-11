@@ -1,0 +1,49 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/CompletedCompanyRecordButton.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/components/ui/CompanyLogo.tscn" id="2_companylogo"]
+
+[node name="CompletedCompanyRecordButton" type="Button"]
+custom_minimum_size = Vector2(260, 66)
+layout_mode = 2
+focus_mode = 2
+clip_contents = true
+script = ExtResource("1_script")
+
+[node name="Content" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Logo" parent="Content" instance=ExtResource("2_companylogo")]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Text" type="VBoxContainer" parent="Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="CompanyName" type="Label" parent="Content/Text"]
+layout_mode = 2
+mouse_filter = 2
+text = "Company"
+text_overrun_behavior = 3
+
+[node name="Fame" type="Label" parent="Content/Text"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 13
+text = "Fame 0"

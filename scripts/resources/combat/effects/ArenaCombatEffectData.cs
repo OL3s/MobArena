@@ -5,14 +5,21 @@ namespace MobArena.Scripts.Resources.Combat.Effects;
 [GlobalClass]
 public partial class ArenaCombatEffectData : Resource
 {
+	public virtual string AttackTypeLabel => "Effect";
+
+	public virtual string AttackTypeIconPath => "res://assets/ui/icons/question_mark.svg";
+
 	[Export(PropertyHint.File, "*.tscn")]
 	public string ScenePath { get; private set; } = string.Empty;
 
     [Export]
-    public CombatDamageData Damage { get; private set; }
+    public ArenaCombatApplyData Apply { get; private set; }
 
     [Export]
-    public bool UseSourceItemDamage { get; private set; } = true;
+    public ArenaCombatEffectData OnHitEffect { get; private set; }
+
+    [Export]
+    public ArenaCombatEffectData OnExpireEffect { get; private set; }
 
 	[Export(PropertyHint.File, "*.tscn")]
 	public string OnHitScenePath { get; private set; } = string.Empty;
@@ -39,4 +46,17 @@ public partial class ArenaCombatEffectData : Resource
 	{
 		return string.IsNullOrWhiteSpace(scenePath) ? null : ResourceLoader.Load<PackedScene>(scenePath);
 	}
+
+    public override string ToString()
+    {
+        var sceneLabel = string.IsNullOrWhiteSpace(ScenePath) ? "Scene=None" : ScenePath.GetFile().GetBaseName();
+        return $"{AttackTypeLabel}:{sceneLabel}";
+    }
+
+    public string ToStringExtended()
+    {
+        var sceneLabel = string.IsNullOrWhiteSpace(ScenePath) ? "Scene=None" : ScenePath.GetFile().GetBaseName();
+        var applyLabel = Apply == null ? "Apply=None" : Apply.ToStringExtended();
+        return $"{GetType().Name}[{sceneLabel}, Lifetime={LifetimeSeconds:0.##}, MaxHits={MaxHits}, MultiHit={CanHitSameTargetMultipleTimes}, {applyLabel}, OnHitEffect={OnHitEffect != null}, OnExpireEffect={OnExpireEffect != null}, OnHitScene={!string.IsNullOrWhiteSpace(OnHitScenePath)}, OnExpireScene={!string.IsNullOrWhiteSpace(OnExpireScenePath)}]";
+    }
 }

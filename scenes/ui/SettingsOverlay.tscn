@@ -87,6 +87,11 @@ custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Controls"
 
+[node name="DevButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Dev"
+
 [node name="SaveDataButton" type="Button" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/CategoryList"]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
@@ -109,17 +114,6 @@ horizontal_alignment = 1
 [node name="GameplaySettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
 layout_mode = 2
 theme_override_constants/separation = 14
-
-[node name="DebugCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
-layout_mode = 2
-text = "Enable debug mode"
-
-[node name="DebugHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("3_body_font")
-theme_override_font_sizes/font_size = 20
-text = "Temporary project-wide debug flag for development-only behavior."
-autowrap_mode = 3
 
 [node name="SkipTutorialCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/GameplaySettings"]
 layout_mode = 2
@@ -155,6 +149,44 @@ suffix = "%"
 layout_mode = 2
 text = "60%"
 vertical_alignment = 1
+
+[node name="DevSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="DevModeCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
+layout_mode = 2
+text = "Enable dev mode"
+
+[node name="DevModeHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_body_font")
+theme_override_font_sizes/font_size = 20
+text = "Temporary project-wide dev flag for development-only behavior."
+autowrap_mode = 3
+
+[node name="IsDemoCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
+layout_mode = 2
+text = "Demo mode"
+
+[node name="IsDemoHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_body_font")
+theme_override_font_sizes/font_size = 20
+text = "Ends the playable demo after the first champion win and blocks further arena starts for that company."
+autowrap_mode = 3
+
+[node name="ShowRuntimeTagsCheckBox" type="CheckBox" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
+layout_mode = 2
+text = "Show runtime tags"
+
+[node name="ShowRuntimeTagsHelp" type="Label" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent/DevSettings"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_body_font")
+theme_override_font_sizes/font_size = 20
+text = "Shows the top-right Demo, Dev, and debug-build tag overlay when those states are active."
+autowrap_mode = 3
 
 [node name="SaveDataSettings" type="VBoxContainer" parent="CenterContainer/PopupPanel/MarginContainer/Layout/Body/SettingsPanel/SettingsContent"]
 visible = false

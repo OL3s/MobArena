@@ -1,0 +1,73 @@
+[gd_resource type="Resource" script_class="OffHandItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/OffHandItemData.cs" id="1_off"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/iron_kite_shield.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_damage_entry"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="5_action"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="6_melee_effect"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="7_apply"]
+[ext_resource type="Script" path="res://scripts/resources/items/ItemRequirementData.cs" id="8_requirement"]
+[ext_resource type="Script" path="res://scripts/resources/items/ItemLevelMultiplierData.cs" id="9_multiplier"]
+
+[sub_resource type="Resource" id="Resource_iron_kite_shield_crush"]
+script = ExtResource("4_damage_entry")
+Type = 2
+Damage = 80
+
+[sub_resource type="Resource" id="Resource_iron_kite_shield_damage"]
+script = ExtResource("3_damage")
+Entries = Array[ExtResource("4_damage_entry")]([SubResource("Resource_iron_kite_shield_crush")])
+
+[sub_resource type="Resource" id="Resource_iron_kite_shield_apply"]
+script = ExtResource("7_apply")
+ForceStrength = 240.0
+
+[sub_resource type="Resource" id="Resource_iron_kite_shield_melee_effect"]
+script = ExtResource("6_melee_effect")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
+Apply = SubResource("Resource_iron_kite_shield_apply")
+LifetimeSeconds = 0.16
+MaxHits = 1
+HitboxRadius = 30.0
+ActiveSeconds = 0.11
+ForwardOffset = 7.0
+
+[sub_resource type="Resource" id="Resource_iron_kite_shield_main_action"]
+script = ExtResource("5_action")
+DisplayName = "Iron Shield Bash"
+Effect = SubResource("Resource_iron_kite_shield_melee_effect")
+WindupSeconds = 0.06
+StaminaCost = 26
+SpawnDistance = 30.0
+
+[sub_resource type="Resource" id="Resource_iron_kite_shield_requirement"]
+script = ExtResource("8_requirement")
+RequiredStrength = 3
+RequiredAgility = 1
+
+[sub_resource type="Resource" id="Resource_iron_kite_shield_multiplier"]
+script = ExtResource("9_multiplier")
+MultiplierPerLevel = 0.03
+StrengthInfluence = 0.85
+AgilityInfluence = 0.15
+MaxMultiplier = 1.75
+
+[resource]
+script = ExtResource("1_off")
+Damage = SubResource("Resource_iron_kite_shield_damage")
+MainAction = SubResource("Resource_iron_kite_shield_main_action")
+DisplayName = "Iron Kite Shield"
+Description = "A sturdy iron shield."
+UiIcon = ExtResource("2_icon")
+TypeTag = 11
+StrengthTag = 4
+HeldTexture = ExtResource("2_icon")
+HeldDisplayHeight = 74.0
+HeldTextureOffset = Vector2(-26, -34)
+Weight = 6
+Cost = 72
+MaxDurability = 100
+Durability = 100
+Requirements = SubResource("Resource_iron_kite_shield_requirement")
+LevelMultiplier = SubResource("Resource_iron_kite_shield_multiplier")

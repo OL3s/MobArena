@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="ArenaCombatActionData" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="apply"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="damage_entry"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="melee"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="action"]
+
+[sub_resource type="Resource" id="entry_2"]
+script = ExtResource("damage_entry")
+Damage = 15
+
+[sub_resource type="Resource" id="damage_3"]
+script = ExtResource("damage")
+Entries = Array[ExtResource("damage_entry")]([SubResource("entry_2")])
+
+[sub_resource type="Resource" id="apply_1"]
+script = ExtResource("apply")
+UseSourceItemDamage = false
+Damage = SubResource("damage_3")
+
+[sub_resource type="Resource" id="melee_4"]
+script = ExtResource("melee")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
+Apply = SubResource("apply_1")
+LifetimeSeconds = 0.28
+MaxHits = 9
+HitboxRadius = 34
+ActiveSeconds = 0.2
+ForwardOffset = 0.0
+
+[resource]
+script = ExtResource("action")
+DisplayName = "02 Melee damage"
+Effect = SubResource("melee_4")

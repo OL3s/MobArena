@@ -14,6 +14,8 @@ public partial class ArenaPlayerSpawner : Node2D
     [Export]
     public PackedScene PlayerScene { get; private set; }
 
+    public int SpawnedPlayerCount => _spawnedPlayers.Count;
+
     public void SpawnFromRunData(CompanyRunData runData)
     {
         ClearSpawned();
@@ -45,6 +47,15 @@ public partial class ArenaPlayerSpawner : Node2D
             combatant.Position = new Vector2(0f, startY + index * SpawnSpacing);
             AddChild(combatant);
             _spawnedPlayers.Add(combatant);
+        }
+    }
+
+    public IEnumerable<PlayerCombatant> GetSpawnedPlayerCombatants()
+    {
+        foreach (var player in _spawnedPlayers)
+        {
+            if (GodotObject.IsInstanceValid(player) && player is PlayerCombatant combatant)
+                yield return combatant;
         }
     }
 

@@ -1,7 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/town_overlays/NextDaySummaryOverlay.cs" id="1_script"]
 [ext_resource type="Shader" path="res://assets/shaders/PopupBlurBackdrop.gdshader" id="2_blur_shader"]
+[ext_resource type="PackedScene" path="res://scenes/town_overlays/PhaseCostRow.tscn" id="3_cost_row"]
+[ext_resource type="PackedScene" path="res://scenes/town_overlays/PhaseChangeRow.tscn" id="4_change_row"]
+[ext_resource type="Font" path="res://assets/fonts/ReadableBodyFont.tres" id="5_body_font"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_next_day_summary_blur"]
 shader = ExtResource("2_blur_shader")
@@ -15,6 +18,8 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
 script = ExtResource("1_script")
+CostRowScene = ExtResource("3_cost_row")
+ChangeRowScene = ExtResource("4_change_row")
 
 [node name="BlurBackdrop" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_next_day_summary_blur")
@@ -62,7 +67,9 @@ horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout"]
 layout_mode = 2
-text = "Confirm city costs and queued Thermae or Training Hall changes before advancing."
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 20
+text = "Confirm city costs before starting the next day."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -93,7 +100,9 @@ theme_override_constants/separation = 8
 
 [node name="CostLine" type="Label" parent="CenterContainer/Panel/MarginContainer/Layout/CostPanel/MarginContainer/CostLayout"]
 layout_mode = 2
-text = "City & Salary cost"
+theme_override_fonts/font = ExtResource("5_body_font")
+theme_override_font_sizes/font_size = 20
+text = "City costs"
 autowrap_mode = 3
 
 [node name="CostDetails" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/Layout/CostPanel/MarginContainer/CostLayout"]
@@ -113,4 +122,4 @@ text = "Cancel"
 [node name="NextDayButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(150, 54)
 layout_mode = 2
-text = "Next Day"
+text = "Start Day"

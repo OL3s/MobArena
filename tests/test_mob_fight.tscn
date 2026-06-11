@@ -1,0 +1,90 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/TestMobFight.cs" id="1_test_mob_fight"]
+[ext_resource type="PackedScene" path="res://scenes/components/arena/PlayerCombatant.tscn" id="2_player_combatant"]
+[ext_resource type="PackedScene" path="res://scenes/components/arena/EnemyCombatant.tscn" id="3_enemy_combatant"]
+[ext_resource type="PackedScene" path="res://scenes/components/arena/combat_ui/CombatHud.tscn" id="4_combat_hud"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_horizontal_wall"]
+size = Vector2(1084, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_vertical_wall"]
+size = Vector2(32, 634)
+
+[node name="TestMobFight" type="Node"]
+script = ExtResource("1_test_mob_fight")
+
+[node name="BackgroundLayer" type="CanvasLayer" parent="."]
+layer = -5
+
+[node name="ArenaFloor" type="ColorRect" parent="BackgroundLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.16, 0.13, 0.1, 1)
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="WorldCamera" type="Camera2D" parent="World"]
+position = Vector2(576, 324)
+enabled = true
+
+[node name="CombatRing" type="ColorRect" parent="World"]
+offset_left = 66.0
+offset_top = 39.0
+offset_right = 1086.0
+offset_bottom = 609.0
+color = Color(0.28, 0.21, 0.15, 1)
+
+[node name="Title" type="Label" parent="World"]
+offset_left = 66.0
+offset_top = 48.0
+offset_right = 1086.0
+offset_bottom = 88.0
+theme_override_font_sizes/font_size = 24
+text = "Test Mob Fight"
+horizontal_alignment = 1
+
+[node name="ArenaWalls" type="Node2D" parent="World"]
+
+[node name="TopWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(576, 23)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/TopWall"]
+shape = SubResource("RectangleShape2D_arena_horizontal_wall")
+
+[node name="BottomWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(576, 625)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/BottomWall"]
+shape = SubResource("RectangleShape2D_arena_horizontal_wall")
+
+[node name="LeftWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(50, 324)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/LeftWall"]
+shape = SubResource("RectangleShape2D_arena_vertical_wall")
+
+[node name="RightWall" type="StaticBody2D" parent="World/ArenaWalls"]
+position = Vector2(1102, 324)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/ArenaWalls/RightWall"]
+shape = SubResource("RectangleShape2D_arena_vertical_wall")
+
+[node name="PlayerCombatant" parent="World" instance=ExtResource("2_player_combatant")]
+position = Vector2(576, 324)
+
+[node name="TrainingDummy" parent="World" instance=ExtResource("3_enemy_combatant")]
+position = Vector2(760, 324)
+
+[node name="CombatHud" parent="." instance=ExtResource("4_combat_hud")]

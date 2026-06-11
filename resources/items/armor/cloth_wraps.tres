@@ -8,16 +8,20 @@
 
 [sub_resource type="Resource" id="Resource_cloth_wraps_armor"]
 script = ExtResource("3_armor_data")
-BaseValue = 1
+BaseValue = 10
 
 [resource]
 script = ExtResource("1_armor")
 DisplayName = "Cloth Wraps"
-Description = "Simple wraps for a new arena fighter."
+Description = "Basic cloth armor."
 UiIcon = ExtResource("2_icon")
+TypeTag = 12
+StrengthTag = 1
 HeldTexture = ExtResource("2_icon")
+Weight = 1
 Cost = 5
-Condition = 1.0
+MaxDurability = 100
+Durability = 100
 ArmorProfile = SubResource("Resource_cloth_wraps_armor")
 ArmorForwardTexture = ExtResource("4_armor_forward")
 ArmorBackTexture = ExtResource("5_armor_back")

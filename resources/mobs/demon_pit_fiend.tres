@@ -8,6 +8,7 @@
 [sub_resource type="Resource" id="Resource_demon_pit_fiend_armor"]
 script = ExtResource("4_armor_data")
 BaseValue = 0
+ImmuneTypes = Array[int]([3])
 
 [resource]
 script = ExtResource("1_enemy")
@@ -17,6 +18,6 @@ UiIcon = ExtResource("2_icon")
 Appearance = ExtResource("3_appearance")
 Scene = null
 Family = 3
-MaxHealth = 210
+MaxHealth = 2100
 ArmorProfile = SubResource("Resource_demon_pit_fiend_armor")
 FameValue = 320

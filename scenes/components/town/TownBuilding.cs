@@ -18,11 +18,6 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     private static readonly Rect2 InteractionBounds = new(new Vector2(-75.0f, -75.0f), new Vector2(150.0f, 150.0f));
     private const ulong InputActivationDebounceMsec = 250;
     private const float ExhaustionWarningThreshold = 5f;
-    private const string IdleIconPath = "res://assets/ui/gladiator_icons/idle.svg";
-    private const string ExhaustionIconPath = "res://assets/ui/gladiator_icons/exhaustion.svg";
-    private const string HealthIconPath = "res://assets/ui/gladiator_icons/health.svg";
-    private const string CriticalRiskIconPath = "res://assets/ui/gladiator_icons/critical_risk.svg";
-
     private string _buildingName = "Town Building";
     private Texture2D _buildingTexture;
     private Texture2D _closedBuildingTexture;
@@ -83,6 +78,21 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     public PackedScene OverlayToOpen { get; set; }
 
     [Export]
+    public PackedScene WarningIconScene { get; set; }
+
+    [Export]
+    public Texture2D IdleWarningIcon { get; set; }
+
+    [Export]
+    public Texture2D ExhaustionWarningIcon { get; set; }
+
+    [Export]
+    public Texture2D HealthWarningIcon { get; set; }
+
+    [Export]
+    public Texture2D CriticalRiskWarningIcon { get; set; }
+
+    [Export]
     public bool Disabled
     {
         get => _disabled || IsDisabledByEmptyRoster() || IsDisabledByNight();
@@ -100,7 +110,16 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     public bool DisableAtNight { get; set; }
 
     [Export]
+    public string ClosedTitle { get; set; } = "Closed";
+
+    [Export(PropertyHint.MultilineText)]
+    public string ClosedMessage { get; set; }
+
+    [Export]
     public bool HideUntilSpecialtyBuildingsUnlocked { get; set; }
+
+    [Export]
+    public int HideUntilCompletedContracts { get; set; } = -1;
 
     [Export]
     public bool HideWhenNoContractsCompletedAndRosterEmpty { get; set; }
@@ -237,9 +256,15 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     public void Activate()
     {
         if (DebugInteraction)
-            GD.Print($"TownBuilding Activate: {BuildingName}, disabled={Disabled}, overlay={OverlayToOpen != null}, scene={SceneToOpen != null}");
+            GameLogger.UI($"TownBuilding Activate: {BuildingName}, disabled={Disabled}, overlay={OverlayToOpen != null}, scene={SceneToOpen != null}");
 
-        if (Disabled || (SceneToOpen == null && OverlayToOpen == null))
+        if (Disabled)
+        {
+            ShowClosedPopupIfConfigured();
+            return;
+        }
+
+        if (SceneToOpen == null && OverlayToOpen == null)
             return;
 
         if (OverlayToOpen != null)
@@ -257,7 +282,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         var globalOverlay = GlobalOverlay.Get();
         if (globalOverlay == null)
         {
-            GD.PushWarning("Could not load global overlay. Opening scene directly.");
+            GameLogger.UI("TownBuilding: GlobalOverlay missing while opening scene; opening scene directly.");
             OpenScene();
             return;
         }
@@ -310,7 +335,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
             return;
         }
 
-        GD.Print(TownDragDropRules.FormatDropMessage(payload, "building", DropTargetName));
+        GameLogger.UI(TownDragDropRules.FormatDropMessage(payload, "building", DropTargetName));
     }
 
     public int GetAssignedGladiatorCapacity()
@@ -342,47 +367,47 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     {
         if (Disabled)
         {
-            GD.PushError($"Building assignment failed: '{DropTargetName}' is disabled.");
+            GameLogger.UI($"Building assignment failed: '{DropTargetName}' is disabled.");
             return false;
         }
 
         if (!AssignDroppedGladiators)
         {
-            GD.PushError($"Building assignment failed: '{DropTargetName}' does not assign dropped gladiators.");
+            GameLogger.UI($"Building assignment failed: '{DropTargetName}' does not assign dropped gladiators.");
             return false;
         }
 
         if (gladiatorData == null)
         {
-            GD.PushError($"Building assignment failed: null gladiator dropped on '{DropTargetName}'.");
+            GameLogger.UI($"Building assignment failed: null gladiator dropped on '{DropTargetName}'.");
             return false;
         }
 
         var runData = SaveNode.Get()?.CompanyRunData;
         if (runData == null || !runData.HasGladiator(gladiatorData))
         {
-            GD.PushError($"Building assignment failed: gladiator '{gladiatorData.GladiatorName}' is not in the active roster.");
+            GameLogger.UI($"Building assignment failed: gladiator '{gladiatorData.GladiatorName}' is not in the active roster.");
             return false;
         }
 
         var assignedGladiators = AssignedGladiators;
         if (assignedGladiators.Contains(gladiatorData))
         {
-            GD.Print($"Building assignment: gladiator '{gladiatorData.GladiatorName}' is already assigned to '{DropTargetName}'.");
+            GameLogger.UI($"Building assignment: gladiator '{gladiatorData.GladiatorName}' is already assigned to '{DropTargetName}'.");
             return true;
         }
 
         var capacity = GetAssignedGladiatorCapacity();
         if (assignedGladiators.Count >= capacity)
         {
-            GD.PushError($"Building assignment failed: '{DropTargetName}' is full ({assignedGladiators.Count}/{capacity}).");
+            GameLogger.UI($"Building assignment failed: '{DropTargetName}' is full ({assignedGladiators.Count}/{capacity}).");
             return false;
         }
 
         if (!runData.TryAssignGladiatorToTownLocation(gladiatorData, AssignmentLocation, capacity))
             return false;
 
-        GD.Print($"Building assignment: gladiator '{gladiatorData.GladiatorName}' assigned to '{DropTargetName}' ({AssignedGladiators.Count}/{capacity}).");
+        GameLogger.UI($"Building assignment: gladiator '{gladiatorData.GladiatorName}' assigned to '{DropTargetName}' ({AssignedGladiators.Count}/{capacity}).");
         return true;
     }
 
@@ -427,6 +452,12 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
         _showGoldCostPreview = visible;
         RefreshGoldPreview();
+        RefreshOccupancyBadge();
+    }
+
+    public void RefreshProgressionState()
+    {
+        RefreshVisuals();
         RefreshOccupancyBadge();
     }
 
@@ -488,7 +519,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
         var currentSaleValue = GetSaleValue(payload);
         if (currentSaleValue != expectedSaleValue)
-            GD.PushError($"Market sale warning: {payload.Kind} '{payload.GetDebugName()}' sale value changed from {expectedSaleValue} to {currentSaleValue} before confirmation.");
+            GameLogger.UI($"Market sale warning: {payload.Kind} '{payload.GetDebugName()}' sale value changed from {expectedSaleValue} to {currentSaleValue} before confirmation.");
 
         var sold = payload.Kind switch
         {
@@ -498,7 +529,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         };
 
         if (sold)
-            GD.Print($"Market sale: sold {payload.Kind} '{payload.GetDebugName()}' for {currentSaleValue} gold.");
+            GameLogger.UI($"Market sale: sold {payload.Kind} '{payload.GetDebugName()}' for {currentSaleValue} gold.");
     }
 
     private static int GetSaleValue(TownDragPayload payload)
@@ -534,14 +565,25 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         var globalOverlay = GlobalOverlay.Get();
         if (globalOverlay == null)
         {
-            GD.PushWarning($"TownBuilding overlay failed: GlobalOverlay missing for {BuildingName}.");
+            GameLogger.UI($"TownBuilding overlay failed: GlobalOverlay missing for {BuildingName}.");
             return;
         }
 
         if (DebugInteraction)
-            GD.Print($"TownBuilding opening overlay: {BuildingName}");
+            GameLogger.UI($"TownBuilding opening overlay: {BuildingName}");
 
         globalOverlay.AddOverlay(OverlayToOpen);
+    }
+
+    private void ShowClosedPopupIfConfigured()
+    {
+        if (string.IsNullOrWhiteSpace(ClosedMessage))
+            return;
+
+        GlobalOverlay.Get()?.ShowBlurredPopup(
+            string.IsNullOrWhiteSpace(ClosedTitle) ? "Closed" : ClosedTitle,
+            ClosedMessage,
+            IconTexture);
     }
 
     private void OnInteractionInputEvent(Node viewport, InputEvent inputEvent, long shapeIdx)
@@ -549,7 +591,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         if (inputEvent is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
         {
             if (DebugInteraction)
-                GD.Print($"TownBuilding Area2D click: {BuildingName}");
+                GameLogger.UI($"TownBuilding Area2D click: {BuildingName}");
 
             GetViewport()?.SetInputAsHandled();
             ActivateFromInput();
@@ -559,7 +601,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
         if (inputEvent is InputEventScreenTouch { Pressed: true })
         {
             if (DebugInteraction)
-                GD.Print($"TownBuilding Area2D touch: {BuildingName}");
+                GameLogger.UI($"TownBuilding Area2D touch: {BuildingName}");
 
             GetViewport()?.SetInputAsHandled();
             ActivateFromInput();
@@ -584,7 +626,8 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
     private void OpenScene()
     {
         GlobalOverlay.Get()?.CloseAllOverlaysImmediate();
-        GetTree().ChangeSceneToPacked(SceneToOpen);
+        SceneTransitionLogger.LogChange(GetTree(), SceneToOpen, $"town building: {BuildingName}");
+        GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToPacked, SceneToOpen);
     }
 
     private void ActivateIfInside(Vector2 viewportPosition, bool fromInput = false)
@@ -595,7 +638,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
             return;
 
         if (DebugInteraction)
-            GD.Print($"TownBuilding fallback hit: {BuildingName}, viewport={viewportPosition}, local={localPosition}");
+            GameLogger.UI($"TownBuilding fallback hit: {BuildingName}, viewport={viewportPosition}, local={localPosition}");
 
         GetViewport()?.SetInputAsHandled();
         if (fromInput)
@@ -691,6 +734,9 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
         var saveNode = SaveNode.Get();
         var runData = _runData ?? saveNode?.CompanyRunData;
+        if (HideUntilCompletedContracts >= 0 && saveNode?.SkipTutorial != true)
+            return (saveNode?.CompanyCareerData?.ContractsCompleted ?? 0) < HideUntilCompletedContracts;
+
         if (HideUntilSpecialtyBuildingsUnlocked)
             return !saveNode.HasReachedSpecialtyBuildingsForProgression && runData?.HasUnlockedSpecialtyBuildings != true;
 
@@ -770,7 +816,7 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
 
             if (_runData?.IsGladiatorIdleInTownLocation(gladiator, AssignmentLocation) == true)
             {
-                AddStatusWarningIcon(IdleIconPath, $"{gladiator.GladiatorName} is assigned here but has no work this phase");
+                AddStatusWarningIcon(IdleWarningIcon, $"{gladiator.GladiatorName} is assigned here but has no work this phase");
                 addedWarning = true;
                 continue;
             }
@@ -779,31 +825,32 @@ public partial class TownBuilding : Node2D, ITownDragDropTarget, ITownHoverInfoP
             if (riskStatus == GladiatorRiskStatus.None)
                 continue;
 
-            var (iconPath, tooltipText) = riskStatus switch
+            var (icon, tooltipText) = riskStatus switch
             {
-                GladiatorRiskStatus.Critical => (CriticalRiskIconPath, $"{gladiator.GladiatorName} is exhausted and low health"),
-                GladiatorRiskStatus.Exhausted => (ExhaustionIconPath, $"{gladiator.GladiatorName} is exhausted"),
-                GladiatorRiskStatus.LowHealth => (HealthIconPath, $"{gladiator.GladiatorName} is low health"),
-                _ => (string.Empty, string.Empty)
+                GladiatorRiskStatus.Critical => (CriticalRiskWarningIcon, $"{gladiator.GladiatorName} is exhausted and low health"),
+                GladiatorRiskStatus.Exhausted => (ExhaustionWarningIcon, $"{gladiator.GladiatorName} is exhausted"),
+                GladiatorRiskStatus.LowHealth => (HealthWarningIcon, $"{gladiator.GladiatorName} is low health"),
+                _ => (null, string.Empty)
             };
-            AddStatusWarningIcon(iconPath, tooltipText);
+            AddStatusWarningIcon(icon, tooltipText);
             addedWarning = true;
         }
 
         _statusWarnings.Visible = addedWarning;
     }
 
-    private void AddStatusWarningIcon(string texturePath, string tooltipText)
+    private void AddStatusWarningIcon(Texture2D texture, string tooltipText)
     {
-        _statusWarnings.AddChild(new TextureRect
+        var icon = WarningIconScene?.Instantiate<TextureRect>();
+        if (icon == null)
         {
-            CustomMinimumSize = new Vector2(20, 20),
-            Texture = ResourceLoader.Load<Texture2D>(texturePath),
-            TooltipText = tooltipText,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
-        });
+            GD.PushError("Town building warning icon scene is missing or has the wrong root type.");
+            return;
+        }
+
+        icon.Texture = texture;
+        icon.TooltipText = tooltipText;
+        _statusWarnings.AddChild(icon);
     }
 
     private static GladiatorRiskStatus GetRiskStatus(GladiatorData gladiator)

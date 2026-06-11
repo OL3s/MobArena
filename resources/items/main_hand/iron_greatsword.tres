@@ -1,0 +1,79 @@
+[gd_resource type="Resource" script_class="MainHandItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/iron_greatsword.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_damage_entry"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="5_action"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="6_melee_effect"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="7_apply"]
+[ext_resource type="Script" path="res://scripts/resources/items/ItemRequirementData.cs" id="8_requirement"]
+[ext_resource type="Script" path="res://scripts/resources/items/ItemLevelMultiplierData.cs" id="9_multiplier"]
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_slash"]
+script = ExtResource("4_damage_entry")
+Damage = 235
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_crush"]
+script = ExtResource("4_damage_entry")
+Type = 2
+Damage = 85
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_damage"]
+script = ExtResource("3_damage")
+Entries = Array[ExtResource("4_damage_entry")]([SubResource("Resource_iron_greatsword_slash"), SubResource("Resource_iron_greatsword_crush")])
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_apply"]
+script = ExtResource("7_apply")
+ForceStrength = 280.0
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_melee_effect"]
+script = ExtResource("6_melee_effect")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
+Apply = SubResource("Resource_iron_greatsword_apply")
+LifetimeSeconds = 0.24
+MaxHits = 2
+HitboxRadius = 46.0
+ActiveSeconds = 0.16
+ForwardOffset = 13.0
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_main_action"]
+script = ExtResource("5_action")
+DisplayName = "Iron Greatsword Cleave"
+Effect = SubResource("Resource_iron_greatsword_melee_effect")
+WindupSeconds = 0.18
+StaminaCost = 58
+SpawnDistance = 46.0
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_requirement"]
+script = ExtResource("8_requirement")
+RequiredStrength = 8
+RequiredAgility = 2
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_multiplier"]
+script = ExtResource("9_multiplier")
+MultiplierPerLevel = 0.045
+StrengthInfluence = 0.9
+AgilityInfluence = 0.15
+MaxMultiplier = 2.15
+
+[resource]
+script = ExtResource("1_main")
+IsTwoHanded = true
+Damage = SubResource("Resource_iron_greatsword_damage")
+MainAction = SubResource("Resource_iron_greatsword_main_action")
+DisplayName = "Iron Greatsword"
+Description = "A two-handed iron greatsword."
+UiIcon = ExtResource("2_icon")
+TypeTag = 2
+StrengthTag = 4
+HeldTexture = ExtResource("2_icon")
+HeldDisplayHeight = 116.0
+HeldRotationDegrees = 16.0
+HeldTextureOffset = Vector2(-16, -86)
+Weight = 9
+Cost = 94
+MaxDurability = 100
+Durability = 100
+Requirements = SubResource("Resource_iron_greatsword_requirement")
+LevelMultiplier = SubResource("Resource_iron_greatsword_multiplier")

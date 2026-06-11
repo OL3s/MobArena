@@ -85,7 +85,7 @@ theme_override_fonts/bold_font = ExtResource("5_body_font")
 theme_override_font_sizes/normal_font_size = 21
 theme_override_font_sizes/bold_font_size = 21
 bbcode_enabled = true
-text = "Choose what the company needs. Recruitment and equipment support the arena loop."
+text = "Choose what the company needs. Recruitment, equipment, and coatings support the arena loop."
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
@@ -103,7 +103,7 @@ icon = ExtResource("4_roster_icon")
 [node name="BlacksmithButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout/Actions"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
-text = "Blacksmith"
+text = "Items"
 icon = ExtResource("6_blacksmith_icon")
 
 [node name="CloseButton" type="Button" parent="CenterContainer/Panel/MarginContainer/Layout"]

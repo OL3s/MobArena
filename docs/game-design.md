@@ -36,13 +36,14 @@ Outside combat, the player makes business decisions: who to recruit, who to trai
 - Arena contracts with different enemy groups, rewards, and restrictions.
 - Gear that changes stats, combat strength, and risk when a gladiator dies.
 - Equipped gear should eventually be visible on the gladiator's body in town and arena, not only represented by inventory/menu icons.
+- Gear quality should be readable through material tiers such as Training, Wooden, Bronze, Iron, and Black. The weapon is only half the work: better gear raises the baseline, while gladiator combat attributes and item-specific multiplier configs should provide the rest of the performance. Item requirements are Strength and Agility only: Strength should favor heavy weapon power, while Agility should favor light/ranged weapon handling and speed. Vitality should affect health, and Endurance should affect stamina amount/generation.
 - City phase for management through simple menus.
 
 ## Economy And Time Pressure
 
 The player must balance upkeep costs against income from arena fights. A larger roster gives more backup options, but too many gladiators increase ongoing costs and can drain gold between fights.
 
-Gladiators recover through explicit Day/Night phase transitions instead of continuous time. The Thermae can speed up health or exhaustion recovery for gold, but stamina cannot be restored by treatment buildings.
+Gladiators recover through explicit Day/Night phase transitions instead of continuous time. The Recovery Bay can speed up health or exhaustion recovery for gold, but stamina cannot be restored by treatment buildings.
 
 Gladiators have one management condition value from 0-10: exhaustion. Exhaustion represents readiness after accumulated fatigue from repeated use and training; it should drop when a gladiator is used too often and recover through phase transitions, encouraging roster rotation. Values at 5 or above apply no cap penalty; below 5, the cap multiplier scales from 1 down to 0 as exhaustion approaches 0. Health still cannot exceed the gladiator's base max health.
 
@@ -83,12 +84,14 @@ MobArena should be designed for phone, controller, and desktop compatibility fro
 Supported input styles:
 
 - Phone: touch controls with a virtual movement stick and touch-friendly combat buttons.
-- Controller: left stick movement with face buttons or triggers for attack, dodge, ability, and item use.
-- Desktop: keyboard and mouse support, with keyboard movement and mouse or key-driven attacks.
+- Controller: left stick movement, optional right stick or right mousepad-style aiming, and face buttons or triggers for attack, dodge, ability, and item use.
+- Desktop: keyboard and mouse support, with keyboard movement, optional mouse aiming, and mouse or key-driven attacks.
 
 Design requirements:
 
 - Core combat actions must map cleanly to all three input styles.
+- Independent aim must not be mandatory for core game logic. Movement-only control should remain a supported mode where movement direction also supplies facing/aim direction.
+- Mouse aiming should be exposed as a settings toggle that defaults on. Keyboard-only control should not require independent aim input.
 - Menus must be usable with touch, controller focus navigation, and mouse.
 - Avoid tiny UI targets because phone support is a first-class requirement.
 - Avoid mechanics that require precise mouse-only aiming unless an equivalent controller and touch solution exists.

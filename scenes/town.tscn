@@ -73,6 +73,8 @@ SceneToOpen = ExtResource("3_arena")
 HoverDescription = "Assign gladiators here, choose a contract, then set controls before entering the arena. Returning from the arena ends the day and starts Night."
 OverlayToOpen = ExtResource("18_arena_overlay")
 DisableAtNight = true
+ClosedTitle = "Arena Closed"
+ClosedMessage = "The arena is closed at Night. Use this time to recover, train, recruit, and prepare for the next Day."
 HideWhenNoContractsCompletedAndRosterEmpty = true
 ConfirmationTitle = "Start Contract?"
 ConfirmationMessage = "Travel to the arena for the starter contract? Current prototype goal: defeat slimes and return to town."
@@ -88,18 +90,20 @@ IconTexture = ExtResource("8_market_icon")
 HoverDescription = "Recruit gladiators, buy equipment at the blacksmith, or sell dropped gladiators and equipment for gold."
 OverlayToOpen = ExtResource("19_market_overlay")
 DisableAtNight = true
+ClosedTitle = "Market Closed"
+ClosedMessage = "The market is closed at Night. Come back during the Day to recruit gladiators, buy equipment, or sell spare gear."
 TownDragDropPriority = 5
 SellDroppedPayloads = true
 MaxAssignedGladiators = 0
 
-[node name="Thermae" parent="World" unique_id=668293402 instance=ExtResource("2_townbuilding")]
+[node name="RecoveryBay" parent="World" unique_id=668293402 instance=ExtResource("2_townbuilding")]
 position = Vector2(1008, 464)
-BuildingName = "Thermae"
+BuildingName = "Recovery Bay"
 BuildingTexture = ExtResource("11_healer_building")
 IconTexture = ExtResource("12_healer_icon")
 HoverDescription = "Assign gladiators here for paid Roman bathhouse care. Choose health treatment or faster exhaustion recovery; work resolves on phase changes."
 OverlayToOpen = ExtResource("21_healer_overlay")
-HideUntilSpecialtyBuildingsUnlocked = true
+HideUntilCompletedContracts = 2
 MaxAssignedGladiators = 2
 AssignmentLocation = 2
 
@@ -110,7 +114,7 @@ BuildingTexture = ExtResource("16_training_building")
 IconTexture = ExtResource("17_training_icon")
 HoverDescription = "Assign gladiators here to train. Choose an attribute focus or balanced overall training; work resolves on phase changes and spends gold, stamina, and exhaustion."
 OverlayToOpen = ExtResource("23_training_overlay")
-HideUntilSpecialtyBuildingsUnlocked = true
+HideUntilCompletedContracts = 3
 MaxAssignedGladiators = 2
 AssignmentLocation = 3
 
@@ -155,14 +159,14 @@ alignment = 1
 [node name="GladiatorsButton" type="Button" parent="World/RosterYard/ButtonRow" unique_id=1405934177]
 custom_minimum_size = Vector2(56, 44)
 layout_mode = 2
-tooltip_text = "Open gladiators overview."
+tooltip_text = "Open gladiator view"
 icon = ExtResource("14_roster_icon")
 expand_icon = true
 
 [node name="EquipmentButton" type="Button" parent="World/RosterYard/ButtonRow" unique_id=771559795]
 custom_minimum_size = Vector2(56, 44)
 layout_mode = 2
-tooltip_text = "Open equipment inventory."
+tooltip_text = "Open items."
 icon = ExtResource("25_equipment_icon")
 expand_icon = true
 

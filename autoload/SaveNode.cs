@@ -25,11 +25,14 @@ public partial class SaveNode : Node
 	private const string WeatherPath = SaveDirectory + "/weather.tres";
 	private const string SettingsPath = SaveDirectory + "/settings.tres";
 
-	private bool _skipExitSave;
 	private string _pendingCompanyLossTitle;
 	private string _pendingCompanyLossText;
+	private bool _suppressExitSave;
 
 	public event Action RuntimeStateResetting;
+	public event Action DevModeChanged;
+	public event Action RuntimeTagsChanged;
+	public event Action TutorialModeChanged;
 
     [Export]
     public bool HasCompany { get; set; }
@@ -55,10 +58,64 @@ public partial class SaveNode : Node
 	[Export]
 	public SettingsConfig SettingsConfig { get; private set; } = new();
 
-	public bool DebugEnabled => SettingsConfig?.DebugEnabled == true;
+	public bool DevEnabled => SettingsConfig?.DevEnabled == true;
+	public bool IsDemo => SettingsConfig?.IsDemo == true;
+	public bool IsDemoComplete => IsDemo && (CompanyCareerData?.ChampionsDefeated ?? 0) > 0;
 	public bool SkipTutorial => SettingsConfig?.SkipTutorial == true;
 	public bool HasCompletedContractsForProgression => SkipTutorial || CompanyCareerData?.HasCompletedContracts == true;
+	public bool HasUnlockedRecoveryBayForProgression => SkipTutorial || (CompanyCareerData?.ContractsCompleted ?? 0) >= 2;
+	public bool HasUnlockedTrainingHallForProgression => SkipTutorial || (CompanyCareerData?.ContractsCompleted ?? 0) >= 3;
 	public bool HasReachedSpecialtyBuildingsForProgression => SkipTutorial || CompanyCareerData?.HasReachedSpecialtyBuildings == true;
+
+	public bool CanStartArenaContract()
+	{
+		return !IsDemoComplete;
+	}
+
+	public void SetDevEnabled(bool devEnabled)
+	{
+		SettingsConfig ??= new SettingsConfig();
+		if (SettingsConfig.DevEnabled == devEnabled)
+			return;
+
+		SettingsConfig.DevEnabled = devEnabled;
+		GameLogger.Save($"Dev mode {(devEnabled ? "enabled" : "disabled")}.");
+		DevModeChanged?.Invoke();
+		RuntimeTagsChanged?.Invoke();
+	}
+
+	public void SetIsDemo(bool isDemo)
+	{
+		SettingsConfig ??= new SettingsConfig();
+		if (SettingsConfig.IsDemo == isDemo)
+			return;
+
+		SettingsConfig.IsDemo = isDemo;
+		GameLogger.Save($"Demo mode {(isDemo ? "enabled" : "disabled")}.");
+		RuntimeTagsChanged?.Invoke();
+	}
+
+	public void SetShowRuntimeTags(bool showRuntimeTags)
+	{
+		SettingsConfig ??= new SettingsConfig();
+		if (SettingsConfig.ShowRuntimeTags == showRuntimeTags)
+			return;
+
+		SettingsConfig.ShowRuntimeTags = showRuntimeTags;
+		GameLogger.Save($"Runtime tags {(showRuntimeTags ? "shown" : "hidden")}.");
+		RuntimeTagsChanged?.Invoke();
+	}
+
+	public void SetSkipTutorial(bool skipTutorial)
+	{
+		SettingsConfig ??= new SettingsConfig();
+		if (SettingsConfig.SkipTutorial == skipTutorial)
+			return;
+
+		SettingsConfig.SkipTutorial = skipTutorial;
+		GameLogger.Save($"Tutorial mode {(skipTutorial ? "disabled" : "enabled")}.");
+		TutorialModeChanged?.Invoke();
+	}
 
 	public void QueueCompanyLossNotification(string title, string text)
 	{
@@ -88,7 +145,7 @@ public partial class SaveNode : Node
 
 	private void ApplyDebugStartingCondition()
 	{
-		if (!DebugEnabled || CompanyRunData?.Gladiators == null || CompanyRunData.Gladiators.Count <= 0)
+		if (!DevEnabled || CompanyRunData?.Gladiators == null || CompanyRunData.Gladiators.Count <= 0)
 			return;
 
 		var gladiator = CompanyRunData.Gladiators[0];
@@ -113,20 +170,20 @@ public partial class SaveNode : Node
 
 	public override void _Ready()
 	{
-		_skipExitSave = true;
-		if (SaveCommandLineController.TryHandle(this))
-			return;
-
-		_skipExitSave = false;
-		Load();
+		SaveCommandLineController.TryHandle(this);
 	}
 
 	public override void _ExitTree()
 	{
-		if (_skipExitSave)
+		if (_suppressExitSave)
 			return;
 
 		Save();
+	}
+
+	public void SuppressExitSaveForCommandLine()
+	{
+		_suppressExitSave = true;
 	}
 
     public bool HasSave()
@@ -136,11 +193,11 @@ public partial class SaveNode : Node
 
 	public Error Save()
 	{
-		GD.Print("SaveNode: Saving data.");
+		GameLogger.Save($"Saving data.");
 		var error = EnsureSaveDirectory();
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Save failed while creating save directory. Error: {error}.");
+			GameLogger.Save($"Save failed while creating save directory. Error: {error}.");
 			return error;
 		}
 
@@ -153,20 +210,20 @@ public partial class SaveNode : Node
 			error = SaveResource(CompletedCompanyHistory, CompletedCompanyHistoryPath);
 			if (error != Error.Ok)
 			{
-				GD.Print($"SaveNode: Save failed for completed company history. Error: {error}.");
+				GameLogger.Save($"Save failed for completed company history. Error: {error}.");
 				return error;
 			}
 
 			error = SaveResource(SettingsConfig, SettingsPath);
 			if (error != Error.Ok)
 			{
-				GD.Print($"SaveNode: Save failed for settings. Error: {error}.");
+				GameLogger.Save($"Save failed for settings. Error: {error}.");
 				return error;
 			}
 
 			error = SaveManifest(CreateManifest());
 			if (error != Error.Ok)
-				GD.PushError($"SaveNode: Save failed for manifest. Error: {error}.");
+				GameLogger.Error(GameLogCategory.Save, $"Save failed for manifest. Error: {error}.");
 
 			return error;
 		}
@@ -174,73 +231,73 @@ public partial class SaveNode : Node
 		error = SaveResource(CompanyLogoData, CompanyLogoPath);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Save failed for company logo. Error: {error}.");
+			GameLogger.Save($"Save failed for company logo. Error: {error}.");
 			return error;
 		}
 
 		error = SaveResource(CompanyCareerData, CompanyCareerPath);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Save failed for company career. Error: {error}.");
+			GameLogger.Save($"Save failed for company career. Error: {error}.");
 			return error;
 		}
 
 		error = SaveResource(CompletedCompanyHistory, CompletedCompanyHistoryPath);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Save failed for completed company history. Error: {error}.");
+			GameLogger.Save($"Save failed for completed company history. Error: {error}.");
 			return error;
 		}
 
 		error = SaveResource(CompanyRunData, CompanyRunPath);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Save failed for company run. Error: {error}.");
+			GameLogger.Save($"Save failed for company run. Error: {error}.");
 			return error;
 		}
 
 		error = SaveResource(TownPhaseState, TownPhasePath);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Save failed for town phase. Error: {error}.");
+			GameLogger.Save($"Save failed for town phase. Error: {error}.");
 			return error;
 		}
 
 		error = SaveResource(WeatherState, WeatherPath);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Save failed for weather. Error: {error}.");
+			GameLogger.Save($"Save failed for weather. Error: {error}.");
 			return error;
 		}
 
 		error = SaveResource(SettingsConfig, SettingsPath);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Save failed for settings. Error: {error}.");
+			GameLogger.Save($"Save failed for settings. Error: {error}.");
 			return error;
 		}
 
 		error = SaveManifest(CreateManifest());
 		if (error != Error.Ok)
-			GD.PushError($"SaveNode: Save failed for manifest. Error: {error}.");
+			GameLogger.Error(GameLogCategory.Save, $"Save failed for manifest. Error: {error}.");
 
 		return error;
     }
 
     public Error Load()
     {
-		GD.Print("SaveNode: Loading data.");
+		GameLogger.Save($"Loading data.");
 		var manifest = new ConfigFile();
 		var error = LoadManifest(manifest);
 		if (error == Error.FileNotFound)
 		{
-			GD.Print("SaveNode: No save manifest found. Using defaults.");
+			GameLogger.Save($"No save manifest found. Using defaults.");
 			return error;
 		}
 
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Load failed for manifest. Error: {error}.");
+			GameLogger.Save($"Load failed for manifest. Error: {error}.");
 			return error;
 		}
 
@@ -249,14 +306,14 @@ public partial class SaveNode : Node
 		error = LoadResource(GetResourcePath(manifest, "completed_company_history", CompletedCompanyHistoryPath), CompletedCompanyHistory, out var completedCompanyHistory);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Load failed for completed company history. Error: {error}.");
+			GameLogger.Save($"Load failed for completed company history. Error: {error}.");
 			return error;
 		}
 
 		error = LoadResource(GetResourcePath(manifest, "settings", SettingsPath), SettingsConfig, out var settingsConfig);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Load failed for settings. Error: {error}.");
+			GameLogger.Save($"Load failed for settings. Error: {error}.");
 			return error;
 		}
 
@@ -275,35 +332,35 @@ public partial class SaveNode : Node
 		error = LoadResource(GetResourcePath(manifest, "company_logo", CompanyLogoPath), CompanyLogoData, out var companyLogoData);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Load failed for company logo. Error: {error}.");
+			GameLogger.Save($"Load failed for company logo. Error: {error}.");
 			return error;
 		}
 
 		error = LoadResource(GetResourcePath(manifest, "company_career", CompanyCareerPath), CompanyCareerData, out var companyCareerData);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Load failed for company career. Error: {error}.");
+			GameLogger.Save($"Load failed for company career. Error: {error}.");
 			return error;
 		}
 
 		error = LoadResource(GetResourcePath(manifest, "company_run", CompanyRunPath), CompanyRunData, out var companyRunData);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Load failed for company run. Error: {error}.");
+			GameLogger.Save($"Load failed for company run. Error: {error}.");
 			return error;
 		}
 
 		error = LoadResource(GetResourcePath(manifest, "town_phase", TownPhasePath), TownPhaseState, out var townPhaseState);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Load failed for town phase. Error: {error}.");
+			GameLogger.Save($"Load failed for town phase. Error: {error}.");
 			return error;
 		}
 
 		error = LoadResource(GetResourcePath(manifest, "weather", WeatherPath), WeatherState, out var weatherState);
 		if (error != Error.Ok)
 		{
-			GD.Print($"SaveNode: Load failed for weather. Error: {error}.");
+			GameLogger.Save($"Load failed for weather. Error: {error}.");
 			return error;
 		}
 
@@ -351,13 +408,13 @@ public partial class SaveNode : Node
 
 	private Error DeleteSaveCore()
 	{
-		GD.Print("SaveNode: Deleting all save data.");
+		GameLogger.Save($"Deleting all save data.");
 		var error = DeleteSaveDirectoryContents();
 		if (error != Error.Ok)
 			return error;
 
 		ResetRuntimeState();
-		GD.Print("SaveNode: All save data deleted.");
+		GameLogger.Save($"All save data deleted.");
 		return Error.Ok;
 	}
 
@@ -398,7 +455,7 @@ public partial class SaveNode : Node
 				return error;
 			}
 
-			GD.Print($"SaveNode: Deleted save path: {entryPath}");
+			GameLogger.Save($"Deleted save path: {entryPath}");
 		}
 
 		directory.ListDirEnd();
@@ -434,9 +491,15 @@ public partial class SaveNode : Node
 
 	private Error RetireCompanyCore()
 	{
-		GD.Print("SaveNode: Retiring current company.");
 		if (HasCompany)
+		{
+			GameLogger.Save($"Retiring current company.");
 			TryAddCurrentCompanyToCompletedHistory();
+		}
+		else
+		{
+			GameLogger.Save($"Retire company requested, but no active company exists in save data.");
+		}
 
 		var error = DeleteFileIfExists(CompanyLogoPath);
 		if (error != Error.Ok)
@@ -465,7 +528,7 @@ public partial class SaveNode : Node
 		TownPhaseState = new TownPhaseState();
 		WeatherState = new WeatherState();
 		error = SaveCurrentManifest();
-		GD.Print(error == Error.Ok ? "SaveNode: Company retired." : $"SaveNode: Company retirement failed while saving manifest. Error: {error}.");
+		GameLogger.Save(error == Error.Ok ? "Company retired." : $"Company retirement failed while saving manifest. Error: {error}.");
 		return error;
 	}
 
@@ -481,9 +544,15 @@ public partial class SaveNode : Node
 
 	public Error ForceRetireCurrentCompany()
 	{
-		GD.Print("SaveNode: Force-retiring current company.");
 		if (HasCompany)
+		{
+			GameLogger.Save($"Force-retiring current company.");
 			TryAddCurrentCompanyToCompletedHistory();
+		}
+		else
+		{
+			GameLogger.Save($"Force-retire requested, but no active company exists in save data.");
+		}
 
 		PrepareRuntimeStateReset();
 		LocalInputConfig.Get()?.ClearControllerSetups();
@@ -498,27 +567,27 @@ public partial class SaveNode : Node
 
 	private Error DeleteSettingsDataCore()
 	{
-		GD.Print("SaveNode: Deleting settings data.");
+		GameLogger.Save($"Deleting settings data.");
 		var error = DeleteFileIfExists(SettingsPath);
 		if (error != Error.Ok)
 			return error;
 
 		SettingsConfig = new SettingsConfig();
 		error = SaveCurrentManifest();
-		GD.Print(error == Error.Ok ? "SaveNode: Settings data deleted." : $"SaveNode: Settings data delete failed while saving manifest. Error: {error}.");
+		GameLogger.Save(error == Error.Ok ? "Settings data deleted." : $"Settings data delete failed while saving manifest. Error: {error}.");
 		return error;
 	}
 
 	private Error DeleteCompletedCompanyHistoryDataCore()
 	{
-		GD.Print("SaveNode: Deleting completed company history data.");
+		GameLogger.Save($"Deleting completed company history data.");
 		var error = DeleteFileIfExists(CompletedCompanyHistoryPath);
 		if (error != Error.Ok)
 			return error;
 
 		CompletedCompanyHistory = new CompletedCompanyHistory();
 		error = SaveCurrentManifest();
-		GD.Print(error == Error.Ok ? "SaveNode: Completed company history data deleted." : $"SaveNode: Completed company history data delete failed while saving manifest. Error: {error}.");
+		GameLogger.Save(error == Error.Ok ? "Completed company history data deleted." : $"Completed company history data delete failed while saving manifest. Error: {error}.");
 		return error;
 	}
 
@@ -624,7 +693,7 @@ public partial class SaveNode : Node
 		if (!FileAccess.FileExists(path))
 		{
 			if (printSkipped)
-				GD.Print($"SaveNode: Delete skipped; file does not exist: {path}");
+				GameLogger.Save($"Delete skipped; file does not exist: {path}");
 			return Error.Ok;
 		}
 
@@ -632,7 +701,7 @@ public partial class SaveNode : Node
 		if (error != Error.Ok)
 			GD.PushError($"Failed to delete save file '{path}': {error}");
 		else
-			GD.Print($"SaveNode: Deleted file: {path}");
+			GameLogger.Save($"Deleted file: {path}");
 
 		return error;
 	}

@@ -17,6 +17,12 @@ public partial class ArenaCombatInputState : Resource
     [Export]
     public bool IsMoving { get; private set; }
 
+    [Export]
+    public Vector2 AimDirection { get; private set; } = Vector2.Zero;
+
+    [Export]
+    public bool IsAiming { get; private set; }
+
     [Export(PropertyHint.Range, "0,0.95,0.01")]
     public float MoveDeadzone { get; private set; } = DefaultMoveDeadzone;
 
@@ -42,6 +48,19 @@ public partial class ArenaCombatInputState : Resource
     {
         MoveDeadzone = Mathf.Clamp(moveDeadzone, 0f, 0.95f);
         ApplyMoveInput();
+    }
+
+    public void SetAimDirection(Vector2 aimDirection)
+    {
+        if (aimDirection.LengthSquared() <= MoveDeadzone * MoveDeadzone)
+        {
+            AimDirection = Vector2.Zero;
+            IsAiming = false;
+            return;
+        }
+
+        AimDirection = aimDirection.Normalized();
+        IsAiming = true;
     }
 
     private void ApplyMoveInput()
@@ -83,6 +102,8 @@ public partial class ArenaCombatInputState : Resource
         MoveDirection = Vector2.Zero;
         MoveStrength = 0f;
         IsMoving = false;
+        AimDirection = Vector2.Zero;
+        IsAiming = false;
         ClearActions();
     }
 }

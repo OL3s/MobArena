@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MultiplierItemCoatingData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MultiplierItemCoatingData.cs" id="1_coating"]
+[ext_resource type="Texture2D" path="res://assets/ui/coatings/strong_honing_oil.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/items/CoatingDamageMultiplierData.cs" id="3_multiplier"]
+
+[sub_resource type="Resource" id="Resource_strong_honing_oil_slash"]
+script = ExtResource("3_multiplier")
+Multiplier = 1.18
+
+[resource]
+script = ExtResource("1_coating")
+DisplayName = "Strong Honing Oil"
+Description = "A concentrated honing oil that sharply multiplies slash damage while its condition lasts."
+UiIcon = ExtResource("2_icon")
+TypeTag = 13
+StrengthTag = 8
+Cost = 80
+MaxDurability = 70
+Durability = 70
+DamageMultipliers = Array[ExtResource("3_multiplier")]([SubResource("Resource_strong_honing_oil_slash")])

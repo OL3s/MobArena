@@ -8,16 +8,16 @@ public static class PhaseTransitionController
     {
         if (phaseState == null || !phaseState.IsDay())
         {
-            GD.Print("PhaseTransitionController: Complete arena day failed; phase is not day.");
+            GameLogger.State($"PhaseTransitionController: Complete arena day failed; {DescribeContext(phaseState, companyRunData)}.");
             return false;
         }
 
-        ExecuteBuildingWork(companyRunData);
+        ExecuteBuildingWork(companyRunData, weatherState);
         companyRunData?.CompleteArenaContractAssignments();
         phaseState.MoveToNight();
         weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
-        GD.Print($"PhaseTransitionController: Completed arena day. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
+        GameLogger.State($"PhaseTransitionController: Completed arena day. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
         return true;
     }
 
@@ -25,16 +25,34 @@ public static class PhaseTransitionController
     {
         if (phaseState == null || !phaseState.IsDay())
         {
-            GD.Print("PhaseTransitionController: Complete arena contract failed; phase is not day.");
+            GameLogger.State($"PhaseTransitionController: Complete arena contract failed; {DescribeContext(phaseState, companyRunData)}.");
             return false;
         }
 
-        ExecuteBuildingWork(companyRunData);
+        ExecuteBuildingWork(companyRunData, weatherState);
         companyRunData?.CompleteArenaContractAssignments();
         phaseState.MoveToNight();
         weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
-        GD.Print($"PhaseTransitionController: Completed arena contract. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
+        GameLogger.State($"PhaseTransitionController: Completed arena contract. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
+        return true;
+    }
+
+    public static bool SkipArenaContract(TownPhaseState phaseState, CompanyRunData companyRunData, WeatherState weatherState = null)
+    {
+        if (phaseState == null || !phaseState.IsDay() || phaseState.IsChampionDay)
+        {
+            GameLogger.State($"PhaseTransitionController: Skip arena contract failed; {DescribeContext(phaseState, companyRunData)}.");
+            return false;
+        }
+
+        ExecuteBuildingWork(companyRunData, weatherState);
+        companyRunData?.SkipArenaContractAssignments();
+        companyRunData?.ClearActiveArenaContract();
+        phaseState.MoveToNight();
+        weatherState?.ChooseRandomWeather(phaseState);
+        companyRunData?.NotifyRunChanged();
+        GameLogger.State($"PhaseTransitionController: Skipped arena contract. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
         return true;
     }
 
@@ -42,22 +60,31 @@ public static class PhaseTransitionController
     {
         if (phaseState == null || !phaseState.CanAdvanceToNextDay)
         {
-            GD.Print("PhaseTransitionController: Advance to next day failed; phase is not night.");
+            GameLogger.State($"PhaseTransitionController: Advance to next day failed; {DescribeContext(phaseState, companyRunData)}.");
             return false;
         }
 
-		ExecuteBuildingWork(companyRunData);
+		ExecuteBuildingWork(companyRunData, weatherState);
 		companyRunData?.PayNightSalary();
         companyRunData?.Market?.ExecuteNewDay();
         phaseState.MoveToNextDay();
         weatherState?.ChooseRandomWeather(phaseState);
         companyRunData?.NotifyRunChanged();
-        GD.Print($"PhaseTransitionController: Advanced to next day. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
+        GameLogger.State($"PhaseTransitionController: Advanced to next day. Day={phaseState.CurrentDay}, phase={phaseState.CurrentPhase}.");
         return true;
     }
 
-    private static void ExecuteBuildingWork(CompanyRunData companyRunData)
+    private static void ExecuteBuildingWork(CompanyRunData companyRunData, WeatherState weatherState)
     {
-        companyRunData?.ExecutePhaseBuildingWork();
+        companyRunData?.ExecutePhaseBuildingWork(weatherState);
+    }
+
+    private static string DescribeContext(TownPhaseState phaseState, CompanyRunData companyRunData)
+    {
+        var day = phaseState?.CurrentDay.ToString() ?? "unknown";
+        var phase = phaseState?.CurrentPhase.ToString() ?? "unknown";
+        var contract = companyRunData?.ActiveArenaContract?.DisplayName ?? "none";
+        var arenaGladiators = companyRunData?.TownAssignments?.ArenaGladiators?.Count ?? 0;
+        return $"day={day}, phase={phase}, contract='{contract}', arenaGladiators={arenaGladiators}";
     }
 }

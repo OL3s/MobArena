@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/components/ui/item_showcases/ItemShowcaseBadge.cs" id="1_script"]
+
+[node name="ItemShowcaseBadge" type="VBoxContainer"]
+custom_minimum_size = Vector2(48, 62)
+layout_mode = 2
+theme_override_constants/separation = 2
+script = ExtResource("1_script")
+
+[node name="Icon" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"HeaderSmall"
+horizontal_alignment = 1
