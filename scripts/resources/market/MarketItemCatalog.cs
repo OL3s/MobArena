@@ -68,7 +68,6 @@ public static class MarketItemCatalog
         "res://resources/items/off_hand/iron_kite_shield.tres",
         "res://resources/items/off_hand/black_shield.tres",
         "res://resources/items/off_hand/stone_shiv.tres",
-        "res://resources/items/off_hand/dagger.tres",
         "res://resources/items/off_hand/bronze_dagger.tres",
         "res://resources/items/off_hand/iron_dagger.tres",
         "res://resources/items/off_hand/black_dagger.tres",

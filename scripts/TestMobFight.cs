@@ -12,7 +12,7 @@ public partial class TestMobFight : Node
 {
     private const string DummyMobPath = "res://resources/mobs/training_dummy.tres";
     private const string TrainingSwordPath = "res://resources/items/main_hand/training_sword.tres";
-    private const string PoisonDaggerPath = "res://resources/items/off_hand/dagger.tres";
+    private const string BronzeDaggerPath = "res://resources/items/off_hand/bronze_dagger.tres";
 
     public override void _Ready()
     {
@@ -30,7 +30,7 @@ public partial class TestMobFight : Node
         var gladiator = GladiatorGenerator.CreateDefault();
         gladiator.SetGladiatorName("Keyboard Tester");
         gladiator.Equipment.EquipMainHand(ResourceLoader.Load<MainHandItemData>(TrainingSwordPath));
-        gladiator.Equipment.TryEquipOffHand(ResourceLoader.Load<OffHandItemData>(PoisonDaggerPath));
+        gladiator.Equipment.TryEquipOffHand(ResourceLoader.Load<OffHandItemData>(BronzeDaggerPath));
 
         var controller = LocalInputControllerConfig.Create(LocalInputControllerConfig.ControllerKind.Keyboard, -1, null);
         player.ConfigureGladiator(gladiator, ArenaControlAssignmentData.Create(gladiator, controller));

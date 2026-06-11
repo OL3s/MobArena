@@ -31,7 +31,7 @@ To add armor:
 - Attack resources live in `scripts/resources/combat/actions/` and `scripts/resources/combat/effects/`.
 - Item icons and held/armor art currently live under `assets/ui/items/`.
 
-Use existing items such as `resources/items/main_hand/training_sword.tres`, `resources/items/off_hand/dagger.tres`, and `resources/items/armor/cloth_wraps.tres` as templates.
+Use existing items such as `resources/items/main_hand/training_sword.tres`, `resources/items/off_hand/bronze_dagger.tres`, and `resources/items/armor/cloth_wraps.tres` as templates.
 
 ## Minimum Valid Items
 
