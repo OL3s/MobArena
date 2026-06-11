@@ -6,8 +6,17 @@ namespace MobArena.Scripts.Resources;
 public partial class GladiatorEquipmentData : Resource
 {
     private const string DefaultArmorPath = "res://resources/items/armor/cloth_wraps.tres";
-    private const string DefaultMainHandPath = "res://resources/items/main_hand/training_sword.tres";
-    private const string DefaultOffHandPath = "res://resources/items/off_hand/wooden_buckler.tres";
+    private static readonly string[] DefaultMainHandPaths =
+    {
+        "res://resources/items/main_hand/training_axe.tres",
+        "res://resources/items/main_hand/training_bow.tres",
+        "res://resources/items/main_hand/training_greataxe.tres",
+        "res://resources/items/main_hand/training_greathammer.tres",
+        "res://resources/items/main_hand/training_greatsword.tres",
+        "res://resources/items/main_hand/training_hammer.tres",
+        "res://resources/items/main_hand/training_spear.tres",
+        "res://resources/items/main_hand/training_sword.tres"
+    };
 
     public enum SignatureSkill
     {
@@ -34,10 +43,16 @@ public partial class GladiatorEquipmentData : Resource
         return new GladiatorEquipmentData
         {
             Armor = random.Randf() < 0.5f ? ItemData.LoadRuntimeCopy<ArmorItemData>(DefaultArmorPath) : null,
-            MainHand = random.Randf() < 0.5f ? ItemData.LoadRuntimeCopy<MainHandItemData>(DefaultMainHandPath) : null,
+            MainHand = random.Randf() < 0.5f ? LoadRandomDefaultMainHand(random) : null,
             OffHand = null,
             Skill = (SignatureSkill)random.RandiRange(0, (int)SignatureSkill.Cleave)
         };
+    }
+
+    private static MainHandItemData LoadRandomDefaultMainHand(RandomNumberGenerator random)
+    {
+        var itemPath = DefaultMainHandPaths[random.RandiRange(0, DefaultMainHandPaths.Length - 1)];
+        return ItemData.LoadRuntimeCopy<MainHandItemData>(itemPath);
     }
 
     public void EquipArmor(ArmorItemData armor)
