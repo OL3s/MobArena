@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="ArmorItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorItemData.cs" id="1_armor"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/iron_mail.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="3_armor_data"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="4_armor_override"]
+[ext_resource type="Script" path="res://scripts/resources/items/ItemRequirementData.cs" id="5_requirement"]
+[ext_resource type="Script" path="res://scripts/resources/items/ItemLevelMultiplierData.cs" id="6_multiplier"]
+
+[sub_resource type="Resource" id="Resource_iron_mail_slash"]
+script = ExtResource("4_armor_override")
+Value = 62
+
+[sub_resource type="Resource" id="Resource_iron_mail_pierce"]
+script = ExtResource("4_armor_override")
+Type = 1
+Value = 45
+
+[sub_resource type="Resource" id="Resource_iron_mail_crush"]
+script = ExtResource("4_armor_override")
+Type = 2
+Value = 28
+
+[sub_resource type="Resource" id="Resource_iron_mail_armor"]
+script = ExtResource("3_armor_data")
+BaseValue = 48
+TypeOverrides = Array[ExtResource("4_armor_override")]([SubResource("Resource_iron_mail_slash"), SubResource("Resource_iron_mail_pierce"), SubResource("Resource_iron_mail_crush")])
+
+[sub_resource type="Resource" id="Resource_iron_mail_requirement"]
+script = ExtResource("5_requirement")
+
+[sub_resource type="Resource" id="Resource_iron_mail_multiplier"]
+script = ExtResource("6_multiplier")
+MultiplierPerLevel = 0.03
+StrengthInfluence = 0.0
+AgilityInfluence = 0.0
+MaxMultiplier = 1.8
+
+[resource]
+script = ExtResource("1_armor")
+DisplayName = "Iron Mail"
+Description = "Sturdy iron armor."
+UiIcon = ExtResource("2_icon")
+TypeTag = 12
+StrengthTag = 10
+HeldTexture = ExtResource("2_icon")
+Cost = 104
+MaxDurability = 100
+Durability = 100
+Requirements = SubResource("Resource_iron_mail_requirement")
+LevelMultiplier = SubResource("Resource_iron_mail_multiplier")
+ArmorProfile = SubResource("Resource_iron_mail_armor")
+ArmorForwardTexture = ExtResource("2_icon")
+ArmorBackTexture = ExtResource("2_icon")

@@ -90,7 +90,7 @@ Player normal actions can start only from `Default`. `Exhausted` still allows mo
 
 `CombatDamageData` has one damage array:
 
-- `Entries`: typed damage such as Slash, Pierce, Crush, Heat, Cold, Acid, Silver, Holy, Cursed, Undead, Demon, Beast, and Champion.
+- `Entries`: typed instant damage such as Slash, Pierce, Crush, Heat, Cold, Acid, Silver, and Holy.
 
 Damage uses `ArmorData.BaseValue` unless an `ArmorTypeOverrideData` exists for that damage type.
 

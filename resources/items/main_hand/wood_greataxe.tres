@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="MainHandItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/greataxe.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
+
+[sub_resource type="Resource" id="slash"]
+script = ExtResource("4_entry")
+Damage = 180
+
+[sub_resource type="Resource" id="crush"]
+script = ExtResource("4_entry")
+Type = 2
+Damage = 50
+
+[sub_resource type="Resource" id="damage"]
+script = ExtResource("3_damage")
+Entries = Array[ExtResource("4_entry")]([SubResource("slash"), SubResource("crush")])
+
+[resource]
+script = ExtResource("1_main")
+IsTwoHanded = true
+Damage = SubResource("damage")
+DisplayName = "Wood Greataxe"
+Description = "A two-handed wood greataxe."
+UiIcon = ExtResource("2_icon")
+TypeTag = 7
+StrengthTag = 2
+HeldTexture = ExtResource("2_icon")
+HeldDisplayHeight = 98.0
+HeldRotationDegrees = 12.0
+HeldTextureOffset = Vector2(-14, -70)
+Weight = 7
+Cost = 30
+MaxDurability = 100
+Durability = 100

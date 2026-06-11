@@ -9,6 +9,7 @@
 [sub_resource type="Resource" id="Resource_champion_demon_lord_armor"]
 script = ExtResource("4_armor_data")
 BaseValue = 0
+ImmuneTypes = Array[int]([3])
 
 [resource]
 script = ExtResource("1_champion")

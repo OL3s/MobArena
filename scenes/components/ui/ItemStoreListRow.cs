@@ -5,12 +5,6 @@ namespace MobArena.Scenes.Components.UI;
 
 public partial class ItemStoreListRow : HBoxContainer
 {
-    private const string ArmorTypeIconPath = "res://assets/ui/items/type_armor.svg";
-    private const string MainHandTypeIconPath = "res://assets/ui/items/type_main_hand.svg";
-    private const string TwoHandedTypeIconPath = "res://assets/ui/items/type_two_handed.svg";
-    private const string OffHandTypeIconPath = "res://assets/ui/items/type_off_hand.svg";
-    private const string UnknownIconPath = "res://assets/ui/icons/question_mark.svg";
-
     [Signal]
     public delegate void DetailsPressedEventHandler(ItemData item);
 
@@ -52,7 +46,8 @@ public partial class ItemStoreListRow : HBoxContainer
             return;
 
         _itemIcon.Texture = _item?.UiIcon;
-        _typeIcon.Texture = GetTypeIcon(_item);
+        _typeIcon.Texture = null;
+        _typeIcon.Hide();
         _nameLabel.Text = _item?.DisplayName ?? "Item";
         _costLabel.Text = (_item?.Cost ?? 0).ToString();
         _detailsButton.Disabled = _selected;
@@ -65,16 +60,4 @@ public partial class ItemStoreListRow : HBoxContainer
             EmitSignal(SignalName.DetailsPressed, _item);
     }
 
-    private static Texture2D GetTypeIcon(ItemData item)
-    {
-        var iconPath = item switch
-        {
-            ArmorItemData => ArmorTypeIconPath,
-            MainHandItemData mainHand => mainHand.IsTwoHanded ? TwoHandedTypeIconPath : MainHandTypeIconPath,
-            OffHandItemData => OffHandTypeIconPath,
-            _ => UnknownIconPath
-        };
-
-        return ResourceLoader.Load<Texture2D>(iconPath);
-    }
 }

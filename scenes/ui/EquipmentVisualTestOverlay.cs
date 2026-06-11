@@ -43,7 +43,7 @@ public partial class EquipmentVisualTestOverlay : Control
         AddSection("Armor", items.OfType<ArmorItemData>());
     }
 
-    private void AddSection<T>(string title, IEnumerable<T> items) where T : ItemData
+    private void AddSection<T>(string title, IEnumerable<T> items) where T : EquipmentItemData
     {
         var titleLabel = new Label
         {
@@ -63,7 +63,7 @@ public partial class EquipmentVisualTestOverlay : Control
             grid.AddChild(CreateItemCard(item));
     }
 
-    private Control CreateItemCard(ItemData item)
+    private Control CreateItemCard(EquipmentItemData item)
     {
         var panel = new PanelContainer { CustomMinimumSize = new Vector2(330, item is ArmorItemData ? 210 : 420) };
         var layout = new VBoxContainer();
@@ -97,14 +97,14 @@ public partial class EquipmentVisualTestOverlay : Control
         return panel;
     }
 
-    private static ItemData LoadItem(string path, bool reloadFromDisk)
+    private static EquipmentItemData LoadItem(string path, bool reloadFromDisk)
     {
         return reloadFromDisk
-            ? ResourceLoader.Load<ItemData>(path, string.Empty, ResourceLoader.CacheMode.Replace)
-            : ResourceLoader.Load<ItemData>(path);
+            ? ResourceLoader.Load<EquipmentItemData>(path, string.Empty, ResourceLoader.CacheMode.Replace)
+            : ResourceLoader.Load<EquipmentItemData>(path);
     }
 
-    private Control CreateHeldEditor(ItemData item)
+    private Control CreateHeldEditor(EquipmentItemData item)
     {
         var layout = new VBoxContainer();
         layout.AddThemeConstantOverride("separation", 6);
@@ -256,12 +256,12 @@ public partial class EquipmentVisualTestOverlay : Control
         return layout;
     }
 
-    private static Vector2 GetPreviewHandPosition(ItemData item)
+    private static Vector2 GetPreviewHandPosition(EquipmentItemData item)
     {
         return item is OffHandItemData ? new Vector2(116, 88) : new Vector2(184, 88);
     }
 
-    private static Vector2 GetPreviewItemPosition(ItemData item)
+    private static Vector2 GetPreviewItemPosition(EquipmentItemData item)
     {
         return item is OffHandItemData ? new Vector2(-12, -2) : new Vector2(12, -2);
     }
@@ -290,7 +290,7 @@ public partial class EquipmentVisualTestOverlay : Control
         return row;
     }
 
-    private static void SaveHeldTuning(ItemData item, float displayHeight, float rotationDegrees, Vector2 textureOffset, Button saveButton)
+    private static void SaveHeldTuning(EquipmentItemData item, float displayHeight, float rotationDegrees, Vector2 textureOffset, Button saveButton)
     {
         item.SetHeldVisualTuning(displayHeight, rotationDegrees, textureOffset);
         var error = ResourceSaver.Save(item, item.ResourcePath);

@@ -45,7 +45,7 @@ Mob Arena runtime CLI commands:
   --generate-gladiator                        Add one default gladiator to the active company.
   --add-money[=amount]                        Add gold. Alias: --add-gold. Missing/invalid amount defaults to 0.
   --add-fame[=amount]                         Add fame. Missing/invalid amount defaults to 0.
-  --buy-equipment[=index]                     Buy blacksmith stock item by index. Default index: 0.
+  --buy-equipment[=index]                     Buy market item stock by index. Default index: 0.
   --buy-gladiator[=index]                     Buy gladiator market stock by index. Default index: 0.
   --contract[=index]                          Complete visible arena contract by index. Alias: --complete-contract. Default index: 0.
   --complete-day                              Complete current day phase. Alias: --complete-arena-day.

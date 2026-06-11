@@ -1,6 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
+using MobArena.Scenes.Components.UI;
 using MobArena.Scripts.Resources.Items;
 using MobArena.Scripts.Resources.Mobs;
 
@@ -19,10 +20,12 @@ public partial class CodexOverlay : Control
         Armor,
         MainHand,
         OffHand,
+        Coating,
         Other
     }
 
     private const string ItemResourceDirectory = "res://resources/items";
+    private const string CoatingResourceDirectory = "res://resources/coatings";
     private const string ChampionIconPath = "res://assets/ui/icons/champion.svg";
 
     [Export]
@@ -88,6 +91,13 @@ public partial class CodexOverlay : Control
             var item = ResourceLoader.Load<ItemData>(path);
             if (item != null)
                 _items.Add(item);
+        }
+
+        foreach (var path in GetTresPaths(CoatingResourceDirectory))
+        {
+            var coating = ResourceLoader.Load<ItemData>(path);
+            if (coating != null)
+                _items.Add(coating);
         }
 
         GD.Print($"CodexOverlay: Loaded {_enemyFamilies.Count} enemy families and {_items.Count} items.");
@@ -189,7 +199,7 @@ public partial class CodexOverlay : Control
         return _items
             .GroupBy(GetItemTypeCategory)
             .OrderBy(group => group.Sum(item => item.Cost))
-            .ThenBy(group => GetItemTypeLabel(group.Key));
+            .ThenBy(group => group.Key.ToString());
     }
 
     private void AddItemGroup(ItemTypeCategory itemType, IEnumerable<ItemData> items)
@@ -210,11 +220,11 @@ public partial class CodexOverlay : Control
             return;
         }
 
-        groupPanel.Configure(GetItemTypeLabel(itemType), GetItemTypeIcon(itemType), isExpanded);
+        groupPanel.Configure(itemType.ToString(), GetItemTypeIcon(itemType), isExpanded);
         groupPanel.HeaderPressed += () =>
         {
             _expandedItemTypes[itemType] = !_expandedItemTypes[itemType];
-            GD.Print($"CodexOverlay: {(_expandedItemTypes[itemType] ? "Expanded" : "Collapsed")} item group '{GetItemTypeLabel(itemType)}' ({groupItems.Count} entries).");
+            GD.Print($"CodexOverlay: {(_expandedItemTypes[itemType] ? "Expanded" : "Collapsed")} item group '{itemType}' ({groupItems.Count} entries).");
             RefreshEntryList();
         };
 
@@ -246,9 +256,10 @@ public partial class CodexOverlay : Control
 
     private void LoadItemTypeIcons()
     {
-        _itemTypeIcons[ItemTypeCategory.Armor] = ResourceLoader.Load<Texture2D>("res://assets/ui/items/type_armor.svg");
-        _itemTypeIcons[ItemTypeCategory.MainHand] = ResourceLoader.Load<Texture2D>("res://assets/ui/items/type_main_hand.svg");
-        _itemTypeIcons[ItemTypeCategory.OffHand] = ResourceLoader.Load<Texture2D>("res://assets/ui/items/type_off_hand.svg");
+        _itemTypeIcons[ItemTypeCategory.Armor] = UiIconLoader.LoadIcon("res://assets/ui/items/type_armor.svg");
+        _itemTypeIcons[ItemTypeCategory.MainHand] = UiIconLoader.LoadIcon("res://assets/ui/items/type_main_hand.svg");
+        _itemTypeIcons[ItemTypeCategory.OffHand] = UiIconLoader.LoadIcon("res://assets/ui/items/type_off_hand.svg");
+        _itemTypeIcons[ItemTypeCategory.Coating] = UiIconLoader.LoadIcon("res://assets/ui/coatings/type_coating.svg");
     }
 
     private static ItemTypeCategory GetItemTypeCategory(ItemData item)
@@ -258,18 +269,8 @@ public partial class CodexOverlay : Control
             ArmorItemData => ItemTypeCategory.Armor,
             MainHandItemData => ItemTypeCategory.MainHand,
             OffHandItemData => ItemTypeCategory.OffHand,
+            ItemCoatingData => ItemTypeCategory.Coating,
             _ => ItemTypeCategory.Other
-        };
-    }
-
-    private static string GetItemTypeLabel(ItemTypeCategory itemType)
-    {
-        return itemType switch
-        {
-            ItemTypeCategory.Armor => "Armor",
-            ItemTypeCategory.MainHand => "Main Hand",
-            ItemTypeCategory.OffHand => "Off Hand",
-            _ => "Other"
         };
     }
 
@@ -311,7 +312,7 @@ public partial class CodexOverlay : Control
         _descriptionLabel.Text = item.Description;
         ClearStats();
         AddStat("Cost", item.Cost.ToString());
-        AddStat("Condition", $"{Mathf.RoundToInt(item.Condition * 100f)}%");
+        AddStat("Condition", $"{Mathf.RoundToInt(item.GetCondition() * 100f)}%");
 
         if (item is MainHandItemData mainHandItem)
             AddStat("Type", mainHandItem.IsTwoHanded ? "Two-handed" : "Main hand");
@@ -319,6 +320,40 @@ public partial class CodexOverlay : Control
             AddStat("Type", "Off hand");
         else if (item is ArmorItemData)
             AddStat("Type", "Armor");
+        else if (item is AdditiveItemCoatingData additiveCoating)
+        {
+            AddStat("Type", "Coating");
+            AddAdditiveCoatingStats(additiveCoating);
+        }
+        else if (item is MultiplierItemCoatingData multiplierCoating)
+        {
+            AddStat("Type", "Coating");
+            AddMultiplierCoatingStats(multiplierCoating);
+        }
+    }
+
+    private void AddAdditiveCoatingStats(AdditiveItemCoatingData coating)
+    {
+        foreach (var damageEntry in coating.DamageEntries)
+        {
+            if (damageEntry != null)
+                AddStat($"Instant {damageEntry.Type}", $"+{damageEntry.Value}");
+        }
+
+        foreach (var effectEntry in coating.EffectEntries)
+        {
+            if (effectEntry != null)
+                AddStat($"Effect {effectEntry.Type}", $"+{effectEntry.Value:0}");
+        }
+    }
+
+    private void AddMultiplierCoatingStats(MultiplierItemCoatingData coating)
+    {
+        foreach (var damageMultiplier in coating.DamageMultipliers)
+        {
+            if (damageMultiplier != null)
+                AddStat($"Instant {damageMultiplier.Type}", $"x{damageMultiplier.Multiplier:0.##}");
+        }
     }
 
     private void ClearDetails()

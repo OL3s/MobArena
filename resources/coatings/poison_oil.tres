@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AdditiveItemCoatingData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/AdditiveItemCoatingData.cs" id="1_coating"]
+[ext_resource type="Texture2D" path="res://assets/ui/coatings/poison_oil.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/items/CoatingEffectEntryData.cs" id="3_effect_entry"]
+
+[sub_resource type="Resource" id="Resource_poison_oil_poison"]
+script = ExtResource("3_effect_entry")
+Value = 220.0
+
+[resource]
+script = ExtResource("1_coating")
+DisplayName = "Poison Oil"
+Description = "A standard poison oil with brief condition. On weapons it adds poison buildup; on armor it adds poison effect defense."
+UiIcon = ExtResource("2_icon")
+TypeTag = 14
+StrengthTag = 7
+Cost = 34
+MaxDurability = 30
+Durability = 30
+EffectEntries = Array[ExtResource("3_effect_entry")]([SubResource("Resource_poison_oil_poison")])

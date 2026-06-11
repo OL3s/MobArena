@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="MainHandItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/spear.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
+
+[sub_resource type="Resource" id="pierce"]
+script = ExtResource("4_entry")
+Type = 1
+Damage = 195
+
+[sub_resource type="Resource" id="slash"]
+script = ExtResource("4_entry")
+Damage = 60
+
+[sub_resource type="Resource" id="damage"]
+script = ExtResource("3_damage")
+Entries = Array[ExtResource("4_entry")]([SubResource("pierce"), SubResource("slash")])
+
+[resource]
+script = ExtResource("1_main")
+Damage = SubResource("damage")
+DisplayName = "Iron Spear"
+Description = "A sturdy iron spear."
+UiIcon = ExtResource("2_icon")
+TypeTag = 3
+StrengthTag = 4
+HeldTexture = ExtResource("2_icon")
+HeldDisplayHeight = 119.0
+HeldRotationDegrees = 17.0
+HeldTextureOffset = Vector2(-12, -90)
+Weight = 5
+Cost = 72
+MaxDurability = 150
+Durability = 150

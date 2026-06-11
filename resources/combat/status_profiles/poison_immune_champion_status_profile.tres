@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="CombatantStatusProfileData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/CombatantStatusProfileData.cs" id="1_profile"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/EffectDefenseData.cs" id="2_defense"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/EffectDefenseTypeOverrideData.cs" id="3_defense_override"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/StatusEffectRulesData.cs" id="4_rules"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/StatusEffectValueOverrideData.cs" id="5_value_override"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/CombatantStateStatusMultiplierData.cs" id="6_state_multiplier"]
+
+[sub_resource type="Resource" id="Resource_poison_immune_champion_stun_defense"]
+script = ExtResource("3_defense_override")
+Type = 1
+Value = 50
+
+[sub_resource type="Resource" id="Resource_poison_immune_champion_effect_defense"]
+script = ExtResource("2_defense")
+BaseValue = 20
+TypeOverrides = Array[ExtResource("3_defense_override")]([SubResource("Resource_poison_immune_champion_stun_defense")])
+
+[sub_resource type="Resource" id="Resource_poison_immune_champion_stun_min"]
+script = ExtResource("5_value_override")
+Type = 1
+Value = 35.0
+
+[sub_resource type="Resource" id="Resource_poison_immune_champion_stun_max"]
+script = ExtResource("5_value_override")
+Type = 1
+Value = 60.0
+
+[sub_resource type="Resource" id="Resource_poison_immune_champion_poison_max"]
+script = ExtResource("5_value_override")
+Value = 300.0
+
+[sub_resource type="Resource" id="Resource_poison_immune_champion_status_rules"]
+script = ExtResource("4_rules")
+BaseMinValue = 1.0
+MinValueOverrides = Array[ExtResource("5_value_override")]([SubResource("Resource_poison_immune_champion_stun_min")])
+BaseMaxValue = 200.0
+MaxValueOverrides = Array[ExtResource("5_value_override")]([SubResource("Resource_poison_immune_champion_stun_max"), SubResource("Resource_poison_immune_champion_poison_max")])
+
+[sub_resource type="Resource" id="Resource_poison_immune_champion_windup_stun_multiplier"]
+script = ExtResource("6_state_multiplier")
+State = 1
+Type = 1
+Multiplier = 1.25
+
+[resource]
+script = ExtResource("1_profile")
+EffectDefenseProfile = SubResource("Resource_poison_immune_champion_effect_defense")
+StatusRules = SubResource("Resource_poison_immune_champion_status_rules")
+ImmuneStatuses = Array[int]([0])
+StateStatusMultipliers = Array[ExtResource("6_state_multiplier")]([SubResource("Resource_poison_immune_champion_windup_stun_multiplier")])

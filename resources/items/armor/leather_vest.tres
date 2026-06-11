@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="ArmorItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorItemData.cs" id="1_armor"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/leather_vest.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="3_armor_data"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="4_armor_override"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/cloth_wraps_armor_forward.svg" id="5_armor_forward"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/cloth_wraps_armor_back.svg" id="6_armor_back"]
+[ext_resource type="Script" path="res://scripts/resources/items/ItemRequirementData.cs" id="7_requirement"]
+[ext_resource type="Script" path="res://scripts/resources/items/ItemLevelMultiplierData.cs" id="8_multiplier"]
+
+[sub_resource type="Resource" id="Resource_leather_vest_crush_weakness"]
+script = ExtResource("4_armor_override")
+Type = 2
+Value = 8
+
+[sub_resource type="Resource" id="Resource_leather_vest_armor"]
+script = ExtResource("3_armor_data")
+BaseValue = 18
+TypeOverrides = Array[ExtResource("4_armor_override")]([SubResource("Resource_leather_vest_crush_weakness")])
+
+[sub_resource type="Resource" id="Resource_leather_vest_requirement"]
+script = ExtResource("7_requirement")
+
+[sub_resource type="Resource" id="Resource_leather_vest_multiplier"]
+script = ExtResource("8_multiplier")
+MultiplierPerLevel = 0.02
+StrengthInfluence = 0.0
+AgilityInfluence = 0.0
+MaxMultiplier = 1.5
+
+[resource]
+script = ExtResource("1_armor")
+DisplayName = "Leather Vest"
+Description = "Light leather armor."
+UiIcon = ExtResource("2_icon")
+TypeTag = 12
+StrengthTag = 9
+HeldTexture = ExtResource("2_icon")
+Cost = 24
+MaxDurability = 100
+Durability = 100
+Requirements = SubResource("Resource_leather_vest_requirement")
+LevelMultiplier = SubResource("Resource_leather_vest_multiplier")
+ArmorProfile = SubResource("Resource_leather_vest_armor")
+ArmorForwardTexture = ExtResource("5_armor_forward")
+ArmorBackTexture = ExtResource("6_armor_back")

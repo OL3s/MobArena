@@ -36,6 +36,7 @@ Outside combat, the player makes business decisions: who to recruit, who to trai
 - Arena contracts with different enemy groups, rewards, and restrictions.
 - Gear that changes stats, combat strength, and risk when a gladiator dies.
 - Equipped gear should eventually be visible on the gladiator's body in town and arena, not only represented by inventory/menu icons.
+- Gear quality should be readable through material tiers such as Training, Wooden, Bronze, Iron, and Blacksteel. The weapon is only half the work: better gear raises the baseline, while gladiator combat attributes and item-specific multiplier configs should provide the rest of the performance. Item requirements are Strength and Agility only: Strength should favor heavy weapon power, while Agility should favor light/ranged weapon handling and speed. Vitality should affect health, and Endurance should affect stamina amount/generation.
 - City phase for management through simple menus.
 
 ## Economy And Time Pressure

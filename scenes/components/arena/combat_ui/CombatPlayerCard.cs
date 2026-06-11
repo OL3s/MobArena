@@ -1,5 +1,6 @@
 using Godot;
 using MobArena.Scenes.Components.Arena;
+using MobArena.Scenes.Components.UI;
 using MobArena.Scripts;
 using MobArena.Scripts.Resources;
 using MobArena.Scripts.Resources.Combat;
@@ -146,13 +147,8 @@ public partial class CombatPlayerCard : PanelContainer
 
     private static Texture2D GetControllerIcon(ArenaControlAssignmentData assignment)
     {
-        return assignment?.ControllerKind switch
-        {
-            LocalInputControllerConfig.ControllerKind.Keyboard => ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_keyboard.svg"),
-            LocalInputControllerConfig.ControllerKind.Mouse => ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_mouse.svg"),
-            LocalInputControllerConfig.ControllerKind.Touch => ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_phone.svg"),
-            LocalInputControllerConfig.ControllerKind.Gamepad => ResourceLoader.Load<Texture2D>("res://assets/ui/input_icons/device_console.svg"),
-            _ => null
-        };
+        return assignment == null
+            ? UiIconLoader.LoadFallbackIcon()
+            : DeviceIconRegistry.LoadDeviceIcon(assignment.ControllerKind);
     }
 }

@@ -1,5 +1,6 @@
 using Godot;
 using Godot.Collections;
+using MobArena.Scenes.Components.UI;
 using MobArena.Scripts.Resources;
 
 namespace MobArena.Scripts;
@@ -27,6 +28,14 @@ public partial class LocalInputConfig : Node
 	public bool HasMousePlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Mouse);
 	public bool HasTouchPlayer => HasControllerKind(LocalInputControllerConfig.ControllerKind.Touch);
 	public bool CanJoin => ControllerSetups.Count < MaxLocalPlayers;
+
+	public override void _Ready()
+	{
+		XboxAIcon ??= InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Gamepad);
+		MouseIcon ??= InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Mouse);
+		EnterIcon ??= InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Keyboard);
+		PhoneIcon ??= InputIconRegistry.LoadJoinPromptIcon(LocalInputControllerConfig.ControllerKind.Touch);
+	}
 
 	public static LocalInputConfig Get()
 	{

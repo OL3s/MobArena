@@ -76,6 +76,8 @@ A champion uses `ChampionMobData`, which currently inherits the same fields as `
 
 `StatusProfile` is optional. If it is null, `EnemyCombatant` falls back to `resources/combat/status_profiles/default_mob_status_profile.tres` or `default_champion_status_profile.tres` for champions.
 
+Blob/slime mobs should use poison-immune status profiles. Poison immunity blocks the lingering `Poison` status while still allowing separate damage types such as `Acid` to resolve through armor unless the mob's `ArmorProfile` says otherwise.
+
 `Scene` is optional. If it is null, `ArenaEnemySpawner` uses the generic `scenes/components/arena/EnemyCombatant.tscn` fallback and configures it from the `.tres`.
 
 ## Appearance
@@ -146,7 +148,7 @@ ArmorData
 Use armor to define what the mob resists, not just how much health it has. Examples:
 
 - Skeletons can resist `Pierce` but be weaker to `Crush`.
-- Demons can resist `Heat` or `Cursed`.
+- Demons can resist `Heat` or other authored instant damage types when the fantasy calls for it.
 - Ice or crystal mobs can resist `Cold` but be weak to `Crush` or `Heat`.
 
 `ArmorData.ImmuneTypes` defaults to `Silver` and `Holy`. If a mob should not have those immunities, set a different `ImmuneTypes` array on its `ArmorProfile`.

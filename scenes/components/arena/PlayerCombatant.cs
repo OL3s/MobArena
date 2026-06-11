@@ -713,7 +713,7 @@ public partial class PlayerCombatant : ArenaCombatant
             _offHandItem.RotationDegrees = equipment.OffHand.GetHeldRotationDegrees();
     }
 
-    private static void ApplyHeldVisual(Sprite2D sprite, MobArena.Scripts.Resources.Items.ItemData item, float fallbackDisplayHeight, Vector2 localPosition)
+    private static void ApplyHeldVisual(Sprite2D sprite, MobArena.Scripts.Resources.Items.EquipmentItemData item, float fallbackDisplayHeight, Vector2 localPosition)
     {
         ApplyLocalVisual(sprite, item?.GetHeldTexture(), item?.GetHeldDisplayHeight(fallbackDisplayHeight) ?? fallbackDisplayHeight, localPosition, item?.GetHeldTextureOffset() ?? Vector2.Zero);
     }

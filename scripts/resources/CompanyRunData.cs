@@ -462,12 +462,51 @@ public partial class CompanyRunData : Resource
         return item != null && Inventory?.Contains(item) == true;
     }
 
+    public bool HasOwnedItem(ItemData item)
+    {
+        if (HasItem(item))
+            return true;
+
+        if (item == null || Gladiators == null)
+            return false;
+
+        foreach (var gladiator in Gladiators)
+        {
+            var equipment = gladiator?.Equipment;
+            if (equipment?.Armor == item || equipment?.MainHand == item || equipment?.OffHand == item)
+                return true;
+        }
+
+        return false;
+    }
+
+    public bool TryApplyCoatingToItem(EquipmentItemData item, ItemCoatingData coating, CompanyCareerData careerData)
+    {
+        EnsureResources();
+        if (!HasOwnedItem(item))
+        {
+            GD.Print($"Apply coating failed: target item '{item?.DisplayName ?? "null"}' is not owned by the company.");
+            return false;
+        }
+
+        if (coating == null)
+        {
+            GD.Print("Apply coating failed: coating is null.");
+            return false;
+        }
+
+        item.ApplyCoating(coating);
+        GD.Print($"CompanyRunData: Applied coating '{coating.DisplayName}' to item '{item.DisplayName}'.");
+        EmitSignal(SignalName.RunChanged);
+        return true;
+    }
+
     public bool HasGladiator(GladiatorData gladiatorData)
     {
         return gladiatorData != null && Gladiators?.Contains(gladiatorData) == true;
     }
 
-    public bool TryEquipItemOnGladiator(GladiatorData gladiatorData, ItemData item)
+    public bool TryEquipItemOnGladiator(GladiatorData gladiatorData, EquipmentItemData item)
     {
         EnsureResources();
         if (!HasGladiator(gladiatorData))
@@ -540,7 +579,7 @@ public partial class CompanyRunData : Resource
         return returnedCount;
     }
 
-    private int ReturnEquippedItemToInventory(ItemData item, GladiatorData gladiatorData, string slotName)
+    private int ReturnEquippedItemToInventory(EquipmentItemData item, GladiatorData gladiatorData, string slotName)
     {
         if (item == null)
             return 0;
@@ -602,7 +641,7 @@ public partial class CompanyRunData : Resource
         return true;
     }
 
-    private static bool PushUnsupportedEquipItem(ItemData item)
+    private static bool PushUnsupportedEquipItem(EquipmentItemData item)
     {
         GD.Print($"Equip failed: item '{item?.DisplayName ?? "null"}' is not an armor, main-hand, or off-hand item.");
         return false;

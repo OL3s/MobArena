@@ -8,6 +8,7 @@
 [sub_resource type="Resource" id="Resource_demon_ash_cultist_armor"]
 script = ExtResource("4_armor_data")
 BaseValue = 0
+ImmuneTypes = Array[int]([3])
 
 [resource]
 script = ExtResource("1_enemy")

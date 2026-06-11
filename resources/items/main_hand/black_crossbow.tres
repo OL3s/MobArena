@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="MainHandItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/crossbow.svg" id="2_icon"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
+[ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
+
+[sub_resource type="Resource" id="pierce"]
+script = ExtResource("4_entry")
+Type = 1
+Damage = 280
+
+[sub_resource type="Resource" id="crush"]
+script = ExtResource("4_entry")
+Type = 2
+Damage = 35
+
+[sub_resource type="Resource" id="damage"]
+script = ExtResource("3_damage")
+Entries = Array[ExtResource("4_entry")]([SubResource("pierce"), SubResource("crush")])
+
+[resource]
+script = ExtResource("1_main")
+IsTwoHanded = true
+Damage = SubResource("damage")
+DisplayName = "Black Crossbow"
+Description = "A high-grade black crossbow."
+UiIcon = ExtResource("2_icon")
+TypeTag = 9
+StrengthTag = 5
+HeldTexture = ExtResource("2_icon")
+HeldDisplayHeight = 80.0
+HeldRotationDegrees = 0.0
+HeldTextureOffset = Vector2(-24, -50)
+Weight = 9
+Cost = 190
+MaxDurability = 180
+Durability = 180

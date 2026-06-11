@@ -4,7 +4,7 @@ using MobArena.Scripts.Resources.Combat;
 namespace MobArena.Scripts.Resources.Items;
 
 [GlobalClass]
-public partial class ArmorItemData : ItemData
+public partial class ArmorItemData : EquipmentItemData
 {
     [Export]
     public ArmorData ArmorProfile { get; private set; }
