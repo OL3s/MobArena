@@ -64,16 +64,17 @@ The current town-management foundation is in place.
 
 Continue from the reusable attack/effect executor foundation by verifying and polishing the new authored non-melee item resources. The project now has packed scenes and data resources for melee, linear projectile, thrown projectile, and area-of-effect attacks, and the first real item batch includes bows, a crossbow, and a poison flask, but they still need normal gameplay tuning and in-arena verification.
 
-1. Verify the new bow/crossbow linear projectile items in normal arena/player activation, not only through resource loading.
-2. Verify the poison flask thrown-projectile-to-AOE chain in normal arena/player activation, including buildup range scaling, acid ticks while inside the cloud, and poison status lingering after leaving.
-3. Make the item store, codex, and item cards clearly show the action-pattern icons for these non-melee items and confirm material-tier names sort/read well.
-4. Tune costs, requirements, level multiplier configs, stamina costs, hit sizes, projectile speed/range, and poison flask AOE timing after practical playtesting.
-5. Implement undertrained-item behavior once requirements should affect combat: equipping can remain allowed, but failing requirements should produce bad results such as immediate `Exhausted` for too-heavy attacks.
-6. Keep all item behavior authored through item `.tres` action/effect subresources; do not hardcode weapon behavior in `PlayerCombatant` or executor scenes.
-7. After non-melee starter items are playable, add player block activation from the existing block input path, using `ArenaCombatantState.Blocking` and data-driven block timing/cost where practical.
-8. Add player ability activation from the existing ability input path, keeping ability behavior authored through action/effect resources instead of hardcoded in `PlayerCombatant`.
-9. After player action/item coverage and visible attack/effect scenes are usable, add the mob behavior-composition flow: optional movement, attack, and logic child components under `EnemyCombatant`-rooted mob scenes.
-10. Add enemy death handling, player death handling from `ArenaCombatState.Died`, arena victory/defeat detection, and a minimal arena HUD for player HP and enemies remaining once health changes during combat.
+1. Create a dedicated `.cs` market item stock generator for the Night -> Day refresh cycle so market stock is curated/progression-aware instead of using the current debug path that generates all existing item resources.
+2. Verify the new bow/crossbow linear projectile items in normal arena/player activation, not only through resource loading.
+3. Verify the poison flask thrown-projectile-to-AOE chain in normal arena/player activation, including buildup range scaling, acid ticks while inside the cloud, and poison status lingering after leaving.
+4. Make the item store, codex, and item cards clearly show the action-pattern icons for these non-melee items and confirm material-tier names sort/read well.
+5. Tune costs, requirements, level multiplier configs, stamina costs, hit sizes, projectile speed/range, and poison flask AOE timing after practical playtesting.
+6. Implement undertrained-item behavior once requirements should affect combat: equipping can remain allowed, but failing requirements should produce bad results such as immediate `Exhausted` for too-heavy attacks.
+7. Keep all item behavior authored through item `.tres` action/effect subresources; do not hardcode weapon behavior in `PlayerCombatant` or executor scenes.
+8. After non-melee starter items are playable, add player block activation from the existing block input path, using `ArenaCombatantState.Blocking` and data-driven block timing/cost where practical.
+9. Add player ability activation from the existing ability input path, keeping ability behavior authored through action/effect resources instead of hardcoded in `PlayerCombatant`.
+10. After player action/item coverage and visible attack/effect scenes are usable, add the mob behavior-composition flow: optional movement, attack, and logic child components under `EnemyCombatant`-rooted mob scenes.
+11. Add enemy death handling, player death handling from `ArenaCombatState.Died`, arena victory/defeat detection, and a minimal arena HUD for player HP and enemies remaining once health changes during combat.
 
 ## Immediate Direction
 
