@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="430" viewBox="0 0 1120 430" role="img" aria-labelledby="title desc">
+  <title id="title">MobArena Authoring Resource Model</title>
+  <desc id="desc">A quick model of authored resources. Items point to damage and actions. Actions point to effects. Mobs point to appearances, armor, status profiles, and optional scenes. Families point to mobs. Contracts point to families and resolved mobs.</desc>
+  <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#553f28"/></marker><style>.bg{fill:#f8f1e7}.box{fill:#fffaf0;stroke:#553f28;stroke-width:2;rx:14}.item{fill:#eef4ff;stroke:#486a8f;stroke-width:2;rx:14}.mob{fill:#eef8ef;stroke:#47704c;stroke-width:2;rx:14}.combat{fill:#fff1e8;stroke:#9a5b33;stroke-width:2;rx:14}.t{font:700 17px serif;fill:#211912}.s{font:14px sans-serif;fill:#31271d}.line{stroke:#553f28;stroke-width:3;marker-end:url(#arrow)}</style></defs>
+  <rect class="bg" width="1120" height="430"/>
+  <rect class="item" x="55" y="65" width="180" height="80"/><text class="t" x="145" y="96" text-anchor="middle">ItemData</text><text class="s" x="145" y="121" text-anchor="middle">gear/coatings</text>
+  <rect class="combat" x="325" y="35" width="190" height="80"/><text class="t" x="420" y="66" text-anchor="middle">CombatDamageData</text><text class="s" x="420" y="91" text-anchor="middle">typed damage entries</text>
+  <rect class="combat" x="325" y="135" width="190" height="80"/><text class="t" x="420" y="166" text-anchor="middle">ActionData</text><text class="s" x="420" y="191" text-anchor="middle">timing + root effect</text>
+  <rect class="combat" x="605" y="135" width="190" height="80"/><text class="t" x="700" y="166" text-anchor="middle">EffectData</text><text class="s" x="700" y="191" text-anchor="middle">melee/projectile/AOE</text>
+  <rect class="combat" x="875" y="135" width="190" height="80"/><text class="t" x="970" y="166" text-anchor="middle">Effect Scene</text><text class="s" x="970" y="191" text-anchor="middle">runtime executor</text>
+  <line class="line" x1="235" y1="95" x2="325" y2="75"/><line class="line" x1="235" y1="115" x2="325" y2="175"/><line class="line" x1="515" y1="175" x2="605" y2="175"/><line class="line" x1="795" y1="175" x2="875" y2="175"/>
+  <rect class="mob" x="55" y="285" width="180" height="80"/><text class="t" x="145" y="316" text-anchor="middle">EnemyMobData</text><text class="s" x="145" y="341" text-anchor="middle">stats + tuning</text>
+  <rect class="mob" x="325" y="285" width="190" height="80"/><text class="t" x="420" y="316" text-anchor="middle">Appearance</text><text class="s" x="420" y="341" text-anchor="middle">UI + body art</text>
+  <rect class="mob" x="605" y="285" width="190" height="80"/><text class="t" x="700" y="316" text-anchor="middle">FamilyData</text><text class="s" x="700" y="341" text-anchor="middle">entries + fame gates</text>
+  <rect class="mob" x="875" y="285" width="190" height="80"/><text class="t" x="970" y="316" text-anchor="middle">ContractData</text><text class="s" x="970" y="341" text-anchor="middle">family + resolved mobs</text>
+  <line class="line" x1="235" y1="325" x2="325" y2="325"/><line class="line" x1="515" y1="325" x2="605" y2="325"/><line class="line" x1="795" y1="325" x2="875" y2="325"/>
+</svg>

@@ -2,6 +2,8 @@
 
 This document records the current status effect structure for arena combat.
 
+Instant damage types, armor mitigation, immunity, and vulnerabilities are documented separately in [damage-types.md](damage-types.md).
+
 ## Goal
 
 Status values use the same rough number scale as combat damage. `100` status value represents about `1.0` second of active effect. Values tick downward at `100` value per second.

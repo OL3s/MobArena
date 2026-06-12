@@ -2,7 +2,16 @@
 
 This document explains the current resource-driven arena combat action system.
 
-For practical authoring steps, see `docs/authoring-attacks.md` and `docs/authoring-player-items.md`. This file focuses on architecture and runtime behavior.
+For practical authoring steps, see [authoring-attacks.md](authoring-attacks.md) and [authoring-player-items.md](authoring-player-items.md). This file focuses on architecture and runtime behavior.
+
+![Combat action flow](diagrams/combat-action-flow.svg)
+
+<details>
+<summary>Diagram source notes</summary>
+
+The SVG at [combat-action-flow.svg](diagrams/combat-action-flow.svg) shows the data path from an item or future mob action, through `ArenaCombatActionData`, through typed effect data, into a reusable effect scene that applies damage, status, or force to combatants.
+
+</details>
 
 ## Goal
 
@@ -86,40 +95,9 @@ Player normal actions can start only from `Default`. `Exhausted` still allows mo
 
 `Exhausted` is also available as a normal combatant state for future mob behavior and status/profile tuning.
 
-## Damage And Immunity
+## Damage, Status, And Payloads
 
-`CombatDamageData` has one damage array:
-
-- `Entries`: typed instant damage such as Slash, Pierce, Crush, Heat, Cold, Acid, Silver, and Holy.
-
-Damage uses `ArmorData.BaseValue` unless an `ArmorTypeOverrideData` exists for that damage type.
-
-`ArmorData.ImmuneTypes` ignores listed damage types completely. By default, armor is immune to `Silver` and `Holy`; a specific armor profile can remove that by setting a different `ImmuneTypes` array in its `.tres`.
-
-Example:
-
-```text
-Weapon damage: Slash 80 + Holy 100
-Target armor ImmuneTypes: [Silver, Holy]
-Result: Slash resolves normally, Holy is ignored.
-
-Weapon damage: Slash 80 + Holy 100
-Target armor ImmuneTypes: [Silver]
-Target armor TypeOverrides: [Holy 0]
-Result: Slash resolves normally, Holy applies at full value.
-
-Weapon damage: Slash 80 + Holy 100
-Target armor ImmuneTypes: [Silver]
-Target armor TypeOverrides: [Holy 50]
-Result: Slash resolves normally, Holy is mitigated by defense 50.
-
-Weapon damage: Slash 80 + Holy 100
-Target armor ImmuneTypes: [Silver]
-Target armor TypeOverrides: [Holy -25]
-Result: Slash resolves normally, Holy is increased by vulnerability 25%.
-```
-
-This keeps damage resolution normalized: Holy and Silver are normal damage types, and immunity decides whether a target ignores them.
+`ArenaCombatApplyData` can apply instant damage, force, and status values. Instant damage type, armor, immunity, and vulnerability rules live in [damage-types.md](damage-types.md). Poison, stun, effect defense, status caps, and status immunity live in [status-effects.md](status-effects.md).
 
 ## Core Resources
 
@@ -243,6 +221,8 @@ It:
 - `Action`
 - `Effect`
 - `Direction`
+- `BuildupScalar`
+- `ChainDepth`
 
 ### IArenaCombatEffect
 
@@ -257,19 +237,19 @@ public interface IArenaCombatEffect
 
 ## Current Player Flow
 
-Players can currently trigger main-hand melee actions.
+Players can currently trigger main-hand and off-hand item actions. The action can be melee, linear projectile, thrown projectile, area of effect, or a configured chain depending on the equipped item's authored `MainAction` resource.
 
 ```text
 Player input
   -> PlayerCombatant
-  -> GladiatorData.Equipment.MainHand
+  -> GladiatorData.Equipment.MainHand or OffHand
   -> DamageItemData.MainAction
   -> ArenaCombatActionRunner.TryActivate(...)
-  -> ArenaMeleeHitbox.tscn
+  -> configured reusable effect scene
   -> target.ApplyDamage(...)
 ```
 
-Current first-pass input:
+Current main-hand input:
 
 - keyboard `Space`
 - mouse left
@@ -280,7 +260,7 @@ Current first-pass input:
 
 Independent aim must not be required by arena action logic. If no separate aim input is present, movement direction should continue to drive facing and action direction. This supports keyboard-only play, simpler movement-only controls, more gamepad/device layouts, and newer players who prefer not to manage movement and aim separately. Mouse aiming should be controlled by a settings toggle that defaults on.
 
-Additional first-pass action inputs exist but do not activate authored effects yet: keyboard `E`/mouse right/gamepad `A` for off-hand, keyboard `F`/mouse-mode `Q`/gamepad `B` for ability, and keyboard `Q`/mouse-mode `Space`/gamepad `Y` for block.
+Current off-hand input is keyboard `E`, mouse right, or gamepad `A`. Additional first-pass action inputs exist but do not activate authored effects yet: keyboard `F`/mouse-mode `Q`/gamepad `B` for ability, and keyboard `Q`/mouse-mode `Space`/gamepad `Y` for block.
 
 The player path uses source item damage by default.
 
@@ -336,7 +316,7 @@ The hitbox does not own rewards, victory checks, death cleanup, or save data.
 
 ## Current Projectile And Area Executors
 
-The first reusable non-melee executors are present but are not yet wired into starter item resources. `tests/attack_effect_sandbox.tscn` loads every `ArenaCombatActionData` `.tres` under `tests/attacks/` into its dropdown for scenario testing, then spawns the selected attack at the mouse position when `F` is pressed.
+The first reusable non-melee executors are present and some authored item resources already use them, including bow/crossbow linear projectile items and the poison flask thrown-projectile-to-AOE chain. `tests/attack_effect_sandbox.tscn` loads every `ArenaCombatActionData` `.tres` under `tests/attacks/` into its dropdown for scenario testing, then spawns the selected attack at the mouse position when `F` is pressed.
 
 ### ArenaAttackLinearProjectile
 
@@ -490,9 +470,10 @@ Resource_slime_green_bump_effect: ArenaMeleeEffectData
 
 ## Next Work
 
-1. Use `tests/attack_effect_sandbox.tscn` to exercise the `tests/attacks/**/*.tres` melee, linear projectile, thrown projectile, and area-of-effect scenarios against 9 training dummies.
-2. Add authored starter item resources that use `ArenaAttackLinearProjectileData`, `ArenaAttackThrownProjectileData`, and `ArenaAttackAreaOfEffectData` outside the sandbox.
-3. After visible attack/effect scenes are in place, add optional enemy movement/attack/logic components under `EnemyCombatant`-rooted scenes.
-4. Add `EnemyMobData.MainAction` or a minimal enemy action component when the first mob attack needs authored tuning.
-5. Add `SlimeEnemyCombatant.tscn` and assign slime mob `Scene` fields once slime movement/attack behavior exists.
-6. Add enemy death cleanup, arena-level victory detection, and player defeat detection.
+1. Verify authored bow/crossbow linear projectile items and the poison flask thrown-projectile-to-AOE chain through normal arena player activation.
+2. Tune non-melee item stamina costs, hit sizes, range, projectile speed, AOE timing, poison values, and action-pattern UI after playtesting.
+3. Add player block activation from the existing block input path through data-driven action/effect resources where practical.
+4. Add player ability activation from the existing ability input path through data-driven action/effect resources.
+5. Add optional enemy movement/attack/logic components under `EnemyCombatant`-rooted scenes.
+6. Add `EnemyMobData.MainAction` or a minimal enemy action component when the first mob attack needs authored tuning.
+7. Add `SlimeEnemyCombatant.tscn` and assign slime mob `Scene` fields once slime movement/attack behavior exists.

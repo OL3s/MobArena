@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="360" viewBox="0 0 1040 360" role="img" aria-labelledby="title desc">
+  <title id="title">MobArena Core Loop Overview</title>
+  <desc id="desc">The player manages a gladiator company in town, selects an arena contract, fights monsters, resolves rewards or losses, then returns to town for recovery, training, shopping, and the next day.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#553f28"/></marker>
+    <style>.bg{fill:#f8f1e7}.box{fill:#fffaf0;stroke:#553f28;stroke-width:2;rx:14}.town{fill:#eef8ef;stroke:#47704c;stroke-width:2;rx:14}.arena{fill:#fff1e8;stroke:#9a5b33;stroke-width:2;rx:14}.risk{fill:#fff0ef;stroke:#8a4a44;stroke-width:2;rx:14}.t{font:700 19px serif;fill:#211912}.s{font:14px sans-serif;fill:#31271d}.line{stroke:#553f28;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect class="bg" width="1040" height="360"/>
+  <rect class="town" x="65" y="105" width="170" height="95"/><text class="t" x="150" y="140" text-anchor="middle">Town</text><text class="s" x="150" y="166" text-anchor="middle">recruit, shop</text><text class="s" x="150" y="187" text-anchor="middle">train, recover</text>
+  <rect class="box" x="310" y="105" width="170" height="95"/><text class="t" x="395" y="140" text-anchor="middle">Contract</text><text class="s" x="395" y="166" text-anchor="middle">assign gladiators</text><text class="s" x="395" y="187" text-anchor="middle">configure controls</text>
+  <rect class="arena" x="555" y="105" width="170" height="95"/><text class="t" x="640" y="140" text-anchor="middle">Arena</text><text class="s" x="640" y="166" text-anchor="middle">fight mobs</text><text class="s" x="640" y="187" text-anchor="middle">survive or die</text>
+  <rect class="risk" x="800" y="105" width="170" height="95"/><text class="t" x="885" y="140" text-anchor="middle">Resolve</text><text class="s" x="885" y="166" text-anchor="middle">gold, fame, death</text><text class="s" x="885" y="187" text-anchor="middle">champion pressure</text>
+  <line class="line" x1="235" y1="152" x2="310" y2="152"/><line class="line" x1="480" y1="152" x2="555" y2="152"/><line class="line" x1="725" y1="152" x2="800" y2="152"/>
+  <path class="line" d="M885 200 C885 285 150 285 150 205" fill="none"/>
+  <text class="s" x="520" y="312" text-anchor="middle">Return to town for Night/Next Day phase work, market refresh, recovery, training, and the next contract.</text>
+</svg>

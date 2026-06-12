@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="360" viewBox="0 0 980 360" role="img" aria-labelledby="title desc">
+  <title id="title">Roadmap: Dedicated Town Building Scenes</title>
+  <desc id="desc">Current MVP uses town building objects and generic overlays. Post-MVP direction is dedicated Recovery Bay and Training Hall scenes using docs/img concept references.</desc>
+  <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#513d28"/></marker><style>.bg{fill:#f8f1e7}.now{fill:#fffaf0;stroke:#513d28;stroke-width:2;rx:12}.later{fill:#eef8ef;stroke:#47704c;stroke-width:2;rx:12}.img{fill:#eef4ff;stroke:#486a8f;stroke-width:2;rx:12}.t{font:700 18px serif;fill:#211912}.s{font:14px sans-serif;fill:#31271d}.line{stroke:#513d28;stroke-width:3;marker-end:url(#arrow)}</style></defs>
+  <rect class="bg" width="980" height="360"/>
+  <rect class="now" x="70" y="95" width="260" height="125"/><text class="t" x="200" y="130" text-anchor="middle">Current MVP</text><text class="s" x="200" y="158" text-anchor="middle">Town building objects</text><text class="s" x="200" y="180" text-anchor="middle">generic modal overlays</text><text class="s" x="200" y="202" text-anchor="middle">fast management loop</text>
+  <line class="line" x1="330" y1="158" x2="440" y2="158"/>
+  <rect class="later" x="440" y="45" width="250" height="110"/><text class="t" x="565" y="78" text-anchor="middle">Dedicated Recovery Bay</text><text class="s" x="565" y="104" text-anchor="middle">separate room/scene view</text><text class="s" x="565" y="126" text-anchor="middle">deeper treatment presentation</text>
+  <rect class="later" x="440" y="205" width="250" height="110"/><text class="t" x="565" y="238" text-anchor="middle">Dedicated Training Hall</text><text class="s" x="565" y="264" text-anchor="middle">separate room/scene view</text><text class="s" x="565" y="286" text-anchor="middle">deeper training presentation</text>
+  <line class="line" x1="330" y1="158" x2="440" y2="100"/><line class="line" x1="330" y1="158" x2="440" y2="260"/>
+  <rect class="img" x="745" y="65" width="180" height="70"/><text class="t" x="835" y="94" text-anchor="middle">docs/img</text><text class="s" x="835" y="118" text-anchor="middle">Recoverybay-example.png</text>
+  <rect class="img" x="745" y="225" width="180" height="70"/><text class="t" x="835" y="254" text-anchor="middle">docs/img</text><text class="s" x="835" y="278" text-anchor="middle">Traininghall-example.png</text>
+  <line class="line" x1="690" y1="100" x2="745" y2="100"/><line class="line" x1="690" y1="260" x2="745" y2="260"/>
+</svg>

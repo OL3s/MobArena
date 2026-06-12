@@ -9,7 +9,7 @@ Value commands use `--flag=value`. Space-separated values are not consumed, so e
 Example:
 
 ```bash
-godot --headless -- --delete --generate-company --add-money=250 --buy-equipment=1 --generate-gladiator --contract --next-day
+godot --headless -- --delete --generate-company --add-money=250 --buy-equipment=1 --generate-gladiator --complete-contract --next-day
 ```
 
 ## Save Data
@@ -17,6 +17,7 @@ godot --headless -- --delete --generate-company --add-money=250 --buy-equipment=
 - `--help`: print the runtime CLI command list and exit.
 - `--save`: save the current runtime save state and exit.
 - `--print-save`: print the current save summary and exit.
+- `--print-load`: load the current save data, print the load result and save summary, then exit.
 - `--delete`: delete all project save data under `user://save` and exit without writing a fresh save.
 
 ## Company Setup
@@ -31,19 +32,19 @@ godot --headless -- --delete --generate-company --add-money=250 --buy-equipment=
 - `--add-fame=<amount>`: add fame to the active company, then save.
 - `--buy-equipment[=index]`: buy and save the generated blacksmith item stock entry at `index`. Defaults to `0`.
 - `--buy-gladiator[=index]`: buy and save the generated gladiator market stock entry at `index`. Defaults to `0`.
-- `--contract[=index]`: complete the available arena contract at `index` for the active company. Defaults to `0`. Alias: `--complete-contract`.
-- `--complete-day`: complete the current day phase without selecting a contract, then save. Alias: `--complete-arena-day`.
+- `--complete-contract[=index]`: complete the available arena contract at `index` for the active company. Defaults to `0`.
+- `--skip-contract`: skip today's arena contract when skip rules allow it, apply the same fame loss as town UI, and move to night.
 - `--next-day`: advance from night to the next day, including salary and market refresh work, then save.
 - `--weather[=value]`: set weather, then save. Accepted values: `Cloudy`/`0`, `Sun`/`1`, `Rain`/`2`. Missing or invalid values default to `Cloudy`.
 
-## Scene Loading
+## Scene Resource Load Checks
 
-- `--goto-scene=<scene>`: load a scene by name, then continue the command sequence. Supported names: `main-menu`, `town`, `arena`.
+- `--goto-scene=<scene>`: resource-load a scene by name as a load check, then continue the command sequence. Supported names: `main-menu`, `town`, `arena`.
 - `--goto=<scene>`: alias for `--goto-scene`.
-- `--goto-main-menu`: load `res://scenes/main_menu.tscn`.
-- `--goto-town`: load `res://scenes/town.tscn`.
-- `--goto-arena`: load `res://scenes/arena.tscn`.
+- `--goto-main-menu`: resource-load `res://scenes/main_menu.tscn`.
+- `--goto-town`: resource-load `res://scenes/town.tscn`.
+- `--goto-arena`: resource-load `res://scenes/arena.tscn`.
 
-`--complete-contract` uses the same contract visibility rules as the arena contract UI: starter contract before the company has completed contracts, generated contracts afterward or when tutorial skipping is enabled.
+`--complete-contract` uses the same contract visibility rules as the arena contract UI: starter contract before the company has completed contracts, generated contracts afterward or when tutorial skipping is enabled. It also uses the shared arena-start API, so contracts can only complete during Day and the block reason is logged when the command is rejected.
 
 Order matters. For example, `--generate-gladiator --generate-company` fails on a clean save because there is no active company when `--generate-gladiator` runs.

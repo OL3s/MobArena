@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520" role="img" aria-labelledby="title desc">
+  <title id="title">MobArena Roadmap Root Features</title>
+  <desc id="desc">A numbered overview of the roadmap root feature tracks: MVP loop, combat feel, dedicated town scenes, input-only clients, combat expansion, management expansion, content expansion, release polish, and actual multiplayer.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#5a422b"/>
+    </marker>
+    <style>
+      .bg{fill:#f8f1e7}
+      .box{fill:#fffaf0;stroke:#5a422b;stroke-width:2;rx:14}
+      .mvp{fill:#eef8ef;stroke:#47704c;stroke-width:2;rx:14}
+      .polish{fill:#fff1e8;stroke:#9a5b33;stroke-width:2;rx:14}
+      .town{fill:#eef4ff;stroke:#486a8f;stroke-width:2;rx:14}
+      .net{fill:#f2efff;stroke:#6652a3;stroke-width:2;rx:14}
+      .num{font:700 22px sans-serif;fill:#fff}
+      .badge{fill:#5a422b}
+      .t{font:700 18px serif;fill:#211912}
+      .s{font:14px sans-serif;fill:#31271d}
+      .line{stroke:#5a422b;stroke-width:3;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect class="bg" width="1120" height="520"/>
+
+  <rect class="mvp" x="40" y="55" width="220" height="95"/>
+  <circle class="badge" cx="70" cy="85" r="18"/><text class="num" x="70" y="93" text-anchor="middle">1</text>
+  <text class="t" x="150" y="88" text-anchor="middle">MVP Loop</text>
+  <text class="s" x="150" y="115" text-anchor="middle">recruit, equip, fight</text>
+  <text class="s" x="150" y="136" text-anchor="middle">resolve rewards/death</text>
+
+  <rect class="polish" x="330" y="55" width="220" height="95"/>
+  <circle class="badge" cx="360" cy="85" r="18"/><text class="num" x="360" y="93" text-anchor="middle">2</text>
+  <text class="t" x="440" y="88" text-anchor="middle">Combat Feel</text>
+  <text class="s" x="440" y="115" text-anchor="middle">particles, shake, audio</text>
+  <text class="s" x="440" y="136" text-anchor="middle">alive readable fights</text>
+
+  <rect class="town" x="620" y="55" width="220" height="95"/>
+  <circle class="badge" cx="650" cy="85" r="18"/><text class="num" x="650" y="93" text-anchor="middle">3</text>
+  <text class="t" x="730" y="88" text-anchor="middle">Town Rooms</text>
+  <text class="s" x="730" y="115" text-anchor="middle">Recovery Bay scene</text>
+  <text class="s" x="730" y="136" text-anchor="middle">Training Hall scene</text>
+
+  <rect class="net" x="860" y="55" width="220" height="95"/>
+  <circle class="badge" cx="890" cy="85" r="18"/><text class="num" x="890" y="93" text-anchor="middle">4</text>
+  <text class="t" x="970" y="88" text-anchor="middle">Input Clients</text>
+  <text class="s" x="970" y="115" text-anchor="middle">phone-as-gamepad</text>
+  <text class="s" x="970" y="136" text-anchor="middle">input intent only</text>
+
+  <line class="line" x1="260" y1="103" x2="330" y2="103"/>
+  <line class="line" x1="550" y1="103" x2="620" y2="103"/>
+  <line class="line" x1="840" y1="103" x2="860" y2="103"/>
+
+  <rect class="box" x="110" y="235" width="220" height="95"/>
+  <circle class="badge" cx="140" cy="265" r="18"/><text class="num" x="140" y="273" text-anchor="middle">5</text>
+  <text class="t" x="220" y="268" text-anchor="middle">Combat Expansion</text>
+  <text class="s" x="220" y="295" text-anchor="middle">block, ability, enemy AI</text>
+  <text class="s" x="220" y="316" text-anchor="middle">mob action resources</text>
+
+  <rect class="box" x="450" y="235" width="220" height="95"/>
+  <circle class="badge" cx="480" cy="265" r="18"/><text class="num" x="480" y="273" text-anchor="middle">6</text>
+  <text class="t" x="560" y="268" text-anchor="middle">Management</text>
+  <text class="s" x="560" y="295" text-anchor="middle">market, upgrades</text>
+  <text class="s" x="560" y="316" text-anchor="middle">requirements, durability</text>
+
+  <rect class="box" x="790" y="235" width="220" height="95"/>
+  <circle class="badge" cx="820" cy="265" r="18"/><text class="num" x="820" y="273" text-anchor="middle">7</text>
+  <text class="t" x="900" y="268" text-anchor="middle">Content</text>
+  <text class="s" x="900" y="295" text-anchor="middle">mobs, contracts, gear</text>
+  <text class="s" x="900" y="316" text-anchor="middle">coatings, appearances</text>
+
+  <line class="line" x1="970" y1="150" x2="970" y2="205"/>
+  <line class="line" x1="970" y1="205" x2="900" y2="235"/>
+  <line class="line" x1="790" y1="283" x2="670" y2="283"/>
+  <line class="line" x1="450" y1="283" x2="330" y2="283"/>
+
+  <rect class="box" x="235" y="400" width="250" height="85"/>
+  <circle class="badge" cx="265" cy="428" r="18"/><text class="num" x="265" y="436" text-anchor="middle">8</text>
+  <text class="t" x="360" y="431" text-anchor="middle">Release Polish</text>
+  <text class="s" x="360" y="458" text-anchor="middle">exports, accessibility, bug bash</text>
+
+  <rect class="net" x="635" y="400" width="250" height="85"/>
+  <circle class="badge" cx="665" cy="428" r="18"/><text class="num" x="665" y="436" text-anchor="middle">9</text>
+  <text class="t" x="760" y="431" text-anchor="middle">Actual Multiplayer</text>
+  <text class="s" x="760" y="458" text-anchor="middle">host-authoritative full clients</text>
+
+  <line class="line" x1="220" y1="330" x2="315" y2="400"/>
+  <line class="line" x1="485" y1="442" x2="635" y2="442"/>
+</svg>

@@ -2,13 +2,22 @@
 
 This document explains how to add or tune an enemy mob resource for contracts, codex display, arena spawning, and future enemy behavior.
 
+![Authoring resource model](diagrams/authoring-resource-model.svg)
+
+<details>
+<summary>Diagram source notes</summary>
+
+The SVG at [authoring-resource-model.svg](diagrams/authoring-resource-model.svg) shows where mob resources sit in the authored data graph: mobs point to appearance/tuning, family resources list mobs with fame gates, and contracts reference families plus resolved mob lists.
+
+</details>
+
 ## Fast Path
 
 To add a normal enemy:
 
 1. Duplicate a similar file in `resources/mobs/`.
 2. Duplicate or reuse a matching appearance in `resources/mob_appearances/`.
-3. Set name, description, icon/appearance, family, health, armor, and fame value.
+3. Set name, description, icon/appearance, family, health, armor, block armor, and fame value.
 4. Add the mob to the correct family file in `resources/mob_families/`.
 5. Open the codex or a contract that can select the mob and verify it appears correctly.
 
@@ -36,6 +45,7 @@ EnemyMobData or ChampionMobData
   Family
   MaxHealth
   ArmorProfile
+  BlockArmorProfile
   FameValue
 ```
 
@@ -57,6 +67,7 @@ EnemyMobData
   Family
   MaxHealth
   ArmorProfile
+  BlockArmorProfile
   StatusProfile
   FameValue
 ```
@@ -72,6 +83,7 @@ A champion uses `ChampionMobData`, which currently inherits the same fields as `
 - `Family`: The `MobFamily` enum value used for sorting and matching to family roots.
 - `MaxHealth`: Runtime enemy health in arena combat.
 - `ArmorProfile`: Authored `ArmorData` for damage mitigation and immunity.
+- `BlockArmorProfile`: Optional authored `ArmorData` added only while the enemy is in `Blocking` state.
 - `FameValue`: The mob's single threat, contract-budget cost, and reward contribution value.
 
 `StatusProfile` is optional. If it is null, `EnemyCombatant` falls back to `resources/combat/status_profiles/default_mob_status_profile.tres` or `default_champion_status_profile.tres` for champions.
@@ -134,7 +146,7 @@ Current broad bands:
 
 ## Health, Armor, And Status
 
-`MaxHealth` controls raw survival time. `ArmorProfile` controls damage mitigation per `CombatDamageType`.
+`MaxHealth` controls raw survival time. `ArmorProfile` controls damage mitigation per `CombatDamageType`. `BlockArmorProfile` is an additive defense profile used only while the mob is in `Blocking` state. See [damage-types.md](damage-types.md) for the full instant damage, armor, block armor, immunity, and vulnerability model.
 
 Armor uses:
 
@@ -145,6 +157,8 @@ ArmorData
   ImmuneTypes
 ```
 
+`BlockArmorProfile` uses the same `ArmorData` shape. Use it to describe the extra protection a mob gets from a guarding posture, shield, shell, raised claws, magic ward, or similar behavior. Current generic enemies do not yet run AI that enters `Blocking`, but the resource value is authored now for future behavior scenes.
+
 Use armor to define what the mob resists, not just how much health it has. Examples:
 
 - Skeletons can resist `Pierce` but be weaker to `Crush`.
@@ -153,7 +167,7 @@ Use armor to define what the mob resists, not just how much health it has. Examp
 
 `ArmorData.ImmuneTypes` defaults to `Silver` and `Holy`. If a mob should not have those immunities, set a different `ImmuneTypes` array on its `ArmorProfile`.
 
-Status behavior comes from `CombatantStatusProfileData`. Use it when a mob should resist, ignore, cap, or amplify statuses such as Poison or Stun. See `docs/status-effects.md` for the detailed status model.
+Status behavior comes from `CombatantStatusProfileData`. Use it when a mob should resist, ignore, cap, or amplify statuses such as Poison or Stun. See [status-effects.md](status-effects.md) for the detailed status model.
 
 ## Runtime Scene
 
@@ -175,7 +189,7 @@ Keep `EnemyCombatant` as the shared shell. Put family movement, attack selection
 1. Create or reuse a UI icon under `assets/ui/mobs/`.
 2. Create or reuse body textures and a `MobAppearanceData` under `resources/mob_appearances/`.
 3. Create an `EnemyMobData` or `ChampionMobData` under `resources/mobs/`.
-4. Set display fields, appearance, family, health, armor, optional status profile, and fame value.
+4. Set display fields, appearance, family, health, armor, block armor, optional status profile, and fame value.
 5. Add the mob to the correct `resources/mob_families/*.tres` with a `MinimumCompanyFame` gate.
 6. Open the codex and verify the enemy appears under the expected family.
 7. Launch a generated or authored contract that can include the mob and verify the icon/name/count display.
@@ -188,6 +202,7 @@ Keep `EnemyCombatant` as the shared shell. Put family movement, attack selection
 - Treating `FameValue` as only a reward number, when it also controls generated difficulty.
 - Setting only `UiIcon` while the appearance points to an older icon.
 - Forgetting that new `ArmorData` defaults to `Silver` and `Holy` immunity.
+- Forgetting `BlockArmorProfile` on mobs that should gain defense while guarding.
 - Creating a custom enemy scene that bypasses `ArenaCombatant.ApplyDamage(...)`.
 - Duplicating enemy stats in contracts instead of referencing the mob `.tres`.
 - Giving a champion normal `EnemyMobData` type instead of `ChampionMobData`.

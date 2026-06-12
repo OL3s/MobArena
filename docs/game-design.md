@@ -2,11 +2,20 @@
 
 MobArena is based on the `Mob Gladiator` concept from `../GameIdeas/MobGladiator.md`.
 
+![Core loop overview](diagrams/game-loop-overview.svg)
+
+<details>
+<summary>Diagram source notes</summary>
+
+The SVG at [game-loop-overview.svg](diagrams/game-loop-overview.svg) shows the core loop: town management, contract selection, arena combat, result resolution, and return to town for phase work and preparation.
+
+</details>
+
 ## High Concept
 
 MobArena is a simple 2D top-down Godot game where the player owns and manages a company of gladiators. The company accepts arena contracts, fights monsters, earns money and fame, buys better gear, recruits new fighters, and tries to survive increasingly difficult battles.
 
-The player directly controls one selected gladiator during each arena fight. If that gladiator dies, they are permanently dead and the player must continue with another fighter from the company.
+The player directly controls selected gladiators during arena fights. If a gladiator dies, they are permanently dead and the player must continue with surviving fighters from the company.
 
 ## Core Fantasy
 
@@ -20,8 +29,8 @@ Outside combat, the player makes business decisions: who to recruit, who to trai
 2. Check available arena contracts.
 3. Manage gladiators, gear, money, fame, and upkeep.
 4. Choose a contract.
-5. Select which gladiator will fight.
-6. Enter the arena and control that gladiator directly.
+5. Select which gladiator or gladiators will fight.
+6. Enter the arena and control the assigned gladiator directly, or assigned gladiators in local co-op flows.
 7. Defeat the mobs or die trying.
 8. Earn money, fame, and experience.
 9. Return to the city and prepare for the next contract.
@@ -35,7 +44,7 @@ Outside combat, the player makes business decisions: who to recruit, who to trai
 - Fame gained from winning contracts, unlocking harder and better-paying fights.
 - Arena contracts with different enemy groups, rewards, and restrictions.
 - Gear that changes stats, combat strength, and risk when a gladiator dies.
-- Equipped gear should eventually be visible on the gladiator's body in town and arena, not only represented by inventory/menu icons.
+- Equipped gear is visible on the gladiator's body in town and arena, not only represented by inventory/menu icons. Future work should keep improving readability and animation around those visible layers.
 - Gear quality should be readable through material tiers such as Training, Wooden, Bronze, Iron, and Black. The weapon is only half the work: better gear raises the baseline, while gladiator combat attributes and item-specific multiplier configs should provide the rest of the performance. Item requirements are Strength and Agility only: Strength should favor heavy weapon power, while Agility should favor light/ranged weapon handling and speed. Vitality should affect health, and Endurance should affect stamina amount/generation.
 - City phase for management through simple menus.
 
@@ -65,7 +74,7 @@ Champion Day is the current hard failure pressure point: the player must take a 
 
 ## Combat Direction
 
-Combat should be simple 2D top-down action. The player controls one gladiator in an arena and fights mobs directly.
+Combat should be simple 2D top-down action. The player controls assigned gladiators in an arena and fights mobs directly.
 
 Basic actions:
 
@@ -84,6 +93,7 @@ MobArena should be designed for phone, controller, and desktop compatibility fro
 Supported input styles:
 
 - Phone: touch controls with a virtual movement stick and touch-friendly combat buttons.
+- Phone as controller: a phone or other secondary device can later join a host as an input-only gamepad that sends controls to the host display.
 - Controller: left stick movement, optional right stick or right mousepad-style aiming, and face buttons or triggers for attack, dodge, ability, and item use.
 - Desktop: keyboard and mouse support, with keyboard movement, optional mouse aiming, and mouse or key-driven attacks.
 
@@ -96,6 +106,7 @@ Design requirements:
 - Avoid tiny UI targets because phone support is a first-class requirement.
 - Avoid mechanics that require precise mouse-only aiming unless an equivalent controller and touch solution exists.
 - Keep the first prototype input set small: move, attack, confirm, cancel, and basic menu navigation.
+- Multiplayer and phone-as-gamepad support should follow the host-authoritative direction in [input.md](input.md). Clients send input; the host owns simulation, enemy AI, combat results, save/run mutations, and scene transitions.
 
 ## Enemy Direction
 
@@ -118,7 +129,7 @@ Possible progression:
 
 ## First Prototype Scope
 
-Keep the first playable version narrow:
+The original first playable target was deliberately narrow:
 
 - One controllable gladiator.
 - One arena.
@@ -131,7 +142,7 @@ Keep the first playable version narrow:
 
 Arena contracts should be authored as resources containing their enemy mob entries and rewards so the selection UI and future combat startup share the same contract definition. Fame gain should scale against current company fame: the mob list provides the base fame value, then an expected-fame cost reduces the net reward so easy contracts are useful early but stop being efficient for famous companies.
 
-Do not build the full roster, shop, fame, upkeep, or gear systems before the basic arena fight and contract loop works.
+The current prototype has already grown beyond parts of this original scope. Keep future work grounded in the same principle: make the arena contract loop playable and readable before broadening management or content further.
 
 ## Design Pillars
 

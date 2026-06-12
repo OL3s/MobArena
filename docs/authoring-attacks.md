@@ -2,6 +2,15 @@
 
 This document explains how to structure resource-driven arena attacks for items, tests, and future enemy behavior.
 
+![Authoring resource model](diagrams/authoring-resource-model.svg)
+
+<details>
+<summary>Diagram source notes</summary>
+
+The SVG at [authoring-resource-model.svg](diagrams/authoring-resource-model.svg) shows the shared authored resource model: items point to damage/actions, actions point to effects, mobs point to appearance/tuning, families point to mobs, and contracts point to families and resolved mobs.
+
+</details>
+
 ## Fast Path
 
 To create a new attack:
@@ -120,7 +129,7 @@ For item attacks, leave `UseSourceItemDamage = true` when the hit should use the
 
 For sandbox attacks and future mob attacks, usually set `UseSourceItemDamage = false` and provide `Apply.Damage`, because there may be no source item damage to resolve.
 
-`ForceStrength` pushes in the attack direction. `StatusApplications` can apply statuses such as Poison or Stun. See `docs/status-effects.md` for status scaling and defense rules.
+`ForceStrength` pushes in the attack direction. `StatusApplications` can apply statuses such as Poison or Stun. See [damage-types.md](damage-types.md) for instant damage/armor rules and [status-effects.md](status-effects.md) for status scaling and defense rules.
 
 ## Effect Types
 

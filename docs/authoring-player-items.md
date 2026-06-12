@@ -2,6 +2,15 @@
 
 This document explains how to structure player item resources, including weapons, off-hand items, armor, visuals, damage, and attacks.
 
+![Authoring resource model](diagrams/authoring-resource-model.svg)
+
+<details>
+<summary>Diagram source notes</summary>
+
+The SVG at [authoring-resource-model.svg](diagrams/authoring-resource-model.svg) shows where item resources sit in the authored data graph: hand items point to damage and actions, actions point to effects, and effects execute through reusable scenes.
+
+</details>
+
 ## Fast Path
 
 To add a weapon:
@@ -35,7 +44,7 @@ Use existing items such as `resources/items/main_hand/training_sword.tres`, `res
 
 ## Minimum Valid Items
 
-A minimum weapon needs:
+A minimum combat-ready weapon needs:
 
 ```text
 MainHandItemData or OffHandItemData
@@ -43,11 +52,11 @@ MainHandItemData or OffHandItemData
   Description
   UiIcon
   Cost
-  Requirements
-  LevelMultiplier
   Damage
   MainAction
 ```
+
+`Requirements` and `LevelMultiplier` are optional tuning data. Add them when the item should care about gladiator attributes or future undertrained-item behavior.
 
 A minimum armor item needs:
 
@@ -57,10 +66,10 @@ ArmorItemData
   Description
   UiIcon
   Cost
-  Requirements
-  LevelMultiplier
   ArmorProfile
 ```
+
+Armor can also author `Requirements` and `LevelMultiplier` when future handling or scaling behavior should care about them.
 
 Held and armor textures are strongly recommended because town and arena characters render equipped gear visibly.
 
@@ -98,12 +107,15 @@ Combat-capable hand items inherit `DamageItemData`.
 DamageItemData
   Damage
   MainAction
+  BlockArmorProfile
 ```
 
 Concrete hand item types:
 
 - `MainHandItemData`: primary hand weapons, with optional `IsTwoHanded`.
 - `OffHandItemData`: off-hand weapons or tools that can also define an attack.
+
+`BlockArmorProfile` is optional only for special hidden or nonstandard resources. Normal authored hand items should set it so blocking has item-specific mitigation.
 
 Armor uses `ArmorItemData`.
 
@@ -215,6 +227,8 @@ Tune these fields in the actual town/arena character presentation, not only in a
 
 Weapons use `CombatDamageData`, which contains one or more `CombatDamageEntryData` rows.
 
+See [damage-types.md](damage-types.md) for the full damage type, armor, immunity, and vulnerability model.
+
 ```text
 CombatDamageData
   Entries
@@ -261,11 +275,36 @@ ArenaCombatActionData
   MaxChainDepth
 ```
 
-See `docs/authoring-attacks.md` for full attack structure details.
+See [authoring-attacks.md](authoring-attacks.md) for full attack structure details.
 
 For normal weapons, the attack effect usually has an `ArenaCombatApplyData` with `UseSourceItemDamage = true`. That means the hit uses the item's `Damage` field.
 
 Use `UseSourceItemDamage = false` when the effect should use separate authored damage, such as a bomb explosion, poison cloud, fire patch, or magic effect.
+
+## Block Defense
+
+Hand items can define `BlockArmorProfile`, an `ArmorData` profile that is added to the combatant's normal armor only while the combatant is in `Blocking` state.
+
+```text
+DamageItemData
+  BlockArmorProfile = ArmorData
+    BaseValue
+    TypeOverrides
+    ImmuneTypes
+```
+
+Current runtime behavior is intentionally simple: player block input can put an idle combatant into `Blocking`; incoming damage then resolves against equipped armor plus all authored hand-item block profiles. When not blocking, only the normal armor profile applies.
+
+Authoring guidance:
+
+- Fist fallback resources under `resources/combat/player_defaults/` leave `BlockArmorProfile` null.
+- Shields and bucklers should have the best broad `BaseValue` because they block all damage types well.
+- Daggers should use `BaseValue = 0` with only `Slash` and `Pierce` type overrides.
+- Swords and greatswords should be decent against blade lines, with lower or modest `Crush` values.
+- Hammers and clubs should be below decent overall, with their best value usually on `Crush`.
+- Bows, crossbows, flasks, and other awkward blocking items should have low or narrow profiles.
+
+Do not add `BlockArmorProfile` to armor item resources. Armor items already use `ArmorProfile`; block defense belongs to hand-held items and future block/skill logic.
 
 ## Attack Pattern UI
 
@@ -455,13 +494,14 @@ Coating resources need only UI icons for now, not in-world held sprites. The Ite
 4. Add held or armor visuals and tune display height, rotation, and offset in-game.
 5. For weapons, add `CombatDamageData` entries with intentional damage types.
 6. For weapons, add `MainAction` with an `ArenaCombatActionData`.
-7. Set the root effect and correct `ScenePath`.
-8. Add an `ArenaCombatApplyData` and decide whether it uses source item damage.
-9. Add chained effects only when the action pattern needs them.
-10. Verify item card, store showcase, and codex display.
-11. Test attacks in `tests/attack_effect_sandbox.tscn` if the item uses a new attack pattern.
-12. Verify armor immunities if the item is armor.
-13. Run `godot --headless --import`, `dotnet build`, and `godot --headless --quit` after resource or script changes.
+7. For hand items, add a `BlockArmorProfile` unless this is a hidden fallback or explicitly non-blocking resource.
+8. Set the root effect and correct `ScenePath`.
+9. Add an `ArenaCombatApplyData` and decide whether it uses source item damage.
+10. Add chained effects only when the action pattern needs them.
+11. Verify item card, store showcase, and codex display.
+12. Test attacks in `tests/attack_effect_sandbox.tscn` if the item uses a new attack pattern.
+13. Verify armor immunities if the item is armor.
+14. Run `godot --headless --import`, `dotnet build`, and `godot --headless --quit` after resource or script changes.
 
 ## Common Mistakes
 
@@ -470,6 +510,7 @@ Coating resources need only UI icons for now, not in-world held sprites. The Ite
 - Leaving `UseSourceItemDamage = true` on effects that should use their own explosion/cloud damage.
 - Duplicating damage in both the item and effect without deciding which one should apply.
 - Forgetting that each damage entry is mitigated separately.
+- Forgetting hand-item `BlockArmorProfile`, leaving block-state defense weaker than intended.
 - Leaving default `Silver` and `Holy` armor immunities when the item should not have them.
 - Using `ImmuneTypes` on armor when a type override would be enough.
 - Tuning held visuals only from the item card instead of checking town and arena characters.

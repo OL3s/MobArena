@@ -1,138 +1,117 @@
 # Project Overview
 
-MobArena is intended to be developed as a Godot-based 2D top-down gladiator arena game. The player manages a gladiator company between fights and directly controls one selected gladiator during arena contracts.
+MobArena is a Godot 4.6 C# prototype for a 2D top-down gladiator arena game. The player manages a gladiator company in town, accepts arena contracts, and controls assigned gladiators in direct arena combat.
 
-The source concept is `../GameIdeas/MobGladiator.md`. See `docs/game-design.md` for the local implementation-oriented summary.
+This file is the documentation hub. Keep it readable and link to topic docs instead of duplicating their details.
 
-## Existing Files
+![Documentation reading flow](diagrams/docs-reading-flow.svg)
 
-- `project.godot` configures the Godot application, renderer, .NET assembly name, and physics engine.
-- `MobArena.csproj` configures the Godot C# project.
-- `autoload/overlay/GlobalOverlay.tscn` is an autoloaded overlay layer for modal UI.
-- `autoload/SaveNode.tscn` is an autoloaded save/load node for runtime company data and simple resource persistence under `user://save`.
-- `autoload/RuntimeTagOverlay.tscn` is an autoloaded top-right runtime tag overlay. It shows newline-separated `Demo`, `Dev`, and `(debug build)` tags when `SettingsConfig.ShowRuntimeTags` is enabled and the corresponding settings or Godot debug-build state are active, and hides itself when no tag applies.
-- `autoload/LocalInputConfig.tscn` is an autoloaded runtime input configuration node for local controller setup.
-- `scenes/components/panels/InfoPopupPanel.tscn` provides a blurred OK popup.
-- `scenes/components/panels/GoCancelPopupPanel.tscn` provides a blurred Go/Cancel popup.
-- `scenes/components/town/TownBuilding.tscn` is the reusable town building template with an exported `PackedScene` target to open.
-- `scenes/main_menu.tscn` is the configured main scene.
-- Contract participant controls are assigned from the Arena launch flow instead of being finalized globally from the main menu.
-- `scenes/town.tscn` is the between-fights management scene. It uses a neutral root with a `Node2D` world plus a `CanvasLayer` controller UI.
-- `scenes/arena.tscn` is the arena contract placeholder. It uses a neutral root with a `Node2D` world plus a `CanvasLayer` controller UI.
-- Arena launches should go through real roster, contract, and control assignment data. The town HUD dev menu has `Quickstart arena` for fast iteration with existing roster gladiators and fixed Keyboard, Mouse, Gamepad 0, and Gamepad 1 assignments. Arena control setup currently exposes touch joining, but combat touch input is not implemented yet.
-- `scripts/MainMenu.cs`, `scripts/Town.cs`, and `scripts/Arena.cs` contain the C# scripts for the initial navigation flow.
-- `scripts/GameLogger.cs` formats runtime diagnostic prints as `[Script.cs][Call Type]: message`; gameplay and UI scripts should use explicit `GameLogger` category helpers instead of direct `GD.Print(...)` calls. See `docs/game-logger.md` for usage and extension rules.
-- `assets/ui/company_shield_highres.svg` provides the current project/app icon.
-- `.gitignore` excludes Godot editor state and Android export output.
-- `.editorconfig` declares UTF-8 files.
-- `.gitattributes` normalizes text files to LF line endings.
+<details>
+<summary>Diagram source notes</summary>
 
-## Current Scene Flow
+The SVG at [docs-reading-flow.svg](diagrams/docs-reading-flow.svg) shows the intended reading path: [README.md](../README.md) points to this overview, then this overview points AI agents to [ai-agent.md](ai-agent.md), [focuspoint.md](focuspoint.md), and the relevant topic docs.
 
-1. `scenes/main_menu.tscn` starts the game.
-2. `scenes/town.tscn` represents the between-fights city/company phase.
-3. Town-center `RosterYard` represents the active roster-management surface.
-4. Current town buildings open modal overlay packed scenes over town through `GlobalOverlay`.
-5. `scenes/arena.tscn` is still present as an arena combat placeholder.
-6. Arena startup should be reached through the town contract flow and its control setup overlay.
+</details>
 
-## Scene Structure
+## Read This First
 
-- Town and arena should keep world objects under a `Node2D` named `World`.
-- Town and arena should keep HUD, controller navigation, touch controls, and menu overlays under a `CanvasLayer` named `ControllerUi`.
-- Phase transitions live in `scripts/resources/PhaseTransitionController.cs` as a static service, not saved state.
-- Future Day/Night transition animation should fit around `PhaseTransitionController`, since that controller owns phase-time advancement and phase work. It is planned UX polish, not part of the current shader foundation.
-- Town Day/Night phase state lives in `scripts/resources/TownPhaseState.cs` as a Godot `Resource`; the shared runtime instance is stored on `SaveNode.TownPhaseState`.
-- `TownPhaseState` also exposes the seven-day champion cadence through Champion Day/countdown helpers used by the town HUD and future contract filtering.
-- Frontend environment visuals live in `scenes/components/environment/EnvironmentVisualOverlay.tscn`, used by both town and arena. It keeps phase-driven time of day separate from shared `WeatherState` weather so Night can compose with Cloudy/Rain and Day can compose with Cloudy/Sun/Rain. `WeatherShaderLayer` provides reusable shader effects for weather by switching between shader materials from `assets/shaders/Weather*.gdshader`; Cloudy uses broad moving cloud shadows, Sun uses moving flare/shimmer, and Rain is split into cloud-background, falling-rain, and splash layers. `PhaseTransitionController` randomizes weather when phase time advances. Weather effects are deliberately simple and debuff-only compared with neutral Cloudy: Sun applies 75% recovery, Rain applies 75% training and 125% Recovery Bay/Training Hall costs.
-- Time-passes work executes once on Day -> Night and once on Night -> Day through `CompanyRunData.ExecutePhaseBuildingWork`: courtyard/arena gladiators recover 1 exhaustion and 10% max health, Recovery Bay-assigned gladiators pay gold for selected health or exhaustion treatment, and Training Hall work spends gold, stamina, and exhaustion to add attribute XP for the selected focus. Night -> Day also pays gladiator salary through `CompanyRunData.PayNightSalary`, currently the floor of each gladiator's initial cost divided by 10.
-- Completed arena contracts use `PhaseTransitionController.CompleteArenaContract` instead of the generic debug `CompleteArenaDay`; contract completion applies 4 exhaustion to arena gladiators, returns them to the courtyard, and clears arena control assignments after Day -> Night building work.
-- The selected arena contract is stored on `CompanyRunData.ActiveArenaContract` when the arena scene launches and cleared when arena results resolve. Arena victory from the scene goes through `Arena.RequestArenaVictory()`, which is guarded against duplicate calls, starts when all spawned enemies are dead or the dev victory button is pressed, prevents player combatants from entering death after victory starts, waits 3 seconds, snapshots arena runtime player health into `GladiatorData` when the victory popup appears, then shows rewards before resolving the win and returning to town. Forfeit and loss still go through `Arena.ResolveContractForfeit()` and `Arena.ResolveContractLoss()`. Win, forfeit, and non-champion loss currently kill only arena gladiators already at 0 health; champion loss force-retires the company instead of processing individual arena deaths. Arena death overlays are queued and shown once town HUD loads. Until real combat result handling exists, `scenes/arena.tscn` exposes dev-only win/loss buttons; the control setup overlay assigns inputs and launches the arena.
-- Settings state lives in `scripts/resources/SettingsConfig.cs` as a Godot `Resource`; the shared runtime instance is stored on `SaveNode.SettingsConfig` and persisted under `user://save/settings.tres`. Current settings are dev mode, demo mode, runtime tag visibility, skip tutorial, low-health warning ratio, and arena movement deadzone.
-- Weather state lives in `scripts/resources/WeatherState.cs` as a Godot `Resource`; the shared runtime instance is stored on `SaveNode.WeatherState` and saved under `user://save/weather.tres` so town and arena render the same current weather across scene changes and save/load.
-- Local input controller setup rows live in `scripts/resources/LocalInputControllerConfig.cs` as Godot `Resource`s. `LocalInputConfig.ControllerSetups` is a runtime `Array<LocalInputControllerConfig>` rebuilt during the arena launch control setup flow.
-- `scenes/components/ui/TownHud.tscn` and `TownHud.cs` provide the reusable top and bottom town HUD used by town-like rooms.
-- Company logo state lives in `scripts/resources/CompanyLogoData.cs` as a Godot `Resource`. It stores shield shape, shield color, logo icon, logo size, and company name. Random company names are generated by `scripts/resources/CompanyNameGenerator.cs`.
-- `scenes/components/ui/CompanyLogo.tscn` renders the logo as two layers: shield and inner logo.
-- `scenes/ui/CompanyLogoEditorOverlay.tscn` edits company identity through `GlobalOverlay`, including dice-button randomization for the name or full logo setup.
-- Completed company history lives in `scripts/resources/CompletedCompanyHistory.cs` as a Godot `Resource` containing capped, fame-sorted `CompletedCompanyRecord` entries with company identity, career totals, and final fame only. It is persisted by `SaveNode` under `user://save/completed_company_history.tres` and can be viewed from `scenes/ui/CompletedCompaniesOverlay.tscn` through the main menu top-right `Records` button.
-- First town entry per run is tracked by `CompanyRunData.HasShownFirstTownEntryPopup`; `Town.cs` currently shows a placeholder tutorial popup once through `GlobalOverlay` and saves the flag. If completed company records exist and tutorial skipping is off, `CompanyRunData.HasAskedReturningPlayerTutorialSkipPopup` gates a one-time per-run prompt asking whether to disable tutorial mode for that run.
-- Character visual identity uses `CharacterAppearanceData` resources with a UI `UiIcon`, a `BodyForward` texture, and a `BodyBack` texture. Gladiators use `GladiatorAppearanceData` under `resources/gladiator_appearances/`; mobs use `MobAppearanceData` under `resources/mob_appearances/`. Some appearances use `UsesSeparatedHands` plus a circular `HandTexture`; body-only mobs such as slimes keep hands disabled. Menus and compact UI use UI icons, while town/arena/world presentation uses body textures through the relevant `GetBodyForwardTexture()`/`GetBodyBackTexture()` APIs.
-- Enemy mob metadata lives under `scripts/resources/mobs/`. `MobData` is the base resource for shared mob display data, and `EnemyMobData` adds family identity, max health, an authored `ArmorData` profile, and fame value. Fame value is the single mob strength, contract-budget cost, and reward contribution value. Authored enemy templates live under `resources/mobs/`; Slimes, Goblins, Undead, and Demons each have five normal mobs plus one champion template, and currently have no packed combat scene assigned. Root enemy-family resources live under `resources/mob_families/` as `EnemyMobFamilyData`, which inherits abstract shared metadata from `MobFamilyData`; contracts and codex load only `EnemyMobFamilyData` so future non-contract family resources can use the same base without entering arena generation. Each enemy family has display data, a family fame value used for cheapest-to-most-expensive catalog sorting, and `MobFamilyMobEntryData` rows that reference individual enemy `.tres` files plus the minimum company fame required before that mob can be selected for generated contracts. Current family bands are intentionally uneven: Slimes are the only very-low-entry family (`5 -> 20 -> 30 -> 45 -> 70`), Goblins start at 40 and scale to 150, Undead start at 40 but jump to 80+ immediately, and Demons start with Imp at 60 before scaling sharply upward.
-- `scenes/ui/CodexOverlay.tscn` opens from the main menu top-right `Codex` button. It discovers authored enemy-family `.tres` files under `resources/mob_families` and item `.tres` files under `resources/items`, lets the player switch between Enemies and Items, and displays shared icon/name/description/stat details. Enemy entries are grouped into collapsed icon-labeled sections from the authored family resources, with individual mobs sorted from lowest to highest fame and champions marked by the champion icon. Item entries use the same collapsed panel grouping by type, with two-handed weapons under Main Hand and marked with the two-handed icon, sorted by total type cost and then individual item cost.
-- Item combat data is resource-container based. `ItemData` owns shared display, cost, and integer `Durability`/`MaxDurability` uses; normalized condition is derived through `GetCondition()`. Equippable gear forks through `EquipmentItemData`, which owns held visuals, integer `Weight`, optional `ItemRequirementData`, optional `ItemLevelMultiplierData`, and optional `AppliedItemCoatingData`. Coatings fork separately through `ItemCoatingData`. Requirements, multipliers, weight, and coatings are authored now for future combat behavior but are not yet a hard equip gate or damage modifier. `ArmorItemData.ArmorProfile` and `EnemyMobData.ArmorProfile` point to `ArmorData`, which stores `BaseValue`, `ArmorTypeOverrideData` rows, and `ImmuneTypes`. `MainHandItemData` and `OffHandItemData` inherit `DamageItemData`, which stores a `CombatDamageData` container made of `CombatDamageEntryData` rows. `CombatDamageType` currently includes physical, elemental, and special instant types: `Slash`, `Pierce`, `Crush`, `Heat`, `Cold`, `Acid`, `Silver`, and `Holy`; `Heat` and `Cold` are valid for explicit fantasies such as explosions, frost, mobs, coatings, or upgrades, but should not become default item-tier filler. Armor mitigation is non-linear for positive armor, neutral at zero armor, treats negative armor as vulnerability, and ignores immune damage types completely. Instant combat type icons live under `assets/ui/combat/instant/type_*.svg`; status icons live under `assets/ui/combat/effects/status_*.svg`; coating branch icons live under `assets/ui/coatings/type_*.svg`. Equipment uses `UiIcon` for UI and optional `HeldTexture`/`HeldDisplayHeight` for in-hand world visuals; armor also has `ArmorForwardTexture` and `ArmorBackTexture` overlays. Material naming should communicate item quality, using tiers such as Training, Stone, Wooden, Bronze, Iron, and Black. Item costs use wide economy bands: crude early gear stays cheap, Bronze moves into hundreds, Iron into thousands, and Black into late-game five figures.
-- `MarketData.ItemStock` backs the Market `Items` storefront and can contain both equipment and coatings. `MarketData` stores current item and gladiator stock as saved run state, so leaving/reloading does not reroll the market. Market stock refreshes only through the Night -> Day phase transition via `MarketData.ExecuteNewDay()`. Market item generation is delegated to `MarketItemStockGenerator.GenerateDebugAllItems()`, which currently loads one runtime copy of each authored debug/catalog item path from `MarketItemCatalog`. Bought coatings enter the shared Items inventory and can be dragged onto a gladiator to choose one of their equipped items as the coating target. Coatings branch into `AdditiveItemCoatingData` and `MultiplierItemCoatingData`. Additive coatings use `DamageEntries` plus `EffectEntries`: on weapons they are attack payloads, while on armor they are damage defense and effect defense. Multiplier coatings use `DamageMultipliers` rows such as the authored slash Honing Oil family.
-- Main menu disables `Enter Town` until company name/logo data is applied through the editor.
-- Main menu top-right UI has `Codex`, `Records`, and the reusable `SettingsButton.tscn`, which opens the Settings overlay.
-- Town buildings are represented by reusable `TownBuilding.tscn` `Node2D` instances positioned in the `World` layer.
-- `TownBuilding.tscn` contains the building SVG sprite, icon SVG sprite, text label, and `Area2D` interaction hitbox in one scene file.
-- Each `TownBuilding` instance can assign unique `BuildingTexture` and `IconTexture` exports.
-- `TownBuilding.DisableWhenRosterEmpty` disables non-market buildings when the active roster is empty. Disabled buildings are grayed out and do not show hover popups or accept interaction; Market stays usable during Day so players can recruit replacements. `TownBuilding.DisableAtNight` disables selected buildings during Night; Arena and Market use it so after-fight Night is for recovery, training, treatment, and advancing to the next day rather than starting another contract or shopping. `TownBuilding.ClosedBuildingTexture` provides optional closed-state art while disabled; Arena and Market use closed-building SVG variants.
-- First-run town guidance uses completed-contract thresholds to stage complexity: Arena stays hidden only while the company has completed no contracts and has no gladiators, Recovery Bay unlocks after the second completed contract, and Training Hall unlocks after the third completed contract. `SettingsConfig.SkipTutorial` bypasses these building gates so all town buildings are available.
-- Town buildings should use a 1:1 square footprint. The current town layout is a 3x2 grid split by an implied horizontal road gap; the road is not drawn.
-- Town currently includes Arena, Market, Recovery Bay, Training Hall, and the central RosterYard management area with gladiator and equipment buttons.
-- Upgradeable buildings implement `IUpgradeable` through `BuildingOverlayPanel`. Recovery Bay and Training Hall currently expose the upgrade button in the overlay header, with levels and gold costs stored on `CompanyRunData`.
-- RosterYard also has a compact gold button. Hovering it shows the current phase total near the button, building phase costs in each building's centered gold badge position, and salary on each visible roster-yard gladiator avatar; salary displays as 0 during Day and as the upcoming Night -> Day payment during Night. Building hover badges show the building's own phase cost plus salary for gladiators assigned inside that building. Pressing it opens `GoldCostOverlay`, which discovers `IPhaseGoldCostSource` nodes and lays out visible current-phase costs in side-by-side boxes for gladiators, buildings, and payment result. Building cost previews hide occupancy badges while visible.
-- The Town HUD `Select Contract` action and arena contract launch allow debt for arena-return upkeep. Returning from arena completes Day -> Night and immediately charges current phase upkeep, but projected negative gold no longer blocks the contract flow.
-- Arena contracts expose a `Donate` action that opens `scenes/town_overlays/arena_donation_overlay.tscn`. Donations buy +1 or +5 current fame for a static gold price per fame point. Cost and mutation logic live in `CompanyRunData.GetFameDonationGoldCost`, `CanDonateForFame`, and `TryDonateForFame`.
-- Arena contracts are authored as `ArenaContractData` resources under `resources/contracts/`. Contracts reference an `EnemyMobFamilyData` root through `FamilyData` and store a resolved exact `Mobs` list for display/spawning. Before any contract is completed, `starter_slime_pit.tres` is the only shown contract and contains one `slime_green.tres` enemy entry as a low-pressure control tutorial. Total mob fame is the contract threat value used for budget and stars; generated gold reward is deterministic from that enemy threat value, gross earned fame is 10% of that threat value, and `GetFameCost(currentCompanyFame)` subtracts 1% current-fame decay for the final net fame reward. `ArenaContractCard` renders family display data from `FamilyData`, one final fame medal value for the net result, and groups duplicate enemy resources into one icon row with an `xN` count.
-- `ArenaContractGenerator` generates the active Arena overlay contracts at runtime from `MobFamilyCatalog`, current company fame, each family's fame value, each family entry's minimum company fame, and each mob's fame value. Normal days generate Easy/Medium/Hard contracts, while Champion Day generates Easy/Medium/Hard champion contracts with exactly one eligible `ChampionMobData` plus eligible support mobs from that champion's family resource. Champion selection picks the highest-fame champion that fits the current tier budget while leaving room for at least one same-family support mob, and support mobs cannot exceed the champion's fame value. Contract cards display total mob-fame threat as non-linear 1-10 stars, starting around 30 threat for 1 star. Authored contract `.tres` resources remain useful examples/fallbacks.
-- Champion Day contracts are mandatory stakes. Advancing Night -> Day into Champion Day shows a champion warning popup. A champion-contract loss force-retires the company through `SaveNode.ForceRetireCurrentCompany()`, preserving qualifying completed-company records and wiping active company/run state. A champion-contract win increments `CompanyCareerData.ChampionsDefeated`.
-- `TownBuilding.OverlayToOpen` opens modal packed-scene building UI over town. `TownBuilding.SceneToOpen` exists for future full-scene navigation but is not used by the current town management flow.
-- Shared modal popups should go through `GlobalOverlay` instead of being attached directly to town or arena scenes.
-- Custom overlays should be opened through `GlobalOverlay.AddOverlay`. If they need a blurred modal feel, reuse `assets/shaders/PopupBlurBackdrop.gdshader` on a fullscreen backdrop.
-- Keep this split intact so phone, controller, and desktop interactions can share the same scene without mixing gameplay world nodes and interface overlays.
-- Room layouts should be authored in `.tscn` files. Scene scripts should look up existing nodes and attach behavior instead of generating the layout in code.
-- Use neutral scene roots when combining world and controller UI. Do not put controller UI under a `Node2D` root.
-- World layouts are authored for `1152x648`. Town and arena use centered `Camera2D` nodes so aspect-ratio expansion grows outward from the center through engine scene behavior.
-- Company overview is currently a `GlobalOverlay` modal opened from the town shield. It displays lifetime counters from `CompanyCareerData`, held and persisted through `SaveNode`.
-- The old separate Roster Hall scene path has been removed. Roster inspection opens from the town-center `RosterYard` using a horizontal gladiator-list overlay with reusable gladiator cards.
-- Current gladiator condition state lives on `GladiatorData`. `Exhaustion` is the remaining 0-10 management condition and affects recoverable health and stamina caps.
-- Current gladiator attribute progression lives on `GladiatorLevelData` as EXP-backed Strength/Agility/Vitality/Endurance values. `TotalExp` and `TotalLevel` provide summed APIs for future balancing and contract requirements.
-- Long-run player/company power should grow mostly linearly through attributes, gear, building upgrades, and future skill unlocks, while contract difficulty should scale faster through fame, family availability, and higher generated threat budgets. The intended long-term shape is that companies can fail early through economy, starvation/debt pressure, or deaths, but successful long runs eventually reach the player's practical skill cap rather than scaling forever at equal pace.
-- Legacy supply upkeep, continuous town time, and champion deadline timer pressure have been removed for the arena-first loop.
-- Gladiator death is centralized in `CompanyRunData.KillGladiator`. Dead gladiators are removed from active `Gladiators`, moved to `Cemetery`, and `GladiatorDeathOverlay.tscn` displays the dead gladiator card. `CemeteryOverlay.tscn` lists all dead gladiators from `CompanyRunData.Cemetery` through the company overview Cemetery button.
-- New company runs start with no gladiators through `SaveNode.StartNewCompanyRun()`. Added gladiators should come from Market recruitment and use `CompanyRunData.AddGladiator` so `CompanyCareerData.TotalGladiatorsInCareer` stays correct.
-- Market recruits are created through `MarketGladiatorStockGenerator`, which calls `GladiatorGenerator` for individual generated gladiators. Recruits use varied current health from 20-100% max health. Before the first completed contract, market recruits are normalized to full health and full exhaustion/readiness so the starter loop and Arena auto-assign cannot soft-lock on poor recruit condition. `GladiatorData.GetMarketValue()` and `GetMarketSaleValue()` account for current health/stamina and exhaustion, so injured or exhausted gladiators are cheaper to buy and sell.
-- Current roster capacity lives on `CompanyRunData.GladiatorCapacity` and defaults to 6. `CompanyRunData.CanAddGladiator`, `AddGladiator`, and `TryBuyGladiator` enforce this cap before adding or spending gold. Phase gold cost timing types live in `scripts/resources/PhaseGoldCost.cs`; scene cost previews use `IPhaseGoldCostSource`, while backend affordability remains in `CompanyRunData`.
-- Equipment visuals are tied to `GladiatorEquipmentData`: equipped armor/weapons from inventory are visible on gladiator body art in the town roster and arena. Menu/card UI uses `UiIcon`; body/world presentation layers body, armor, hands, held items, and shadow. Courtyard roster-yard gladiators show their total level from `GladiatorLevelData.TotalLevel` under the character. The current implementation is duplicated in town and arena actors and should be extracted into a reusable character visual component before adding attack animation.
-- Arena combatants own a runtime `ArenaCombatState` resource. `PlayerCombatant` configures both runtime current health and runtime max health from the gladiator's arena-entry `GladiatorData.Health`, plus equipped `ArmorProfile`, then syncs runtime health changes back into `GladiatorData.SetHealth`. This prevents arena healing from restoring pre-existing injuries above the health a gladiator started the fight with. `EnemyCombatant` configures it from `EnemyMobData.MaxHealth` and the mob's authored `ArmorProfile`; enemy health labels display the runtime current/max value. `ArenaCombatant` owns team identity and shared damage entry points so future melee, projectile, thrown, and AoE scenes can target combatants without duplicating damage/armor rules.
-- Arena combatant states include short-lived runtime states such as `Windup`, `Release`, `Stunned`, and `Exhausted`. `Exhausted` is separate from the town-management `GladiatorData.Exhaustion` condition. If a player tries an action that costs more stamina than they currently have, the action does not activate and the player enters `Exhausted`. Exhausted player movement uses a `0.5` speed multiplier and clears once stamina regenerates back to the failed action's cost, capped by recoverable max stamina, and once the minimum exhausted window has passed. That minimum starts at `1.0` second and is reduced by a non-linear diminishing-returns curve from Endurance, approaching a `0.25` second floor.
-- Player normal actions can start only from `Default`, so `Exhausted` blocks starting another normal action even though movement and input reading continue.
-- Item combat activation is resource-driven. `DamageItemData.MainAction` points to `ArenaCombatActionData`, which references typed effect config resources such as `ArenaMeleeEffectData`, `ArenaAttackLinearProjectileData`, `ArenaAttackThrownProjectileData`, and `ArenaAttackAreaOfEffectData`. Runtime arena effect executors and helpers live under `scenes/components/arena/combat/effects/`. `ArenaCombatActionRunner` spawns reusable effect scenes and initializes them with `ArenaCombatEffectContext`; effect resources can also chain initialized `OnHitEffect` and `OnExpireEffect` followups. `ArenaMeleeHitbox.tscn`, `ArenaAttackLinearProjectile.tscn`, `ArenaAttackThrownProjectile.tscn`, and `ArenaAttackAreaOfEffect.tscn` are present, though starter sword, hammer, spear, and dagger resources still use inline melee action/effect subresources. Empty player hand slots fall back to hidden default punch resources under `resources/combat/player_defaults/`, with off-hand punch weaker than main-hand punch. Attack effect data exposes type labels/icons under `assets/ui/attacks/`, and item cards/store showcases stack those icons to summarize the item's action pattern.
-- Enemy spawning is resource-driven but not scene-generated. Contracts are based on an authored root enemy-family resource, but expose resolved typed enemy resources through `ArenaContractData.GetEnemyMobs()`, and `ArenaEnemySpawner` accepts an array of `EnemyMobData`. If a mob's `Scene` is null, the arena fallback generic `EnemyCombatant.tscn` is used and configured from the `.tres`; if `Scene` is set, it should point to a family or unique behavior-composition scene such as a future `SlimeEnemyCombatant.tscn`. Keep `EnemyCombatant` as the shared shell and put family movement, attack, and logic in child components on those behavior scenes.
+If you are an AI agent, read [ai-agent.md](ai-agent.md), [focuspoint.md](focuspoint.md), and the relevant topic docs in the documentation map before changing code, scenes, resources, or docs.
 
-## Settings And Input
+For current implementation work, treat [focuspoint.md](focuspoint.md) as the active session handoff and [roadmap.md](roadmap.md) as post-MVP direction.
 
-- Arena control setup is explicit per contract launch. `LocalInputConfig` records controllers joined in that launch flow instead of auto-creating startup controller setup.
-- `SettingsConfig.DevEnabled` stores the temporary project-wide dev flag. `SettingsConfig.IsDemo` enables the demo-complete gate after the first champion win. `SettingsConfig.ShowRuntimeTags` controls whether the runtime tag overlay is shown. Settings UI mutates these directly like the other settings fields; gameplay code can read `SaveNode.DevEnabled`, `SaveNode.IsDemo`, and `SaveNode.IsDemoComplete` as conveniences. The Town HUD shows a compact `Dev` menu only while dev mode is enabled. `SettingsConfig.ArenaAutoAssignCount` persists the Arena overlay auto-assign dropdown value.
-- `SettingsConfig.LowHealthWarningRatio` stores the low-health warning threshold used by town Risk counts and town-world warning icons. Risk classification is centralized through `GladiatorData.GetRiskStatus(...)`, including the critical combined low-health-and-exhausted state so displays do not duplicate warning icons for one gladiator.
-- Idle assigned gladiators are counted separately through `CompanyRunData.GetIdleAssignedGladiatorCount`. The clock icon is `assets/ui/gladiator_icons/idle.svg` and means assigned but no work will run this phase; `assets/ui/gladiator_icons/exhaustion.svg` is now the exhausted warning icon.
-- Primary-input auto-detect/default-input settings are not implemented. `SettingsConfig` currently exposes debug, demo mode, tutorial, low-health warning, arena move deadzone, and arena auto-assign count. A mouse-aim setting should be added and should default on.
-- `ArenaContractsOverlay` has an auto-assign control with a persisted 1-4 count dropdown. It assigns the requested number of active-roster gladiators to Arena only when enough gladiators are above the configured low-health warning ratio; low-health and dead gladiators are excluded. Building assigned-gladiator rows use the left drag-hand button as a clear-all shortcut that moves every assigned gladiator back to the courtyard. `ArenaControlConfigOverlay` clears and rebuilds `LocalInputConfig.ControllerSetups` per contract by assigning controls to Arena gladiators left-to-right. Keyboard, Mouse, Touch, and Gamepad can be joined in the setup overlay, but arena gameplay input is implemented for Keyboard, Mouse, and Gamepad only. Keyboard-only arena control uses movement direction for facing/aim. Mouse-mode arena aim can follow the mouse cursor; gamepad aim can read the right stick or right mousepad-style input. Independent aim is optional, and movement-only control should remain valid by using movement direction as facing/aim direction.
-- Gamepad prompts use imported icons under `assets/ui/input_icons/`. Keyboard, mouse, touch, and gamepad setup rows use the icons exported on `LocalInputConfig`.
-- General device icons use SVG assets named `device_pc.svg`, `device_console.svg`, and `device_phone.svg`. Control-mode device icons use `device_keyboard.svg` for keyboard-only and `device_mouse.svg` for keyboard+mouse. The arena combat HUD and launch summary use these device/control-mode icons, while join prompts still use action-specific prompts such as Enter and mouse-left. Keyboard and Mouse remain separate `ControllerKind` values because mouse control uses keyboard movement plus mouse aim/actions.
-- Local co-op is planned for up to four local players. Keep future join/leave mutation in `LocalInputConfig` so gameplay scenes can query the same source of truth.
+## Current Status
 
-## Not Yet Present
+| Area | Status |
+| --- | --- |
+| Engine | Godot 4.6 C# with GL Compatibility rendering and Jolt Physics. |
+| Main flow | `Main Menu -> Town -> Arena`. |
+| Town | Roster management, drag/drop, Market, Recovery Bay, Training Hall, contracts, control setup, phase work, weather, and champion cadence are implemented at prototype level. |
+| Arena | Assigned players and contract enemies spawn; runtime combat state, player actions, combat HUD, victory, defeat, forfeit, and result resolution exist at first-pass level. |
+| Combat actions | Resource-driven melee, linear projectile, thrown projectile, and area-of-effect executors exist. |
+| Enemy behavior | Enemy resources, families, contracts, spawning, and health exist; family-specific enemy AI and attacks are not implemented yet. |
+| Input | Keyboard, mouse, and gamepad arena input exist. Touch can join control setup but does not drive arena combat yet. |
+| Save data | `SaveNode` persists company, run, career, phase, weather, settings, and completed-company history resources under `user://save`. |
 
-- Full gameplay combat loop
-- Runtime enemy behavior scenes; enemy `.tres` metadata and generic fallback spawning exist, but family-specific mob gameplay scenes are not implemented yet
-- Runtime contract execution; arena contract `.tres` metadata exists, but actual combat spawning/result handling is still placeholder-level
-- Real local co-op join/leave input handling and per-player gameplay spawning
-- Export presets
+## Game Flow
 
-## Intended First Prototype
+1. Main menu creates or loads a company.
+2. Town handles recruitment, gear, assignments, treatment, training, contracts, phase work, and onboarding gates.
+3. Arena launches from town with an active contract, assigned gladiators, and per-contract control assignments.
+4. Arena resolves win, loss, forfeit, champion retirement, demo completion, and return-to-town/main-menu transitions.
+5. Night/Day phase advancement resolves building work, salaries, market refresh, weather changes, and champion cadence.
 
-- One controllable gladiator.
-- One arena.
-- Slime enemies.
-- Basic movement and attack.
-- Phone, controller, and desktop input support.
-- Simple contract selection.
-- Money reward after winning.
-- Gladiator death and replacement.
+## Architecture Snapshot
 
-## Documentation Policy
+Durable architecture boundaries live in [architecture.md](architecture.md).
 
-Keep this documentation accurate as the project evolves. Prefer documenting real decisions and implemented structure over speculative plans.
+Short version:
+
+- Autoloads provide global services: `GlobalOverlay`, `SaveNode`, `RuntimeTagOverlay`, and `LocalInputConfig`.
+- Scenes own presentation, signals, and scene flow, not long-term game data.
+- Godot `Resource` classes under `scripts/resources/` own data and most mutation APIs.
+- Authored `.tres` resources under `resources/` are the source of truth for items, mobs, contracts, appearances, combat profiles, and combat actions.
+- Arena combat effects target `ArenaCombatant.ApplyDamage(...)` and do not mutate save/run data directly.
+- Phase changes go through `PhaseTransitionController`.
+- Modal UI goes through `GlobalOverlay`.
+
+## Documentation Map
+
+| File | Purpose |
+| --- | --- |
+| [ai-agent.md](ai-agent.md) | Required implementation rules and constraints for AI agents and developers. |
+| [focuspoint.md](focuspoint.md) | Current active priority, handoff state, and immediate next work. |
+| [roadmap.md](roadmap.md) | Post-MVP direction and intentionally deferred systems. |
+| [architecture.md](architecture.md) | Runtime boundaries, ownership rules, and major system relationships. |
+| [source-layout.md](source-layout.md) | Folder map and where new files should live. |
+| [testing.md](testing.md) | Validation commands, manual test scenes, and sandbox workflows. |
+| [game-design.md](game-design.md) | Game concept, design pillars, economy, combat direction, and prototype scope. |
+| [town-management.md](town-management.md) | Town scene, RosterYard, drag/drop, buildings, market, treatment, training, contracts, and phase work. |
+| [arena-combat.md](arena-combat.md) | Arena scene runtime, spawners, combatants, player input, HUD, victory, defeat, and current combat limits. |
+| [arena-combat-actions.md](arena-combat-actions.md) | Resource-driven action/effect architecture and runtime executors. |
+| [damage-types.md](damage-types.md) | Instant damage types, damage entries, armor mitigation, immunity, and damage icons. |
+| [status-effects.md](status-effects.md) | Poison, stun, status value scale, effect defense, status profiles, and status icons. |
+| [input.md](input.md) | Local input, remote input-only devices, host-authoritative multiplayer direction. |
+| [authoring-attacks.md](authoring-attacks.md) | Practical guide for authoring attack/action/effect resources. |
+| [authoring-player-items.md](authoring-player-items.md) | Practical guide for authoring weapons, off-hand items, armor, visuals, coatings, and item actions. |
+| [authoring-mobs.md](authoring-mobs.md) | Practical guide for authoring mobs, appearances, families, fame, armor, status profiles, and future scenes. |
+| [save-data.md](save-data.md) | Save files, runtime resources, company run/career split, settings, weather, history, and retirement. |
+| [cli-commands.md](cli-commands.md) | Headless save-data and run-mutation command reference. |
+| [game-logger.md](game-logger.md) | `GameLogger` API, categories, message style, and extension rules. |
+
+## Source Layout
+
+See [source-layout.md](source-layout.md) for the full folder map.
+
+Core paths:
+
+| Path | Purpose |
+| --- | --- |
+| `project.godot` | Godot project settings and autoload registration. |
+| `autoload/` | Global runtime nodes. |
+| `scripts/resources/` | Resource classes, data models, and mutation APIs. |
+| `scenes/` | Main scenes, overlays, and reusable scene components. |
+| `resources/` | Authored gameplay `.tres` resources. |
+| `assets/` | Runtime art, UI icons, fonts, and shaders. |
+| [diagrams/](diagrams/) | Documentation-only SVG diagrams. |
+| `tests/` | Manual test scenes and sandbox resources. |
+
+## Current Boundaries
+
+- The arena has first-pass combat/result flow, but enemy AI and family-specific behavior scenes are still future work.
+- Player main-hand and off-hand actions activate item-authored actions. Block and ability inputs are read but do not activate authored gameplay actions yet.
+- Touch control setup exists, but touch combat input is not implemented yet.
+- Item requirements, level multipliers, coatings, weight, and durability are authored data, but several of their gameplay effects are not enforced yet.
+- Market item stock still uses a debug catalog path list instead of progression-aware generation.
+- Dedicated Recovery Bay and Training Hall room scenes are post-MVP roadmap work; current town uses building objects and overlays.
+
+## Validation
+
+Use [testing.md](testing.md) as the source of truth for validation workflows.
+
+Common commands:
+
+```bash
+godot --headless --import
+dotnet build
+godot --headless --quit
+```

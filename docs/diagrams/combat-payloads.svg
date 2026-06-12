@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="340" viewBox="0 0 980 340" role="img" aria-labelledby="title desc">
+  <title id="title">Combat Payload Families</title>
+  <desc id="desc">Instant damage uses CombatDamageData and armor. Status effects use StatusEffectApplicationData and status profiles. Both are applied through ArenaCombatApplyData.</desc>
+  <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#513d28"/></marker><style>.bg{fill:#f8f1e7}.box{fill:#fffaf0;stroke:#513d28;stroke-width:2;rx:12}.dmg{fill:#fff1eb;stroke:#8a4d38;stroke-width:2;rx:12}.stat{fill:#eef7ff;stroke:#456f92;stroke-width:2;rx:12}.t{font:700 18px serif;fill:#201811}.s{font:14px sans-serif;fill:#31271d}.line{stroke:#513d28;stroke-width:3;marker-end:url(#arrow)}</style></defs>
+  <rect class="bg" width="980" height="340"/>
+  <rect class="box" x="390" y="35" width="200" height="70"/><text class="t" x="490" y="65" text-anchor="middle">Apply Payload</text><text class="s" x="490" y="89" text-anchor="middle">ArenaCombatApplyData</text>
+  <line class="line" x1="445" y1="105" x2="265" y2="155"/><line class="line" x1="535" y1="105" x2="715" y2="155"/>
+  <rect class="dmg" x="85" y="155" width="300" height="130"/><text class="t" x="235" y="188" text-anchor="middle">Damage Types</text><text class="s" x="235" y="214" text-anchor="middle">Slash, Pierce, Crush, Heat</text><text class="s" x="235" y="236" text-anchor="middle">Cold, Acid, Silver, Holy</text><text class="s" x="235" y="258" text-anchor="middle">mitigated by ArmorData</text>
+  <rect class="stat" x="595" y="155" width="300" height="130"/><text class="t" x="745" y="188" text-anchor="middle">Status Effects</text><text class="s" x="745" y="214" text-anchor="middle">Poison, Stun</text><text class="s" x="745" y="236" text-anchor="middle">value scale, decay, caps</text><text class="s" x="745" y="258" text-anchor="middle">filtered by status profile</text>
+</svg>
