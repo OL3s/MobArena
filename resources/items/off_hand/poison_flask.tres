@@ -5,7 +5,7 @@
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_damage_entry"]
 [ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="5_action"]
-[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatBuildupData.cs" id="6_buildup"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatWindupData.cs" id="6_windup"]
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackThrownProjectileData.cs" id="7_thrown"]
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackAreaOfEffectData.cs" id="8_aoe"]
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="9_apply"]
@@ -57,16 +57,16 @@ ArcHeight = 82.0
 VisualTexture = ExtResource("2_icon")
 VisualDisplayHeight = 22.0
 
-[sub_resource type="Resource" id="Resource_poison_flask_buildup"]
-script = ExtResource("6_buildup")
-BuildupSeconds = 1.0
+[sub_resource type="Resource" id="Resource_poison_flask_windup"]
+script = ExtResource("6_windup")
+WindupSeconds = 1.0
 ScaleRange = true
 
 [sub_resource type="Resource" id="Resource_poison_flask_main_action"]
 script = ExtResource("5_action")
 DisplayName = "Throw Poison Flask"
 Effect = SubResource("Resource_poison_flask_throw")
-Buildup = SubResource("Resource_poison_flask_buildup")
+Windup = SubResource("Resource_poison_flask_windup")
 WindupSeconds = 0.08
 StaminaCost = 22
 SpawnDistance = 28.0

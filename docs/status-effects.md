@@ -142,4 +142,4 @@ Poison currently ticks `100` raw damage per second while active, matching the up
 
 - Decide whether freeze should be a full immobilize or a heavy slow when added.
 - Decide if future statuses need active thresholds separate from application min.
-- Keep status buildup separate from direct damage so an attack can deal damage, add status value, or do both.
+- Keep status application separate from direct damage so an attack can deal damage, add status value, or do both.

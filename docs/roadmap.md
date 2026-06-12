@@ -104,7 +104,7 @@ Post-MVP combat work:
 - add enemy-authored attacks through the same action/effect system
 - improve combat HUD and feedback
 - add projectile wall behavior where useful
-- tune stamina, windup, release, buildup, status, and damage values through playtesting
+- tune stamina, windup, release, status, and damage values through playtesting
 
 ## Management Expansion
 

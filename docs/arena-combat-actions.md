@@ -109,7 +109,7 @@ Current fields:
 
 - `DisplayName`
 - `Effect`
-- `Buildup`
+- `Windup`
 - `WindupSeconds`
 - `StaminaCost`
 - `SpawnDistance`
@@ -221,7 +221,7 @@ It:
 - `Action`
 - `Effect`
 - `Direction`
-- `BuildupScalar`
+- `WindupScalar`
 - `ChainDepth`
 
 ### IArenaCombatEffect
@@ -266,9 +266,9 @@ The player path uses source item damage by default.
 
 When an equipped hand item is missing, `PlayerCombatant` uses hidden default punch resources from `resources/combat/player_defaults/`. The main-hand punch is stronger than the off-hand punch, and both still flow through `ArenaCombatActionData`/`ArenaMeleeEffectData` instead of hardcoded damage.
 
-Actions may optionally set `Buildup` to an `ArenaCombatBuildupData` resource. If `Buildup` is null, the action keeps the normal press-to-register behavior. If `Buildup` is present, the first press starts buildup and the second press releases the action with a scalar from `0.1` to `1.0` based on `BuildupSeconds`. The buildup config chooses which authored values use the scalar, such as range, speed, or damage. Current sandbox thrown attacks use buildup with range scaling only.
+Actions may optionally set `Windup` to an `ArenaCombatWindupData` resource. If `Windup` is null, the action keeps the normal press-to-register behavior. If `Windup` is present, the first press starts windup and puts the player in `Windup`; cancellable windup actions release on a second press with a scalar from `0.1` to `1.0` based on the action's `WindupSeconds`. Non-cancellable windup actions ignore early same-button presses and auto-execute at full scalar when `WindupSeconds` is reached. The windup config chooses which authored values use the scalar, such as range, speed, or damage. Current sandbox thrown attacks use windup with range scaling only.
 
-`ArenaCombatActionData.MaxChainDepth` limits initialized effect chaining and defaults to 12. Set it lower for tests that should prove a chain stops quickly, or higher for deliberate multi-stage attacks. Runtime logs include action name, effect type, buildup scalar, chain depth, hits, target health, and chain-depth blocks.
+`ArenaCombatActionData.MaxChainDepth` limits initialized effect chaining and defaults to 12. Set it lower for tests that should prove a chain stops quickly, or higher for deliberate multi-stage attacks. Runtime logs include action name, effect type, windup scalar, chain depth, hits, target health, and chain-depth blocks.
 
 Each attack effect data subtype owns a type label and icon path. Current icons live under `assets/ui/attacks/` for melee, linear projectile, thrown projectile, and area-of-effect. Item cards and item store showcases traverse the root effect plus `OnHitEffect`/`OnExpireEffect` chains and stack those icons so the item preview shows the action pattern at a glance.
 
@@ -330,6 +330,7 @@ It:
 - exposes `ShadowScale` and `ShadowAlpha` so authored projectiles can tune the ground shadow without generating it in code
 - can use an authored `VisualTexture` and `VisualDisplayHeight`; otherwise it falls back to the procedural rectangular visual
 - applies optional `Apply` damage/status/force on collision
+- destroys on arena border walls by default, or bounces when `BounceOffWalls` is authored true
 - tracks targets already hit
 - uses `MaxPenetrations` before being destroyed by hits
 - can spawn initialized `OnHitEffect`/`OnExpireEffect` resources

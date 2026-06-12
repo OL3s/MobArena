@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="ArenaCombatActionData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="1_action"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackLinearProjectileData.cs" id="2_linear"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="3_apply"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/arrow_projectile.svg" id="4_arrow"]
+
+[sub_resource type="Resource" id="apply"]
+script = ExtResource("3_apply")
+ForceStrength = 55.0
+
+[sub_resource type="Resource" id="effect"]
+script = ExtResource("2_linear")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaAttackLinearProjectile.tscn"
+Apply = SubResource("apply")
+LifetimeSeconds = 2.0
+MaxHits = 1
+Speed = 680.0
+Range = 600.0
+HitboxLength = 46.0
+HitboxWidth = 12.0
+VisualHeight = 10.0
+VisualTexture = ExtResource("4_arrow")
+VisualDisplayHeight = 18.0
+MaxPenetrations = 1
+BounceOffWalls = false
+
+[resource]
+script = ExtResource("1_action")
+DisplayName = "Crossbow Shot"
+Effect = SubResource("effect")
+WindupSeconds = 0.14
+StaminaCost = 28
+SpawnDistance = 38.0

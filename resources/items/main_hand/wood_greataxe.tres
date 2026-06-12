@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/items/wood_greataxe.svg" id="2_icon"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
+[ext_resource type="Resource" path="res://resources/combat/item_actions/greataxe_cleave.tres" id="main_action_resource"]
 
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="block_armor_override"]
@@ -46,6 +47,7 @@ script = ExtResource("1_main")
 BlockArmorProfile = SubResource("Resource_wood_greataxe_block_armor")
 IsTwoHanded = true
 Damage = SubResource("damage")
+MainAction = ExtResource("main_action_resource")
 DisplayName = "Wood Greataxe"
 Description = "A two-handed wood greataxe."
 UiIcon = ExtResource("2_icon")

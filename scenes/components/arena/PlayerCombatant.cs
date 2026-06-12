@@ -48,10 +48,10 @@ public partial class PlayerCombatant : ArenaCombatant
     private ArenaCombatActionData _pendingAction;
     private float _windupRemaining;
     private float _releaseRemaining;
-    private DamageItemData _buildupItem;
-    private ArenaCombatActionData _buildupAction;
-    private float _buildupElapsed;
-    private float _pendingBuildupScalar = 1f;
+    private DamageItemData _windupItem;
+    private ArenaCombatActionData _windupAction;
+    private float _windupElapsed;
+    private float _pendingWindupScalar = 1f;
     private int _exhaustedStaminaRecoveryThreshold;
     private float _exhaustedRemainingSeconds;
 
@@ -85,7 +85,7 @@ public partial class PlayerCombatant : ArenaCombatant
         LogActionPresses(mainHandPressed, offHandPressed, abilityPressed, blockPressed);
         UpdateCombatantState(deltaSeconds);
         UpdateExhaustedState(deltaSeconds);
-        UpdateBuildup(deltaSeconds);
+        UpdateWindup(deltaSeconds);
         TryActivateMainHand(mainHandPressed);
         TryActivateOffHand(offHandPressed);
         RegenerateStamina(deltaSeconds);
@@ -117,7 +117,7 @@ public partial class PlayerCombatant : ArenaCombatant
         InputState.Reset();
         ResetActionPressTracking();
         ClearPendingAction();
-        ClearBuildup();
+        ClearWindup();
         ClearExhaustedRecoveryState();
         SetCombatantState(ArenaCombatantState.Default);
         _staminaRegenAccumulator = 0f;
@@ -433,21 +433,25 @@ public partial class PlayerCombatant : ArenaCombatant
         if (item == null || action == null)
             return;
 
-        if (action.Buildup != null)
+        if (action.Windup != null)
         {
-            if (_buildupAction == action && _buildupItem == item)
+            if (_windupAction == action && _windupItem == item)
             {
-                if (TrySpendStaminaAndStartAction(item, action, action.Buildup.GetScalar(_buildupElapsed)))
-                    ClearBuildup();
+                if (action.Windup.CanReleaseEarly != true)
+                    return;
+
+                if (TrySpendStaminaAndStartAction(item, action, GetWindupScalar(action), true))
+                    ClearWindup();
                 return;
             }
 
-            if (_buildupAction != null || !CanStartAction())
+            if (_windupAction != null || !CanStartAction())
                 return;
 
-            _buildupItem = item;
-            _buildupAction = action;
-            _buildupElapsed = 0f;
+            _windupItem = item;
+            _windupAction = action;
+            _windupElapsed = 0f;
+            SetCombatantState(ArenaCombatantState.Windup);
             RefreshStateLabel();
             return;
         }
@@ -458,9 +462,9 @@ public partial class PlayerCombatant : ArenaCombatant
         TrySpendStaminaAndStartAction(item, action, 1f);
     }
 
-    private bool TrySpendStaminaAndStartAction(DamageItemData item, ArenaCombatActionData action, float buildupScalar)
+    private bool TrySpendStaminaAndStartAction(DamageItemData item, ArenaCombatActionData action, float windupScalar, bool skipWindup = false)
     {
-        if (!CanStartAction())
+        if (!CanStartAction() && !CanReleaseWindup(action))
             return false;
 
         var staminaCost = action.StaminaCost;
@@ -475,16 +479,26 @@ public partial class PlayerCombatant : ArenaCombatant
             GladiatorData.SpendStamina(staminaCost);
         }
 
-        StartAction(item, action, buildupScalar);
+        StartAction(item, action, windupScalar, skipWindup);
         return true;
     }
 
-    private void StartAction(DamageItemData item, ArenaCombatActionData action, float buildupScalar = 1f)
+    private bool CanReleaseWindup(ArenaCombatActionData action)
+    {
+        return action != null && _windupAction == action && CombatantState == ArenaCombatantState.Windup;
+    }
+
+    private float GetWindupScalar(ArenaCombatActionData action)
+    {
+        return action?.Windup?.GetScalar(_windupElapsed, action.WindupSeconds) ?? 1f;
+    }
+
+    private void StartAction(DamageItemData item, ArenaCombatActionData action, float windupScalar = 1f, bool skipWindup = false)
     {
         _pendingActionItem = item;
         _pendingAction = action;
-        _pendingBuildupScalar = Mathf.Clamp(buildupScalar, ArenaCombatBuildupData.MinScalar, ArenaCombatBuildupData.MaxScalar);
-        _windupRemaining = Mathf.Max(0f, action.WindupSeconds);
+        _pendingWindupScalar = Mathf.Clamp(windupScalar, ArenaCombatWindupData.MinScalar, ArenaCombatWindupData.MaxScalar);
+        _windupRemaining = skipWindup ? 0f : Mathf.Max(0f, action.WindupSeconds);
 
         if (_windupRemaining <= 0f)
         {
@@ -502,6 +516,9 @@ public partial class PlayerCombatant : ArenaCombatant
 
         if (CombatantState == ArenaCombatantState.Windup)
         {
+            if (_windupAction != null)
+                return;
+
             _windupRemaining -= delta;
             if (_windupRemaining <= 0f)
                 ExecutePendingAction();
@@ -534,12 +551,21 @@ public partial class PlayerCombatant : ArenaCombatant
         }
     }
 
-    private void UpdateBuildup(float delta)
+    private void UpdateWindup(float delta)
     {
-        if (_buildupAction == null || delta <= 0f || IsDead)
+        if (_windupAction == null || delta <= 0f || IsDead)
             return;
 
-        _buildupElapsed += delta;
+        _windupElapsed += delta;
+        if (_windupAction.Windup.CanReleaseEarly != true && _windupElapsed >= Mathf.Max(0.05f, _windupAction.WindupSeconds))
+        {
+            var item = _windupItem;
+            var action = _windupAction;
+            if (TrySpendStaminaAndStartAction(item, action, ArenaCombatWindupData.MaxScalar, true))
+                ClearWindup();
+            return;
+        }
+
         RefreshStateLabel();
     }
 
@@ -554,7 +580,7 @@ public partial class PlayerCombatant : ArenaCombatant
 
         var action = _pendingAction;
         var item = _pendingActionItem;
-        var activated = ArenaCombatActionRunner.TryActivate(this, item, action, _pendingBuildupScalar);
+        var activated = ArenaCombatActionRunner.TryActivate(this, item, action, _pendingWindupScalar);
         _releaseRemaining = Mathf.Max(0.05f, action.Effect?.LifetimeSeconds ?? 0.05f);
         SetCombatantState(ArenaCombatantState.Release);
 
@@ -571,21 +597,21 @@ public partial class PlayerCombatant : ArenaCombatant
         _pendingAction = null;
         _windupRemaining = 0f;
         _releaseRemaining = 0f;
-        _pendingBuildupScalar = 1f;
+        _pendingWindupScalar = 1f;
     }
 
-    private void ClearBuildup()
+    private void ClearWindup()
     {
-        _buildupItem = null;
-        _buildupAction = null;
-        _buildupElapsed = 0f;
+        _windupItem = null;
+        _windupAction = null;
+        _windupElapsed = 0f;
         RefreshStateLabel();
     }
 
     private void ExhaustFromFailedAction(int staminaCost)
     {
         ClearPendingAction();
-        ClearBuildup();
+        ClearWindup();
         var recoverableMax = Mathf.Max(1, GladiatorData?.RecoverableMaxStamina ?? staminaCost);
         var recoveryThreshold = Mathf.Clamp(staminaCost, 1, recoverableMax);
         _exhaustedStaminaRecoveryThreshold = Mathf.Max(_exhaustedStaminaRecoveryThreshold, recoveryThreshold);
@@ -684,9 +710,9 @@ public partial class PlayerCombatant : ArenaCombatant
             return;
 
         _stateLabel.Visible = SaveNode.Get().DevEnabled;
-        _stateLabel.Text = _buildupAction?.Buildup == null
+        _stateLabel.Text = _windupAction?.Windup == null
             ? CombatantState.ToString()
-            : $"Buildup {_buildupAction.Buildup.GetScalar(_buildupElapsed):0.00}";
+            : $"Windup {GetWindupScalar(_windupAction):0.00}";
         _stateLabel.Modulate = CombatantState switch
         {
             ArenaCombatantState.Windup => new Color(1f, 0.72f, 0.35f),

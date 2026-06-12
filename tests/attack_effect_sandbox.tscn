@@ -50,7 +50,7 @@ offset_top = 564.0
 offset_right = 1070.0
 offset_bottom = 594.0
 theme_override_font_sizes/font_size = 16
-text = "Choose an attack, move the mouse over the arena, then press F. Buildup attacks use F once to charge and F again to spawn."
+text = "Choose an attack, move the mouse over the arena, then press F. Windup attacks use F once to charge and F again to spawn when early release is enabled."
 horizontal_alignment = 1
 
 [node name="ArenaWalls" type="Node2D" parent="World"]

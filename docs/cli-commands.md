@@ -1,6 +1,6 @@
 # CLI Commands
 
-Run these from the project root with `godot --headless -- <flag>`.
+Run these from the project root with `tools/cli.sh <flag>`. The wrapper calls `tools/godot-dotnet8.sh --headless -- <flag>` so Godot runs with the same .NET 8 isolation used by validation.
 
 Recognized runtime flags can be stacked in one command. They execute left to right, save after each mutating step, stop on first failure, and quit automatically when the sequence finishes. `--quit` is not required.
 
@@ -9,8 +9,25 @@ Value commands use `--flag=value`. Space-separated values are not consumed, so e
 Example:
 
 ```bash
-godot --headless -- --delete --generate-company --add-money=250 --buy-equipment=1 --generate-gladiator --complete-contract --next-day
+tools/cli.sh --delete --generate-company --add-money=250 --buy-equipment=1 --generate-gladiator --complete-contract --next-day
 ```
+
+Raw equivalent:
+
+```bash
+tools/godot-dotnet8.sh --headless -- --delete --generate-company --add-money=250 --buy-equipment=1 --generate-gladiator --complete-contract --next-day
+```
+
+## Tool Wrappers
+
+| Script | Command chain |
+| --- | --- |
+| `tools/cli.sh <flags>` | Generic CLI wrapper; pass any flags listed below. |
+| `tools/cli-print-load.sh` | `--print-load` |
+| `tools/cli-new-company.sh` | `--generate-company` plus any extra flags passed to the script. |
+| `tools/cli-contract-flow.sh` | `--generate-company-if-missing --add-money=250 --generate-gladiator --complete-contract --next-day` plus extra flags. |
+| `tools/cli-reset-demo-run.sh` | `--delete --generate-company --add-money=250 --generate-gladiator` plus extra flags. This intentionally deletes local save data. |
+| `tools/check-scenes.sh` | `--goto-main-menu --goto-town --goto-arena` |
 
 ## Save Data
 

@@ -16,18 +16,32 @@ The SVG at [testing-workflow.svg](diagrams/testing-workflow.svg) shows the stand
 Run these from the project root after changing C# code, scenes, resources, imported assets, or project settings:
 
 ```bash
-godot --headless --import
+tools/validate.sh
+```
+
+That script runs the standard validation chain through the project wrappers:
+
+```bash
+tools/import.sh
+tools/build.sh
+tools/startup-check.sh
+```
+
+The equivalent raw commands are:
+
+```bash
+tools/godot-dotnet8.sh --headless --import --quit
 dotnet build
-godot --headless --quit
+tools/godot-dotnet8.sh --headless --quit
 ```
 
 What each command catches:
 
 | Command | Purpose |
 | --- | --- |
-| `godot --headless --import` | Reimports assets/resources and catches many broken Godot resource references. |
+| `tools/import.sh` | Reimports assets/resources and catches many broken Godot resource references. |
 | `dotnet build` | Compiles the C# project. |
-| `godot --headless --quit` | Starts the project headlessly and catches startup/load errors. |
+| `tools/startup-check.sh` | Starts the project headlessly and catches startup/load errors. |
 
 On Linux with multiple .NET SDKs installed, Godot Mono can ignore `global.json` during editor/import startup and pick a newer host runtime. If `godot --headless --import --quit` crashes while unloading after import, run Godot through the local .NET 8 wrapper:
 
@@ -71,7 +85,7 @@ godot tests/attack_effect_sandbox.tscn
 
 The sandbox loads `tests/attacks/**/*.tres` into a dropdown. Select an attack, move the mouse over the arena, and press `F` to spawn it at the mouse position facing right.
 
-Buildup attacks use `F` once to charge and `F` again to release.
+Windup attacks use `F` once to charge and `F` again to release when early release is enabled.
 
 Use the sandbox to verify:
 
@@ -88,10 +102,19 @@ Headless command-line mutation helpers are documented in [cli-commands.md](cli-c
 Example command sequence:
 
 ```bash
-godot --headless -- --delete --generate-company --add-money=250 --buy-equipment=1 --generate-gladiator --complete-contract --next-day
+tools/cli.sh --delete --generate-company --add-money=250 --buy-equipment=1 --generate-gladiator --complete-contract --next-day
 ```
 
 Use CLI commands when you need to check save-data paths, run mutation, contract completion, market purchase paths, weather setting, or scene resource load checks.
+
+Useful wrappers:
+
+| Script | Purpose |
+| --- | --- |
+| `tools/cli-print-load.sh` | Load and print the current save summary. |
+| `tools/check-scenes.sh` | Resource-load main menu, town, and arena scenes. |
+| `tools/cli-contract-flow.sh` | Ensure a company exists, add money/gladiator, complete one contract, and advance to next day. |
+| `tools/cli-reset-demo-run.sh` | Delete local save data, create a funded company, and add one gladiator. This is intentionally destructive. |
 
 ## Documentation-Only Changes
 

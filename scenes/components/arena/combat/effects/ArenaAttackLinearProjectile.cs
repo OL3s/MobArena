@@ -7,6 +7,7 @@ namespace MobArena.Scenes.Components.Arena.Combat.Effects;
 
 public partial class ArenaAttackLinearProjectile : Area2D, IArenaCombatEffect
 {
+    private const uint WallCollisionMask = 1u;
     private const uint CombatantCollisionMask = 2u;
 
     private readonly HashSet<ulong> _hitTargets = new();
@@ -27,7 +28,7 @@ public partial class ArenaAttackLinearProjectile : Area2D, IArenaCombatEffect
         _visual = GetNodeOrNull<ArenaAttackVisual>("Visual");
         _shadow = GetNodeOrNull<Sprite2D>("Shadow");
         CollisionLayer = 0;
-        CollisionMask = CombatantCollisionMask;
+        CollisionMask = WallCollisionMask | CombatantCollisionMask;
         BodyEntered += OnBodyEntered;
     }
 
@@ -119,7 +120,13 @@ public partial class ArenaAttackLinearProjectile : Area2D, IArenaCombatEffect
         if (_destroyed || _effectData == null || _penetrationsUsed >= Mathf.Max(1, _effectData.MaxPenetrations))
             return;
 
-        if (body is not ArenaCombatant target || target == _context.Source)
+        if (body is not ArenaCombatant target)
+        {
+            HandleWallHit(body as Node2D);
+            return;
+        }
+
+        if (target == _context.Source)
             return;
 
         var targetId = target.GetInstanceId();
@@ -137,6 +144,33 @@ public partial class ArenaAttackLinearProjectile : Area2D, IArenaCombatEffect
 
         if (_penetrationsUsed >= Mathf.Max(1, _effectData.MaxPenetrations))
             DestroyProjectile(false);
+    }
+
+    private void HandleWallHit(Node2D wall)
+    {
+        if (wall == null)
+            return;
+
+        if (!_effectData.BounceOffWalls)
+        {
+            DestroyProjectile(true);
+            return;
+        }
+
+        var normal = GetWallNormal(wall);
+        _direction = _direction.Bounce(normal).Normalized();
+        GlobalRotation = _direction.Angle();
+        GlobalPosition += _direction * 4f;
+        GameLogger.Combat($"Combat bounce: LinearProjectile action={_context.ActionName}, wall={wall.Name}.");
+    }
+
+    private Vector2 GetWallNormal(Node2D wall)
+    {
+        var delta = GlobalPosition - wall.GlobalPosition;
+        if (Mathf.Abs(delta.X) > Mathf.Abs(delta.Y))
+            return delta.X >= 0f ? Vector2.Right : Vector2.Left;
+
+        return delta.Y >= 0f ? Vector2.Down : Vector2.Up;
     }
 
     private int ApplyToTarget(ArenaCombatant target)

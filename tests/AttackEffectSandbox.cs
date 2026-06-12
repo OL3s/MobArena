@@ -22,8 +22,8 @@ public partial class AttackEffectSandbox : Node
     private Label _detailsLabel;
     private PackedScene _dummyScene;
     private EnemyMobData _dummyData;
-    private ArenaCombatActionData _buildupAction;
-    private float _buildupElapsed;
+    private ArenaCombatActionData _windupAction;
+    private float _windupElapsed;
 
     public override void _Ready()
     {
@@ -54,10 +54,17 @@ public partial class AttackEffectSandbox : Node
 
     public override void _Process(double delta)
     {
-        if (_buildupAction?.Buildup == null)
+        if (_windupAction?.Windup == null)
             return;
 
-        _buildupElapsed += (float)delta;
+        _windupElapsed += (float)delta;
+        if (_windupAction.Windup.CanReleaseEarly != true && _windupElapsed >= Mathf.Max(0.05f, _windupAction.WindupSeconds))
+        {
+            SpawnAttack(_windupAction, _world.GetGlobalMousePosition(), ArenaCombatWindupData.MaxScalar);
+            ClearWindup();
+            return;
+        }
+
         RefreshDetails();
     }
 
@@ -114,7 +121,7 @@ public partial class AttackEffectSandbox : Node
 
     private void OnAttackSelected(long index)
     {
-        ClearBuildup();
+        ClearWindup();
         RefreshDetails();
     }
 
@@ -128,12 +135,14 @@ public partial class AttackEffectSandbox : Node
 
     private string GetDetailsText(AttackTestCase selected)
     {
-        if (_buildupAction == selected.Action && selected.Action.Buildup != null)
-            return $"Selected: {selected.DisplayName}\nBuildup {_buildupAction.Buildup.GetScalar(_buildupElapsed):0.00}. Press F again to spawn at the mouse position, facing right.";
+        if (_windupAction == selected.Action && selected.Action.Windup != null)
+            return selected.Action.Windup.CanReleaseEarly
+                ? $"Selected: {selected.DisplayName}\nWindup {_windupAction.Windup.GetScalar(_windupElapsed, selected.Action.WindupSeconds):0.00}. Press F again to spawn at the mouse position, facing right."
+                : $"Selected: {selected.DisplayName}\nWindup {_windupAction.Windup.GetScalar(_windupElapsed, selected.Action.WindupSeconds):0.00}. Spawns automatically at full windup.";
 
-        return selected.Action.Buildup == null
+        return selected.Action.Windup == null
             ? $"Selected: {selected.DisplayName}\nPress F to spawn at the mouse position, facing right. Reset Dummies restores all 9 targets."
-            : $"Selected: {selected.DisplayName}\nPress F once to start buildup, then F again to spawn at the mouse position, facing right.";
+            : $"Selected: {selected.DisplayName}\nPress F once to start windup, then F again to spawn at the mouse position, facing right.";
     }
 
     private void HandleSpawnKeyPressed()
@@ -142,25 +151,28 @@ public partial class AttackEffectSandbox : Node
         if (selected?.Action?.Effect == null)
             return;
 
-        if (selected.Action.Buildup == null)
+        if (selected.Action.Windup == null)
         {
             SpawnAttack(selected.Action, _world.GetGlobalMousePosition(), 1f);
             return;
         }
 
-        if (_buildupAction == selected.Action)
+        if (_windupAction == selected.Action)
         {
-            SpawnAttack(selected.Action, _world.GetGlobalMousePosition(), selected.Action.Buildup.GetScalar(_buildupElapsed));
-            ClearBuildup();
+            if (selected.Action.Windup.CanReleaseEarly != true)
+                return;
+
+            SpawnAttack(selected.Action, _world.GetGlobalMousePosition(), selected.Action.Windup.GetScalar(_windupElapsed, selected.Action.WindupSeconds));
+            ClearWindup();
             return;
         }
 
-        _buildupAction = selected.Action;
-        _buildupElapsed = 0f;
+        _windupAction = selected.Action;
+        _windupElapsed = 0f;
         RefreshDetails();
     }
 
-    private void SpawnAttack(ArenaCombatActionData action, Vector2 position, float buildupScalar)
+    private void SpawnAttack(ArenaCombatActionData action, Vector2 position, float windupScalar)
     {
         if (action?.Effect == null)
             return;
@@ -179,16 +191,16 @@ public partial class AttackEffectSandbox : Node
                 Action = action,
                 Effect = effect,
                 Direction = Vector2.Right,
-                BuildupScalar = Mathf.Clamp(buildupScalar, 0.1f, 1f),
+                WindupScalar = Mathf.Clamp(windupScalar, 0.1f, 1f),
                 MaxChainDepth = Mathf.Max(0, action.MaxChainDepth)
             },
             effect);
     }
 
-    private void ClearBuildup()
+    private void ClearWindup()
     {
-        _buildupAction = null;
-        _buildupElapsed = 0f;
+        _windupAction = null;
+        _windupElapsed = 0f;
     }
 
     private AttackTestCase GetSelectedAttack()

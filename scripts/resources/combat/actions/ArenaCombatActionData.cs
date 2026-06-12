@@ -15,7 +15,7 @@ public partial class ArenaCombatActionData : Resource
     public ArenaCombatEffectData Effect { get; private set; }
 
     [Export]
-    public ArenaCombatBuildupData Buildup { get; private set; }
+    public ArenaCombatWindupData Windup { get; private set; }
 
     [Export(PropertyHint.Range, "0,5,0.01")]
     public float WindupSeconds { get; private set; }
@@ -37,7 +37,7 @@ public partial class ArenaCombatActionData : Resource
     public string ToStringExtended()
     {
         var effectLabel = Effect == null ? "Effect=None" : Effect.ToStringExtended();
-        var buildupLabel = Buildup == null ? "Buildup=None" : Buildup.ToStringExtended();
-        return $"Action[{DisplayName}, Windup={WindupSeconds:0.##}, Stamina={StaminaCost}, Spawn={SpawnDistance:0.#}, MaxChainDepth={MaxChainDepth}, {buildupLabel}, {effectLabel}]";
+        var windupLabel = Windup == null ? "Windup=None" : Windup.ToStringExtended();
+        return $"Action[{DisplayName}, Windup={WindupSeconds:0.##}, Stamina={StaminaCost}, Spawn={SpawnDistance:0.#}, MaxChainDepth={MaxChainDepth}, {windupLabel}, {effectLabel}]";
     }
 }

@@ -1,10 +1,11 @@
-[gd_resource type="Resource" script_class="OffHandItemData" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="OffHandItemData" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/items/OffHandItemData.cs" id="1_off"]
 [ext_resource type="Texture2D" path="res://assets/ui/items/wooden_buckler.svg" id="2_icon"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_damage_entry"]
 [ext_resource type="Texture2D" path="res://assets/ui/items/wooden_buckler_held.svg" id="5_held"]
+[ext_resource type="Resource" path="res://resources/combat/item_actions/shield_bash.tres" id="main_action_resource"]
 
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
 [sub_resource type="Resource" id="Resource_wooden_buckler_crush"]
@@ -37,3 +38,4 @@ Cost = 50
 MaxDurability = 100
 Durability = 100
 Damage = SubResource("Resource_wooden_buckler_damage")
+MainAction = ExtResource("main_action_resource")

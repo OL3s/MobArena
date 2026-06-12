@@ -16,7 +16,7 @@ public sealed class ArenaCombatEffectContext
     public ArenaCombatActionData Action { get; init; }
     public ArenaCombatEffectData Effect { get; init; }
     public Vector2 Direction { get; init; } = Vector2.Right;
-    public float BuildupScalar { get; init; } = 1f;
+    public float WindupScalar { get; init; } = 1f;
     public int ChainDepth { get; init; }
     public int MaxChainDepth { get; init; } = ArenaCombatActionData.DefaultMaxChainDepth;
 
@@ -33,7 +33,7 @@ public sealed class ArenaCombatEffectContext
             Action = Action,
             Effect = effect,
             Direction = Direction,
-            BuildupScalar = BuildupScalar,
+            WindupScalar = WindupScalar,
             ChainDepth = ChainDepth + 1,
             MaxChainDepth = MaxChainDepth
         };
@@ -41,17 +41,17 @@ public sealed class ArenaCombatEffectContext
 
     public float ScaleRange(float value)
     {
-        return Action?.Buildup?.ScaleRange == true ? value * GetClampedBuildupScalar() : value;
+        return Action?.Windup?.ScaleRange == true ? value * GetClampedWindupScalar() : value;
     }
 
     public float ScaleSpeed(float value)
     {
-        return Action?.Buildup?.ScaleSpeed == true ? value * GetClampedBuildupScalar() : value;
+        return Action?.Windup?.ScaleSpeed == true ? value * GetClampedWindupScalar() : value;
     }
 
     public CombatDamageData ScaleDamage(CombatDamageData damage)
     {
-        if (damage == null || Action?.Buildup?.ScaleDamage != true)
+        if (damage == null || Action?.Windup?.ScaleDamage != true)
             return damage;
 
         var scaledDamage = new CombatDamageData();
@@ -62,16 +62,16 @@ public sealed class ArenaCombatEffectContext
 
             var scaledEntry = new CombatDamageEntryData();
             scaledEntry.Set("Type", (int)entry.Type);
-            scaledEntry.Set("Damage", Mathf.RoundToInt(entry.Damage * GetClampedBuildupScalar()));
+            scaledEntry.Set("Damage", Mathf.RoundToInt(entry.Damage * GetClampedWindupScalar()));
             scaledDamage.Entries.Add(scaledEntry);
         }
 
         return scaledDamage;
     }
 
-    private float GetClampedBuildupScalar()
+    private float GetClampedWindupScalar()
     {
-        return Mathf.Clamp(BuildupScalar, ArenaCombatBuildupData.MinScalar, ArenaCombatBuildupData.MaxScalar);
+        return Mathf.Clamp(WindupScalar, ArenaCombatWindupData.MinScalar, ArenaCombatWindupData.MaxScalar);
     }
 
     public override string ToString()
@@ -82,6 +82,6 @@ public sealed class ArenaCombatEffectContext
     public string ToStringExtended()
     {
         var sourceName = Source?.Name ?? "NoSource";
-        return $"Context[Action={ActionName}, Source={sourceName}, Team={SourceTeam}, Direction={Direction}, Buildup={BuildupScalar:0.##}, Chain={ChainDepth}/{MaxChainDepth}]";
+        return $"Context[Action={ActionName}, Source={sourceName}, Team={SourceTeam}, Direction={Direction}, Windup={WindupScalar:0.##}, Chain={ChainDepth}/{MaxChainDepth}]";
     }
 }

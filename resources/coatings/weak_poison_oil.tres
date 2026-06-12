@@ -11,7 +11,7 @@ Value = 140.0
 [resource]
 script = ExtResource("1_coating")
 DisplayName = "Weak Poison Oil"
-Description = "A cheap poison oil with a short active condition. On weapons it adds poison buildup; on armor it adds poison effect defense."
+Description = "A cheap poison oil with a short active condition. On weapons it adds poison value; on armor it adds poison effect defense."
 UiIcon = ExtResource("2_icon")
 TypeTag = 14
 StrengthTag = 6

@@ -66,7 +66,7 @@ An attack starts with `ArenaCombatActionData`.
 ArenaCombatActionData
   DisplayName
   Effect
-  Buildup
+  Windup
   WindupSeconds
   StaminaCost
   SpawnDistance
@@ -92,13 +92,13 @@ Typed effect resources inherit shared fields from `ArenaCombatEffectData`, so th
 
 - `DisplayName`: Player/debug label for the action.
 - `Effect`: The root effect spawned when the action activates.
-- `Buildup`: Optional two-press charge/release data.
+- `Windup`: Optional two-press charge/release data.
 - `WindupSeconds`: Delay before the effect spawns.
 - `StaminaCost`: Cost paid by the activating combatant.
 - `SpawnDistance`: Distance in front of the source where the root effect starts.
 - `MaxChainDepth`: Safety limit for recursive effect chains. Default is `12`.
 
-Use low windup for quick jabs and higher windup for heavy attacks. Leave `Buildup` null unless the action should use two presses. Do not use chained effects without considering `MaxChainDepth`.
+Use low windup for quick jabs and higher windup for heavy attacks. Leave `Windup` null unless the action should use two presses. Do not use chained effects without considering `MaxChainDepth`.
 
 For players, `StaminaCost` is a mismanagement check. If current stamina is high enough, the action activates and spends stamina. If current stamina is too low, the action does not activate and the player enters `ArenaCombatantState.Exhausted`. Exhausted player movement uses a `0.5` speed multiplier until stamina regenerates back to the failed action's cost, capped by recoverable max stamina, and until the minimum exhausted window has passed. That minimum starts at `1.0` second and is reduced by a non-linear diminishing-returns curve from Endurance, approaching a `0.25` second floor.
 
@@ -191,6 +191,7 @@ ArenaAttackLinearProjectileData
   ShadowScale
   ShadowAlpha
   MaxPenetrations
+  BounceOffWalls
 ```
 
 Use linear projectiles for arrows, bolts, beams, thrown knives that hit during travel, and other forward-moving collisions. Linear projectiles can damage during flight and can spawn followups on hit or expiry.
@@ -202,6 +203,7 @@ Important runtime fields:
 - `Speed`: travel speed.
 - `HitboxLength` and `HitboxWidth`: rectangular collision size.
 - `MaxPenetrations`: number of successful targets the projectile can pass through before being destroyed.
+- `BounceOffWalls`: if false, border wall contact destroys the projectile; if true, it reflects off the wall and continues until range or hit limits expire.
 - `OnHitEffect`: gameplay followup spawned at the hit position.
 - `OnExpireEffect`: gameplay followup spawned when the projectile reaches max range.
 
@@ -319,7 +321,7 @@ Effects can also spawn raw visual scenes through:
 - `OnHitScenePath`
 - `OnExpireScenePath`
 
-Use `OnHitEffect` and `OnExpireEffect` for gameplay effects that need context, damage, teams, source item damage, direction, buildup scalar, or further chaining.
+Use `OnHitEffect` and `OnExpireEffect` for gameplay effects that need context, damage, teams, source item damage, direction, windup scalar, or further chaining.
 
 Use raw scene paths for visual-only scenes that do not need `IArenaCombatEffect.Initialize(...)`.
 
@@ -339,29 +341,35 @@ Fire flask
   OnExpireEffect = AOE fire patch with repeated Heat ticks
 ```
 
-## Buildup
+## Windup
 
-`ArenaCombatBuildupData` makes an action use two presses.
+`ArenaCombatWindupData` makes an action use two presses.
 
 ```text
-ArenaCombatBuildupData
-  BuildupSeconds
+ArenaCombatWindupData
+  WindupSeconds
   ScaleDamage
   ScaleRange
   ScaleSpeed
+  CanReleaseEarly
 ```
 
 First press starts charging. Second press releases. The runtime scalar moves from `0.1` to `1.0` based on elapsed charge time.
 
-Leave `Buildup` null for normal press-to-attack behavior.
+For player item actions, the max-charge time is the action's `WindupSeconds`. During charge the combatant is in `Windup`, so windup vulnerability and movement tuning apply while the player is holding the attack. The second press releases immediately with the current scalar instead of starting another windup delay.
+
+If `CanReleaseEarly` is false, pressing the same action button during windup does not release the action. The action auto-executes at full scalar when `WindupSeconds` is reached.
+
+Leave `Windup` null for normal press-to-attack behavior.
 
 Good uses:
 
 - Thrown bombs with `ScaleRange = true`.
 - Heavy bow shots with `ScaleDamage = true` and maybe `ScaleSpeed = true`.
+- Great-weapons with `ScaleDamage = true` when the attack should commit to a charged release.
 - Charged magic effects with `ScaleDamage = true`.
 
-Avoid buildup for basic starter weapons unless the item fantasy needs commitment.
+Avoid windup for basic starter weapons unless the item fantasy needs commitment.
 
 ## Visuals
 
@@ -381,7 +389,7 @@ Use `tests/attack_effect_sandbox.tscn` to test attacks without creating a real i
 godot tests/attack_effect_sandbox.tscn
 ```
 
-The sandbox loads `tests/attacks/**/*.tres`. Select an attack, move the mouse over the arena, and press `F` to spawn it facing right. Buildup attacks use `F` once to charge and `F` again to spawn.
+The sandbox loads `tests/attacks/**/*.tres`. Select an attack, move the mouse over the arena, and press `F` to spawn it facing right. Windup attacks use `F` once to charge and `F` again to spawn when early release is enabled.
 
 Use the sandbox for:
 
@@ -399,7 +407,7 @@ Use the sandbox for:
 5. Add `ArenaCombatApplyData` if the effect should damage, push, or apply status.
 6. Decide whether damage should come from the source item or from the effect itself.
 7. Add `OnHitEffect` or `OnExpireEffect` only when the chain needs gameplay context.
-8. Add `Buildup` only when the action should use two-press charge/release.
+8. Add `Windup` only when the action should use two-press charge/release.
 9. Test in `tests/attack_effect_sandbox.tscn` before attaching to a real item.
 10. Run `godot --headless --import`, `dotnet build`, and `godot --headless --quit` after resource or script changes.
 

@@ -26,7 +26,7 @@ Primary goal: verify and tune authored non-melee player items in normal arena/pl
 
 1. Create a dedicated market item stock generator for the Night -> Day refresh cycle so stock is curated/progression-aware instead of using the current debug all-items catalog.
 2. Verify bow/crossbow linear projectile items through normal arena player activation.
-3. Verify the poison flask thrown-projectile-to-AOE chain through normal arena player activation, including buildup range scaling, acid ticks, and poison lingering.
+3. Verify the poison flask thrown-projectile-to-AOE chain through normal arena player activation, including windup range scaling, acid ticks, and poison lingering.
 4. Confirm item store, codex, and item cards display action-pattern icons clearly for non-melee items.
 5. Tune costs, requirements, level multipliers, stamina costs, hit sizes, projectile speed/range, AOE timing, and poison values after practical playtesting.
 6. Keep item behavior authored through item `.tres` action/effect subresources. Do not hardcode weapon behavior in `PlayerCombatant` or executor scenes.

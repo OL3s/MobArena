@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackThrownProjectileData.cs" id="thrown"]
 [ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="action"]
-[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatBuildupData.cs" id="buildup"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatWindupData.cs" id="windup"]
 
 [sub_resource type="Resource" id="thrown_1"]
 script = ExtResource("thrown")
@@ -12,13 +12,13 @@ Range = 280
 TravelSeconds = 0.55
 ArcHeight = 72
 
-[sub_resource type="Resource" id="buildup_range"]
-script = ExtResource("buildup")
-BuildupSeconds = 1.0
+[sub_resource type="Resource" id="windup_range"]
+script = ExtResource("windup")
+WindupSeconds = 1.0
 ScaleRange = true
 
 [resource]
 script = ExtResource("action")
 DisplayName = "30 Thrown no spawn"
 Effect = SubResource("thrown_1")
-Buildup = SubResource("buildup_range")
+Windup = SubResource("windup_range")

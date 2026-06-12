@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="ArenaCombatActionData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="1_action"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="2_melee"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="3_apply"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatWindupData.cs" id="4_windup"]
+
+[sub_resource type="Resource" id="apply"]
+script = ExtResource("3_apply")
+ForceStrength = 250.0
+
+[sub_resource type="Resource" id="effect"]
+script = ExtResource("2_melee")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
+Apply = SubResource("apply")
+LifetimeSeconds = 0.23
+MaxHits = 2
+HitboxRadius = 46.0
+ActiveSeconds = 0.15
+ForwardOffset = 11.0
+
+[sub_resource type="Resource" id="windup"]
+script = ExtResource("4_windup")
+WindupSeconds = 1.0
+ScaleDamage = true
+CanReleaseEarly = true
+
+[resource]
+script = ExtResource("1_action")
+DisplayName = "Greataxe Cleave"
+Effect = SubResource("effect")
+Windup = SubResource("windup")
+WindupSeconds = 1.0
+StaminaCost = 46
+SpawnDistance = 42.0

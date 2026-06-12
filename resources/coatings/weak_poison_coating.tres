@@ -17,7 +17,7 @@ Value = 220.0
 [resource]
 script = ExtResource("1_coating")
 DisplayName = "Weak Poison Coating"
-Description = "A basic poison coating with better staying power than oil. On weapons it adds acid damage and poison buildup; on armor it adds acid defense and poison effect defense."
+Description = "A basic poison coating with better staying power than oil. On weapons it adds acid damage and poison value; on armor it adds acid defense and poison effect defense."
 UiIcon = ExtResource("2_icon")
 TypeTag = 14
 StrengthTag = 6

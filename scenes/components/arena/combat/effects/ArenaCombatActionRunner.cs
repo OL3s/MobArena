@@ -6,7 +6,7 @@ namespace MobArena.Scenes.Components.Arena.Combat.Effects;
 
 public static class ArenaCombatActionRunner
 {
-	public static bool TryActivate(ArenaCombatant source, ItemData item, ArenaCombatActionData action, float buildupScalar = 1f)
+	public static bool TryActivate(ArenaCombatant source, ItemData item, ArenaCombatActionData action, float windupScalar = 1f)
 	{
 		var scene = action?.Effect?.Scene;
 		if (source == null || scene == null)
@@ -30,7 +30,7 @@ public static class ArenaCombatActionRunner
                 Action = action,
                 Effect = action.Effect,
                 Direction = direction,
-                BuildupScalar = Mathf.Clamp(buildupScalar, ArenaCombatBuildupData.MinScalar, ArenaCombatBuildupData.MaxScalar),
+                WindupScalar = Mathf.Clamp(windupScalar, ArenaCombatWindupData.MinScalar, ArenaCombatWindupData.MaxScalar),
                 MaxChainDepth = Mathf.Max(0, action.MaxChainDepth)
             },
             action.Effect);

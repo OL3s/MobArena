@@ -38,4 +38,7 @@ public partial class ArenaAttackLinearProjectileData : ArenaCombatEffectData
 
     [Export(PropertyHint.Range, "1,100,1")]
     public int MaxPenetrations { get; private set; } = 1;
+
+    [Export]
+    public bool BounceOffWalls { get; private set; }
 }

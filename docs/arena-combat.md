@@ -94,7 +94,7 @@ See [arena-combat-actions.md](arena-combat-actions.md) for:
 - `ArenaCombatActionData`
 - `ArenaCombatEffectData`
 - melee, linear projectile, thrown projectile, AOE executors
-- buildup
+- windup
 - chaining
 - attack sandbox workflow
 

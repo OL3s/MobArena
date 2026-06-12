@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArenaCombatActionData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="1_action"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="2_melee"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="3_apply"]
+
+[sub_resource type="Resource" id="apply"]
+script = ExtResource("3_apply")
+ForceStrength = 130.0
+
+[sub_resource type="Resource" id="effect"]
+script = ExtResource("2_melee")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaMeleeHitbox.tscn"
+Apply = SubResource("apply")
+LifetimeSeconds = 0.16
+MaxHits = 1
+HitboxRadius = 31.0
+ActiveSeconds = 0.12
+ForwardOffset = 8.0
+
+[resource]
+script = ExtResource("1_action")
+DisplayName = "Sword Slash"
+Effect = SubResource("effect")
+WindupSeconds = 0.06
+StaminaCost = 22
+SpawnDistance = 34.0

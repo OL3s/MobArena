@@ -6,7 +6,7 @@
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="melee"]
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackThrownProjectileData.cs" id="thrown"]
 [ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="action"]
-[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatBuildupData.cs" id="buildup"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatWindupData.cs" id="windup"]
 
 [sub_resource type="Resource" id="entry_2"]
 script = ExtResource("damage_entry")
@@ -40,13 +40,13 @@ Range = 260
 TravelSeconds = 0.45
 ArcHeight = 60
 
-[sub_resource type="Resource" id="buildup_range"]
-script = ExtResource("buildup")
-BuildupSeconds = 1.0
+[sub_resource type="Resource" id="windup_range"]
+script = ExtResource("windup")
+WindupSeconds = 1.0
 ScaleRange = true
 
 [resource]
 script = ExtResource("action")
 DisplayName = "29 Thrown end melee"
 Effect = SubResource("thrown_5")
-Buildup = SubResource("buildup_range")
+Windup = SubResource("windup_range")

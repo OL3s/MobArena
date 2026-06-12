@@ -68,8 +68,8 @@ public abstract partial class ItemStoreShowcaseBase : VBoxContainer, IItemStoreS
         AddStat("Stamina Cost", action.StaminaCost.ToString());
         AddStat("Spawn Distance", action.SpawnDistance.ToString("0.#"));
         AddStat("Max Chain Depth", action.MaxChainDepth.ToString());
-        if (action.Buildup != null)
-            AddStat("Buildup", action.Buildup.ToString());
+        if (action.Windup != null)
+            AddStat("Windup", action.Windup.ToString());
 
         if (action.Effect == null)
             return;

@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/items/iron_spear.svg" id="2_icon"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
+[ext_resource type="Resource" path="res://resources/combat/item_actions/spear_thrust.tres" id="main_action_resource"]
 
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="block_armor_override"]
@@ -40,6 +41,7 @@ ImmuneTypes = Array[int]([])
 script = ExtResource("1_main")
 BlockArmorProfile = SubResource("Resource_iron_spear_block_armor")
 Damage = SubResource("damage")
+MainAction = ExtResource("main_action_resource")
 DisplayName = "Iron Spear"
 Description = "A sturdy iron spear."
 UiIcon = ExtResource("2_icon")

@@ -268,7 +268,7 @@ The action controls timing and points to an effect.
 ArenaCombatActionData
   DisplayName
   Effect
-  Buildup
+  Windup
   WindupSeconds
   StaminaCost
   SpawnDistance
@@ -374,10 +374,18 @@ Bow:
 MainHandItemData
   Damage = Pierce
   MainAction = ArenaCombatActionData
+    Windup = ArenaCombatWindupData
+      ScaleDamage = true
+      ScaleRange = true
+      ScaleSpeed = true
+    WindupSeconds = max-charge time
     Effect = ArenaAttackLinearProjectileData
       ScenePath = ArenaAttackLinearProjectile.tscn
       Apply.UseSourceItemDamage = true
+      VisualTexture = arrow projectile art
 ```
+
+Crossbows should usually use the same linear projectile effect without `Windup`, so they fire on the normal press-to-attack path after their authored windup.
 
 Bomb:
 
@@ -385,7 +393,7 @@ Bomb:
 OffHandItemData or MainHandItemData
   Damage = optional or null
   MainAction = ArenaCombatActionData
-    Buildup.ScaleRange = true
+    Windup.ScaleRange = true
     Effect = ArenaAttackThrownProjectileData
       ScenePath = ArenaAttackThrownProjectile.tscn
       OnExpireEffect = ArenaAttackAreaOfEffectData
@@ -445,7 +453,7 @@ MultiplierItemCoatingData
 
 Additive damage and effect entries are interpreted by the item slot that carries the coating:
 
-- On main-hand/off-hand items, `DamageEntries` are added attack damage and `EffectEntries` are added status/effect buildup.
+- On main-hand/off-hand items, `DamageEntries` are added attack damage and `EffectEntries` add status/effect values.
 - On armor items, `DamageEntries` are temporary damage-defense values and `EffectEntries` are temporary effect-defense values.
 
 Current entry resources:

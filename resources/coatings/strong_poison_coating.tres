@@ -17,7 +17,7 @@ Value = 460.0
 [resource]
 script = ExtResource("1_coating")
 DisplayName = "Strong Poison Coating"
-Description = "A potent poison coating with solid condition. On weapons it adds acid damage and poison buildup; on armor it adds acid defense and poison effect defense."
+Description = "A potent poison coating with solid condition. On weapons it adds acid damage and poison value; on armor it adds acid defense and poison effect defense."
 UiIcon = ExtResource("2_icon")
 TypeTag = 14
 StrengthTag = 8

@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="ArenaCombatActionData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatActionData.cs" id="1_action"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaAttackLinearProjectileData.cs" id="2_linear"]
+[ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="3_apply"]
+[ext_resource type="Script" path="res://scripts/resources/combat/actions/ArenaCombatWindupData.cs" id="4_windup"]
+[ext_resource type="Texture2D" path="res://assets/ui/items/arrow_projectile.svg" id="5_arrow"]
+
+[sub_resource type="Resource" id="apply"]
+script = ExtResource("3_apply")
+ForceStrength = 40.0
+
+[sub_resource type="Resource" id="effect"]
+script = ExtResource("2_linear")
+ScenePath = "res://scenes/components/arena/combat/effects/ArenaAttackLinearProjectile.tscn"
+Apply = SubResource("apply")
+LifetimeSeconds = 2.0
+MaxHits = 1
+Speed = 560.0
+Range = 520.0
+HitboxLength = 42.0
+HitboxWidth = 10.0
+VisualHeight = 10.0
+VisualTexture = ExtResource("5_arrow")
+VisualDisplayHeight = 18.0
+MaxPenetrations = 1
+BounceOffWalls = false
+
+[sub_resource type="Resource" id="windup"]
+script = ExtResource("4_windup")
+WindupSeconds = 0.8
+ScaleDamage = true
+ScaleRange = true
+ScaleSpeed = true
+CanReleaseEarly = true
+
+[resource]
+script = ExtResource("1_action")
+DisplayName = "Bow Shot"
+Effect = SubResource("effect")
+Windup = SubResource("windup")
+WindupSeconds = 0.8
+StaminaCost = 22
+SpawnDistance = 36.0
