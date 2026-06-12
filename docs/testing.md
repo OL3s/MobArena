@@ -29,6 +29,15 @@ What each command catches:
 | `dotnet build` | Compiles the C# project. |
 | `godot --headless --quit` | Starts the project headlessly and catches startup/load errors. |
 
+On Linux with multiple .NET SDKs installed, Godot Mono can ignore `global.json` during editor/import startup and pick a newer host runtime. If `godot --headless --import --quit` crashes while unloading after import, run Godot through the local .NET 8 wrapper:
+
+```bash
+tools/godot-dotnet8.sh --headless --import --quit
+tools/godot-dotnet8.sh --headless --quit
+```
+
+The wrapper creates a temporary isolated .NET root under `/tmp/opencode/dotnet8-root` from the installed .NET 8 SDK/runtime and runs Godot with `DOTNET_ROOT` and `DOTNET_MULTILEVEL_LOOKUP=0`.
+
 If Godot tries to open a deleted or renamed scene from local editor state, reset local generated cache and import again:
 
 ```bash
