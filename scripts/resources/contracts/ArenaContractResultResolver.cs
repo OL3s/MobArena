@@ -6,6 +6,8 @@ namespace MobArena.Scripts.Resources.Contracts;
 
 public static class ArenaContractResultResolver
 {
+    private const float SkipContractFameMultiplier = 0.9f;
+
     public enum ContractResult
     {
         None,
@@ -62,9 +64,15 @@ public static class ArenaContractResultResolver
 
     public static ContractResult ResolveVisibleContractWin(SaveNode saveNode, int contractIndex)
     {
-        if (saveNode?.CanStartArenaContract() != true)
+        if (saveNode == null)
         {
-            GameLogger.Contract($"Arena result: visible contract win ignored because arena start is blocked; {DescribeContext(saveNode)}.");
+            GameLogger.Contract($"Arena result: visible contract win ignored because arena start is blocked: save node is missing; {DescribeContext(saveNode)}.");
+            return ContractResult.None;
+        }
+
+        if (!saveNode.CanStartArenaContract(out var blockReason))
+        {
+            GameLogger.Contract($"Arena result: visible contract win ignored because arena start is blocked: {blockReason}; {DescribeContext(saveNode)}.");
             return ContractResult.None;
         }
 
@@ -73,6 +81,68 @@ public static class ArenaContractResultResolver
 
         saveNode.CompanyRunData?.SetActiveArenaContract(contract);
         return ResolveWin(saveNode);
+    }
+
+    public static bool CanSkipDailyContract(SaveNode saveNode, out string blockReason)
+    {
+        var phaseState = saveNode?.TownPhaseState;
+        if (saveNode?.CompanyRunData == null || phaseState == null)
+        {
+            blockReason = "save state is missing run or phase data";
+            return false;
+        }
+
+        if (phaseState.IsChampionDay)
+        {
+            blockReason = "Champion Day contracts cannot be skipped";
+            return false;
+        }
+
+        if (saveNode.CompanyCareerData?.HasCompletedContracts != true && saveNode.SkipTutorial != true)
+        {
+            blockReason = "complete the first contract before skipping daily contracts";
+            return false;
+        }
+
+        if (!phaseState.IsDay())
+        {
+            blockReason = $"daily contracts can only be skipped during Day; current phase is {phaseState.GetPhaseLabel()}";
+            return false;
+        }
+
+        blockReason = string.Empty;
+        return true;
+    }
+
+    public static int GetSkipContractFameLoss(SaveNode saveNode)
+    {
+        var currentFame = Mathf.Max(0, saveNode?.CompanyRunData?.Fame ?? 0);
+        var nextFame = Mathf.FloorToInt(currentFame * SkipContractFameMultiplier);
+        return Mathf.Max(0, currentFame - nextFame);
+    }
+
+    public static ContractResult SkipDailyContract(SaveNode saveNode)
+    {
+        if (!CanSkipDailyContract(saveNode, out var blockReason))
+        {
+            GameLogger.Contract($"Arena result: skip contract ignored: {blockReason}; {DescribeContext(saveNode)}.");
+            return ContractResult.None;
+        }
+
+        var runData = saveNode.CompanyRunData;
+        var previousFame = runData.Fame;
+        var fameLoss = GetSkipContractFameLoss(saveNode);
+        if (!PhaseTransitionController.SkipArenaContract(saveNode.TownPhaseState, runData, saveNode.WeatherState))
+        {
+            GameLogger.Contract($"Arena result: skip contract ignored because phase transition failed; {DescribeContext(saveNode)}.");
+            return ContractResult.None;
+        }
+
+        if (fameLoss > 0)
+            runData.LoseFame(fameLoss);
+
+        GameLogger.Contract($"Arena result: skipped daily contract; fame {previousFame} -> {runData.Fame}; {DescribeContext(saveNode)}.");
+        return ContractResult.Completed;
     }
 
     public static ContractResult ResolveLoss(SaveNode saveNode)

@@ -180,7 +180,7 @@ public abstract partial class ArenaCombatant : CharacterBody2D
         if (!CanReceiveDamageFrom(source))
             return 0;
 
-        return CombatState?.ApplyDamage(damage) ?? 0;
+        return CombatState?.ApplyDamage(damage, CombatantState == ArenaCombatantState.Blocking) ?? 0;
     }
 
     public int ApplyRawDamage(int amount, ArenaCombatant source = null)

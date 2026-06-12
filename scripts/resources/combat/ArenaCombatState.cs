@@ -1,4 +1,5 @@
 using Godot;
+using Godot.Collections;
 using MobArena.Scenes.Components.Arena;
 using MobArena.Scripts.Resources.Combat.Effects;
 using MobArena.Scripts.Resources.Items;
@@ -31,22 +32,31 @@ public partial class ArenaCombatState : Resource
     public ArmorData ArmorProfile { get; private set; }
 
     [Export]
+    public Array<ArmorData> BlockArmorProfiles { get; private set; } = new();
+
+    [Export]
     public CombatantStatusProfileData StatusProfile { get; private set; }
 
-    private readonly Dictionary<StatusEffectType, float> _statusValues = new();
+    private readonly System.Collections.Generic.Dictionary<StatusEffectType, float> _statusValues = new();
     private float _poisonTickAccumulator;
     private int _minimumHealthFloor;
     private bool _damageLocked;
 
     public bool IsDead => CurrentHealth <= 0;
 
-    public void Configure(int maxHealth, int currentHealth = -1, ArmorData armorProfile = null, CombatantStatusProfileData statusProfile = null)
+    public void Configure(
+        int maxHealth,
+        int currentHealth = -1,
+        ArmorData armorProfile = null,
+        CombatantStatusProfileData statusProfile = null,
+        Array<ArmorData> blockArmorProfiles = null)
     {
         MaxHealth = Mathf.Max(1, maxHealth);
         CurrentHealth = currentHealth < 0
             ? MaxHealth
             : Mathf.Clamp(currentHealth, 0, MaxHealth);
         ArmorProfile = armorProfile;
+        BlockArmorProfiles = blockArmorProfiles ?? new Array<ArmorData>();
         StatusProfile = statusProfile ?? new CombatantStatusProfileData();
         _statusValues.Clear();
         _poisonTickAccumulator = 0f;
@@ -55,9 +65,9 @@ public partial class ArenaCombatState : Resource
         EmitSignal(SignalName.HealthChanged, CurrentHealth, MaxHealth);
     }
 
-    public int ApplyDamage(CombatDamageData damage)
+    public int ApplyDamage(CombatDamageData damage, bool includeBlockArmor = false)
     {
-        return damage == null ? 0 : ApplyRawDamage(GetMitigatedDamage(damage));
+        return damage == null ? 0 : ApplyRawDamage(GetMitigatedDamage(damage, includeBlockArmor));
     }
 
     public int ApplyRawDamage(int amount)
@@ -85,9 +95,61 @@ public partial class ArenaCombatState : Resource
         _minimumHealthFloor = enabled && CurrentHealth > 0 ? 1 : 0;
     }
 
-    public int GetMitigatedDamage(CombatDamageData damage)
+    public int GetMitigatedDamage(CombatDamageData damage, bool includeBlockArmor = false)
     {
-        return damage?.GetMitigatedTotalDamage(ArmorProfile) ?? 0;
+        if (damage == null)
+            return 0;
+
+        var total = 0;
+        foreach (var entry in damage.Entries ?? new Array<CombatDamageEntryData>())
+        {
+            if (entry == null)
+                continue;
+
+            total += ApplyEffectiveArmorToDamage(entry, includeBlockArmor);
+        }
+
+        return total;
+    }
+
+    public int GetEffectiveArmorValue(CombatDamageType type, bool includeBlockArmor = false)
+    {
+        var armorValue = ArmorProfile?.GetArmorValue(type) ?? 0;
+        if (!includeBlockArmor || BlockArmorProfiles == null)
+            return armorValue;
+
+        foreach (var blockArmor in BlockArmorProfiles)
+            armorValue += blockArmor?.GetArmorValue(type) ?? 0;
+
+        return armorValue;
+    }
+
+    public bool IsEffectivelyImmuneTo(CombatDamageType type, bool includeBlockArmor = false)
+    {
+        if (ArmorProfile?.IsImmuneTo(type) == true)
+            return true;
+
+        if (!includeBlockArmor || BlockArmorProfiles == null)
+            return false;
+
+        foreach (var blockArmor in BlockArmorProfiles)
+        {
+            if (blockArmor?.IsImmuneTo(type) == true)
+                return true;
+        }
+
+        return false;
+    }
+
+    private int ApplyEffectiveArmorToDamage(CombatDamageEntryData damageEntry, bool includeBlockArmor)
+    {
+        if (damageEntry == null)
+            return 0;
+
+        if (IsEffectivelyImmuneTo(damageEntry.Type, includeBlockArmor))
+            return 0;
+
+        return ArmorData.ApplyArmorToDamage(damageEntry.Damage, GetEffectiveArmorValue(damageEntry.Type, includeBlockArmor));
     }
 
     public void Heal(int amount)
@@ -149,7 +211,7 @@ public partial class ArenaCombatState : Resource
         TickPoisonDamage(deltaSeconds);
 
         var decay = deltaSeconds * StatusValueDecayPerSecond;
-        var keys = new List<StatusEffectType>(_statusValues.Keys);
+        var keys = new System.Collections.Generic.List<StatusEffectType>(_statusValues.Keys);
         foreach (var type in keys)
         {
             var current = _statusValues[type];

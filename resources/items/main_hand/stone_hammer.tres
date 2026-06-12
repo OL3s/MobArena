@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MainHandItemData" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="MainHandItemData" load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/items/MainHandItemData.cs" id="1_main"]
 [ext_resource type="Texture2D" path="res://assets/ui/items/stone_hammer.svg" id="2_icon"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="6_melee_effect"]
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="7_apply"]
 
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="block_armor_override"]
 [sub_resource type="Resource" id="crush"]
 script = ExtResource("4_entry")
 Type = 2
@@ -39,8 +41,20 @@ WindupSeconds = 0.1
 StaminaCost = 30
 SpawnDistance = 34.0
 
+[sub_resource type="Resource" id="Resource_stone_hammer_block_crush"]
+script = ExtResource("block_armor_override")
+Type = 2
+Value = 11
+
+[sub_resource type="Resource" id="Resource_stone_hammer_block_armor"]
+script = ExtResource("block_armor_data")
+BaseValue = 8
+TypeOverrides = Array[ExtResource("block_armor_override")]([SubResource("Resource_stone_hammer_block_crush")])
+ImmuneTypes = Array[int]([])
+
 [resource]
 script = ExtResource("1_main")
+BlockArmorProfile = SubResource("Resource_stone_hammer_block_armor")
 Damage = SubResource("damage")
 MainAction = SubResource("main_action")
 DisplayName = "Stone Hammer"

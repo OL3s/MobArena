@@ -10,6 +10,8 @@
 [ext_resource type="Script" path="res://scripts/resources/items/ItemRequirementData.cs" id="8_requirement"]
 [ext_resource type="Script" path="res://scripts/resources/items/ItemLevelMultiplierData.cs" id="9_multiplier"]
 
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="block_armor_override"]
 [sub_resource type="Resource" id="Resource_wooden_bow_pierce"]
 script = ExtResource("4_damage_entry")
 Type = 1
@@ -59,8 +61,20 @@ StrengthInfluence = 0.15
 AgilityInfluence = 0.9
 MaxMultiplier = 1.8
 
+[sub_resource type="Resource" id="Resource_wooden_bow_block_pierce"]
+script = ExtResource("block_armor_override")
+Type = 1
+Value = 8
+
+[sub_resource type="Resource" id="Resource_wooden_bow_block_armor"]
+script = ExtResource("block_armor_data")
+BaseValue = 0
+TypeOverrides = Array[ExtResource("block_armor_override")]([SubResource("Resource_wooden_bow_block_pierce")])
+ImmuneTypes = Array[int]([])
+
 [resource]
 script = ExtResource("1_main")
+BlockArmorProfile = SubResource("Resource_wooden_bow_block_armor")
 IsTwoHanded = true
 Damage = SubResource("Resource_wooden_bow_damage")
 MainAction = SubResource("Resource_wooden_bow_main_action")

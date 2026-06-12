@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ChampionMobData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="ChampionMobData" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/mobs/ChampionMobData.cs" id="1_champion"]
 [ext_resource type="Texture2D" path="res://assets/ui/mobs/champion_goblin_warlord.svg" id="2_icon"]
@@ -6,12 +6,19 @@
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="4_armor_data"]
 [ext_resource type="Resource" path="res://resources/combat/status_profiles/default_champion_status_profile.tres" id="5_status_profile"]
 
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
 [sub_resource type="Resource" id="Resource_champion_goblin_warlord_armor"]
 script = ExtResource("4_armor_data")
 BaseValue = 0
 
+[sub_resource type="Resource" id="Resource_champion_goblin_warlord_block_armor"]
+script = ExtResource("block_armor_data")
+BaseValue = 50
+ImmuneTypes = Array[int]([])
+
 [resource]
 script = ExtResource("1_champion")
+BlockArmorProfile = SubResource("Resource_champion_goblin_warlord_block_armor")
 DisplayName = "Goblin Warlord"
 Description = "A goblin champion meant to lead same-family support mobs."
 UiIcon = ExtResource("2_icon")

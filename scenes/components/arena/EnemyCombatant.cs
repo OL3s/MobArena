@@ -1,6 +1,8 @@
 using Godot;
+using Godot.Collections;
 using MobArena.Scripts.Resources.Combat;
 using MobArena.Scripts.Resources.Combat.Effects;
+using MobArena.Scripts.Resources.Items;
 using MobArena.Scripts.Resources.Mobs;
 
 namespace MobArena.Scenes.Components.Arena;
@@ -60,8 +62,18 @@ public partial class EnemyCombatant : ArenaCombatant
             Mathf.Max(1, mobData?.MaxHealth ?? 1),
             mobData?.MaxHealth ?? 1,
             mobData?.ArmorProfile,
-            GetStatusProfile(mobData));
+            GetStatusProfile(mobData),
+            GetBlockArmorProfiles(mobData));
         return combatState;
+    }
+
+    private static Array<ArmorData> GetBlockArmorProfiles(EnemyMobData mobData)
+    {
+        var profiles = new Array<ArmorData>();
+        if (mobData?.BlockArmorProfile != null)
+            profiles.Add(mobData.BlockArmorProfile);
+
+        return profiles;
     }
 
     private static CombatantStatusProfileData GetStatusProfile(EnemyMobData mobData)

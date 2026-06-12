@@ -69,7 +69,26 @@ public partial class SaveNode : Node
 
 	public bool CanStartArenaContract()
 	{
-		return !IsDemoComplete;
+		return CanStartArenaContract(out _);
+	}
+
+	public bool CanStartArenaContract(out string blockReason)
+	{
+		if (IsDemoComplete)
+		{
+			blockReason = "demo is complete";
+			return false;
+		}
+
+		if (TownPhaseState?.IsDay() != true)
+		{
+			var phase = TownPhaseState?.GetPhaseLabel() ?? "unknown";
+			blockReason = $"arena contracts can only start during Day; current phase is {phase}";
+			return false;
+		}
+
+		blockReason = string.Empty;
+		return true;
 	}
 
 	public void SetDevEnabled(bool devEnabled)

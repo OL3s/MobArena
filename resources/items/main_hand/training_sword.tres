@@ -9,6 +9,8 @@
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaMeleeEffectData.cs" id="7_melee_effect"]
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="8_apply"]
 
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="block_armor_override"]
 [sub_resource type="Resource" id="Resource_training_sword_slash"]
 script = ExtResource("4_damage_entry")
 Damage = 80
@@ -44,8 +46,30 @@ WindupSeconds = 0.04
 StaminaCost = 20
 SpawnDistance = 34.0
 
+[sub_resource type="Resource" id="Resource_training_sword_block_slash"]
+script = ExtResource("block_armor_override")
+Type = 0
+Value = 18
+
+[sub_resource type="Resource" id="Resource_training_sword_block_pierce"]
+script = ExtResource("block_armor_override")
+Type = 1
+Value = 10
+
+[sub_resource type="Resource" id="Resource_training_sword_block_crush"]
+script = ExtResource("block_armor_override")
+Type = 2
+Value = 5
+
+[sub_resource type="Resource" id="Resource_training_sword_block_armor"]
+script = ExtResource("block_armor_data")
+BaseValue = 12
+TypeOverrides = Array[ExtResource("block_armor_override")]([SubResource("Resource_training_sword_block_slash"), SubResource("Resource_training_sword_block_pierce"), SubResource("Resource_training_sword_block_crush")])
+ImmuneTypes = Array[int]([])
+
 [resource]
 script = ExtResource("1_main")
+BlockArmorProfile = SubResource("Resource_training_sword_block_armor")
 Damage = SubResource("Resource_training_sword_damage")
 MainAction = SubResource("Resource_training_sword_main_action")
 DisplayName = "Training Sword"

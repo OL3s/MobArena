@@ -13,18 +13,17 @@ public static class SaveCommandLineController
 	private const string DeleteFlag = "--delete";
 	private const string SaveFlag = "--save";
 	private const string PrintSaveFlag = "--print-save";
+	private const string PrintLoadFlag = "--print-load";
 	private const string GenerateCompanyFlag = "--generate-company";
 	private const string GenerateCompanyIfMissingFlag = "--generate-company-if-missing";
 	private const string GenerateGladiatorFlag = "--generate-gladiator";
-	private const string ContractFlag = "--contract";
 	private const string CompleteContractFlag = "--complete-contract";
+	private const string SkipContractFlag = "--skip-contract";
 	private const string AddMoneyFlag = "--add-money";
 	private const string AddGoldFlag = "--add-gold";
 	private const string AddFameFlag = "--add-fame";
 	private const string BuyEquipmentFlag = "--buy-equipment";
 	private const string BuyGladiatorFlag = "--buy-gladiator";
-	private const string CompleteDayFlag = "--complete-day";
-	private const string CompleteArenaDayFlag = "--complete-arena-day";
 	private const string NextDayFlag = "--next-day";
 	private const string WeatherFlag = "--weather";
 	private const string GotoSceneFlag = "--goto-scene";
@@ -40,6 +39,7 @@ Mob Arena runtime CLI commands:
   --help                                      Print this help text and exit.
   --save                                      Save current runtime state.
   --print-save                                Print current save summary.
+  --print-load                                Load current save data and print the load result plus summary.
   --delete                                    Delete all save data.
   --generate-company-if-missing               Create a default company only when none exists.
   --generate-company                          Create a default company, replacing active company data.
@@ -48,8 +48,8 @@ Mob Arena runtime CLI commands:
   --add-fame[=amount]                         Add fame. Missing/invalid amount defaults to 0.
   --buy-equipment[=index]                     Buy market item stock by index. Default index: 0.
   --buy-gladiator[=index]                     Buy gladiator market stock by index. Default index: 0.
-  --contract[=index]                          Complete visible arena contract by index. Alias: --complete-contract. Default index: 0.
-  --complete-day                              Complete current day phase. Alias: --complete-arena-day.
+  --complete-contract[=index]                 Complete visible arena contract by index. Default index: 0.
+  --skip-contract                             Skip today's arena contract when skip rules allow it.
   --next-day                                  Advance from night to the next day.
   --weather[=Cloudy|Sun|Rain|0|1|2]           Set weather. Missing/invalid value defaults to Cloudy.
   --goto-scene=<main-menu|town|arena>         Load a scene resource. Alias: --goto=<scene>.
@@ -90,16 +90,17 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 			HelpFlag => HandleHelp(),
 			SaveFlag => SaveCommand(saveNode, "save"),
 			PrintSaveFlag => HandlePrintSave(saveNode),
+			PrintLoadFlag => HandlePrintLoad(saveNode),
 			DeleteFlag => HandleSaveDelete(saveNode),
 			GenerateCompanyFlag => HandleCompanyGeneration(saveNode, true),
 			GenerateCompanyIfMissingFlag => HandleCompanyGeneration(saveNode, false),
 			GenerateGladiatorFlag => HandleGenerateGladiator(saveNode),
-			ContractFlag or CompleteContractFlag => HandleCompleteContract(saveNode, command),
+			CompleteContractFlag => HandleCompleteContract(saveNode, command),
+			SkipContractFlag => HandleSkipContract(saveNode),
 			AddMoneyFlag or AddGoldFlag => HandleAddGold(saveNode, command),
 			AddFameFlag => HandleAddFame(saveNode, command),
 			BuyEquipmentFlag => HandleBuyEquipment(saveNode, command),
 			BuyGladiatorFlag => HandleBuyGladiator(saveNode, command),
-			CompleteDayFlag or CompleteArenaDayFlag => HandleCompleteArenaDay(saveNode),
 			NextDayFlag => HandleNextDay(saveNode),
 			WeatherFlag => HandleWeather(saveNode, command),
 			GotoSceneFlag or GotoFlag => HandleGotoScene(saveNode, command.Value),
@@ -133,11 +134,18 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 			return 1;
 		}
 
-		var runData = saveNode.CompanyRunData;
-		var careerData = saveNode.CompanyCareerData;
-		var phaseState = saveNode.TownPhaseState;
-		var weatherState = saveNode.WeatherState;
-		GameLogger.CLI($"save summary: hasCompany={saveNode.HasCompany}, company='{saveNode.CompanyLogoData?.CompanyName ?? "None"}', gold={runData?.Gold ?? 0}, fame={runData?.Fame ?? 0}, gladiators={runData?.Gladiators?.Count ?? 0}, inventory={runData?.Inventory?.Count ?? 0}, contractsCompleted={careerData?.ContractsCompleted ?? 0}, day={phaseState?.CurrentDay ?? 0}, phase={phaseState?.CurrentPhase.ToString() ?? "None"}, weather={weatherState?.CurrentWeather.ToString() ?? "None"}.");
+		PrintSaveSummary(saveNode);
+		return 0;
+	}
+
+	private static int HandlePrintLoad(SaveNode saveNode)
+	{
+		var loadError = saveNode.Load();
+		GameLogger.CLI($"load completed with result {loadError}.");
+		if (loadError != Error.Ok && loadError != Error.FileNotFound)
+			return 1;
+
+		PrintSaveSummary(saveNode);
 		return 0;
 	}
 
@@ -193,6 +201,24 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		return exitCode;
 	}
 
+	private static int HandleSkipContract(SaveNode saveNode)
+	{
+		if (!TryLoadCompany(saveNode, "skip contract"))
+			return 1;
+
+		var result = ArenaContractResultResolver.SkipDailyContract(saveNode);
+		if (result != ArenaContractResultResolver.ContractResult.Completed)
+		{
+			GameLogger.CLI($"skip contract failed; resolver returned {result}.");
+			return 1;
+		}
+
+		var saveError = saveNode.Save();
+		var exitCode = saveError == Error.Ok ? 0 : 1;
+		GameLogger.CLI($"skip contract completed with exit code {exitCode}.");
+		return exitCode;
+	}
+
 	private static int HandleAddGold(SaveNode saveNode, CommandLineCommand command)
 	{
 		if (!TryLoadCompany(saveNode, "add money"))
@@ -233,20 +259,6 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 			return 1;
 
 		return SaveCommand(saveNode, "buy gladiator");
-	}
-
-	private static int HandleCompleteArenaDay(SaveNode saveNode)
-	{
-		if (!TryLoadCompany(saveNode, "complete day"))
-			return 1;
-
-		if (!PhaseTransitionController.CompleteArenaDay(saveNode.TownPhaseState, saveNode.CompanyRunData, saveNode.WeatherState))
-		{
-			GameLogger.CLI($"complete day failed; town is not in day phase.");
-			return 1;
-		}
-
-		return SaveCommand(saveNode, "complete day");
 	}
 
 	private static int HandleNextDay(SaveNode saveNode)
@@ -322,6 +334,15 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 		return exitCode;
 	}
 
+	private static void PrintSaveSummary(SaveNode saveNode)
+	{
+		var runData = saveNode.CompanyRunData;
+		var careerData = saveNode.CompanyCareerData;
+		var phaseState = saveNode.TownPhaseState;
+		var weatherState = saveNode.WeatherState;
+		GameLogger.CLI($"save summary: hasCompany={saveNode.HasCompany}, company='{saveNode.CompanyLogoData?.CompanyName ?? "None"}', gold={runData?.Gold ?? 0}, fame={runData?.Fame ?? 0}, gladiators={runData?.Gladiators?.Count ?? 0}, inventory={runData?.Inventory?.Count ?? 0}, contractsCompleted={careerData?.ContractsCompleted ?? 0}, day={phaseState?.CurrentDay ?? 0}, phase={phaseState?.CurrentPhase.ToString() ?? "None"}, weather={weatherState?.CurrentWeather.ToString() ?? "None"}.");
+	}
+
 	private static int HandleGotoScene(SaveNode saveNode, string sceneName)
 	{
 		var scenePath = GetScenePath(sceneName);
@@ -391,13 +412,14 @@ Commands can be stacked left to right and quit automatically. Values use --flag=
 			HelpFlag => true,
 			SaveFlag => true,
 			PrintSaveFlag => true,
+			PrintLoadFlag => true,
 			DeleteFlag => true,
 			GenerateCompanyFlag or GenerateCompanyIfMissingFlag => true,
-			GenerateGladiatorFlag or ContractFlag or CompleteContractFlag => true,
+			GenerateGladiatorFlag or CompleteContractFlag or SkipContractFlag => true,
 			AddMoneyFlag or AddGoldFlag => true,
 			AddFameFlag => true,
 			BuyEquipmentFlag or BuyGladiatorFlag => true,
-			CompleteDayFlag or CompleteArenaDayFlag or NextDayFlag or WeatherFlag => true,
+			NextDayFlag or WeatherFlag => true,
 			GotoSceneFlag or GotoFlag or GotoMainMenuFlag or GotoTownFlag or GotoArenaFlag => true,
 			_ => false
 		};

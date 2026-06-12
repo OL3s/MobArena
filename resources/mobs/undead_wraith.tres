@@ -1,16 +1,35 @@
-[gd_resource type="Resource" script_class="EnemyMobData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="EnemyMobData" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/mobs/EnemyMobData.cs" id="1_enemy"]
 [ext_resource type="Texture2D" path="res://assets/ui/mobs/undead_wraith.svg" id="2_icon"]
 [ext_resource type="Resource" path="res://resources/mob_appearances/undead_wraith.tres" id="3_appearance"]
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="4_armor_data"]
 
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="block_armor_override"]
 [sub_resource type="Resource" id="Resource_undead_wraith_armor"]
 script = ExtResource("4_armor_data")
 BaseValue = 0
 
+[sub_resource type="Resource" id="Resource_undead_wraith_block_holy"]
+script = ExtResource("block_armor_override")
+Type = 7
+Value = -10
+
+[sub_resource type="Resource" id="Resource_undead_wraith_block_silver"]
+script = ExtResource("block_armor_override")
+Type = 6
+Value = -10
+
+[sub_resource type="Resource" id="Resource_undead_wraith_block_armor"]
+script = ExtResource("block_armor_data")
+BaseValue = 18
+TypeOverrides = Array[ExtResource("block_armor_override")]([SubResource("Resource_undead_wraith_block_holy"), SubResource("Resource_undead_wraith_block_silver")])
+ImmuneTypes = Array[int]([])
+
 [resource]
 script = ExtResource("1_enemy")
+BlockArmorProfile = SubResource("Resource_undead_wraith_block_armor")
 DisplayName = "Wraith"
 Description = "A high-fame undead mob for hard generated contracts."
 UiIcon = ExtResource("2_icon")

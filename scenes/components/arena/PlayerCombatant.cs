@@ -6,6 +6,7 @@ using MobArena.Scripts.Resources.Combat.Actions;
 using MobArena.Scripts.Resources.Combat.Effects;
 using MobArena.Scripts.Resources.Combat;
 using MobArena.Scripts.Resources.Items;
+using Godot.Collections;
 
 namespace MobArena.Scenes.Components.Arena;
 
@@ -137,8 +138,23 @@ public partial class PlayerCombatant : ArenaCombatant
             Mathf.Max(1, entryHealth),
             entryHealth,
             gladiatorData?.Equipment?.Armor?.ArmorProfile,
-            ResourceLoader.Load<CombatantStatusProfileData>(DefaultStatusProfilePath));
+            ResourceLoader.Load<CombatantStatusProfileData>(DefaultStatusProfilePath),
+            GetBlockArmorProfiles(gladiatorData));
         return combatState;
+    }
+
+    private static Array<ArmorData> GetBlockArmorProfiles(GladiatorData gladiatorData)
+    {
+        var profiles = new Array<ArmorData>();
+        AddBlockArmorProfile(profiles, gladiatorData?.Equipment?.MainHand);
+        AddBlockArmorProfile(profiles, gladiatorData?.Equipment?.OffHand);
+        return profiles;
+    }
+
+    private static void AddBlockArmorProfile(Array<ArmorData> profiles, DamageItemData item)
+    {
+        if (item?.BlockArmorProfile != null)
+            profiles.Add(item.BlockArmorProfile);
     }
 
     protected override void OnCombatStateHealthChanged(int currentHealth, int maxHealth)
@@ -493,8 +509,22 @@ public partial class PlayerCombatant : ArenaCombatant
             return;
         }
 
-        if (CombatantState != ArenaCombatantState.Release)
+        if (CombatantState == ArenaCombatantState.Blocking)
+        {
+            if (InputState.BlockPressed)
+                return;
+
+            SetCombatantState(ArenaCombatantState.Default);
             return;
+        }
+
+        if (CombatantState != ArenaCombatantState.Release)
+        {
+            if (CombatantState == ArenaCombatantState.Default && InputState.BlockPressed)
+                SetCombatantState(ArenaCombatantState.Blocking);
+
+            return;
+        }
 
         _releaseRemaining -= delta;
         if (_releaseRemaining <= 0f)

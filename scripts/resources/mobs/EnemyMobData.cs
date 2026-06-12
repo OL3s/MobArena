@@ -17,6 +17,9 @@ public partial class EnemyMobData : MobData
     public ArmorData ArmorProfile { get; private set; }
 
     [Export]
+    public ArmorData BlockArmorProfile { get; private set; }
+
+    [Export]
     public CombatantStatusProfileData StatusProfile { get; private set; }
 
     [Export]

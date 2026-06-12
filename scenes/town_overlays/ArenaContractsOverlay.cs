@@ -12,7 +12,6 @@ public partial class ArenaContractsOverlay : Control
 {
     private const string ArenaDonationOverlayScenePath = "res://scenes/town_overlays/arena_donation_overlay.tscn";
     private const string FameIconPath = "res://assets/ui/icons/fame.svg";
-    private const float SkipContractFameMultiplier = 0.9f;
 
     [Export]
     public PackedScene ArenaScene { get; set; }
@@ -431,34 +430,22 @@ public partial class ArenaContractsOverlay : Control
         if (!CanSkipDailyContract())
             return;
 
-        var previousFame = _runData.Fame;
-        var fameLoss = GetSkipContractFameLoss();
-        if (!PhaseTransitionController.SkipArenaContract(_phaseState, _runData, SaveNode.Get()?.WeatherState))
+        if (ArenaContractResultResolver.SkipDailyContract(SaveNode.Get()) != ArenaContractResultResolver.ContractResult.Completed)
             return;
 
-        if (fameLoss > 0)
-            _runData.LoseFame(fameLoss);
-
         SaveNode.Get()?.Save();
-        GameLogger.Contract($"ArenaContractsOverlay: Skipped daily contract. Fame {previousFame} -> {_runData.Fame}.");
         QueueFree();
     }
 
     private int GetSkipContractFameLoss()
     {
-        var currentFame = Mathf.Max(0, _runData?.Fame ?? 0);
-        var nextFame = Mathf.FloorToInt(currentFame * SkipContractFameMultiplier);
-        return Mathf.Max(0, currentFame - nextFame);
+        return ArenaContractResultResolver.GetSkipContractFameLoss(SaveNode.Get());
     }
 
     private string GetSkipContractTooltip()
     {
-        if (_phaseState?.IsChampionDay == true)
-            return "Champion Day contracts cannot be skipped.";
-        if (_careerData?.HasCompletedContracts != true && SaveNode.Get().SkipTutorial != true)
-            return "Complete your first contract before skipping daily contracts.";
-        if (_phaseState?.IsDay() != true)
-            return "Daily contracts can only be skipped during the day.";
+        if (!ArenaContractResultResolver.CanSkipDailyContract(SaveNode.Get(), out var blockReason))
+            return blockReason;
 
         var fameLoss = GetSkipContractFameLoss();
         return fameLoss > 0
@@ -468,10 +455,7 @@ public partial class ArenaContractsOverlay : Control
 
     private bool CanSkipDailyContract()
     {
-        return _runData != null
-            && _phaseState?.IsDay() == true
-            && _phaseState.IsChampionDay != true
-            && (_careerData?.HasCompletedContracts == true || SaveNode.Get().SkipTutorial);
+        return ArenaContractResultResolver.CanSkipDailyContract(SaveNode.Get(), out _);
     }
 
     private bool IsFirstContractOnboarding()
@@ -505,13 +489,20 @@ public partial class ArenaContractsOverlay : Control
         GlobalOverlay.Get()?.AddOverlay(overlayScene.Instantiate<ArenaDonationOverlay>());
     }
 
-    private void StartArenaScene()
-    {
-        if (SaveNode.Get()?.CanStartArenaContract() != true)
-        {
-            GameLogger.Contract("Arena launch blocked: demo is complete.");
-            return;
-        }
+	private void StartArenaScene()
+	{
+		var saveNode = SaveNode.Get();
+		if (saveNode == null)
+		{
+			GameLogger.Contract("Arena launch blocked: save node is missing.");
+			return;
+		}
+
+		if (!saveNode.CanStartArenaContract(out var blockReason))
+		{
+			GameLogger.Contract($"Arena launch blocked: {blockReason}.");
+			return;
+		}
 
         var selectedContract = GetSelectedContractOrNull();
         if (selectedContract == null)

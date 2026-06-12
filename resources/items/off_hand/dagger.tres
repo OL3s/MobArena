@@ -10,6 +10,8 @@
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/ArenaCombatApplyData.cs" id="8_apply"]
 [ext_resource type="Script" path="res://scripts/resources/combat/effects/StatusEffectApplicationData.cs" id="9_status_application"]
 
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="block_armor_override"]
 [sub_resource type="Resource" id="Resource_dagger_pierce"]
 script = ExtResource("4_damage_entry")
 Type = 1
@@ -50,8 +52,25 @@ WindupSeconds = 0.02
 StaminaCost = 10
 SpawnDistance = 26.0
 
+[sub_resource type="Resource" id="Resource_dagger_block_slash"]
+script = ExtResource("block_armor_override")
+Type = 0
+Value = 16
+
+[sub_resource type="Resource" id="Resource_dagger_block_pierce"]
+script = ExtResource("block_armor_override")
+Type = 1
+Value = 20
+
+[sub_resource type="Resource" id="Resource_dagger_block_armor"]
+script = ExtResource("block_armor_data")
+BaseValue = 0
+TypeOverrides = Array[ExtResource("block_armor_override")]([SubResource("Resource_dagger_block_slash"), SubResource("Resource_dagger_block_pierce")])
+ImmuneTypes = Array[int]([])
+
 [resource]
 script = ExtResource("1_off")
+BlockArmorProfile = SubResource("Resource_dagger_block_armor")
 Damage = SubResource("Resource_dagger_damage")
 MainAction = SubResource("Resource_dagger_main_action")
 DisplayName = "Dagger"

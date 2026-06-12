@@ -11,4 +11,7 @@ public abstract partial class DamageItemData : EquipmentItemData
 
     [Export]
     public ArenaCombatActionData MainAction { get; private set; }
+
+    [Export]
+    public ArmorData BlockArmorProfile { get; private set; }
 }

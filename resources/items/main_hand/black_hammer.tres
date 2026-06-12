@@ -5,6 +5,8 @@
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
 
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="block_armor_override"]
 [sub_resource type="Resource" id="crush"]
 script = ExtResource("4_entry")
 Type = 2
@@ -14,8 +16,20 @@ Damage = 300
 script = ExtResource("3_damage")
 Entries = Array[ExtResource("4_entry")]([SubResource("crush")])
 
+[sub_resource type="Resource" id="Resource_black_hammer_block_crush"]
+script = ExtResource("block_armor_override")
+Type = 2
+Value = 30
+
+[sub_resource type="Resource" id="Resource_black_hammer_block_armor"]
+script = ExtResource("block_armor_data")
+BaseValue = 22
+TypeOverrides = Array[ExtResource("block_armor_override")]([SubResource("Resource_black_hammer_block_crush")])
+ImmuneTypes = Array[int]([])
+
 [resource]
 script = ExtResource("1_main")
+BlockArmorProfile = SubResource("Resource_black_hammer_block_armor")
 Damage = SubResource("damage")
 DisplayName = "Black Hammer"
 Description = "A high-grade black hammer."

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EnemyMobData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="EnemyMobData" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/mobs/EnemyMobData.cs" id="1_enemy"]
 [ext_resource type="Texture2D" path="res://assets/ui/mobs/slime_red.svg" id="2_icon"]
@@ -6,12 +6,19 @@
 [ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="4_armor_data"]
 [ext_resource type="Resource" path="res://resources/combat/status_profiles/poison_immune_mob_status_profile.tres" id="5_status_profile"]
 
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
 [sub_resource type="Resource" id="Resource_slime_red_armor"]
 script = ExtResource("4_armor_data")
 BaseValue = 0
 
+[sub_resource type="Resource" id="Resource_slime_red_block_armor"]
+script = ExtResource("block_armor_data")
+BaseValue = 6
+ImmuneTypes = Array[int]([])
+
 [resource]
 script = ExtResource("1_enemy")
+BlockArmorProfile = SubResource("Resource_slime_red_block_armor")
 DisplayName = "Red Slime"
 Description = "An aggressive slime for contracts that should feel clearly more dangerous than the starter pit."
 UiIcon = ExtResource("2_icon")

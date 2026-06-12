@@ -5,6 +5,8 @@
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageData.cs" id="3_damage"]
 [ext_resource type="Script" path="res://scripts/resources/combat/CombatDamageEntryData.cs" id="4_entry"]
 
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="block_armor_override"]
 [sub_resource type="Resource" id="pierce"]
 script = ExtResource("4_entry")
 Type = 1
@@ -14,8 +16,20 @@ Damage = 180
 script = ExtResource("3_damage")
 Entries = Array[ExtResource("4_entry")]([SubResource("pierce")])
 
+[sub_resource type="Resource" id="Resource_iron_bow_block_pierce"]
+script = ExtResource("block_armor_override")
+Type = 1
+Value = 16
+
+[sub_resource type="Resource" id="Resource_iron_bow_block_armor"]
+script = ExtResource("block_armor_data")
+BaseValue = 0
+TypeOverrides = Array[ExtResource("block_armor_override")]([SubResource("Resource_iron_bow_block_pierce")])
+ImmuneTypes = Array[int]([])
+
 [resource]
 script = ExtResource("1_main")
+BlockArmorProfile = SubResource("Resource_iron_bow_block_armor")
 IsTwoHanded = true
 Damage = SubResource("damage")
 DisplayName = "Iron Bow"

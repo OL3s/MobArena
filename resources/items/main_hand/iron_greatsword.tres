@@ -10,6 +10,8 @@
 [ext_resource type="Script" path="res://scripts/resources/items/ItemRequirementData.cs" id="8_requirement"]
 [ext_resource type="Script" path="res://scripts/resources/items/ItemLevelMultiplierData.cs" id="9_multiplier"]
 
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorData.cs" id="block_armor_data"]
+[ext_resource type="Script" path="res://scripts/resources/items/ArmorTypeOverrideData.cs" id="block_armor_override"]
 [sub_resource type="Resource" id="Resource_iron_greatsword_slash"]
 script = ExtResource("4_damage_entry")
 Damage = 235
@@ -57,8 +59,30 @@ StrengthInfluence = 0.9
 AgilityInfluence = 0.15
 MaxMultiplier = 2.15
 
+[sub_resource type="Resource" id="Resource_iron_greatsword_block_slash"]
+script = ExtResource("block_armor_override")
+Type = 0
+Value = 64
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_block_pierce"]
+script = ExtResource("block_armor_override")
+Type = 1
+Value = 40
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_block_crush"]
+script = ExtResource("block_armor_override")
+Type = 2
+Value = 24
+
+[sub_resource type="Resource" id="Resource_iron_greatsword_block_armor"]
+script = ExtResource("block_armor_data")
+BaseValue = 46
+TypeOverrides = Array[ExtResource("block_armor_override")]([SubResource("Resource_iron_greatsword_block_slash"), SubResource("Resource_iron_greatsword_block_pierce"), SubResource("Resource_iron_greatsword_block_crush")])
+ImmuneTypes = Array[int]([])
+
 [resource]
 script = ExtResource("1_main")
+BlockArmorProfile = SubResource("Resource_iron_greatsword_block_armor")
 IsTwoHanded = true
 Damage = SubResource("Resource_iron_greatsword_damage")
 MainAction = SubResource("Resource_iron_greatsword_main_action")
